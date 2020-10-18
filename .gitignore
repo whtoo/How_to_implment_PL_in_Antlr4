@@ -3,3 +3,4 @@
 .classpath
 **/.antlr
 src/**/*.jar
+**/classes

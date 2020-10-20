@@ -2,9 +2,8 @@
 package org.teachfx.antlr4.ep2;
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class ArrayInitBaseListener implements ArrayInitListener {
 	@Override public void enterArray(ArrayInitParser.ArrayContext ctx) { }

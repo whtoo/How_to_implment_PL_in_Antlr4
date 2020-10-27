@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="InterfaceParser" default="run" basedir=".">
    <property name="src" value="." />
-   <property name="grammar" value="Expr"/>
+   <property name="grammar" value="CSV"/>
    <property name="dest" value="classes" />
    <property name="InterfaceParser_jar" value="InterfaceParser1.jar" />
    <property name="bsh.path"

@@ -120,11 +120,6 @@ public class ExprParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_stat; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ExprVisitor ) return ((ExprVisitor<? extends T>)visitor).visitStat(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final StatContext stat() throws RecognitionException {
@@ -202,11 +197,6 @@ public class ExprParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_e; }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof ExprVisitor ) return ((ExprVisitor<? extends T>)visitor).visitE(this);
-			else return visitor.visitChildren(this);
-		}
 	}
 
 	public final EContext e() throws RecognitionException {

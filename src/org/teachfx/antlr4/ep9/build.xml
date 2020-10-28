@@ -24,6 +24,7 @@
       <java jar="../../../../../lib/antlr-4.8-complete.jar" fork="true">
          <arg line="${grammar}.g4"/>
          <arg line="-no-listener"/>
+         <arg line="-no-visitor"/>
          <arg line="-package"/>
          <arg line="${pkg}"/>
       </java>

@@ -32,7 +32,7 @@ public class Calc {
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             parser.setInputStream(tokens);
             ParseTree tree = parser.compileUnit();
-            ExpressionNode exprAST = new BuildAstVisitor().visit(tree);
+            ExpressionNode exprAST = tree.accept(new BuildAstVisitor());
             System.out.println("Result : " + astVisitor.visit(exprAST));
             expr = bufferedReader.readLine();
             line++;

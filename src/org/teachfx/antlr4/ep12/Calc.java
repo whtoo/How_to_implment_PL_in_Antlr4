@@ -22,6 +22,8 @@ public class Calc {
         String expr = bufferedReader.readLine();
         int line = 1;
         MathParser parser = new MathParser(null);
+        ASTVisitor<Double> astVisitor = new EvalExprVisitor();
+
         while(expr != null) {
             ANTLRInputStream input = new ANTLRInputStream(expr+"\n");
             MathLexer lexer = new MathLexer(input);
@@ -31,7 +33,6 @@ public class Calc {
             parser.setInputStream(tokens);
             ParseTree tree = parser.compileUnit();
             ExpressionNode exprAST = new BuildAstVisitor().visit(tree);
-            ASTVisitor<Double> astVisitor = new EvalExprVisitor();
             System.out.println("Result : " + astVisitor.visit(exprAST));
             expr = bufferedReader.readLine();
             line++;

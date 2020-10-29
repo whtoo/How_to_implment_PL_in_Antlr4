@@ -54,6 +54,10 @@ public class EvalExprVisitor implements ASTVisitor<Double> {
             return visit((NegateNode)node);
         } else if(node.getClass().equals(NumberNode.class)) {
             return visit((NumberNode)node);
+        } else if(node.getClass().equals(AssignNode.class)) {
+            return visit((AssignNode)node);
+        } else if(node.getClass().equals(VarNode.class)) {
+            return visit((VarNode)node);
         }
         return null;
     }
@@ -65,7 +69,7 @@ public class EvalExprVisitor implements ASTVisitor<Double> {
     }
 
     @Override
-    public Double visit(VarNode node) {        
+    public Double visit(VarNode node) {     
         return memory.get(node.name);
     }
 

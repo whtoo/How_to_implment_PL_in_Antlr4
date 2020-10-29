@@ -11,6 +11,8 @@ import org.teachfx.antlr4.ep12.MathParser.VarExprContext;
 public class BuildAstVisitor extends MathBaseVisitor<ExpressionNode> {
    @Override
    public ExpressionNode visitCompileUnit(CompileUnitContext ctx) {
+        if(ctx.assign() != null) return visit(ctx.assign());
+
         return visit(ctx.expr());
     }
 

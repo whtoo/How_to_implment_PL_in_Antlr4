@@ -9,8 +9,5 @@ public abstract class ASTVisitor<T>
     public abstract T visit(NegateNode node);
     public abstract T visit(NumberNode node);
 
-    public T visit(ExpressionNode node)
-    {
-        return visit(node);
-    }
+    public abstract T visit(ExpressionNode node);
 }

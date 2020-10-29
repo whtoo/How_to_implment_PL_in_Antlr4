@@ -30,7 +30,11 @@
       </java>
    </target>
    <target name="compile" depends="init">
-      <javac srcdir="${src}" destdir="${dest}" />
+      <javac srcdir="${src}" destdir="${dest}" >
+         <classpath path="../../../../../lib/ST-4.3.1.jar">
+
+         </classpath>
+      </javac>
    </target>
    <target name="build" depends="compile">
       <jar jarfile="${InterfaceParser_jar}" basedir="${dest}" />

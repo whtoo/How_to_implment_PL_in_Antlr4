@@ -1,9 +1,17 @@
 grammar Math;
-
+tokens {
+    
+}
 compileUnit
     :   expr EOF                            
     |   assign EOF
     ;
+
+funcall : name=ID '(' params=parameters ')';
+
+parameters : parameter (',' parameter)* | ;
+
+parameter : expr;
 
 expr
     :   '(' expr ')'                         # parensExpr

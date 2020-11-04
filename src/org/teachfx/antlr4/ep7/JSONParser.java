@@ -1,3 +1,4 @@
+package org.teachfx.antlr4.ep7;
 // Generated from JSON.g4 by ANTLR 4.8
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;

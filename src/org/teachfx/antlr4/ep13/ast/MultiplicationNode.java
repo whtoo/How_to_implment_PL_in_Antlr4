@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep13;
+package org.teachfx.antlr4.ep13.ast;
 public class MultiplicationNode extends InfixExpressionNode{
     public MultiplicationNode() {
         super();

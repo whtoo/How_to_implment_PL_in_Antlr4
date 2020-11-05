@@ -36,7 +36,7 @@
       <jar jarfile="${InterfaceParser_jar}" basedir="${dest}" />
    </target>
    <target name="run" depends="build">
-      <java classname="Test" classpath="${InterfaceParser_jar}" />
+      <java classname="Calc" classpath="${InterfaceParser_jar}" />
    </target>
    <target name="clean">
       <delete dir="${dest}" />

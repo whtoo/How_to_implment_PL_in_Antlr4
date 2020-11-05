@@ -2,18 +2,18 @@ package org.teachfx.antlr4.ep14.symtab;
 
 import java.util.Map;
 
-import org.teachfx.antlr4.ep14.ast.*;
+import org.antlr.v4.runtime.ParserRuleContext;
 
 
 public abstract class ScopedSymbol extends Symbol implements Scope {
     Scope enclosingScope;
-    public Ast tree;
+    public ParserRuleContext tree;
     public ScopedSymbol(String name, Type type,Scope enclosingScope) {
         super(name, type);
         this.enclosingScope = enclosingScope;
     }
 
-    public ScopedSymbol(String name, Scope enclosingScope,Ast tree) {
+    public ScopedSymbol(String name, Scope enclosingScope,ParserRuleContext tree) {
         super(name);
         this.enclosingScope = enclosingScope;
         this.tree = tree;

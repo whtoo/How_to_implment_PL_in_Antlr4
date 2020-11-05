@@ -20,63 +20,21 @@ public interface MathExprVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitCompileUnit(MathExprParser.CompileUnitContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MathExprParser#funcall}.
+	 * Visit a parse tree produced by {@link MathExprParser#varDelaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFuncall(MathExprParser.FuncallContext ctx);
+	T visitVarDelaration(MathExprParser.VarDelarationContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MathExprParser#parameters}.
+	 * Visit a parse tree produced by {@link MathExprParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitParameters(MathExprParser.ParametersContext ctx);
+	T visitExpr(MathExprParser.ExprContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MathExprParser#parameter}.
+	 * Visit a parse tree produced by {@link MathExprParser#type}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitParameter(MathExprParser.ParameterContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code varExpr}
-	 * labeled alternative in {@link MathExprParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitVarExpr(MathExprParser.VarExprContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code infixExpr}
-	 * labeled alternative in {@link MathExprParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitInfixExpr(MathExprParser.InfixExprContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code unaryExpr}
-	 * labeled alternative in {@link MathExprParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitUnaryExpr(MathExprParser.UnaryExprContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code numberExpr}
-	 * labeled alternative in {@link MathExprParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitNumberExpr(MathExprParser.NumberExprContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code parensExpr}
-	 * labeled alternative in {@link MathExprParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitParensExpr(MathExprParser.ParensExprContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code assignExpr}
-	 * labeled alternative in {@link MathExprParser#assign}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAssignExpr(MathExprParser.AssignExprContext ctx);
+	T visitType(MathExprParser.TypeContext ctx);
 }

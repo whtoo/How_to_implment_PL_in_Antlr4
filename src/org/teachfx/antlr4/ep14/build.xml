@@ -27,7 +27,8 @@
          <arg line="-visitor"/>
       </java>
    </target>
-   <target name="compile" depends="init">
+   <target name="compile" depends="clean,init">
+      <delete dir="./compiler/.antlr" />
       <javac srcdir="${src}" destdir="${dest}" />
    </target>
    <target name="build" depends="compile">

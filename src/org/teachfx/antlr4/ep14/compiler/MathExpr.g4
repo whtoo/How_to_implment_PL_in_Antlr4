@@ -4,7 +4,6 @@ grammar MathExpr;
 
 @header {
 package org.teachfx.antlr4.ep14.compiler;
-import org.teachfx.antlr4.ep14.ast.*;
 import org.teachfx.antlr4.ep14.symtab.*;
 }
 

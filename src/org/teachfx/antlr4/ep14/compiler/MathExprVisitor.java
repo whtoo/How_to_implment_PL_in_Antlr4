@@ -1,7 +1,6 @@
 // Generated from ./compiler/MathExpr.g4 by ANTLR 4.8
 
 package org.teachfx.antlr4.ep14.compiler;
-import org.teachfx.antlr4.ep14.ast.*;
 import org.teachfx.antlr4.ep14.symtab.*;
 
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;

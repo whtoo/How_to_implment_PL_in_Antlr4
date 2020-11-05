@@ -14,7 +14,9 @@ compileUnit
 
 varDelaration : vtype=type name=ID ('=' value=expr)?  ';'
     	{
-         VariableSymbol vs = new VariableSymbol($name.text,$vtype.tsym);
+         BuiltIntTypeSymbol sym = (BuiltIntTypeSymbol)symtab.resolve($vtype.text);
+         
+         VariableSymbol vs = new VariableSymbol($name.text,sym);
     	 symtab.define(vs);
          System.out.println($name.text+" ref to " + symtab.resolve($name.text));
         }        

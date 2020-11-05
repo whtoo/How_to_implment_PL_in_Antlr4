@@ -200,7 +200,9 @@ public class MathExprParser extends Parser {
 			setState(19);
 			match(T__1);
 
-			         VariableSymbol vs = new VariableSymbol((((VarDelarationContext)_localctx).name!=null?((VarDelarationContext)_localctx).name.getText():null),((VarDelarationContext)_localctx).vtype.tsym);
+			         BuiltIntTypeSymbol sym = (BuiltIntTypeSymbol)symtab.resolve((((VarDelarationContext)_localctx).vtype!=null?_input.getText(((VarDelarationContext)_localctx).vtype.start,((VarDelarationContext)_localctx).vtype.stop):null));
+			         
+			         VariableSymbol vs = new VariableSymbol((((VarDelarationContext)_localctx).name!=null?((VarDelarationContext)_localctx).name.getText():null),sym);
 			    	 symtab.define(vs);
 			         System.out.println((((VarDelarationContext)_localctx).name!=null?((VarDelarationContext)_localctx).name.getText():null)+" ref to " + symtab.resolve((((VarDelarationContext)_localctx).name!=null?((VarDelarationContext)_localctx).name.getText():null)));
 			        

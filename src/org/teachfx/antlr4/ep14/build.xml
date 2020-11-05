@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="InterfaceParser" default="run" basedir=".">
    <property name="src" value="." />
-   <property name="grammar" value="Cymbol"/>
+   <property name="grammar" value="MathExpr"/>
    <property name="dest" value="classes" />
    <property name="InterfaceParser_jar" value="InterfaceParser1.jar" />
    <property name="bsh.path"
@@ -22,11 +22,9 @@
       </script>
       
       <java jar="../../../../../lib/antlr-4.8-complete.jar" fork="true">
-         <arg line="${grammar}.g4"/>
+         <arg line="./compiler/${grammar}.g4"/>
          <arg line="-no-listener"/>
          <arg line="-visitor"/>
-         <arg line="-package"/>
-         <arg line="${pkg}"/>
       </java>
    </target>
    <target name="compile" depends="init">

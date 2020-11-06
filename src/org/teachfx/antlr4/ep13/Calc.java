@@ -13,6 +13,8 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.stringtemplate.v4.ST;
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 
 public class Calc {
     public static void main(String[] args) throws IOException {
@@ -27,7 +29,7 @@ public class Calc {
         ASTVisitor<Double> astVisitor = new EvalExprVisitor();
         
         while(expr != null) {
-            ANTLRInputStream input = new ANTLRInputStream(expr+"\n");
+            CharStream input = CharStreams.fromString(expr + "\n");
             MathLexer lexer = new MathLexer(input);
             lexer.setLine(line);
             lexer.setCharPositionInLine(0);

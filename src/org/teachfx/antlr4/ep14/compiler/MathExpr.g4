@@ -1,11 +1,11 @@
 grammar MathExpr;
 
-@header {
+@parser::header {
 package org.teachfx.antlr4.ep14.compiler;
 import org.teachfx.antlr4.ep14.symtab.*;
 }
 
-@members {SymbolTable symtab;}
+@parser::members {SymbolTable symtab;}
 
 compileUnit
    [SymbolTable symtab] // pass symbol table to start rule

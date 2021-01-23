@@ -42,7 +42,9 @@
       </jar>
    </target>
    <target name="run" depends="build">
-      <java classname="org.teachfx.antlr4.ep15.Compiler" classpath="${CymbolParser_jar}" />
+      <java classname="org.teachfx.antlr4.ep15.Compiler" classpath="${CymbolParser_jar}" >
+         <arg line="t.cymbol" />
+      </java>
    </target>
    <target name="clean">
       <delete dir="${dest}" />

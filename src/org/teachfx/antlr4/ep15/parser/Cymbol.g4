@@ -7,7 +7,7 @@ file:   (functionDecl | varDecl)+ ;
 varDecl
     :   type ID ('=' expr)? ';'
     ;
-type:   'float' | 'int' | 'void' ; // user-defined types
+type:   'float' | 'int' | 'void' ; // pre-defined types
 
 functionDecl
     :   type ID '(' formalParameters? ')' block // "void f(int x) {...}"

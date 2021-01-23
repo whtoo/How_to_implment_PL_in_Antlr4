@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="CymbolParser" default="run" basedir=".">
-   <property name="src" value="./compiler" />
+   <property name="src" value="." />
+   <property name="parserSrc" value="${src}/parser"/>
    <property name="grammar" value="Cymbol"/>
    <property name="dest" value="classes" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
@@ -13,7 +14,7 @@
       <script language="beanshell" classpath="${bsh.path}">
          import java.io.File;
 
-         File file = pathToFile(src);
+         File file = pathToFile(parserSrc);
          String path = file.getAbsolutePath();
          int idx = path.indexOf("src");
          path = path.substring(idx+4);
@@ -22,13 +23,13 @@
       </script>
       
       <java jar="../../../../../lib/antlr-4.8-complete.jar" fork="true">
-         <arg line="./compiler/${grammar}.g4"/>
+         <arg line="${parserSrc}/${grammar}.g4"/>
          <arg line="-no-listener"/>
          <arg line="-visitor"/>
       </java>
    </target>
    <target name="compile" depends="clean,init">
-      <delete dir="./compiler/.antlr" />
+      <delete dir="${parserSrc}/.antlr" />
       <javac srcdir="${src}" destdir="${dest}" />
    </target>
    <target name="build" depends="compile">

@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep12;
+package org.teachfx.antlr4.ep12.ast;
 public class AdditionNode extends InfixExpressionNode {
     public AdditionNode() {
         super();

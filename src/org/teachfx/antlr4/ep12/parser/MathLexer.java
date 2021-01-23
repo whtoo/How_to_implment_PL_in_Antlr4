@@ -1,5 +1,7 @@
-// Generated from Math.g4 by ANTLR 4.8
-package org.teachfx.antlr4.ep12;
+// Generated from ./compiler/Math.g4 by ANTLR 4.8
+
+package org.teachfx.antlr4.ep12.parser;
+
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

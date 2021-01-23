@@ -1,4 +1,5 @@
-package org.teachfx.antlr4.ep12;
+package org.teachfx.antlr4.ep12.visitor;
+import org.teachfx.antlr4.ep12.ast.*;
 
 public interface  ASTVisitor<T>
 {

@@ -1,8 +1,8 @@
-package org.teachfx.antlr4.ep12;
+package org.teachfx.antlr4.ep12.ast;
 
 public class AssignNode extends ExpressionNode {
-    protected String varName;
-    protected ExpressionNode value;
+    public String varName;
+    public ExpressionNode value;
     public AssignNode(String varName,ExpressionNode value) {
         super();
         this.varName = varName;

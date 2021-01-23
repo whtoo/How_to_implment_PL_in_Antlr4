@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep12;
+package org.teachfx.antlr4.ep12.ast;
 
 public abstract class InfixExpressionNode extends ExpressionNode {
     public ExpressionNode left;

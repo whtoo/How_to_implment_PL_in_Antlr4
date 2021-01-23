@@ -1,5 +1,7 @@
 grammar Math;
-
+@header {
+package org.teachfx.antlr4.ep12.parser;
+}
 compileUnit
     :   expr EOF                            
     |   assign EOF

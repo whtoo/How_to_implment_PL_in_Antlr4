@@ -1,12 +1,15 @@
-package org.teachfx.antlr4.ep12;
+package org.teachfx.antlr4.ep12.visitor;
 
-import org.teachfx.antlr4.ep12.MathParser.AssignExprContext;
-import org.teachfx.antlr4.ep12.MathParser.CompileUnitContext;
-import org.teachfx.antlr4.ep12.MathParser.InfixExprContext;
-import org.teachfx.antlr4.ep12.MathParser.NumberExprContext;
-import org.teachfx.antlr4.ep12.MathParser.ParensExprContext;
-import org.teachfx.antlr4.ep12.MathParser.UnaryExprContext;
-import org.teachfx.antlr4.ep12.MathParser.VarExprContext;
+import org.teachfx.antlr4.ep12.ast.*;
+import org.teachfx.antlr4.ep12.parser.*;
+
+import org.teachfx.antlr4.ep12.parser.MathParser.AssignExprContext;
+import org.teachfx.antlr4.ep12.parser.MathParser.CompileUnitContext;
+import org.teachfx.antlr4.ep12.parser.MathParser.InfixExprContext;
+import org.teachfx.antlr4.ep12.parser.MathParser.NumberExprContext;
+import org.teachfx.antlr4.ep12.parser.MathParser.ParensExprContext;
+import org.teachfx.antlr4.ep12.parser.MathParser.UnaryExprContext;
+import org.teachfx.antlr4.ep12.parser.MathParser.VarExprContext;
 
 public class BuildAstVisitor extends MathBaseVisitor<ExpressionNode> {
    @Override

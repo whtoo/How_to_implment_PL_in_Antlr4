@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="CymbolParser" default="run" basedir=".">
+   <property name="src" value="./compiler" />
+   <property name="grammar" value="Cymbol"/>
+   <property name="dest" value="classes" />
+   <property name="CymbolParser_jar" value="CymbolParser1.jar" />
+   <property name="bsh.path"
+   location="/usr/local/lib/bsh-2.0b5.jar" />
+   <target name="init">
+      <mkdir dir="${dest}" />
+   </target>
+   <target name="gen">
+      <script language="beanshell" classpath="${bsh.path}">
+         import java.io.File;
+
+         File file = pathToFile(src);
+         String path = file.getAbsolutePath();
+         int idx = path.indexOf("src");
+         path = path.substring(idx+4);
+         pkg = path.replace('/','.');
+         project.setNewProperty("pkg",pkg);
+      </script>
+      
+      <java jar="../../../../../lib/antlr-4.8-complete.jar" fork="true">
+         <arg line="./compiler/${grammar}.g4"/>
+         <arg line="-no-listener"/>
+         <arg line="-visitor"/>
+      </java>
+   </target>
+   <target name="compile" depends="clean,init">
+      <delete dir="./compiler/.antlr" />
+      <javac srcdir="${src}" destdir="${dest}" />
+   </target>
+   <target name="build" depends="compile">
+      <jar jarfile="${CymbolParser_jar}" basedir="${dest}" />
+   </target>
+   <target name="run" depends="build">
+      <java classname="Test" classpath="${CymbolParser_jar}" />
+   </target>
+   <target name="clean">
+      <delete dir="${dest}" />
+      <delete file="${CymbolParser_jar}" />
+   </target>
+   <target name="rerun" depends="clean,run">
+      <ant target="clean" />
+      <ant target="run" />
+   </target>
+</project>

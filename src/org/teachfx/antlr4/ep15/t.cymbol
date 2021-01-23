@@ -1,0 +1,7 @@
+int a = 12;
+int b = 8;
+int c;
+int add(int x,int y) {
+    return x + y;
+}
+c = add(a + b);

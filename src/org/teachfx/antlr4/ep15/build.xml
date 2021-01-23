@@ -4,6 +4,7 @@
    <property name="parserSrc" value="${src}/parser"/>
    <property name="grammar" value="Cymbol"/>
    <property name="dest" value="classes" />
+   <property name="jar.class.path" value="../../../../../lib/antlr-4.8-complete.jar" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
    <property name="bsh.path"
    location="/usr/local/lib/bsh-2.0b5.jar" />
@@ -22,7 +23,7 @@
          project.setNewProperty("pkg",pkg);
       </script>
       
-      <java jar="../../../../../lib/antlr-4.8-complete.jar" fork="true">
+      <java jar="${jar.classs.path}" fork="true">
          <arg line="${parserSrc}/${grammar}.g4"/>
          <arg line="-no-listener"/>
          <arg line="-visitor"/>
@@ -33,10 +34,15 @@
       <javac srcdir="${src}" destdir="${dest}" />
    </target>
    <target name="build" depends="compile">
-      <jar jarfile="${CymbolParser_jar}" basedir="${dest}" />
+      <jar jarfile="${CymbolParser_jar}" basedir="${dest}" >
+         <manifest>
+            <attribute name="Main-Class" value="org.teachfx.antlr4.ep15.Compiler" />
+            <attribute name="Class-Path" value="${jar.class.path}"/>
+         </manifest>
+      </jar>
    </target>
    <target name="run" depends="build">
-      <java classname="Test" classpath="${CymbolParser_jar}" />
+      <java classname="org.teachfx.antlr4.ep15.Compiler" classpath="${CymbolParser_jar}" />
    </target>
    <target name="clean">
       <delete dir="${dest}" />

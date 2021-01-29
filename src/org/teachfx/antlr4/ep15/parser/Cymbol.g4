@@ -19,36 +19,37 @@ formalParameter
     :   type ID
     ;
 
-block:  '{' stat* '}' ;   // possibly empty statement block
-stat:   block
-    |   varDecl
-    |   'if' expr 'then' stat ('else' stat)?
-    |   'return' expr? ';' 
-    |   expr '=' expr ';' // assignment
-    |   expr ';'          // func call
+block:  '{' stat* '}' ;    // possibly empty statement block
+
+stat:   block               #statBlock 
+    |   varDecl             #statVarDecl
+    |   'if' expr 'then' stat ('else' stat)? #statIfElese
+    |   'return' expr? ';' # statReturn
+    |   expr '=' expr ';' #statAssign // assignment 
+    |   expr ';'         #statExpr // func call
     ;
 
-expr:   ID '(' exprList? ')'    // func call like f(), f(x), f(1,2)
-    |   ID '[' expr ']'         // array index like a[i], a[i][j]
-    |   '-' expr                // unary minus
-    |   '!' expr                // boolean not
-    |   expr '*' expr
-    |   expr ('+'|'-') expr
-    |   expr '==' expr          // equality comparison (lowest priority op)
-    |   ID                      // variable reference
-    |   INT
-    |   '(' expr ')'
+expr:   ID '(' exprLst? ')' #exprCall   // func call like f(), f(x), f(1,2)
+    |   '-' expr         #exprUnary       // unary minus
+    |   '!' expr         #exprUnary       // boolean not
+    |   expr ('*'|'/') expr    #exprBinary
+    |   expr ('+'|'-') expr #exprBinary
+    |   expr '==' expr #exprBinary         // equality comparison (lowest priority op)
+    |   ID                   #exprID   // variable reference
+    |   INT                  #exprINT
+    |   FLOAT #exprFLOAT
+    |   '(' expr ')'         #exprGroup
     ;
-exprList : expr (',' expr)* ;   // arg list
+exprLst : expr (',' expr)* #exprList ;   // arg list
 
 ID  :   LETTER (LETTER | [0-9])* ;
 fragment
 LETTER : [a-zA-Z] ;
 
 INT :   [0-9]+ ;
-
+FLOAT : INT? '.' INT ;
 WS  :   [ \t\n\r]+ -> skip ;
 
-SL_COMMENT
+SLCOMMENT
     :   '//' .*? '\n' -> skip
     ;

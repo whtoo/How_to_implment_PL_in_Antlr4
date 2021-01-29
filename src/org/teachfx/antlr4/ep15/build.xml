@@ -23,7 +23,7 @@
          project.setNewProperty("pkg",pkg);
       </script>
       
-      <java jar="${jar.classs.path}" fork="true">
+      <java jar="${jar.class.path}" fork="true">
          <arg line="${parserSrc}/${grammar}.g4"/>
          <arg line="-no-listener"/>
          <arg line="-visitor"/>

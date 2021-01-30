@@ -6,7 +6,7 @@ public class GlobalScope extends BaseScope {
         super(null);
         
     }
-
+    
     @Override
     public String getScopeName() {
         return "gloabl";

@@ -12,10 +12,12 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep15.parser.CymbolLexer;
 import org.teachfx.antlr4.ep15.parser.CymbolParser;
+import org.teachfx.antlr4.ep15.parser.CymbolVisitor;
+import org.teachfx.antlr4.ep15.visitor.LocalDefine;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
-        // TODO: Add local resolver.
+        // TODO: Add test cases for local resolver.
         String fileName = null;
         if(args.length > 0) fileName = args[0];
         InputStream is = System.in;
@@ -25,6 +27,8 @@ public class Compiler {
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         CymbolParser parser = new CymbolParser(tokenStream);
         ParseTree parseTree = parser.file();
-        System.out.println(parseTree.toStringTree());
+        LocalDefine localResolver = new LocalDefine();
+        parseTree.accept(localResolver);
+        System.out.println("scope attached with " + localResolver.scopes);
     }
 }

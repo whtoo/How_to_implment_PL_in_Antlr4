@@ -25,11 +25,11 @@ public class CymbolParser extends Parser {
 	public static final int
 		RULE_file = 0, RULE_varDecl = 1, RULE_type = 2, RULE_functionDecl = 3, 
 		RULE_formalParameters = 4, RULE_formalParameter = 5, RULE_block = 6, RULE_stat = 7, 
-		RULE_expr = 8, RULE_exprLst = 9;
+		RULE_expr = 8, RULE_primary = 9, RULE_exprLst = 10;
 	private static String[] makeRuleNames() {
 		return new String[] {
 			"file", "varDecl", "type", "functionDecl", "formalParameters", "formalParameter", 
-			"block", "stat", "expr", "exprLst"
+			"block", "stat", "expr", "primary", "exprLst"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -101,6 +101,17 @@ public class CymbolParser extends Parser {
 	}
 
 	public static class FileContext extends ParserRuleContext {
+		public FileContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_file; }
+	 
+		public FileContext() { }
+		public void copyFrom(FileContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	public static class CompilationUnitContext extends FileContext {
 		public List<FunctionDeclContext> functionDecl() {
 			return getRuleContexts(FunctionDeclContext.class);
 		}
@@ -113,13 +124,10 @@ public class CymbolParser extends Parser {
 		public VarDeclContext varDecl(int i) {
 			return getRuleContext(VarDeclContext.class,i);
 		}
-		public FileContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_file; }
+		public CompilationUnitContext(FileContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitFile(this);
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitCompilationUnit(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -129,31 +137,32 @@ public class CymbolParser extends Parser {
 		enterRule(_localctx, 0, RULE_file);
 		int _la;
 		try {
+			_localctx = new CompilationUnitContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(22); 
+			setState(24); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
-				setState(22);
+				setState(24);
 				_errHandler.sync(this);
 				switch ( getInterpreter().adaptivePredict(_input,0,_ctx) ) {
 				case 1:
 					{
-					setState(20);
+					setState(22);
 					functionDecl();
 					}
 					break;
 				case 2:
 					{
-					setState(21);
+					setState(23);
 					varDecl();
 					}
 					break;
 				}
 				}
-				setState(24); 
+				setState(26); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4))) != 0) );
@@ -196,23 +205,23 @@ public class CymbolParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(26);
+			setState(28);
 			type();
-			setState(27);
+			setState(29);
 			match(ID);
-			setState(30);
+			setState(32);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if (_la==T__0) {
 				{
-				setState(28);
+				setState(30);
 				match(T__0);
-				setState(29);
+				setState(31);
 				expr(0);
 				}
 			}
 
-			setState(32);
+			setState(34);
 			match(T__1);
 			}
 		}
@@ -246,7 +255,7 @@ public class CymbolParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(34);
+			setState(36);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4))) != 0)) ) {
 			_errHandler.recoverInline(this);
@@ -298,25 +307,25 @@ public class CymbolParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(36);
-			type();
-			setState(37);
-			match(ID);
 			setState(38);
-			match(T__5);
+			type();
+			setState(39);
+			match(ID);
 			setState(40);
+			match(T__5);
+			setState(42);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4))) != 0)) {
 				{
-				setState(39);
+				setState(41);
 				formalParameters();
 				}
 			}
 
-			setState(42);
+			setState(44);
 			match(T__6);
-			setState(43);
+			setState(45);
 			block();
 			}
 		}
@@ -356,21 +365,21 @@ public class CymbolParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(45);
+			setState(47);
 			formalParameter();
-			setState(50);
+			setState(52);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==T__7) {
 				{
 				{
-				setState(46);
+				setState(48);
 				match(T__7);
-				setState(47);
+				setState(49);
 				formalParameter();
 				}
 				}
-				setState(52);
+				setState(54);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -409,9 +418,9 @@ public class CymbolParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(53);
+			setState(55);
 			type();
-			setState(54);
+			setState(56);
 			match(ID);
 			}
 		}
@@ -451,23 +460,23 @@ public class CymbolParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(56);
+			setState(58);
 			match(T__8);
-			setState(60);
+			setState(62);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__8) | (1L << T__10) | (1L << T__13) | (1L << T__14) | (1L << T__15) | (1L << ID) | (1L << INT) | (1L << FLOAT))) != 0)) {
 				{
 				{
-				setState(57);
+				setState(59);
 				stat();
 				}
 				}
-				setState(62);
+				setState(64);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(63);
+			setState(65);
 			match(T__9);
 			}
 		}
@@ -483,30 +492,17 @@ public class CymbolParser extends Parser {
 	}
 
 	public static class StatContext extends ParserRuleContext {
-		public StatContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_stat; }
-	 
-		public StatContext() { }
-		public void copyFrom(StatContext ctx) {
-			super.copyFrom(ctx);
-		}
-	}
-	public static class StatBlockContext extends StatContext {
 		public BlockContext block() {
 			return getRuleContext(BlockContext.class,0);
 		}
-		public StatBlockContext(StatContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitStatBlock(this);
-			else return visitor.visitChildren(this);
+		public VarDeclContext varDecl() {
+			return getRuleContext(VarDeclContext.class,0);
 		}
-	}
-	public static class StatIfEleseContext extends StatContext {
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
+		public List<ExprContext> expr() {
+			return getRuleContexts(ExprContext.class);
+		}
+		public ExprContext expr(int i) {
+			return getRuleContext(ExprContext.class,i);
 		}
 		public List<StatContext> stat() {
 			return getRuleContexts(StatContext.class);
@@ -514,57 +510,13 @@ public class CymbolParser extends Parser {
 		public StatContext stat(int i) {
 			return getRuleContext(StatContext.class,i);
 		}
-		public StatIfEleseContext(StatContext ctx) { copyFrom(ctx); }
+		public StatContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_stat; }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitStatIfElese(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class StatVarDeclContext extends StatContext {
-		public VarDeclContext varDecl() {
-			return getRuleContext(VarDeclContext.class,0);
-		}
-		public StatVarDeclContext(StatContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitStatVarDecl(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class StatAssignContext extends StatContext {
-		public List<ExprContext> expr() {
-			return getRuleContexts(ExprContext.class);
-		}
-		public ExprContext expr(int i) {
-			return getRuleContext(ExprContext.class,i);
-		}
-		public StatAssignContext(StatContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitStatAssign(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class StatExprContext extends StatContext {
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
-		}
-		public StatExprContext(StatContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitStatExpr(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class StatReturnContext extends StatContext {
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
-		}
-		public StatReturnContext(StatContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitStatReturn(this);
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitStat(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -574,45 +526,42 @@ public class CymbolParser extends Parser {
 		enterRule(_localctx, 14, RULE_stat);
 		int _la;
 		try {
-			setState(88);
+			setState(90);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,8,_ctx) ) {
 			case 1:
-				_localctx = new StatBlockContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(65);
+				setState(67);
 				block();
 				}
 				break;
 			case 2:
-				_localctx = new StatVarDeclContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(66);
+				setState(68);
 				varDecl();
 				}
 				break;
 			case 3:
-				_localctx = new StatIfEleseContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(67);
-				match(T__10);
-				setState(68);
-				expr(0);
 				setState(69);
-				match(T__11);
+				match(T__10);
 				setState(70);
+				expr(0);
+				setState(71);
+				match(T__11);
+				setState(72);
 				stat();
-				setState(73);
+				setState(75);
 				_errHandler.sync(this);
 				switch ( getInterpreter().adaptivePredict(_input,6,_ctx) ) {
 				case 1:
 					{
-					setState(71);
+					setState(73);
 					match(T__12);
-					setState(72);
+					setState(74);
 					stat();
 					}
 					break;
@@ -620,46 +569,43 @@ public class CymbolParser extends Parser {
 				}
 				break;
 			case 4:
-				_localctx = new StatReturnContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(75);
-				match(T__13);
 				setState(77);
+				match(T__13);
+				setState(79);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__5) | (1L << T__14) | (1L << T__15) | (1L << ID) | (1L << INT) | (1L << FLOAT))) != 0)) {
 					{
-					setState(76);
+					setState(78);
 					expr(0);
 					}
 				}
 
-				setState(79);
+				setState(81);
 				match(T__1);
 				}
 				break;
 			case 5:
-				_localctx = new StatAssignContext(_localctx);
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(80);
-				expr(0);
-				setState(81);
-				match(T__0);
 				setState(82);
 				expr(0);
 				setState(83);
+				match(T__0);
+				setState(84);
+				expr(0);
+				setState(85);
 				match(T__1);
 				}
 				break;
 			case 6:
-				_localctx = new StatExprContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(85);
+				setState(87);
 				expr(0);
-				setState(86);
+				setState(88);
 				match(T__1);
 				}
 				break;
@@ -687,27 +633,6 @@ public class CymbolParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
-	public static class ExprINTContext extends ExprContext {
-		public TerminalNode INT() { return getToken(CymbolParser.INT, 0); }
-		public ExprINTContext(ExprContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitExprINT(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class ExprCallContext extends ExprContext {
-		public TerminalNode ID() { return getToken(CymbolParser.ID, 0); }
-		public ExprLstContext exprLst() {
-			return getRuleContext(ExprLstContext.class,0);
-		}
-		public ExprCallContext(ExprContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitExprCall(this);
-			else return visitor.visitChildren(this);
-		}
-	}
 	public static class ExprBinaryContext extends ExprContext {
 		public List<ExprContext> expr() {
 			return getRuleContexts(ExprContext.class);
@@ -733,15 +658,6 @@ public class CymbolParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
-	public static class ExprIDContext extends ExprContext {
-		public TerminalNode ID() { return getToken(CymbolParser.ID, 0); }
-		public ExprIDContext(ExprContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitExprID(this);
-			else return visitor.visitChildren(this);
-		}
-	}
 	public static class ExprUnaryContext extends ExprContext {
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
@@ -753,12 +669,26 @@ public class CymbolParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
-	public static class ExprFLOATContext extends ExprContext {
-		public TerminalNode FLOAT() { return getToken(CymbolParser.FLOAT, 0); }
-		public ExprFLOATContext(ExprContext ctx) { copyFrom(ctx); }
+	public static class ExprPrimaryContext extends ExprContext {
+		public PrimaryContext primary() {
+			return getRuleContext(PrimaryContext.class,0);
+		}
+		public ExprPrimaryContext(ExprContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitExprFLOAT(this);
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitExprPrimary(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExprFunCallContext extends ExprContext {
+		public TerminalNode ID() { return getToken(CymbolParser.ID, 0); }
+		public ExprLstContext exprLst() {
+			return getRuleContext(ExprLstContext.class,0);
+		}
+		public ExprFunCallContext(ExprContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitExprFunCall(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -784,25 +714,25 @@ public class CymbolParser extends Parser {
 			switch ( getInterpreter().adaptivePredict(_input,10,_ctx) ) {
 			case 1:
 				{
-				_localctx = new ExprCallContext(_localctx);
+				_localctx = new ExprFunCallContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
 
-				setState(91);
+				setState(93);
 				match(ID);
-				setState(92);
-				match(T__5);
 				setState(94);
+				match(T__5);
+				setState(96);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__5) | (1L << T__14) | (1L << T__15) | (1L << ID) | (1L << INT) | (1L << FLOAT))) != 0)) {
 					{
-					setState(93);
+					setState(95);
 					exprLst();
 					}
 				}
 
-				setState(96);
+				setState(98);
 				match(T__6);
 				}
 				break;
@@ -811,10 +741,10 @@ public class CymbolParser extends Parser {
 				_localctx = new ExprUnaryContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(97);
+				setState(99);
 				match(T__14);
-				setState(98);
-				expr(9);
+				setState(100);
+				expr(7);
 				}
 				break;
 			case 3:
@@ -822,40 +752,22 @@ public class CymbolParser extends Parser {
 				_localctx = new ExprUnaryContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(99);
+				setState(101);
 				match(T__15);
-				setState(100);
-				expr(8);
+				setState(102);
+				expr(6);
 				}
 				break;
 			case 4:
 				{
-				_localctx = new ExprIDContext(_localctx);
-				_ctx = _localctx;
-				_prevctx = _localctx;
-				setState(101);
-				match(ID);
-				}
-				break;
-			case 5:
-				{
-				_localctx = new ExprINTContext(_localctx);
-				_ctx = _localctx;
-				_prevctx = _localctx;
-				setState(102);
-				match(INT);
-				}
-				break;
-			case 6:
-				{
-				_localctx = new ExprFLOATContext(_localctx);
+				_localctx = new ExprPrimaryContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
 				setState(103);
-				match(FLOAT);
+				primary();
 				}
 				break;
-			case 7:
+			case 5:
 				{
 				_localctx = new ExprGroupContext(_localctx);
 				_ctx = _localctx;
@@ -886,7 +798,7 @@ public class CymbolParser extends Parser {
 						_localctx = new ExprBinaryContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(110);
-						if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
+						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
 						setState(111);
 						_la = _input.LA(1);
 						if ( !(_la==T__16 || _la==T__17) ) {
@@ -898,7 +810,7 @@ public class CymbolParser extends Parser {
 							consume();
 						}
 						setState(112);
-						expr(8);
+						expr(6);
 						}
 						break;
 					case 2:
@@ -906,7 +818,7 @@ public class CymbolParser extends Parser {
 						_localctx = new ExprBinaryContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(113);
-						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
+						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
 						setState(114);
 						_la = _input.LA(1);
 						if ( !(_la==T__14 || _la==T__18) ) {
@@ -918,7 +830,7 @@ public class CymbolParser extends Parser {
 							consume();
 						}
 						setState(115);
-						expr(7);
+						expr(5);
 						}
 						break;
 					case 3:
@@ -926,11 +838,11 @@ public class CymbolParser extends Parser {
 						_localctx = new ExprBinaryContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(116);
-						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
+						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
 						setState(117);
 						match(T__19);
 						setState(118);
-						expr(6);
+						expr(4);
 						}
 						break;
 					}
@@ -949,6 +861,91 @@ public class CymbolParser extends Parser {
 		}
 		finally {
 			unrollRecursionContexts(_parentctx);
+		}
+		return _localctx;
+	}
+
+	public static class PrimaryContext extends ParserRuleContext {
+		public PrimaryContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_primary; }
+	 
+		public PrimaryContext() { }
+		public void copyFrom(PrimaryContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	public static class PrimaryFLOATContext extends PrimaryContext {
+		public TerminalNode FLOAT() { return getToken(CymbolParser.FLOAT, 0); }
+		public PrimaryFLOATContext(PrimaryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitPrimaryFLOAT(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class PrimaryIDContext extends PrimaryContext {
+		public TerminalNode ID() { return getToken(CymbolParser.ID, 0); }
+		public PrimaryIDContext(PrimaryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitPrimaryID(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class PrimaryINTContext extends PrimaryContext {
+		public TerminalNode INT() { return getToken(CymbolParser.INT, 0); }
+		public PrimaryINTContext(PrimaryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitPrimaryINT(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final PrimaryContext primary() throws RecognitionException {
+		PrimaryContext _localctx = new PrimaryContext(_ctx, getState());
+		enterRule(_localctx, 18, RULE_primary);
+		try {
+			setState(127);
+			_errHandler.sync(this);
+			switch (_input.LA(1)) {
+			case ID:
+				_localctx = new PrimaryIDContext(_localctx);
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(124);
+				match(ID);
+				}
+				break;
+			case INT:
+				_localctx = new PrimaryINTContext(_localctx);
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(125);
+				match(INT);
+				}
+				break;
+			case FLOAT:
+				_localctx = new PrimaryFLOATContext(_localctx);
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(126);
+				match(FLOAT);
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
 		}
 		return _localctx;
 	}
@@ -981,27 +978,27 @@ public class CymbolParser extends Parser {
 
 	public final ExprLstContext exprLst() throws RecognitionException {
 		ExprLstContext _localctx = new ExprLstContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_exprLst);
+		enterRule(_localctx, 20, RULE_exprLst);
 		int _la;
 		try {
 			_localctx = new ExprListContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(124);
-			expr(0);
 			setState(129);
+			expr(0);
+			setState(134);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==T__7) {
 				{
 				{
-				setState(125);
+				setState(130);
 				match(T__7);
-				setState(126);
+				setState(131);
 				expr(0);
 				}
 				}
-				setState(131);
+				setState(136);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1028,52 +1025,54 @@ public class CymbolParser extends Parser {
 	private boolean expr_sempred(ExprContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 0:
-			return precpred(_ctx, 7);
-		case 1:
-			return precpred(_ctx, 6);
-		case 2:
 			return precpred(_ctx, 5);
+		case 1:
+			return precpred(_ctx, 4);
+		case 2:
+			return precpred(_ctx, 3);
 		}
 		return true;
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\33\u0087\4\2\t\2"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\33\u008c\4\2\t\2"+
 		"\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
-		"\t\13\3\2\3\2\6\2\31\n\2\r\2\16\2\32\3\3\3\3\3\3\3\3\5\3!\n\3\3\3\3\3"+
-		"\3\4\3\4\3\5\3\5\3\5\3\5\5\5+\n\5\3\5\3\5\3\5\3\6\3\6\3\6\7\6\63\n\6\f"+
-		"\6\16\6\66\13\6\3\7\3\7\3\7\3\b\3\b\7\b=\n\b\f\b\16\b@\13\b\3\b\3\b\3"+
-		"\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\5\tL\n\t\3\t\3\t\5\tP\n\t\3\t\3\t\3\t\3"+
-		"\t\3\t\3\t\3\t\3\t\3\t\5\t[\n\t\3\n\3\n\3\n\3\n\5\na\n\n\3\n\3\n\3\n\3"+
-		"\n\3\n\3\n\3\n\3\n\3\n\3\n\3\n\3\n\5\no\n\n\3\n\3\n\3\n\3\n\3\n\3\n\3"+
-		"\n\3\n\3\n\7\nz\n\n\f\n\16\n}\13\n\3\13\3\13\3\13\7\13\u0082\n\13\f\13"+
-		"\16\13\u0085\13\13\3\13\2\3\22\f\2\4\6\b\n\f\16\20\22\24\2\5\3\2\5\7\3"+
-		"\2\23\24\4\2\21\21\25\25\2\u0094\2\30\3\2\2\2\4\34\3\2\2\2\6$\3\2\2\2"+
-		"\b&\3\2\2\2\n/\3\2\2\2\f\67\3\2\2\2\16:\3\2\2\2\20Z\3\2\2\2\22n\3\2\2"+
-		"\2\24~\3\2\2\2\26\31\5\b\5\2\27\31\5\4\3\2\30\26\3\2\2\2\30\27\3\2\2\2"+
-		"\31\32\3\2\2\2\32\30\3\2\2\2\32\33\3\2\2\2\33\3\3\2\2\2\34\35\5\6\4\2"+
-		"\35 \7\27\2\2\36\37\7\3\2\2\37!\5\22\n\2 \36\3\2\2\2 !\3\2\2\2!\"\3\2"+
-		"\2\2\"#\7\4\2\2#\5\3\2\2\2$%\t\2\2\2%\7\3\2\2\2&\'\5\6\4\2\'(\7\27\2\2"+
-		"(*\7\b\2\2)+\5\n\6\2*)\3\2\2\2*+\3\2\2\2+,\3\2\2\2,-\7\t\2\2-.\5\16\b"+
-		"\2.\t\3\2\2\2/\64\5\f\7\2\60\61\7\n\2\2\61\63\5\f\7\2\62\60\3\2\2\2\63"+
-		"\66\3\2\2\2\64\62\3\2\2\2\64\65\3\2\2\2\65\13\3\2\2\2\66\64\3\2\2\2\67"+
-		"8\5\6\4\289\7\27\2\29\r\3\2\2\2:>\7\13\2\2;=\5\20\t\2<;\3\2\2\2=@\3\2"+
-		"\2\2><\3\2\2\2>?\3\2\2\2?A\3\2\2\2@>\3\2\2\2AB\7\f\2\2B\17\3\2\2\2C[\5"+
-		"\16\b\2D[\5\4\3\2EF\7\r\2\2FG\5\22\n\2GH\7\16\2\2HK\5\20\t\2IJ\7\17\2"+
-		"\2JL\5\20\t\2KI\3\2\2\2KL\3\2\2\2L[\3\2\2\2MO\7\20\2\2NP\5\22\n\2ON\3"+
-		"\2\2\2OP\3\2\2\2PQ\3\2\2\2Q[\7\4\2\2RS\5\22\n\2ST\7\3\2\2TU\5\22\n\2U"+
-		"V\7\4\2\2V[\3\2\2\2WX\5\22\n\2XY\7\4\2\2Y[\3\2\2\2ZC\3\2\2\2ZD\3\2\2\2"+
-		"ZE\3\2\2\2ZM\3\2\2\2ZR\3\2\2\2ZW\3\2\2\2[\21\3\2\2\2\\]\b\n\1\2]^\7\27"+
-		"\2\2^`\7\b\2\2_a\5\24\13\2`_\3\2\2\2`a\3\2\2\2ab\3\2\2\2bo\7\t\2\2cd\7"+
-		"\21\2\2do\5\22\n\13ef\7\22\2\2fo\5\22\n\ngo\7\27\2\2ho\7\30\2\2io\7\31"+
-		"\2\2jk\7\b\2\2kl\5\22\n\2lm\7\t\2\2mo\3\2\2\2n\\\3\2\2\2nc\3\2\2\2ne\3"+
-		"\2\2\2ng\3\2\2\2nh\3\2\2\2ni\3\2\2\2nj\3\2\2\2o{\3\2\2\2pq\f\t\2\2qr\t"+
-		"\3\2\2rz\5\22\n\nst\f\b\2\2tu\t\4\2\2uz\5\22\n\tvw\f\7\2\2wx\7\26\2\2"+
-		"xz\5\22\n\byp\3\2\2\2ys\3\2\2\2yv\3\2\2\2z}\3\2\2\2{y\3\2\2\2{|\3\2\2"+
-		"\2|\23\3\2\2\2}{\3\2\2\2~\u0083\5\22\n\2\177\u0080\7\n\2\2\u0080\u0082"+
-		"\5\22\n\2\u0081\177\3\2\2\2\u0082\u0085\3\2\2\2\u0083\u0081\3\2\2\2\u0083"+
-		"\u0084\3\2\2\2\u0084\25\3\2\2\2\u0085\u0083\3\2\2\2\20\30\32 *\64>KOZ"+
-		"`ny{\u0083";
+		"\t\13\4\f\t\f\3\2\3\2\6\2\33\n\2\r\2\16\2\34\3\3\3\3\3\3\3\3\5\3#\n\3"+
+		"\3\3\3\3\3\4\3\4\3\5\3\5\3\5\3\5\5\5-\n\5\3\5\3\5\3\5\3\6\3\6\3\6\7\6"+
+		"\65\n\6\f\6\16\68\13\6\3\7\3\7\3\7\3\b\3\b\7\b?\n\b\f\b\16\bB\13\b\3\b"+
+		"\3\b\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\5\tN\n\t\3\t\3\t\5\tR\n\t\3\t\3\t"+
+		"\3\t\3\t\3\t\3\t\3\t\3\t\3\t\5\t]\n\t\3\n\3\n\3\n\3\n\5\nc\n\n\3\n\3\n"+
+		"\3\n\3\n\3\n\3\n\3\n\3\n\3\n\3\n\5\no\n\n\3\n\3\n\3\n\3\n\3\n\3\n\3\n"+
+		"\3\n\3\n\7\nz\n\n\f\n\16\n}\13\n\3\13\3\13\3\13\5\13\u0082\n\13\3\f\3"+
+		"\f\3\f\7\f\u0087\n\f\f\f\16\f\u008a\13\f\3\f\2\3\22\r\2\4\6\b\n\f\16\20"+
+		"\22\24\26\2\5\3\2\5\7\3\2\23\24\4\2\21\21\25\25\2\u0098\2\32\3\2\2\2\4"+
+		"\36\3\2\2\2\6&\3\2\2\2\b(\3\2\2\2\n\61\3\2\2\2\f9\3\2\2\2\16<\3\2\2\2"+
+		"\20\\\3\2\2\2\22n\3\2\2\2\24\u0081\3\2\2\2\26\u0083\3\2\2\2\30\33\5\b"+
+		"\5\2\31\33\5\4\3\2\32\30\3\2\2\2\32\31\3\2\2\2\33\34\3\2\2\2\34\32\3\2"+
+		"\2\2\34\35\3\2\2\2\35\3\3\2\2\2\36\37\5\6\4\2\37\"\7\27\2\2 !\7\3\2\2"+
+		"!#\5\22\n\2\" \3\2\2\2\"#\3\2\2\2#$\3\2\2\2$%\7\4\2\2%\5\3\2\2\2&\'\t"+
+		"\2\2\2\'\7\3\2\2\2()\5\6\4\2)*\7\27\2\2*,\7\b\2\2+-\5\n\6\2,+\3\2\2\2"+
+		",-\3\2\2\2-.\3\2\2\2./\7\t\2\2/\60\5\16\b\2\60\t\3\2\2\2\61\66\5\f\7\2"+
+		"\62\63\7\n\2\2\63\65\5\f\7\2\64\62\3\2\2\2\658\3\2\2\2\66\64\3\2\2\2\66"+
+		"\67\3\2\2\2\67\13\3\2\2\28\66\3\2\2\29:\5\6\4\2:;\7\27\2\2;\r\3\2\2\2"+
+		"<@\7\13\2\2=?\5\20\t\2>=\3\2\2\2?B\3\2\2\2@>\3\2\2\2@A\3\2\2\2AC\3\2\2"+
+		"\2B@\3\2\2\2CD\7\f\2\2D\17\3\2\2\2E]\5\16\b\2F]\5\4\3\2GH\7\r\2\2HI\5"+
+		"\22\n\2IJ\7\16\2\2JM\5\20\t\2KL\7\17\2\2LN\5\20\t\2MK\3\2\2\2MN\3\2\2"+
+		"\2N]\3\2\2\2OQ\7\20\2\2PR\5\22\n\2QP\3\2\2\2QR\3\2\2\2RS\3\2\2\2S]\7\4"+
+		"\2\2TU\5\22\n\2UV\7\3\2\2VW\5\22\n\2WX\7\4\2\2X]\3\2\2\2YZ\5\22\n\2Z["+
+		"\7\4\2\2[]\3\2\2\2\\E\3\2\2\2\\F\3\2\2\2\\G\3\2\2\2\\O\3\2\2\2\\T\3\2"+
+		"\2\2\\Y\3\2\2\2]\21\3\2\2\2^_\b\n\1\2_`\7\27\2\2`b\7\b\2\2ac\5\26\f\2"+
+		"ba\3\2\2\2bc\3\2\2\2cd\3\2\2\2do\7\t\2\2ef\7\21\2\2fo\5\22\n\tgh\7\22"+
+		"\2\2ho\5\22\n\bio\5\24\13\2jk\7\b\2\2kl\5\22\n\2lm\7\t\2\2mo\3\2\2\2n"+
+		"^\3\2\2\2ne\3\2\2\2ng\3\2\2\2ni\3\2\2\2nj\3\2\2\2o{\3\2\2\2pq\f\7\2\2"+
+		"qr\t\3\2\2rz\5\22\n\bst\f\6\2\2tu\t\4\2\2uz\5\22\n\7vw\f\5\2\2wx\7\26"+
+		"\2\2xz\5\22\n\6yp\3\2\2\2ys\3\2\2\2yv\3\2\2\2z}\3\2\2\2{y\3\2\2\2{|\3"+
+		"\2\2\2|\23\3\2\2\2}{\3\2\2\2~\u0082\7\27\2\2\177\u0082\7\30\2\2\u0080"+
+		"\u0082\7\31\2\2\u0081~\3\2\2\2\u0081\177\3\2\2\2\u0081\u0080\3\2\2\2\u0082"+
+		"\25\3\2\2\2\u0083\u0088\5\22\n\2\u0084\u0085\7\n\2\2\u0085\u0087\5\22"+
+		"\n\2\u0086\u0084\3\2\2\2\u0087\u008a\3\2\2\2\u0088\u0086\3\2\2\2\u0088"+
+		"\u0089\3\2\2\2\u0089\27\3\2\2\2\u008a\u0088\3\2\2\2\21\32\34\",\66@MQ"+
+		"\\bny{\u0081\u0088";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

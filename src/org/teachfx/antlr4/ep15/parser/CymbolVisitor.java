@@ -13,11 +13,12 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	/**
-	 * Visit a parse tree produced by {@link CymbolParser#file}.
+	 * Visit a parse tree produced by the {@code compilationUnit}
+	 * labeled alternative in {@link CymbolParser#file}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFile(CymbolParser.FileContext ctx);
+	T visitCompilationUnit(CymbolParser.CompilationUnitContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link CymbolParser#varDecl}.
 	 * @param ctx the parse tree
@@ -55,61 +56,11 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBlock(CymbolParser.BlockContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code statBlock}
-	 * labeled alternative in {@link CymbolParser#stat}.
+	 * Visit a parse tree produced by {@link CymbolParser#stat}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitStatBlock(CymbolParser.StatBlockContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code statVarDecl}
-	 * labeled alternative in {@link CymbolParser#stat}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatVarDecl(CymbolParser.StatVarDeclContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code statIfElese}
-	 * labeled alternative in {@link CymbolParser#stat}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatIfElese(CymbolParser.StatIfEleseContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code statReturn}
-	 * labeled alternative in {@link CymbolParser#stat}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatReturn(CymbolParser.StatReturnContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code statAssign}
-	 * labeled alternative in {@link CymbolParser#stat}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatAssign(CymbolParser.StatAssignContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code statExpr}
-	 * labeled alternative in {@link CymbolParser#stat}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatExpr(CymbolParser.StatExprContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code exprINT}
-	 * labeled alternative in {@link CymbolParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExprINT(CymbolParser.ExprINTContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code exprCall}
-	 * labeled alternative in {@link CymbolParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExprCall(CymbolParser.ExprCallContext ctx);
+	T visitStat(CymbolParser.StatContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code exprBinary}
 	 * labeled alternative in {@link CymbolParser#expr}.
@@ -125,13 +76,6 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprGroup(CymbolParser.ExprGroupContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprID}
-	 * labeled alternative in {@link CymbolParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExprID(CymbolParser.ExprIDContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code exprUnary}
 	 * labeled alternative in {@link CymbolParser#expr}.
 	 * @param ctx the parse tree
@@ -139,12 +83,40 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprUnary(CymbolParser.ExprUnaryContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprFLOAT}
+	 * Visit a parse tree produced by the {@code exprPrimary}
 	 * labeled alternative in {@link CymbolParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprFLOAT(CymbolParser.ExprFLOATContext ctx);
+	T visitExprPrimary(CymbolParser.ExprPrimaryContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code exprFunCall}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprFunCall(CymbolParser.ExprFunCallContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code primaryID}
+	 * labeled alternative in {@link CymbolParser#primary}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrimaryID(CymbolParser.PrimaryIDContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code primaryINT}
+	 * labeled alternative in {@link CymbolParser#primary}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrimaryINT(CymbolParser.PrimaryINTContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code primaryFLOAT}
+	 * labeled alternative in {@link CymbolParser#primary}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrimaryFLOAT(CymbolParser.PrimaryFLOATContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code exprList}
 	 * labeled alternative in {@link CymbolParser#exprLst}.

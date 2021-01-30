@@ -1,7 +1,9 @@
 int a = 12;
 int b = 8;
-int c;
+int c = 16;
 int add(int x,int y) {
-    return x + y;
+    int d = x + y;
+    return d;
 }
-c = add(a + b);
+int e = add(a,b) * c;
+

@@ -56,7 +56,36 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBlock(CymbolParser.BlockContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link CymbolParser#stat}.
+	 * Visit a parse tree produced by the {@code statBlock}
+	 * labeled alternative in {@link CymbolParser#statatment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStatBlock(CymbolParser.StatBlockContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code statVarDecl}
+	 * labeled alternative in {@link CymbolParser#statatment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStatVarDecl(CymbolParser.StatVarDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code statReturn}
+	 * labeled alternative in {@link CymbolParser#statatment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStatReturn(CymbolParser.StatReturnContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code statAssign}
+	 * labeled alternative in {@link CymbolParser#statatment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStatAssign(CymbolParser.StatAssignContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code stat}
+	 * labeled alternative in {@link CymbolParser#statatment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
@@ -90,12 +119,12 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprPrimary(CymbolParser.ExprPrimaryContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code exprFunCall}
+	 * Visit a parse tree produced by the {@code exprFuncCall}
 	 * labeled alternative in {@link CymbolParser#expr}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitExprFunCall(CymbolParser.ExprFunCallContext ctx);
+	T visitExprFuncCall(CymbolParser.ExprFuncCallContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code primaryID}
 	 * labeled alternative in {@link CymbolParser#primary}.
@@ -117,11 +146,4 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitPrimaryFLOAT(CymbolParser.PrimaryFLOATContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code exprList}
-	 * labeled alternative in {@link CymbolParser#exprLst}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExprList(CymbolParser.ExprListContext ctx);
 }

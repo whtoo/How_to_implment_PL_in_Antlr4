@@ -5,7 +5,7 @@ package org.teachfx.antlr4.ep15.parser;
 file :   (functionDecl | varDecl)+ #compilationUnit ;
 
 varDecl
-    :   type ID ('=' expr)? ';'
+    :   type ID ('=' expr)? ';' 
     ;
 type:   'float' | 'int' | 'void' ; // pre-defined types
 
@@ -19,17 +19,16 @@ formalParameter
     :   type ID
     ;
 
-block:  '{' stat* '}' ;    // possibly empty statement block
+block:  '{' statatment* '}' ;    // possibly empty statement block
 
-stat:   block               
-    |   varDecl             
-    |   'if' expr 'then' stat ('else' stat)? 
-    |   'return' expr? ';' 
-    |   expr '=' expr ';'  // assignment 
-    |   expr ';'         // func call
+statatment:   block               #statBlock
+    |   varDecl             #statVarDecl
+    |   'return' expr? ';' #statReturn
+    |   expr '=' expr ';' #statAssign // assignment 
+    |   expr ';'       #stat // func call
     ;
 
-expr:   ID '(' exprLst? ')' #exprFunCall   // func call like f(), f(x), f(1,2)
+expr:   expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
     |   '-' expr         #exprUnary       // unary minus
     |   '!' expr         #exprUnary       // boolean not
     |   expr ('*'|'/') expr    #exprBinary
@@ -42,7 +41,6 @@ primary:    ID                   #primaryID   // variable reference
     |       INT                  #primaryINT
     |       FLOAT                #primaryFLOAT
     ;
-exprLst : expr (',' expr)* #exprList ;   // arg list
 
 ID  :   LETTER (LETTER | [0-9])* ;
 fragment

@@ -2,16 +2,14 @@ package org.teachfx.antlr4.ep16.visitor;
 
 import org.teachfx.antlr4.ep16.symtab.*;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
-import org.teachfx.antlr4.ep16.parser.*;
 import org.teachfx.antlr4.ep16.parser.CymbolParser.*;
 
 /*
 * @author Arthur.Bltiz
 * @description 变量消解-每个变量解决归属问题.
 */
-public class LocalDefine extends CymbolBaseVisitor<Object> {
+public class LocalDefine extends CymbolASTVisitor<Object> {
     private Scope currentScope = null;
     public ParseTreeProperty<Scope> scopes;
 
@@ -24,17 +22,9 @@ public class LocalDefine extends CymbolBaseVisitor<Object> {
     @Override
     public Object visitCompilationUnit(CompilationUnitContext ctx) {
         stashScope(ctx);
-        for (ParseTree rule : ctx.children) {
-            System.out.println("rule clz " + rule.getClass().toString());
-           if (rule instanceof FunctionDeclContext) {
-               System.out.println("visit func " + rule.getText());
-               visitFunctionDecl((FunctionDeclContext)rule);
-           } else if (rule instanceof VarDeclContext) {
-               System.out.println("visit var " + rule.getText());
-               visitVarDecl((VarDeclContext)rule);
-           }
-       }
-       return null;
+        super.visitCompilationUnit(ctx);
+
+        return null;
     }
 
     @Override
@@ -42,27 +32,16 @@ public class LocalDefine extends CymbolBaseVisitor<Object> {
         Scope methodScope = new MethodSymbol(ctx.getText(), currentScope, ctx);
         stashScope(ctx);
         pushScope(methodScope);
-        System.out.println("enter func with " + currentScope.getScopeName());
-        visitFormalParameters(ctx.formalParameters());
-        visitBlock(ctx.block());
-        System.out.println("exit func with " + currentScope.getScopeName());
+        super.visitFunctionDecl(ctx);
         popScope();
         System.out.println("enter scope with " + currentScope.getScopeName());
         return null;
     }
-    @Override
-    public Object visitFormalParameters(FormalParametersContext ctx) {
-        System.out.println("begin collect params");
-
-        for (FormalParameterContext param : ctx.formalParameter()) {
-            visitFormalParameter(param);
-        }
-        return null;
-    }
+   
     
     @Override
     public Object visitFormalParameter(FormalParameterContext ctx) {
-        System.out.println("collect param with "+ctx.getText());
+        System.out.println(tab + "collect param with "+ctx.getText());
         stashScope(ctx);
         return null;
     }
@@ -72,66 +51,36 @@ public class LocalDefine extends CymbolBaseVisitor<Object> {
         Scope local = new LocalScope(currentScope);
         stashScope(ctx);
         pushScope(local);
-        for (StatatmentContext stat : ctx.statatment()) {
-            visit(stat);
-        }
+        super.visitBlock(ctx);
         popScope();
         return null;
     }
 
-    @Override
-    public Object visitStat(StatContext ctx) {
-        System.out.println("visit stats");
-        for (ParseTree expr : ctx.children) {
-            System.out.println("expr clz " + expr.getClass().toString());
-            if (expr instanceof PrimaryFLOATContext) {
-                visitPrimaryFLOAT((PrimaryFLOATContext)expr);
-            } else if (expr instanceof PrimaryINTContext) {
-                visitPrimaryINT((PrimaryINTContext)expr);
-            } else if (expr instanceof PrimaryIDContext) {
-                visitPrimaryID((PrimaryIDContext)expr);
-            } else if (expr instanceof ExprBinaryContext) {
-                visitExprBinary((ExprBinaryContext)expr);
-            } else if (expr instanceof ExprUnaryContext) {
-                visitExprUnary((ExprUnaryContext)expr);
-            } else if (expr instanceof ExprGroupContext) {
-                visitExprGroup((ExprGroupContext)expr);
-            }
-        }
-        
-       
-        return null;
-    }
+   
     @Override
     public Object visitStatVarDecl(StatVarDeclContext ctx) {
-        System.out.println("enter stat var declaration " + ctx.getText());
+        System.out.println(tab + "enter stat var declaration " + ctx.getText());
         stashScope(ctx);
         return null;
     }
 
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
-        System.out.println("enter var declaration " + ctx.getText());
+        System.out.println(tab + "enter var declaration " + ctx.getText());
         stashScope(ctx);
-        return null;
-    }
-    
-    @Override
-    public Object visitExprFuncCall(ExprFuncCallContext ctx) {
-        System.out.println("enter expr func calling " + ctx.getText());
         return null;
     }
 
     @Override
     public Object visitPrimaryFLOAT(PrimaryFLOATContext ctx) {
-        System.out.println("enter float constant");
+        System.out.println(tab + "enter float constant");
         stashScope(ctx);
         return null;
     }
 
     @Override
     public Object visitPrimaryID(PrimaryIDContext ctx) {
-        System.out.println("enter id  "+ctx.getText());
+        System.out.println(tab + "enter id  "+ctx.getText());
 
         stashScope(ctx);
         return null;
@@ -139,7 +88,7 @@ public class LocalDefine extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitPrimaryINT(PrimaryINTContext ctx) {
-        System.out.println("enter int constant");
+        System.out.println(tab + "enter int constant");
 
         stashScope(ctx);
         return null;

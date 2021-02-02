@@ -29,8 +29,8 @@ public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
     public T visitFunctionDecl(FunctionDeclContext ctx) {
         tab += " ";
         System.out.println(tab + "enter func " + ctx.getText());
-        visitFormalParameters(ctx.formalParameters());
-        visitBlock(ctx.block());
+        visit(ctx.formalParameters());
+        visit(ctx.block());
         tab = tab.substring(0,tab.length()-1);
         System.out.println(tab + "exit func with "+ ctx.getText());
         return null;
@@ -43,50 +43,11 @@ public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
         tab += " ";
         for (ParseTree rule : ctx.children) {
             System.out.println(tab + "rule clz " + rule.getClass().toString());
-           if (rule instanceof FunctionDeclContext) {
-               System.out.println(tab + "visit func " + rule.getText());
-               visitFunctionDecl((FunctionDeclContext)rule);
-           } else if (rule instanceof VarDeclContext) {
-               System.out.println(tab + "visit var " + rule.getText());
-               visitVarDecl((VarDeclContext)rule);
-           }
+            visit(rule);
        }
        tab = tab.substring(0,tab.length()-1);
        System.out.println(tab + "end visit compileUnit");
        return null;
     }
 
-    @Override
-    public T visitFormalParameters(FormalParametersContext ctx) {
-        System.out.println(tab + "begin collect params");
-
-        for (FormalParameterContext param : ctx.formalParameter()) {
-            visitFormalParameter(param);
-        }
-        return null;
-    }
-
-    @Override
-    public T visitStat(StatContext ctx) {
-        System.out.println(tab + "visit stats");
-        for (ParseTree expr : ctx.children) {
-            System.out.println("expr clz " + expr.getClass().toString());
-            if (expr instanceof PrimaryFLOATContext) {
-                visitPrimaryFLOAT((PrimaryFLOATContext)expr);
-            } else if (expr instanceof PrimaryINTContext) {
-                visitPrimaryINT((PrimaryINTContext)expr);
-            } else if (expr instanceof PrimaryIDContext) {
-                visitPrimaryID((PrimaryIDContext)expr);
-            } else if (expr instanceof ExprBinaryContext) {
-                visitExprBinary((ExprBinaryContext)expr);
-            } else if (expr instanceof ExprUnaryContext) {
-                visitExprUnary((ExprUnaryContext)expr);
-            } else if (expr instanceof ExprGroupContext) {
-                visitExprGroup((ExprGroupContext)expr);
-            }
-        }
-        
-       
-        return null;
-    }
 }

@@ -7,12 +7,16 @@ import org.teachfx.antlr4.ep16.parser.CymbolParser.*;
 
 /*
 * @author Arthur.Bltiz
-* @description 变量消解-每个变量解决归属问题.
+* @description 变量消解-标记每个ast节点的作用域归属问题.
 */
 public class LocalDefine extends CymbolASTVisitor<Object> {
     private Scope currentScope = null;
-    public ParseTreeProperty<Scope> scopes;
+    private ParseTreeProperty<Scope> scopes;
 
+    public ParseTreeProperty<Scope> getScopes() {
+        return scopes;
+    }
+    
     public LocalDefine() {
         BaseScope globalScope = new GlobalScope();
         currentScope = globalScope;

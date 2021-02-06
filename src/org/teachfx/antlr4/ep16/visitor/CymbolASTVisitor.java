@@ -1,6 +1,8 @@
 package org.teachfx.antlr4.ep16.visitor;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.teachfx.antlr4.ep16.misc.Util;
 import org.teachfx.antlr4.ep16.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep16.parser.CymbolParser.*;
 
@@ -9,7 +11,12 @@ public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
     CymbolASTVisitor() { 
 
     }
-
+    @Override
+    public T visitVarDecl(VarDeclContext ctx) {
+        visitType(ctx.type());
+        
+        return null;
+    }
     @Override
     public T visitExprFuncCall(ExprFuncCallContext ctx) {
         System.out.println(tab + "enter expr func calling " + ctx.getText());
@@ -28,11 +35,11 @@ public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
     @Override
     public T visitFunctionDecl(FunctionDeclContext ctx) {
         tab += " ";
-        System.out.println(tab + "enter func " + ctx.getText());
+        System.out.println(tab + "enter func " + Util.name(ctx));
         visit(ctx.formalParameters());
         visit(ctx.block());
+        System.out.println(tab + "exit func with "+ Util.name(ctx));
         tab = tab.substring(0,tab.length()-1);
-        System.out.println(tab + "exit func with "+ ctx.getText());
         return null;
     }
 

@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.teachfx.antlr4.ep16.misc.*;
 import org.teachfx.antlr4.ep16.parser.CymbolLexer;
 import org.teachfx.antlr4.ep16.parser.CymbolParser;
-import org.teachfx.antlr4.ep16.visitor.LocalDefine;
+
+import org.teachfx.antlr4.ep16.visitor.*;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
@@ -21,8 +23,11 @@ public class Compiler {
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         CymbolParser parser = new CymbolParser(tokenStream);
         ParseTree parseTree = parser.file();
-        LocalDefine localResolver = new LocalDefine();
+        LocalDefine localDefine = new LocalDefine();
+        parseTree.accept(localDefine);
+        System.out.println("scope attached with " + localDefine.getScopes());
+        LocalResolver localResolver = new LocalResolver(new ScopeUtil(localDefine.getScopes()));
         parseTree.accept(localResolver);
-        System.out.println("scope attached with " + localResolver.getScopes());
+        System.out.println("types attached with " + localDefine.getScopes());
     }
 }

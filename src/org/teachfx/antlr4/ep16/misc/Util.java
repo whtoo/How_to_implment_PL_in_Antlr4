@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 public class Util {
 
     public static String name(ParserRuleContext ctx) {
+        
         try {
             TerminalNode id = (TerminalNode) ctx.getClass().getMethod("ID", new Class[0])
                     .invoke(ctx, new Object[0]);

@@ -13,7 +13,6 @@ import org.teachfx.antlr4.ep16.visitor.*;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
-        // TODO: Add test cases for local resolver.
         String fileName = null;
         if(args.length > 0) fileName = args[0];
         InputStream is = System.in;

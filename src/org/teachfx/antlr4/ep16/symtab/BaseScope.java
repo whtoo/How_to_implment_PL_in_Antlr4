@@ -9,9 +9,9 @@ public  abstract class BaseScope implements Scope {
     
     public BaseScope(Scope parent) {
         this.enclosingScope = parent;
-        define(new BuiltInTypeSymbol("int"));
-        define(new BuiltInTypeSymbol("float"));
-        define(new BuiltInTypeSymbol("void"));
+        define(TypeTable.INT);
+        define(TypeTable.FLOAT);
+        define(TypeTable.VOID);
     }
 
     @Override

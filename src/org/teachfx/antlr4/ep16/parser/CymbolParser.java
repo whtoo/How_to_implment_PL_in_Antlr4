@@ -21,7 +21,8 @@ public class CymbolParser extends Parser {
 	public static final int
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, T__8=9, 
 		T__9=10, T__10=11, T__11=12, T__12=13, T__13=14, T__14=15, T__15=16, T__16=17, 
-		ID=18, INT=19, FLOAT=20, WS=21, SLCOMMENT=22;
+		ID=18, BOOLEAN=19, NULL=20, INT=21, FLOAT=22, WS=23, CHAR=24, STRING=25, 
+		SLCOMMENT=26;
 	public static final int
 		RULE_file = 0, RULE_varDecl = 1, RULE_type = 2, RULE_primaryType = 3, 
 		RULE_functionDecl = 4, RULE_formalParameters = 5, RULE_formalParameter = 6, 
@@ -37,14 +38,16 @@ public class CymbolParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, "'='", "';'", "'float'", "'int'", "'void'", "'('", "')'", "','", 
-			"'{'", "'}'", "'return'", "'-'", "'!'", "'*'", "'/'", "'+'", "'=='"
+			"'{'", "'}'", "'return'", "'-'", "'!'", "'*'", "'/'", "'+'", "'=='", 
+			null, null, "'null'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
-			null, null, null, null, null, null, "ID", "INT", "FLOAT", "WS", "SLCOMMENT"
+			null, null, null, null, null, null, "ID", "BOOLEAN", "NULL", "INT", "FLOAT", 
+			"WS", "CHAR", "STRING", "SLCOMMENT"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -517,7 +520,7 @@ public class CymbolParser extends Parser {
 			setState(66);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__8) | (1L << T__10) | (1L << T__11) | (1L << T__12) | (1L << ID) | (1L << INT) | (1L << FLOAT))) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << T__5) | (1L << T__8) | (1L << T__10) | (1L << T__11) | (1L << T__12) | (1L << ID) | (1L << BOOLEAN) | (1L << INT) | (1L << FLOAT) | (1L << CHAR) | (1L << STRING))) != 0)) {
 				{
 				{
 				setState(63);
@@ -646,7 +649,7 @@ public class CymbolParser extends Parser {
 				setState(75);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__5) | (1L << T__11) | (1L << T__12) | (1L << ID) | (1L << INT) | (1L << FLOAT))) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__5) | (1L << T__11) | (1L << T__12) | (1L << ID) | (1L << BOOLEAN) | (1L << INT) | (1L << FLOAT) | (1L << CHAR) | (1L << STRING))) != 0)) {
 					{
 					setState(74);
 					expr(0);
@@ -810,8 +813,11 @@ public class CymbolParser extends Parser {
 				}
 				break;
 			case ID:
+			case BOOLEAN:
 			case INT:
 			case FLOAT:
+			case CHAR:
+			case STRING:
 				{
 				_localctx = new ExprPrimaryContext(_localctx);
 				_ctx = _localctx;
@@ -911,7 +917,7 @@ public class CymbolParser extends Parser {
 						setState(119);
 						_errHandler.sync(this);
 						_la = _input.LA(1);
-						if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__5) | (1L << T__11) | (1L << T__12) | (1L << ID) | (1L << INT) | (1L << FLOAT))) != 0)) {
+						if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__5) | (1L << T__11) | (1L << T__12) | (1L << ID) | (1L << BOOLEAN) | (1L << INT) | (1L << FLOAT) | (1L << CHAR) | (1L << STRING))) != 0)) {
 							{
 							setState(111);
 							expr(0);
@@ -978,12 +984,39 @@ public class CymbolParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
+	public static class PrimaryCHARContext extends PrimaryContext {
+		public TerminalNode CHAR() { return getToken(CymbolParser.CHAR, 0); }
+		public PrimaryCHARContext(PrimaryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitPrimaryCHAR(this);
+			else return visitor.visitChildren(this);
+		}
+	}
 	public static class PrimaryIDContext extends PrimaryContext {
 		public TerminalNode ID() { return getToken(CymbolParser.ID, 0); }
 		public PrimaryIDContext(PrimaryContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitPrimaryID(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class PrimarySTRINGContext extends PrimaryContext {
+		public TerminalNode STRING() { return getToken(CymbolParser.STRING, 0); }
+		public PrimarySTRINGContext(PrimaryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitPrimarySTRING(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class PrimaryBOOLContext extends PrimaryContext {
+		public TerminalNode BOOLEAN() { return getToken(CymbolParser.BOOLEAN, 0); }
+		public PrimaryBOOLContext(PrimaryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitPrimaryBOOL(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1001,7 +1034,7 @@ public class CymbolParser extends Parser {
 		PrimaryContext _localctx = new PrimaryContext(_ctx, getState());
 		enterRule(_localctx, 20, RULE_primary);
 		try {
-			setState(130);
+			setState(133);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case ID:
@@ -1026,6 +1059,30 @@ public class CymbolParser extends Parser {
 				{
 				setState(129);
 				match(FLOAT);
+				}
+				break;
+			case CHAR:
+				_localctx = new PrimaryCHARContext(_localctx);
+				enterOuterAlt(_localctx, 4);
+				{
+				setState(130);
+				match(CHAR);
+				}
+				break;
+			case STRING:
+				_localctx = new PrimarySTRINGContext(_localctx);
+				enterOuterAlt(_localctx, 5);
+				{
+				setState(131);
+				match(STRING);
+				}
+				break;
+			case BOOLEAN:
+				_localctx = new PrimaryBOOLContext(_localctx);
+				enterOuterAlt(_localctx, 6);
+				{
+				setState(132);
+				match(BOOLEAN);
 				}
 				break;
 			default:
@@ -1065,7 +1122,7 @@ public class CymbolParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\30\u0087\4\2\t\2"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\34\u008a\4\2\t\2"+
 		"\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
 		"\t\13\4\f\t\f\3\2\3\2\6\2\33\n\2\r\2\16\2\34\3\3\3\3\3\3\3\3\5\3#\n\3"+
 		"\3\3\3\3\3\4\3\4\5\4)\n\4\3\5\3\5\3\6\3\6\3\6\3\6\5\6\61\n\6\3\6\3\6\3"+
@@ -1074,33 +1131,35 @@ public class CymbolParser extends Parser {
 		"\3\n\3\n\3\n\5\nY\n\n\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13"+
 		"\5\13e\n\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13\3\13"+
 		"\3\13\3\13\7\13u\n\13\f\13\16\13x\13\13\5\13z\n\13\3\13\7\13}\n\13\f\13"+
-		"\16\13\u0080\13\13\3\f\3\f\3\f\5\f\u0085\n\f\3\f\2\3\24\r\2\4\6\b\n\f"+
-		"\16\20\22\24\26\2\5\3\2\5\7\3\2\20\21\4\2\16\16\22\22\2\u0092\2\32\3\2"+
-		"\2\2\4\36\3\2\2\2\6(\3\2\2\2\b*\3\2\2\2\n,\3\2\2\2\f\65\3\2\2\2\16=\3"+
-		"\2\2\2\20@\3\2\2\2\22X\3\2\2\2\24d\3\2\2\2\26\u0084\3\2\2\2\30\33\5\n"+
-		"\6\2\31\33\5\4\3\2\32\30\3\2\2\2\32\31\3\2\2\2\33\34\3\2\2\2\34\32\3\2"+
-		"\2\2\34\35\3\2\2\2\35\3\3\2\2\2\36\37\5\6\4\2\37\"\7\24\2\2 !\7\3\2\2"+
-		"!#\5\24\13\2\" \3\2\2\2\"#\3\2\2\2#$\3\2\2\2$%\7\4\2\2%\5\3\2\2\2&)\5"+
-		"\b\5\2\')\7\24\2\2(&\3\2\2\2(\'\3\2\2\2)\7\3\2\2\2*+\t\2\2\2+\t\3\2\2"+
-		"\2,-\5\6\4\2-.\7\24\2\2.\60\7\b\2\2/\61\5\f\7\2\60/\3\2\2\2\60\61\3\2"+
-		"\2\2\61\62\3\2\2\2\62\63\7\t\2\2\63\64\5\20\t\2\64\13\3\2\2\2\65:\5\16"+
-		"\b\2\66\67\7\n\2\2\679\5\16\b\28\66\3\2\2\29<\3\2\2\2:8\3\2\2\2:;\3\2"+
-		"\2\2;\r\3\2\2\2<:\3\2\2\2=>\5\6\4\2>?\7\24\2\2?\17\3\2\2\2@D\7\13\2\2"+
-		"AC\5\22\n\2BA\3\2\2\2CF\3\2\2\2DB\3\2\2\2DE\3\2\2\2EG\3\2\2\2FD\3\2\2"+
-		"\2GH\7\f\2\2H\21\3\2\2\2IY\5\20\t\2JY\5\4\3\2KM\7\r\2\2LN\5\24\13\2ML"+
-		"\3\2\2\2MN\3\2\2\2NO\3\2\2\2OY\7\4\2\2PQ\5\24\13\2QR\7\3\2\2RS\5\24\13"+
-		"\2ST\7\4\2\2TY\3\2\2\2UV\5\24\13\2VW\7\4\2\2WY\3\2\2\2XI\3\2\2\2XJ\3\2"+
-		"\2\2XK\3\2\2\2XP\3\2\2\2XU\3\2\2\2Y\23\3\2\2\2Z[\b\13\1\2[\\\7\16\2\2"+
-		"\\e\5\24\13\t]^\7\17\2\2^e\5\24\13\b_e\5\26\f\2`a\7\b\2\2ab\5\24\13\2"+
-		"bc\7\t\2\2ce\3\2\2\2dZ\3\2\2\2d]\3\2\2\2d_\3\2\2\2d`\3\2\2\2e~\3\2\2\2"+
-		"fg\f\7\2\2gh\t\3\2\2h}\5\24\13\bij\f\6\2\2jk\t\4\2\2k}\5\24\13\7lm\f\5"+
-		"\2\2mn\7\23\2\2n}\5\24\13\6op\f\n\2\2py\7\b\2\2qv\5\24\13\2rs\7\n\2\2"+
-		"su\5\24\13\2tr\3\2\2\2ux\3\2\2\2vt\3\2\2\2vw\3\2\2\2wz\3\2\2\2xv\3\2\2"+
-		"\2yq\3\2\2\2yz\3\2\2\2z{\3\2\2\2{}\7\t\2\2|f\3\2\2\2|i\3\2\2\2|l\3\2\2"+
-		"\2|o\3\2\2\2}\u0080\3\2\2\2~|\3\2\2\2~\177\3\2\2\2\177\25\3\2\2\2\u0080"+
-		"~\3\2\2\2\u0081\u0085\7\24\2\2\u0082\u0085\7\25\2\2\u0083\u0085\7\26\2"+
-		"\2\u0084\u0081\3\2\2\2\u0084\u0082\3\2\2\2\u0084\u0083\3\2\2\2\u0085\27"+
-		"\3\2\2\2\21\32\34\"(\60:DMXdvy|~\u0084";
+		"\16\13\u0080\13\13\3\f\3\f\3\f\3\f\3\f\3\f\5\f\u0088\n\f\3\f\2\3\24\r"+
+		"\2\4\6\b\n\f\16\20\22\24\26\2\5\3\2\5\7\3\2\20\21\4\2\16\16\22\22\2\u0098"+
+		"\2\32\3\2\2\2\4\36\3\2\2\2\6(\3\2\2\2\b*\3\2\2\2\n,\3\2\2\2\f\65\3\2\2"+
+		"\2\16=\3\2\2\2\20@\3\2\2\2\22X\3\2\2\2\24d\3\2\2\2\26\u0087\3\2\2\2\30"+
+		"\33\5\n\6\2\31\33\5\4\3\2\32\30\3\2\2\2\32\31\3\2\2\2\33\34\3\2\2\2\34"+
+		"\32\3\2\2\2\34\35\3\2\2\2\35\3\3\2\2\2\36\37\5\6\4\2\37\"\7\24\2\2 !\7"+
+		"\3\2\2!#\5\24\13\2\" \3\2\2\2\"#\3\2\2\2#$\3\2\2\2$%\7\4\2\2%\5\3\2\2"+
+		"\2&)\5\b\5\2\')\7\24\2\2(&\3\2\2\2(\'\3\2\2\2)\7\3\2\2\2*+\t\2\2\2+\t"+
+		"\3\2\2\2,-\5\6\4\2-.\7\24\2\2.\60\7\b\2\2/\61\5\f\7\2\60/\3\2\2\2\60\61"+
+		"\3\2\2\2\61\62\3\2\2\2\62\63\7\t\2\2\63\64\5\20\t\2\64\13\3\2\2\2\65:"+
+		"\5\16\b\2\66\67\7\n\2\2\679\5\16\b\28\66\3\2\2\29<\3\2\2\2:8\3\2\2\2:"+
+		";\3\2\2\2;\r\3\2\2\2<:\3\2\2\2=>\5\6\4\2>?\7\24\2\2?\17\3\2\2\2@D\7\13"+
+		"\2\2AC\5\22\n\2BA\3\2\2\2CF\3\2\2\2DB\3\2\2\2DE\3\2\2\2EG\3\2\2\2FD\3"+
+		"\2\2\2GH\7\f\2\2H\21\3\2\2\2IY\5\20\t\2JY\5\4\3\2KM\7\r\2\2LN\5\24\13"+
+		"\2ML\3\2\2\2MN\3\2\2\2NO\3\2\2\2OY\7\4\2\2PQ\5\24\13\2QR\7\3\2\2RS\5\24"+
+		"\13\2ST\7\4\2\2TY\3\2\2\2UV\5\24\13\2VW\7\4\2\2WY\3\2\2\2XI\3\2\2\2XJ"+
+		"\3\2\2\2XK\3\2\2\2XP\3\2\2\2XU\3\2\2\2Y\23\3\2\2\2Z[\b\13\1\2[\\\7\16"+
+		"\2\2\\e\5\24\13\t]^\7\17\2\2^e\5\24\13\b_e\5\26\f\2`a\7\b\2\2ab\5\24\13"+
+		"\2bc\7\t\2\2ce\3\2\2\2dZ\3\2\2\2d]\3\2\2\2d_\3\2\2\2d`\3\2\2\2e~\3\2\2"+
+		"\2fg\f\7\2\2gh\t\3\2\2h}\5\24\13\bij\f\6\2\2jk\t\4\2\2k}\5\24\13\7lm\f"+
+		"\5\2\2mn\7\23\2\2n}\5\24\13\6op\f\n\2\2py\7\b\2\2qv\5\24\13\2rs\7\n\2"+
+		"\2su\5\24\13\2tr\3\2\2\2ux\3\2\2\2vt\3\2\2\2vw\3\2\2\2wz\3\2\2\2xv\3\2"+
+		"\2\2yq\3\2\2\2yz\3\2\2\2z{\3\2\2\2{}\7\t\2\2|f\3\2\2\2|i\3\2\2\2|l\3\2"+
+		"\2\2|o\3\2\2\2}\u0080\3\2\2\2~|\3\2\2\2~\177\3\2\2\2\177\25\3\2\2\2\u0080"+
+		"~\3\2\2\2\u0081\u0088\7\24\2\2\u0082\u0088\7\27\2\2\u0083\u0088\7\30\2"+
+		"\2\u0084\u0088\7\32\2\2\u0085\u0088\7\33\2\2\u0086\u0088\7\25\2\2\u0087"+
+		"\u0081\3\2\2\2\u0087\u0082\3\2\2\2\u0087\u0083\3\2\2\2\u0087\u0084\3\2"+
+		"\2\2\u0087\u0085\3\2\2\2\u0087\u0086\3\2\2\2\u0088\27\3\2\2\2\21\32\34"+
+		"\"(\60:DMXdvy|~\u0087";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

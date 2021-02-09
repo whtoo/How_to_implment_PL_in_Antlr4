@@ -40,15 +40,22 @@ expr:   expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f()
 primary:    ID                   #primaryID   // variable reference
     |       INT                  #primaryINT
     |       FLOAT                #primaryFLOAT
+    |       CHAR                 #primaryCHAR
+    |       STRING               #primarySTRING
+    |       BOOLEAN              #primaryBOOL
     ;
 
 ID  :   LETTER (LETTER | [0-9])* ;
+BOOLEAN: 'true' | 'false';
+NULL : 'null';
 fragment
 LETTER : [a-zA-Z] ;
 
 INT :   [0-9]+ ;
 FLOAT : INT? '.' INT ;
 WS  :   [ \t\n\r]+ -> skip ;
+CHAR :  '\'' . '\'' ;
+STRING: '"' ~( '"' | '\r' | '\n' )* '"'; 
 
 SLCOMMENT
     :   '//' .*? '\n' -> skip

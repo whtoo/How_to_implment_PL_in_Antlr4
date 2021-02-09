@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.teachfx.antlr4.ep16.parser.CymbolBaseVisitor;
+import org.teachfx.antlr4.ep16.parser.CymbolParser;
 import org.teachfx.antlr4.ep16.parser.CymbolParser.*;
 import org.teachfx.antlr4.ep16.symtab.*;
 import org.teachfx.antlr4.ep16.misc.*;
@@ -58,7 +59,12 @@ public class LocalResolver extends CymbolBaseVisitor<Object> {
         method.type = method.scope.lookup(returnType);
         return null;
     }
-
+    @Override
+    public Object visitExprFuncCall(ExprFuncCallContext ctx) {
+        super.visitExprFuncCall(ctx);
+        copyType(ctx.expr(FUNC_EXPR),ctx);
+        return null;
+    }
     // @Override
     // public void exitExpr_Call(Expr_CallContext ctx) {
     //     copyType(ctx.expr(FUNC_EXPR), ctx);
@@ -69,11 +75,17 @@ public class LocalResolver extends CymbolBaseVisitor<Object> {
     //     copyType(ctx.expr(ARRAY_EXPR), ctx);
     // }
 
+    @Override
+    public Object visitExprGroup(ExprGroupContext ctx) {
+        super.visitExprGroup(ctx);
+        copyType(ctx.expr(),ctx);
+        return null;
+    }
     // @Override
     // public void exitExpr_Group(Expr_GroupContext ctx) {
     //     copyType(ctx.expr(), ctx);
     // }
-
+    
     // @Override
     // public void visitTerminal(TerminalNode node) {
     //     if(node.getSymbol().getText().equals(".")) {
@@ -90,82 +102,123 @@ public class LocalResolver extends CymbolBaseVisitor<Object> {
     // public void exitExpr_Member(Expr_MemberContext ctx) {
     //     copyType(ctx.expr(RIGHT), ctx);
     // }
-
+    @Override
+    public Object visitExprBinary(ExprBinaryContext ctx) {
+        super.visitExprBinary(ctx);
+        copyType(ctx.expr(LEFT),ctx);
+        return null;
+    }
     // @Override
     // public void exitExpr_Binary(Expr_BinaryContext ctx) {
     //     copyType(ctx.expr(LEFT), ctx);
     // }
-
+    @Override
+    public Object visitExprUnary(ExprUnaryContext ctx) {
+        super.visitExprUnary(ctx);
+        copyType(ctx.expr(),ctx);
+        return null;
+    }
     // @Override
     // public void exitExpr_Unary(Expr_UnaryContext ctx) {
     //     copyType(ctx.expr(), ctx);
     // }
-
+    @Override
+    public Object visitExprPrimary(ExprPrimaryContext ctx) {
+        super.visitExprPrimary(ctx);
+        copyType(ctx.primary(),ctx);
+        return null;
+    }
     // @Override
     // public void exitExpr_Primary(Expr_PrimaryContext ctx) {
     //     copyType(ctx.primary(), ctx);
     // }
-    
+    @Override
+    public Object visitPrimaryBOOL(PrimaryBOOLContext ctx) {
+        setType(ctx);
+        return null;
+    }
     // @Override
     // public void enterPrimitiveType(PrimitiveTypeContext ctx) {
     //     setType(ctx);
     // }
-
+    @Override
+    public Object visitPrimaryCHAR(PrimaryCHARContext ctx) {
+        setType(ctx);
+        return null;
+    }
     // @Override
     // public void enterPrim_Int(Prim_IntContext ctx) {
     //     setType(ctx);
     // }
 
-
+    
     // @Override
     // public void enterPrim_String(Prim_StringContext ctx) {
     //     setType(ctx);
     // }
-    
+    @Override
+    public Object visitPrimaryID(PrimaryIDContext ctx) {
+        setType(ctx);
+        return null;
+    }
     // @Override
     // public void enterPrim_Id(Prim_IdContext ctx) {
     //     setType(ctx);
     // }
+    public Object visitPrimaryINT(PrimaryINTContext ctx) { 
+        setType(ctx);
+        return null; 
+    }
 
+    @Override
+    public Object visitPrimaryFLOAT(PrimaryFLOATContext ctx) {
+        setType(ctx);
+        return null;
+    }
 
+    @Override
+    public Object visitPrimarySTRING(PrimarySTRINGContext ctx) {
+        setType(ctx);
+        return null;
+    }
 
     // @Override
     // public void enterPrim(PrimContext ctx) {
     //     setType(ctx);
     // }
 
-    // private void setType(ParserRuleContext ctx) {
-    //     // already defined type as in the case of struct members
-    //     if(types.get(ctx) != null) { return; }
+    private void setType(ParserRuleContext ctx) {
+        // already defined type as in the case of struct members
+        if(types.get(ctx) != null) { return; }
         
-    //     int tokenValue = ctx.start.getType();
-    //     String tokenName = ctx.start.getText();
-    //     if(tokenValue == CymbolParser.ID) {
-    //         Scope scope = scopes.get(ctx);
-    //         Symbol s = scope.resolve(tokenName);
+        int tokenValue = ctx.start.getType();
+        String tokenName = ctx.start.getText();
+        if(tokenValue == CymbolParser.ID) {
+            Scope scope = scopes.get(ctx);
+            Symbol s = scope.resolve(tokenName);
             
-    //         if(s == null) { compiler.reportError(ctx, "Unknown type for id: " + tokenName); }
-    //         else { stashType(ctx, s.type); }
+            if(s == null) { System.err.println("Unknown type for id: " + tokenName); }
+            else { stashType(ctx, s.type); }
             
-    //     } else if (tokenValue == CymbolParser.INT || 
-    //                tokenName.equals("int")) {
-    //         stashType(ctx, SymbolTable.INT);   
-    //     } else if (tokenValue == CymbolParser.FLOAT ||
-    //                tokenName.equals("float")) {
-    //         stashType(ctx, SymbolTable.FLOAT);            
-    //     } else if (tokenValue == CymbolParser.CHAR ||
-    //                tokenName.equals("char")) {
-    //         stashType(ctx, SymbolTable.CHAR);
-    //     } else if (tokenName.equals("true") ||
-    //                tokenName.equals("false")||
-    //                tokenName.equals("boolean")) {
-    //         stashType(ctx, SymbolTable.BOOLEAN);            
-    //     } else if (tokenName.equals("void")) {
-    //         stashType(ctx, SymbolTable.VOID);
-    //     } else if (tokenName.equals("null")) {
-    //         stashType(ctx, SymbolTable.NULL);
-    //     }
-    // }
+        } else if (tokenValue == CymbolParser.INT || 
+                   tokenName.equals("int")) {
+            stashType(ctx, TypeTable.INT);   
+        } else if (tokenValue == CymbolParser.FLOAT ||
+                   tokenName.equals("float")) {
+            stashType(ctx, TypeTable.FLOAT);            
+        } else if (tokenValue == CymbolParser.CHAR ||
+                   tokenName.equals("char")) {
+            stashType(ctx, TypeTable.CHAR);
+        } else if (tokenName.equals("true") ||
+                   tokenName.equals("false")||
+                   tokenName.equals("bool")) {
+            stashType(ctx, TypeTable.BOOLEAN);            
+        } else if (tokenName.equals("void")) {
+            stashType(ctx, TypeTable.VOID);
+        } else if (tokenName.equals("null")) {
+            stashType(ctx, TypeTable.NULL);
+        }
+    }
 
     private void stashType(ParserRuleContext ctx, Type type) {
         types.put(ctx, type);

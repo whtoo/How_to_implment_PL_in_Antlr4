@@ -35,9 +35,10 @@
    </target>
    <target name="build" depends="compile">
       <jar jarfile="${CymbolParser_jar}" basedir="${dest}" >
+         <zipfileset src="${jar.class.path}"/>
+         <fileset dir="${basedir}/resources"></fileset>
          <manifest>
             <attribute name="Main-Class" value="org.teachfx.antlr4.ep16.Compiler" />
-            <attribute name="Class-Path" value="${jar.class.path}"/>
          </manifest>
       </jar>
    </target>

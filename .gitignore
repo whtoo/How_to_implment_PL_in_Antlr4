@@ -7,3 +7,4 @@ src/**/*.jar
 **/*.iml
 .idea/
 .vscode/
+**/DS_Store

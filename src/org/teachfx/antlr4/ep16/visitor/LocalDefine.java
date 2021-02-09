@@ -33,6 +33,19 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     }
 
     @Override
+    public Object visitVarDecl(VarDeclContext ctx) {
+        System.out.println(tab + "enter var decl " + ctx.getText());
+        stashScope(ctx);
+        return super.visitVarDecl(ctx);
+    }
+    
+    @Override
+    public Object visitStatVarDecl(StatVarDeclContext ctx) {
+        System.out.println(tab + "enter stat var decl " + ctx.getText());
+        return super.visitStatVarDecl(ctx);
+    }
+
+    @Override
     public Object visitFunctionDecl(FunctionDeclContext ctx) {
         MethodSymbol methodScope = new MethodSymbol(Util.name(ctx), currentScope, ctx);
         currentScope.define(methodScope);
@@ -44,9 +57,14 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         return null;
     }
    
-    
+    @Override
+    public Object visitExprFuncCall(ExprFuncCallContext ctx) {
+        
+        return super.visitExprFuncCall(ctx);
+    }
     @Override
     public Object visitFormalParameter(FormalParameterContext ctx) {
+        super.visitFormalParameter(ctx);
         System.out.println(tab + "collect param with "+ctx.getText());
         stashScope(ctx);
         return null;
@@ -54,29 +72,29 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
 
     @Override
     public Object visitBlock(BlockContext ctx) {
+        System.out.println(tab + "enter block " + ctx.getText());
+
         Scope local = new LocalScope(currentScope);
         stashScope(ctx);
         pushScope(local);
         super.visitBlock(ctx);
         popScope();
+        System.out.println(tab + "exit block " + ctx.getText());
+
         return null;
     }
-
-   
+ 
     @Override
-    public Object visitStatVarDecl(StatVarDeclContext ctx) {
-        System.out.println(tab + "enter stat var declaration " + ctx.getText());
+    public Object visitExprBinary(ExprBinaryContext ctx) {
+        System.out.println(tab + "enter binary expr " + ctx.getText());
         stashScope(ctx);
-        return null;
+        return super.visitExprBinary(ctx);
     }
-
     @Override
-    public Object visitVarDecl(VarDeclContext ctx) {
-        System.out.println(tab + "enter var declaration " + ctx.getText());
+    public Object visitExprUnary(ExprUnaryContext ctx) {
+        System.out.println(tab + "enter unary expr " + ctx.getText());
         stashScope(ctx);
-        super.visitVarDecl(ctx);
-
-        return null;
+        return super.visitExprUnary(ctx);
     }
     @Override
     public Object visitType(TypeContext ctx) {

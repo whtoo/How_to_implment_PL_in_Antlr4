@@ -30,6 +30,7 @@ public class LocalResolver extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
+        super.visitVarDecl(ctx);
         System.out.println(ctx.getClass().toString());
         Type type = scopes.lookup(ctx.type());
         System.out.println(ctx.getText());
@@ -53,6 +54,7 @@ public class LocalResolver extends CymbolBaseVisitor<Object> {
     
     @Override
     public Object visitFunctionDecl(FunctionDeclContext ctx){
+        super.visitFunctionDecl(ctx);
         Symbol method = scopes.resolve(ctx);
         String returnType = ctx.type().getStart().getText();
         method.type = method.scope.lookup(returnType);

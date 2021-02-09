@@ -11,24 +11,18 @@ public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
     CymbolASTVisitor() { 
 
     }
-    @Override
-    public T visitVarDecl(VarDeclContext ctx) {
-        visitType(ctx.type());
-        
-        return null;
-    }
+    
     @Override
     public T visitExprFuncCall(ExprFuncCallContext ctx) {
         System.out.println(tab + "enter expr func calling " + ctx.getText());
+        super.visitExprFuncCall(ctx);
         return null;
     }
 
     @Override
     public T visitBlock(BlockContext ctx) {
         tab+= " ";
-        for (StatatmentContext stat : ctx.statatment()) {
-            visit(stat);
-        }
+        super.visitBlock(ctx);
         tab = tab.substring(0,tab.length()-1);
         return null;
     }

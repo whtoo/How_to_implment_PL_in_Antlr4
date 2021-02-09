@@ -1,6 +1,5 @@
 package org.teachfx.antlr4.ep16.visitor;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep16.misc.Util;
 import org.teachfx.antlr4.ep16.parser.CymbolBaseVisitor;

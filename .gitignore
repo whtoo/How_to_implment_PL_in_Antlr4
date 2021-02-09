@@ -6,3 +6,4 @@ src/**/*.jar
 **/classes
 **/*.iml
 .idea/
+.vscode/

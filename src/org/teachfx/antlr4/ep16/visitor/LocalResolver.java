@@ -11,7 +11,6 @@ import org.teachfx.antlr4.ep16.symtab.*;
 import org.teachfx.antlr4.ep16.misc.*;
 
 public class LocalResolver extends CymbolBaseVisitor<Object> {
-    
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
     private static final int ARRAY_EXPR = 0;
@@ -81,10 +80,6 @@ public class LocalResolver extends CymbolBaseVisitor<Object> {
         copyType(ctx.expr(),ctx);
         return null;
     }
-    // @Override
-    // public void exitExpr_Group(Expr_GroupContext ctx) {
-    //     copyType(ctx.expr(), ctx);
-    // }
     
     // @Override
     // public void visitTerminal(TerminalNode node) {
@@ -98,73 +93,45 @@ public class LocalResolver extends CymbolBaseVisitor<Object> {
     //     }
     // }
 
-    // @Override
-    // public void exitExpr_Member(Expr_MemberContext ctx) {
-    //     copyType(ctx.expr(RIGHT), ctx);
-    // }
     @Override
     public Object visitExprBinary(ExprBinaryContext ctx) {
         super.visitExprBinary(ctx);
         copyType(ctx.expr(LEFT),ctx);
         return null;
     }
-    // @Override
-    // public void exitExpr_Binary(Expr_BinaryContext ctx) {
-    //     copyType(ctx.expr(LEFT), ctx);
-    // }
+
     @Override
     public Object visitExprUnary(ExprUnaryContext ctx) {
         super.visitExprUnary(ctx);
         copyType(ctx.expr(),ctx);
         return null;
     }
-    // @Override
-    // public void exitExpr_Unary(Expr_UnaryContext ctx) {
-    //     copyType(ctx.expr(), ctx);
-    // }
+
     @Override
     public Object visitExprPrimary(ExprPrimaryContext ctx) {
         super.visitExprPrimary(ctx);
         copyType(ctx.primary(),ctx);
         return null;
     }
-    // @Override
-    // public void exitExpr_Primary(Expr_PrimaryContext ctx) {
-    //     copyType(ctx.primary(), ctx);
-    // }
+
     @Override
     public Object visitPrimaryBOOL(PrimaryBOOLContext ctx) {
         setType(ctx);
         return null;
     }
-    // @Override
-    // public void enterPrimitiveType(PrimitiveTypeContext ctx) {
-    //     setType(ctx);
-    // }
+
     @Override
     public Object visitPrimaryCHAR(PrimaryCHARContext ctx) {
         setType(ctx);
         return null;
     }
-    // @Override
-    // public void enterPrim_Int(Prim_IntContext ctx) {
-    //     setType(ctx);
-    // }
 
-    
-    // @Override
-    // public void enterPrim_String(Prim_StringContext ctx) {
-    //     setType(ctx);
-    // }
     @Override
     public Object visitPrimaryID(PrimaryIDContext ctx) {
         setType(ctx);
         return null;
     }
-    // @Override
-    // public void enterPrim_Id(Prim_IdContext ctx) {
-    //     setType(ctx);
-    // }
+
     public Object visitPrimaryINT(PrimaryINTContext ctx) { 
         setType(ctx);
         return null; 
@@ -181,11 +148,6 @@ public class LocalResolver extends CymbolBaseVisitor<Object> {
         setType(ctx);
         return null;
     }
-
-    // @Override
-    // public void enterPrim(PrimContext ctx) {
-    //     setType(ctx);
-    // }
 
     private void setType(ParserRuleContext ctx) {
         // already defined type as in the case of struct members

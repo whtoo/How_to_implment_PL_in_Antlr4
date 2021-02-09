@@ -10,7 +10,7 @@ import org.teachfx.antlr4.ep16.parser.CymbolParser.*;
 import org.teachfx.antlr4.ep16.symtab.*;
 import org.teachfx.antlr4.ep16.misc.*;
 
-public class LocalResolver extends CymbolBaseVisitor<Object> {
+public class LocalResolver extends CymbolASTVisitor<Object> {
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
     private static final int ARRAY_EXPR = 0;

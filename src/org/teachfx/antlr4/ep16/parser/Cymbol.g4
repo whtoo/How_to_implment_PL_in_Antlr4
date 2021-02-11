@@ -19,11 +19,12 @@ formalParameter
     :   type ID
     ;
 
-block:  '{' statatment* '}' ;    // possibly empty statement block
+block:  '{' statetment* '}' ;    // possibly empty statement block
 
-statatment:   block               #statBlock
+statetment:   block               #statBlock
     |   varDecl             #statVarDecl
     |   'return' expr? ';' #statReturn
+    |   'if' '(' expr ')' statetment ('else' statetment)? #stateCondition
     |   expr '=' expr ';' #statAssign // assignment 
     |   expr ';'       #stat // func call
     ;
@@ -31,9 +32,9 @@ statatment:   block               #statBlock
 expr:   expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
     |   '-' expr         #exprUnary       // unary minus
     |   '!' expr         #exprUnary       // boolean not
-    |   expr ('*'|'/') expr    #exprBinary
-    |   expr ('+'|'-') expr #exprBinary
-    |   expr '==' expr #exprBinary         // equality comparison (lowest priority op)
+    |   expr o=('*'|'/') expr    #exprBinary
+    |   expr o=('+'|'-') expr #exprBinary
+    |   expr o=('=='|'!='|'>'|'>='|'<'|'<=') expr #exprBinary
     |   primary #exprPrimary
     |   '(' expr ')'         #exprGroup
     ;

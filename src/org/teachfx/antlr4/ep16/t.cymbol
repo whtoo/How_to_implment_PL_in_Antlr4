@@ -3,6 +3,9 @@ int b = 8;
 int c = 16;
 int add(int x,int y) {
     int d = x + y;
+    if (d >= 0) {
+        d = d + 1;
+    }
     return d;
 }
 int e = add(a,b) * c;

@@ -63,10 +63,6 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         copyType(ctx.expr(FUNC_EXPR),ctx);
         return null;
     }
-    // @Override
-    // public void exitExpr_Call(Expr_CallContext ctx) {
-    //     copyType(ctx.expr(FUNC_EXPR), ctx);
-    // }
 
     // @Override
     // public void exitExpr_Array(Expr_ArrayContext ctx) {
@@ -95,7 +91,11 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     @Override
     public Object visitExprBinary(ExprBinaryContext ctx) {
         super.visitExprBinary(ctx);
+        System.out.println(tab + "binary operation : " + ctx.getText());
+        System.out.println(tab + "operator " + ctx.o.getText());
+        System.out.println(tab + "left operand is " + ctx.expr(LEFT).getText() + " right operand is "+ctx.expr(RIGHT).getText());
         copyType(ctx.expr(LEFT),ctx);
+        
         return null;
     }
 

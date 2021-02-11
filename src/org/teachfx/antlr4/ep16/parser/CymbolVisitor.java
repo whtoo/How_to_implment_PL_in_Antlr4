@@ -63,35 +63,42 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	T visitBlock(CymbolParser.BlockContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code statBlock}
-	 * labeled alternative in {@link CymbolParser#statatment}.
+	 * labeled alternative in {@link CymbolParser#statetment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitStatBlock(CymbolParser.StatBlockContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code statVarDecl}
-	 * labeled alternative in {@link CymbolParser#statatment}.
+	 * labeled alternative in {@link CymbolParser#statetment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitStatVarDecl(CymbolParser.StatVarDeclContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code statReturn}
-	 * labeled alternative in {@link CymbolParser#statatment}.
+	 * labeled alternative in {@link CymbolParser#statetment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitStatReturn(CymbolParser.StatReturnContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code stateCondition}
+	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStateCondition(CymbolParser.StateConditionContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code statAssign}
-	 * labeled alternative in {@link CymbolParser#statatment}.
+	 * labeled alternative in {@link CymbolParser#statetment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitStatAssign(CymbolParser.StatAssignContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code stat}
-	 * labeled alternative in {@link CymbolParser#statatment}.
+	 * labeled alternative in {@link CymbolParser#statetment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */

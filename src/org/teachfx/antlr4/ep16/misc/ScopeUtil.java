@@ -1,7 +1,6 @@
 package org.teachfx.antlr4.ep16.misc;
 
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 import org.teachfx.antlr4.ep16.symtab.*;

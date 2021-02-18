@@ -12,6 +12,7 @@ import org.teachfx.antlr4.ep16.parser.CymbolParser;
 import org.teachfx.antlr4.ep16.visitor.*;
 
 public class Compiler {
+   
     public static void main(String[] args) throws IOException {
         String fileName = null;
         if(args.length > 0) fileName = args[0];

@@ -33,8 +33,8 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         System.out.println(ctx.getText());
 
         VariableSymbol var = new VariableSymbol(Util.name(ctx), type);
-      
-        if(type == null) { System.out.println(ctx + "Unknown type when declaring variable: " + var); }
+
+        if(type == null) { CompilerLogger.error(ctx , "Unknown type when declaring variable: " + var); }
         Scope scope = scopes.get(ctx);
         scope.define(var);
         return null;
@@ -158,7 +158,7 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
             Scope scope = scopes.get(ctx);
             Symbol s = scope.resolve(tokenName);
             
-            if(s == null) { System.err.println("Unknown type for id: " + tokenName); }
+            if(s == null) { CompilerLogger.error(ctx,"Unknown type for id: " + tokenName); }
             else { stashType(ctx, s.type); }
             
         } else if (tokenValue == CymbolParser.INT || 

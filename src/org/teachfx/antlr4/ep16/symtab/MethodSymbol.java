@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 
-public class MethodSymbol extends ScopedSymbol implements Scope {
+public class MethodSymbol extends ScopedSymbol {
     Map<String, Symbol> orderedArgs = new LinkedHashMap<String, Symbol>();
     public boolean builtin = false;
 

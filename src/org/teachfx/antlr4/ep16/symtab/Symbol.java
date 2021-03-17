@@ -5,7 +5,8 @@ public class Symbol {
     static Type UNDEFINED;
     public Type type;
     public Scope scope;
-
+    public Object value;
+    
     public Symbol(String name) {
         this.name = name;
         this.type = UNDEFINED;

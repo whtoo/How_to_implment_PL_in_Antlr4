@@ -9,6 +9,6 @@ public class TypeTable {
     public static BuiltInTypeSymbol NULL = new BuiltInTypeSymbol("null");
     public static BuiltInTypeSymbol BOOLEAN = new BuiltInTypeSymbol("bool");
 
-
+    
 
 }

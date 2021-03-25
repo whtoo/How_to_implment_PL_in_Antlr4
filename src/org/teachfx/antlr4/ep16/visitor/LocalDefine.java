@@ -22,6 +22,10 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     public LocalDefine() {
         BaseScope globalScope = new GlobalScope();
         currentScope = globalScope;
+        MethodSymbol printFuncSymbol = new MethodSymbol("print",globalScope,null);
+        printFuncSymbol.builtin = true;
+        printFuncSymbol.getMemebers().put("value", TypeTable.OBJECT);
+        globalScope.define(printFuncSymbol);
         scopes = new ParseTreeProperty<Scope>();
     }
 

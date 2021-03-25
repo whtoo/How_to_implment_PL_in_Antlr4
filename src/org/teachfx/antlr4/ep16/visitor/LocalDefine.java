@@ -9,6 +9,7 @@ import org.teachfx.antlr4.ep16.parser.CymbolParser.*;
 /*
 * @author Arthur.Bltiz
 * @description 变量消解-标记每个ast节点的作用域归属问题.
+* @purpose 解决变量的定位问题--属于哪个作用域
 */
 public class LocalDefine extends CymbolASTVisitor<Object> {
     private Scope currentScope = null;

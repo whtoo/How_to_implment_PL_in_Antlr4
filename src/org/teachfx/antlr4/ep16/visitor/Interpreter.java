@@ -10,11 +10,7 @@ import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprPrimaryContext;
 import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprUnaryContext;
 
 public class Interpreter extends CymbolBaseVisitor<Object> {
-    private static final Map<String,Object> memory;
-    
-    static { 
-        memory = new HashMap<String,Object>();
-    }
+   
 
     //< Expression evaluation
     @Override

@@ -7,13 +7,21 @@ import org.teachfx.antlr4.ep16.parser.CymbolParser.*;
 import org.teachfx.antlr4.ep16.symtab.*;
 import org.teachfx.antlr4.ep16.misc.*;
 
+/**
+ * @description 给变量分配类型
+ * @purpose 给变量确定具体类型
+ */
 public class LocalResolver extends CymbolASTVisitor<Object> {
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
+
+    // ID[index-expr]
     private static final int ARRAY_EXPR = 0;
     private static final int FUNC_EXPR = 0;
+    // struct ID block-declaration
     private static final int STRUCT = 0;
     private static final int MEMBER_PARENT = 2;
+    // ID.(ID|FUNC-CALL)
     private static final int MEMBER = 0;
     
     private ScopeUtil scopes;

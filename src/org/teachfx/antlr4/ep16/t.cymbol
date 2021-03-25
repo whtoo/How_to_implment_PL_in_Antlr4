@@ -1,6 +1,7 @@
 int a = 12;
 int b = 8;
 int c = 16;
+
 int add(int x,int y) {
     int d = x + y;
     if (d >= 0) {
@@ -8,5 +9,8 @@ int add(int x,int y) {
     }
     return d;
 }
+
 int e = add(a,b) * c;
+
+add(a,e);
 

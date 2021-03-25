@@ -3,9 +3,10 @@ package org.teachfx.antlr4.ep16.symtab;
 public class Symbol {
     String name;
     static Type UNDEFINED;
+    // Mark which type
     public Type type;
+    // Locate where I am.
     public Scope scope;
-    public Object value;
     
     public Symbol(String name) {
         this.name = name;

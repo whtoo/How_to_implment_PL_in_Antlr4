@@ -2,7 +2,7 @@ grammar Cymbol;
 @header {
 package org.teachfx.antlr4.ep16.parser;
 }
-file :   (functionDecl | varDecl)+ #compilationUnit ;
+file :   (functionDecl | varDecl | statetment)+ #compilationUnit ;
 
 varDecl
     :   type ID ('=' expr)? ';' 

@@ -12,5 +12,5 @@ int add(int x,int y) {
 
 int e = add(a,b) * c;
 
-add(a,e);
+print(add(a,e));
 

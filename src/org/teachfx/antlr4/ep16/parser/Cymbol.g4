@@ -25,6 +25,7 @@ statetment:   block               #statBlock
     |   varDecl             #statVarDecl
     |   'return' expr? ';' #statReturn
     |   'if' '(' expr ')' statetment ('else' statetment)? #stateCondition
+    |   'while' '(' expr ')' statetment #stateWhile
     |   expr '=' expr ';' #statAssign // assignment 
     |   expr ';'       #stat // func call
     ;
@@ -49,6 +50,7 @@ primary:    ID                   #primaryID   // variable reference
 ID  :   LETTER (LETTER | [0-9])* ;
 BOOLEAN: 'true' | 'false';
 NULL : 'null';
+
 fragment
 LETTER : [a-zA-Z] ;
 

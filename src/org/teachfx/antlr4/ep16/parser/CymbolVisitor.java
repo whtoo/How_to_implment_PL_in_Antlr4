@@ -90,6 +90,13 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStateCondition(CymbolParser.StateConditionContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code stateWhile}
+	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStateWhile(CymbolParser.StateWhileContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code statAssign}
 	 * labeled alternative in {@link CymbolParser#statetment}.
 	 * @param ctx the parse tree

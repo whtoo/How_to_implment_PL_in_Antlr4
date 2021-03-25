@@ -8,7 +8,7 @@ public class TypeTable {
     public static BuiltInTypeSymbol VOID = new BuiltInTypeSymbol("void");
     public static BuiltInTypeSymbol NULL = new BuiltInTypeSymbol("null");
     public static BuiltInTypeSymbol BOOLEAN = new BuiltInTypeSymbol("bool");
-
+    public static BuiltInTypeSymbol OBJECT = new BuiltInTypeSymbol("object");
     
 
 }

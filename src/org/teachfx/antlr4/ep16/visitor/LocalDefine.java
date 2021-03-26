@@ -53,6 +53,8 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     @Override
     public Object visitFunctionDecl(FunctionDeclContext ctx) {
         MethodSymbol methodScope = new MethodSymbol(Util.name(ctx), currentScope, ctx);
+        methodScope.blockStmt = ctx.blockDef;
+        methodScope.callee = (ParserRuleContext) ctx.parent;
         currentScope.define(methodScope);
         stashScope(ctx);
         pushScope(methodScope);
@@ -64,8 +66,9 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
    
     @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
-        
-        return super.visitExprFuncCall(ctx);
+        super.visitExprFuncCall(ctx);
+        stashScope(ctx);
+        return null;
     }
     @Override
     public Object visitFormalParameter(FormalParameterContext ctx) {

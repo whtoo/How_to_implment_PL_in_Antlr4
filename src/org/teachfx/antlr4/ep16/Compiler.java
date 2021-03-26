@@ -25,9 +25,13 @@ public class Compiler {
         ParseTree parseTree = parser.file();
         LocalDefine localDefine = new LocalDefine();
         parseTree.accept(localDefine);
-        System.out.println("scope attached with " + localDefine.getScopes());
-        LocalResolver localResolver = new LocalResolver(new ScopeUtil(localDefine.getScopes()));
+        //System.out.println("scope attached with " + localDefine.getScopes());
+        ScopeUtil scopeUtil = new ScopeUtil(localDefine.getScopes());
+        LocalResolver localResolver = new LocalResolver(scopeUtil);
         parseTree.accept(localResolver);
-        System.out.println("types attached with " + localDefine.getScopes());
+        //System.out.println("types attached with " + localDefine.getScopes());
+        Interpreter interpreter = new Interpreter(scopeUtil);
+        interpreter.interpret(parseTree);
+
     }
 }

@@ -10,7 +10,7 @@ varDecl
 type:  primaryType | ID  ; // pre-defined types
 primaryType: 'float' | 'int' | 'void';
 functionDecl
-    :   type ID '(' formalParameters? ')' block // "void f(int x) {...}"
+    :   retType=type funcName=ID '(' params=formalParameters? ')' blockDef=block // "void f(int x) {...}"
     ;
 formalParameters
     :   formalParameter (',' formalParameter)*
@@ -24,8 +24,8 @@ block:  '{' statetment* '}' ;    // possibly empty statement block
 statetment:   block               #statBlock
     |   varDecl             #statVarDecl
     |   'return' expr? ';' #statReturn
-    |   'if' '(' expr ')' statetment ('else' statetment)? #stateCondition
-    |   'while' '(' expr ')' statetment #stateWhile
+    |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
+    |   'while' '(' cond=expr ')' then=statetment #stateWhile
     |   expr '=' expr ';' #statAssign // assignment 
     |   expr ';'       #stat // func call
     ;

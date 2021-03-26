@@ -1,5 +1,7 @@
 package org.teachfx.antlr4.ep16.symtab;
 
+import org.teachfx.antlr4.ep16.misc.MemorySpace;
+
 public class Symbol {
     String name;
     static Type UNDEFINED;
@@ -7,6 +9,7 @@ public class Symbol {
     public Type type;
     // Locate where I am.
     public Scope scope;
+    public MemorySpace space;
     
     public Symbol(String name) {
         this.name = name;

@@ -6,7 +6,7 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.teachfx.antlr4.ep16.symtab.*;
 
 public class ScopeUtil {
-    
+
     private ParseTreeProperty<Scope> scopes;
 
     public ScopeUtil(ParseTreeProperty<Scope> scopes) {
@@ -21,11 +21,11 @@ public class ScopeUtil {
         Type type= scope.lookup(name);
         if(type == null) { 
             String msg = "unknown type: " + name;
-//            compiler.reportError(ctx, msg);
+            CompilerLogger.error(ctx, msg);
         }
         return type;
     }
-    
+
     public Symbol resolve(ParserRuleContext ctx) {
         String name = Util.name(ctx);
         System.out.println("lookup func is : "+name);
@@ -36,7 +36,7 @@ public class ScopeUtil {
         Symbol symbol = scope.resolve(name);
         if(symbol == null) { 
             String msg = "unknown symbol: " + name;
-//            compiler.reportError(ctx, msg);
+            CompilerLogger.error(ctx, msg);
         }
         return symbol;
     }

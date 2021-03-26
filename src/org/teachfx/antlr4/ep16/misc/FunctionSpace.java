@@ -9,7 +9,7 @@ public class FunctionSpace extends MemorySpace {
         this.def = def;
     }
 
-    public FunctionSpace(String name,MemorySpace space,MethodSymbol def) {
+    public FunctionSpace(String name,MethodSymbol def,MemorySpace space) {
         super(name,space);
         this.def = def;
     }

@@ -60,15 +60,18 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     @Override
     public Object visitFunctionDecl(FunctionDeclContext ctx){
         super.visitFunctionDecl(ctx);
-        Symbol method = scopes.resolve(ctx);
+        Symbol method = this.scopes.resolve(ctx);
         String returnType = ctx.type().getStart().getText();
         method.type = method.scope.lookup(returnType);
+        
         return null;
     }
     @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         super.visitExprFuncCall(ctx);
+        // 这里有一个func name ctx和symbol没有建立匹配的问题
         copyType(ctx.expr(FUNC_EXPR),ctx);
+    
         return null;
     }
 

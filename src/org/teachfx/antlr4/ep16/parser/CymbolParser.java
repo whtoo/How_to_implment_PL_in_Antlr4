@@ -349,6 +349,10 @@ public class CymbolParser extends Parser {
 	}
 
 	public static class FunctionDeclContext extends ParserRuleContext {
+		public TypeContext retType;
+		public Token funcName;
+		public FormalParametersContext params;
+		public BlockContext blockDef;
 		public TypeContext type() {
 			return getRuleContext(TypeContext.class,0);
 		}
@@ -378,9 +382,9 @@ public class CymbolParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(43);
-			type();
+			((FunctionDeclContext)_localctx).retType = type();
 			setState(44);
-			match(ID);
+			((FunctionDeclContext)_localctx).funcName = match(ID);
 			setState(45);
 			match(T__5);
 			setState(47);
@@ -389,14 +393,14 @@ public class CymbolParser extends Parser {
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__2) | (1L << T__3) | (1L << T__4) | (1L << ID))) != 0)) {
 				{
 				setState(46);
-				formalParameters();
+				((FunctionDeclContext)_localctx).params = formalParameters();
 				}
 			}
 
 			setState(49);
 			match(T__6);
 			setState(50);
-			block();
+			((FunctionDeclContext)_localctx).blockDef = block();
 			}
 		}
 		catch (RecognitionException re) {
@@ -606,6 +610,8 @@ public class CymbolParser extends Parser {
 		}
 	}
 	public static class StateWhileContext extends StatetmentContext {
+		public ExprContext cond;
+		public StatetmentContext then;
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
@@ -645,6 +651,9 @@ public class CymbolParser extends Parser {
 		}
 	}
 	public static class StateConditionContext extends StatetmentContext {
+		public ExprContext cond;
+		public StatetmentContext then;
+		public StatetmentContext elseDo;
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
@@ -715,11 +724,11 @@ public class CymbolParser extends Parser {
 				setState(80);
 				match(T__5);
 				setState(81);
-				expr(0);
+				((StateConditionContext)_localctx).cond = expr(0);
 				setState(82);
 				match(T__6);
 				setState(83);
-				statetment();
+				((StateConditionContext)_localctx).then = statetment();
 				setState(86);
 				_errHandler.sync(this);
 				switch ( getInterpreter().adaptivePredict(_input,8,_ctx) ) {
@@ -728,7 +737,7 @@ public class CymbolParser extends Parser {
 					setState(84);
 					match(T__12);
 					setState(85);
-					statetment();
+					((StateConditionContext)_localctx).elseDo = statetment();
 					}
 					break;
 				}
@@ -743,11 +752,11 @@ public class CymbolParser extends Parser {
 				setState(89);
 				match(T__5);
 				setState(90);
-				expr(0);
+				((StateWhileContext)_localctx).cond = expr(0);
 				setState(91);
 				match(T__6);
 				setState(92);
-				statetment();
+				((StateWhileContext)_localctx).then = statetment();
 				}
 				break;
 			case 6:

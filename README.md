@@ -41,8 +41,11 @@
 当所有依赖都安装完毕后，以ep16为例
 
 > `cd your_project_dir`
+
 > `cd src/org/teachfx/antlr4/ep16`
+
 > `ant gen`
+
 > `ant run`
 ### 3.3. 如何从Ant构建并运行工程
 

@@ -1,6 +1,6 @@
 # 如何用antlr实现你自己的第一门~~简单~~编程语言(Cymbol:dog:)
 ## 1. 全局鸟瞰
-
+- [x] [ep1](src/org/teachfx/antlr4/ep1)--antlr支持的EBNF语法描述hello world示例。
 ## 2. 为什么会有这个系列的教程？
 
 ## 3. 工程体系介绍

@@ -30,7 +30,7 @@ statetment:   block               #statBlock
     |   expr ';'       #stat // func call
     ;
 
-expr:   expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
+expr:   ID '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
     |   '-' expr         #exprUnary       // unary minus
     |   '!' expr         #exprUnary       // boolean not
     |   expr o=('*'|'/') expr    #exprBinary

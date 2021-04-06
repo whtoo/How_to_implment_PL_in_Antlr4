@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep17;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,24 +15,24 @@ import org.teachfx.antlr4.ep17.visitor.*;
 public class Compiler {
    
     public static void main(String[] args) throws IOException {
-        String fileName = null;
-        if(args.length > 0) fileName = args[0];
-        InputStream is = System.in;
-        if(fileName != null) is = new FileInputStream(fileName);
-        CharStream charStream = CharStreams.fromStream(is);
-        CymbolLexer lexer = new CymbolLexer(charStream);
-        CommonTokenStream tokenStream = new CommonTokenStream(lexer);
-        CymbolParser parser = new CymbolParser(tokenStream);
-        ParseTree parseTree = parser.file();
-        LocalDefine localDefine = new LocalDefine();
-        parseTree.accept(localDefine);
-        //System.out.println("scope attached with " + localDefine.getScopes());
-        ScopeUtil scopeUtil = new ScopeUtil(localDefine.getScopes());
-        LocalResolver localResolver = new LocalResolver(scopeUtil);
-        parseTree.accept(localResolver);
-        //System.out.println("types attached with " + localDefine.getScopes());
-        Interpreter interpreter = new Interpreter(scopeUtil);
-        interpreter.interpret(parseTree);
-
+        try {
+            String fileName = new File("classes/org/teachfx/antlr4/ep17/").getAbsolutePath() + "/t.cymbol";
+            if(args.length > 0) fileName = args[0];
+            InputStream is = System.in;
+            if(fileName != null) is = new FileInputStream(fileName);
+            CharStream charStream = CharStreams.fromStream(is);
+            CymbolLexer lexer = new CymbolLexer(charStream);
+            CommonTokenStream tokenStream = new CommonTokenStream(lexer);
+            CymbolParser parser = new CymbolParser(tokenStream);
+            ParseTree parseTree = parser.file();
+            CallGraphVisitor collector = new CallGraphVisitor();
+            parseTree.accept(collector);
+            System.out.println(collector.callGraph.toString());
+            System.out.println(collector.callGraph.toDOT());
+            System.out.println(collector.callGraph.toST().render());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+       
     }
 }

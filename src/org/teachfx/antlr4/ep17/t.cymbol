@@ -7,7 +7,12 @@ int add(int x,int y) {
     if (d >= 0) {
         d = d + 1;
     }
+    println(d);
     return d;
+}
+
+void println(int x) {
+    print(x);
 }
 
 int v = add(a,b);

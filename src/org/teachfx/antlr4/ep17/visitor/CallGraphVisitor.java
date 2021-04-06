@@ -12,6 +12,7 @@ public class CallGraphVisitor extends CymbolBaseVisitor<Object>{
     public CallGraphVisitor() { 
         super();
         this.callGraph = new Graph();
+        callGraph.nodes.add("print");
     }
 
     @Override

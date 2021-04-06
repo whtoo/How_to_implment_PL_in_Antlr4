@@ -1,6 +1,8 @@
 # 如何用antlr实现你自己的第一门~~简单~~编程语言(Cymbol:dog:)
 ## 1. 全局鸟瞰
 - [x] [ep1](src/org/teachfx/antlr4/ep1)--antlr支持的EBNF语法描述hello world示例。
+- [x] [ep2](src/org/teachfx/antlr4/ep2)--如何使用g4描述形如`{1,2...}`的数组，并在listener中print它。
+- [x] [ep3](src/org/teachfx/antlr4/ep3)--实现一个只包含加减乘除的微型计算器。
 ## 2. 为什么会有这个系列的教程？
 
 ## 3. 工程体系介绍

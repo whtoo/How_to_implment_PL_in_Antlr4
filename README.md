@@ -3,20 +3,33 @@
 - [x] [ep1](src/org/teachfx/antlr4/ep1)--antlr支持的EBNF语法描述hello world示例。
 - [x] [ep2](src/org/teachfx/antlr4/ep2)--如何使用g4描述形如`{1,2,{3,4..}...}`的数组，并在listener中print它。
 - [x] [ep3](src/org/teachfx/antlr4/ep3)--实现一个只包含加减乘除的微型计算器。
-- [x] [ep4](src/org/teachfx/antlr4/ep4)--
-- [x] [ep5](src/org/teachfx/antlr4/ep5)--
-- [x] [ep6](src/org/teachfx/antlr4/ep6)--
-- [x] [ep7](src/org/teachfx/antlr4/ep7)
-- [x] [ep8](src/org/teachfx/antlr4/ep8)
-- [x] [ep9](src/org/teachfx/antlr4/ep9)
-- [x] [ep10](src/org/teachfx/antlr4/ep10)
-- [x] [ep11](src/org/teachfx/antlr4/ep11)
-- [x] [ep12](src/org/teachfx/antlr4/ep12)
-- [x] [ep13](src/org/teachfx/antlr4/ep13)
-- [x] [ep14](src/org/teachfx/antlr4/ep14)
-- [x] [ep15](src/org/teachfx/antlr4/ep15)
-- [x] [ep16](src/org/teachfx/antlr4/ep16)
-- [x] [ep17](src/org/teachfx/antlr4/ep17)
+- [x] [ep4](src/org/teachfx/antlr4/ep4)--实现一个可以进行简单交互的算术计算器。
+- [x] [ep5](src/org/teachfx/antlr4/ep5)--实现一个Java接口提取工具。
+- [x] [ep6](src/org/teachfx/antlr4/ep6)--实现一个CVS提取器。
+- [x] [ep7](src/org/teachfx/antlr4/ep7)--实现一个JSON解析工具。
+- [x] [ep8](src/org/teachfx/antlr4/ep8)--抽象语法书提取器
+- [x] [ep9](src/org/teachfx/antlr4/ep9)--ep4增强版本
+- [x] [ep10](src/org/teachfx/antlr4/ep10)--ep6的另一种实现
+- [x] [ep11](src/org/teachfx/antlr4/ep11)--基于ep8的算术解释器（AST Tree walking)
+- [x] [ep12](src/org/teachfx/antlr4/ep12)--ep11增加赋值语句和变量声明。
+- [x] [ep13](src/org/teachfx/antlr4/ep13)--ep11另一种简化实现。
+- [x] [ep14](src/org/teachfx/antlr4/ep14)--实现符号表记录。
+- [x] [ep15](src/org/teachfx/antlr4/ep15)--实现变量的作用域确定。
+- [x] [ep16](src/org/teachfx/antlr4/ep16)--实现变量的消解和类型检查，并实现函数作用域与有函数调用的脚本求值。
+- [x] [ep17](src/org/teachfx/antlr4/ep17)--实现函数的静态声明依赖（并不是我心里想的调用图生成，但是还是加上吧，让其他人避坑。）
+- [ ] [ep18](src/org/teachfx/antlr4/ep18)--应该会综合《两周实现脚本语言》与《编程语言的实现模式》中对VM的设计，
+个人会采用基于栈的VM写一个，下个章节就采用寄存器模型再写一个。
+- [ ] [ep19](src/org/teachfx/antlr4/ep19)--本来我的TODO里面写的是实现闭包和结构体，但是看情况吧。估计VM还得在这个章节修订。
+- [ ] [ep20](src/org/teachfx/antlr4/ep20)--这里会增加java的native导入，具体实现我会参考《两周实现脚本语言》。VM的修订与扩展。
+- [ ] [ep21](src/org/teachfx/antlr4/ep21)--希望能够在这一章终结。
+- [ ] [ep22](src/org/teachfx/antlr4/ep22)--如果，我还能坚持写到这里，就增加汇编输出以及编译优化。应该只有SSA以及peep hole，寄存器染色也可能会出现。
+
+PS: 终于写完了，感觉好忐忑。不过，我还有另外几个也是编译原理相关的坑也要填。
+首先，我得感谢父母，他们给了我莫大支持。
+其次，我得谢谢github，不然我这辈子很难自己手写构造CPS转换器并理解CPS转换的本质。SICP诚不我欺。
+再次，我得说我终于从心结里面出来了，希望以后我能做自己喜欢的工作。
+最后，打个广告，我是一个有着9年经验的iOS架构师（虽然是只设计过一个network的lib😳）以及同等时长的js开发者，以及一个有着1年半载技术管理经验的技术经理（真的是加起来这么长😭）。我现在想从事大前端（包括iOS、前端在内的整个生态）工具链开发--包括但不限于静态分析工具、打包工具、代码生成。我对编译器前端应用非常熟悉且喜爱，而且自认为对工具开发小有心得😄。希望能够
+在自己喜欢领域的有点贡献🎉。
 
 ## 2. 为什么会有这个系列的教程？
 我一开始是看龙书以及《两周实现脚本语言》、《自制编译器》、《编程语言的实现模式》、《现代编译原理--C描述》
@@ -48,7 +61,8 @@
 
 > `ant run`
 ### 3.3. 如何从Ant构建并运行工程
-
+这部分就是Ant的一般使用，我之前是参考《Ant使用指南》--一本很老的书。
+大家可以百度一下，教程很多我就不浪费篇幅了。
 ## 4. 参考或者模仿材料来源
 1. [动手做解释器](http://www.craftinginterpreters.com/)
 2. [如何实现一个编程语言](http://lisperator.net/pltut/)

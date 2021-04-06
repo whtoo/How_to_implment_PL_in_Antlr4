@@ -1,3 +1,3 @@
 # Implementation in plan
 
-* [ ] Add VM support.
+* [ ] Add native library support.

@@ -1,3 +1,3 @@
 # Implementation in plan
 
-* [ ] Add native library for cymbol.
+* [ ] Add VM for cymbol.

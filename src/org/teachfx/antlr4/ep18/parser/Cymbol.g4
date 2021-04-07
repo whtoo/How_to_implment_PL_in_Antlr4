@@ -7,8 +7,8 @@ file :   (functionDecl | varDecl | statetment)+ #compilationUnit ;
 varDecl
     :   type ID ('=' expr)? ';' 
     ;
-type:  primaryType | ID  ; // pre-defined types
-primaryType: 'float' | 'int' | 'void';
+type:  primaryType | ID ; // pre-defined types
+primaryType: 'float' | 'int' | 'void' | 'bool' | 'String' | 'Object';
 functionDecl
     :   retType=type funcName=ID '(' params=formalParameters? ')' blockDef=block // "void f(int x) {...}"
     ;

@@ -12,6 +12,7 @@ public  abstract class BaseScope implements Scope {
         define(TypeTable.INT);
         define(TypeTable.FLOAT);
         define(TypeTable.VOID);
+        define(TypeTable.BOOLEAN);
     }
 
     @Override

@@ -181,7 +181,10 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         } else if (tokenValue == CymbolParser.CHAR ||
                    tokenName.equals("char")) {
             stashType(ctx, TypeTable.CHAR);
-        } else if (tokenName.equals("true") ||
+        } else if(tokenValue == CymbolParser.STRING || tokenName.equals("String")){
+            stashType(ctx, TypeTable.STRING);
+        }
+        else if (tokenName.equals("true") ||
                    tokenName.equals("false")||
                    tokenName.equals("bool")) {
             stashType(ctx, TypeTable.BOOLEAN);            

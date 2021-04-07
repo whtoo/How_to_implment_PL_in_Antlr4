@@ -8,6 +8,7 @@ import org.teachfx.antlr4.ep16.misc.FunctionSpace;
 import org.teachfx.antlr4.ep16.misc.MemorySpace;
 import org.teachfx.antlr4.ep16.misc.ScopeUtil;
 import org.teachfx.antlr4.ep16.misc.Util;
+import org.teachfx.antlr4.ep16.symtab.*;
 import org.teachfx.antlr4.ep16.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprBinaryContext;
 import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprFuncCallContext;
@@ -252,7 +253,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         String tokenName = ctx.start.getText();
 
         Symbol symbol = scope.resolve(tokenName);
-        if (symbol.getClass().getSimpleName().equalsIgnoreCase("MethodSymbol")) {
+        if (ScopedSymbol.class.isAssignableFrom(symbol.getClass())) {
             return symbol;
         }
         return this.currentSpace.get(symbol.getName());

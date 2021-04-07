@@ -17,8 +17,8 @@
 - [x] [ep15](src/org/teachfx/antlr4/ep15)--实现变量的作用域确定。
 - [x] [ep16](src/org/teachfx/antlr4/ep16)--实现变量的消解和类型检查，并实现函数作用域与有函数调用的脚本求值。
 - [x] [ep17](src/org/teachfx/antlr4/ep17)--实现函数的静态声明依赖（并不是我心里想的调用图生成，但是还是加上吧，让其他人避坑。）
-- [ ] [ep18](src/org/teachfx/antlr4/ep18)--应该会综合《两周实现脚本语言》与《编程语言的实现模式》中对VM的设计，
-个人会采用基于栈的VM写一个，下个章节就采用寄存器模型再写一个。
+- [x] [ep18](src/org/teachfx/antlr4/ep18)--(~~应该会综合《两周实现脚本语言》与《编程语言的实现模式》中对VM的设计~~)**已经采用栈解释器了，主要就是因为实现简单**😆
+
 - [ ] [ep19](src/org/teachfx/antlr4/ep19)--本来我的TODO里面写的是实现闭包和结构体，但是看情况吧。估计VM还得在这个章节修订。
 - [ ] [ep20](src/org/teachfx/antlr4/ep20)--这里会增加java的native导入，具体实现我会参考《两周实现脚本语言》。VM的修订与扩展。
 - [ ] [ep21](src/org/teachfx/antlr4/ep21)--希望能够在这一章终结。

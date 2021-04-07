@@ -138,7 +138,9 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
+        // Resolve method symbol from scope unity by calling visitPrimaryID
         MethodSymbol method = (MethodSymbol) visit(ctx.getChild(0));
+
         Object value = 0;
         if (method.builtin) {
             if (method.getName() == "print") {

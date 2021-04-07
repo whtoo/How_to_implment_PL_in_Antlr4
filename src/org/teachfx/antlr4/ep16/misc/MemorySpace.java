@@ -1,7 +1,10 @@
 package org.teachfx.antlr4.ep16.misc;
 
 import java.util.*;
-
+/** 链式作用域
+ * 最简单支持嵌套函数调用（直接递归与间接递归）的实现方式。
+ * 它的优化体现在对查询symbol的优化上。
+ * */
 public class MemorySpace {
 
     private Map<String,Object> memory;

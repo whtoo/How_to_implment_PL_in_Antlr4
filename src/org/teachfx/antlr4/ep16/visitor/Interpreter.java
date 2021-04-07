@@ -256,6 +256,8 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
         Symbol symbol = scope.resolve(tokenName);
         if (ScopedSymbol.class.isAssignableFrom(symbol.getClass())) {
+            // 作用域符号统统直接返回，它们都是一个自封闭的作用域和求值环境。
+            // 针对它们的求值只能发生在其内部某个方法或者表达式的调用上。
             return symbol;
         }
         return this.currentSpace.get(symbol.getName());

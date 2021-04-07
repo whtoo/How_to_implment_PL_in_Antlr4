@@ -1,9 +1,8 @@
 # Implementation in plan
 
-- [ ] Add native library support.
-- [ ] Add VM design for cymbol.
-    - [ ] Define instructions for Arithmetic operations.
-    - [ ] Define logic test instructions.
-    - [ ] Define setjump/ret instructions.
-    - [ ] Define memory access and modification.
-    - [ ] Define contro-flow machanism.
+- [x] Add VM design for cymbol.
+    - [x] Define instructions for Arithmetic operations.
+    - [x] Define logic test instructions.
+    - [x] Define setjump/ret instructions.
+    - [x] Define memory access and modification.
+    - [x] Define contro-flow machanism.

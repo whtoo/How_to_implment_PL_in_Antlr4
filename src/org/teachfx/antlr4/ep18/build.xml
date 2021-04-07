@@ -2,7 +2,9 @@
 <project name="CymbolParser" default="run" basedir=".">
    <property name="src" value="." />
    <property name="parserSrc" value="${src}/parser"/>
+   <property name="vmSrc" value="${src}/stackvm"/>
    <property name="grammar" value="Cymbol"/>
+   <property name="vmGrammar" value="VMAssembler"/> 
    <property name="dest" value="/Users/blitz/tmp/Antlr4_Tutorial/classes" />
    <property name="jar.class.path" value="../../../../../lib/antlr-4.8-complete.jar" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
@@ -27,6 +29,12 @@
          <arg line="${parserSrc}/${grammar}.g4"/>
          <arg line="-no-listener"/>
          <arg line="-visitor"/>
+      </java>
+
+      <java jar="${jar.class.path}" fork="true">
+         <arg line="${vmSrc}/${vmGrammar}.g4"/>
+         <arg line="-listener"/>
+         <arg line="-no-visitor"/>
       </java>
    </target>
    <target name="compile" depends="clean,init">

@@ -10,7 +10,7 @@ program
    
 // how much data space
 // START: data
-globals : NEWLINE* '.globals' INT NEWLINE ;
+globals : NEWLINE* '.globals' intVal=INT NEWLINE ;
 // END: data
 
 //  .def fact: args=1, locals=0
@@ -22,10 +22,10 @@ functionDeclaration
 
 // START: instr
 instr
-    :   ID NEWLINE                         
-    |   ID operand NEWLINE                 
-    |   ID a=operand ',' b=operand NEWLINE 
-    |   ID a=operand ',' b=operand ',' c=operand NEWLINE
+    :   op=ID NEWLINE                         
+    |   op=ID a=operand NEWLINE                 
+    |   op=ID a=operand ',' b=operand NEWLINE 
+    |   op=ID a=operand ',' b=operand ',' c=operand NEWLINE
         
     ;
 // END: instr
@@ -50,7 +50,7 @@ REG :   'r' INT ;
 
 ID  :   LETTER (LETTER | '0'..'9')* ;
 
-FUNC:   ID '()';
+FUNC:   ID '()' {setText(getText().substring(0,getText().length()-2)); };
 
 fragment
 LETTER
@@ -61,7 +61,7 @@ INT :   '-'? '0'..'9'+ ;
 
 CHAR:   '\'' . '\'' ;
 
-STRING: '\\"' STR_CHARS '\\"' ;
+STRING: '"' STR_CHARS '"' { setText(getText().substring(1, getText().length() - 1)); };
 
 fragment STR_CHARS : ~'"'* ;
 

@@ -1,6 +1,6 @@
 // Generated from ./stackvm/VMAssembler.g4 by ANTLR 4.8
 
-package org.teachfx.antlr4.ep19.stackvm;
+package org.teachfx.antlr4.ep18.stackvm;
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 

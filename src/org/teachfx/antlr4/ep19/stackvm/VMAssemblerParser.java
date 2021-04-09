@@ -1,6 +1,6 @@
 // Generated from ./stackvm/VMAssembler.g4 by ANTLR 4.8
 
-package org.teachfx.antlr4.ep19.stackvm;
+package org.teachfx.antlr4.ep18.stackvm;
 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -203,11 +203,12 @@ public class VMAssemblerParser extends Parser {
 	}
 
 	public static class GlobalsContext extends ParserRuleContext {
-		public TerminalNode INT() { return getToken(VMAssemblerParser.INT, 0); }
+		public Token intVal;
 		public List<TerminalNode> NEWLINE() { return getTokens(VMAssemblerParser.NEWLINE); }
 		public TerminalNode NEWLINE(int i) {
 			return getToken(VMAssemblerParser.NEWLINE, i);
 		}
+		public TerminalNode INT() { return getToken(VMAssemblerParser.INT, 0); }
 		public GlobalsContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -246,7 +247,7 @@ public class VMAssemblerParser extends Parser {
 			setState(29);
 			match(T__0);
 			setState(30);
-			match(INT);
+			((GlobalsContext)_localctx).intVal = match(INT);
 			setState(31);
 			match(NEWLINE);
 			}
@@ -328,11 +329,12 @@ public class VMAssemblerParser extends Parser {
 	}
 
 	public static class InstrContext extends ParserRuleContext {
+		public Token op;
 		public OperandContext a;
 		public OperandContext b;
 		public OperandContext c;
-		public TerminalNode ID() { return getToken(VMAssemblerParser.ID, 0); }
 		public TerminalNode NEWLINE() { return getToken(VMAssemblerParser.NEWLINE, 0); }
+		public TerminalNode ID() { return getToken(VMAssemblerParser.ID, 0); }
 		public List<OperandContext> operand() {
 			return getRuleContexts(OperandContext.class);
 		}
@@ -364,7 +366,7 @@ public class VMAssemblerParser extends Parser {
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(45);
-				match(ID);
+				((InstrContext)_localctx).op = match(ID);
 				setState(46);
 				match(NEWLINE);
 				}
@@ -373,9 +375,9 @@ public class VMAssemblerParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(47);
-				match(ID);
+				((InstrContext)_localctx).op = match(ID);
 				setState(48);
-				operand();
+				((InstrContext)_localctx).a = operand();
 				setState(49);
 				match(NEWLINE);
 				}
@@ -384,7 +386,7 @@ public class VMAssemblerParser extends Parser {
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(51);
-				match(ID);
+				((InstrContext)_localctx).op = match(ID);
 				setState(52);
 				((InstrContext)_localctx).a = operand();
 				setState(53);
@@ -399,7 +401,7 @@ public class VMAssemblerParser extends Parser {
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(57);
-				match(ID);
+				((InstrContext)_localctx).op = match(ID);
 				setState(58);
 				((InstrContext)_localctx).a = operand();
 				setState(59);

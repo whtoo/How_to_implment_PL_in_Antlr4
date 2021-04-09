@@ -10,3 +10,5 @@
 - [x] Assembler for cymbol VM.
     - [x] Implementation of assembler.
     - [x] Implementation of symbols used in VM.
+    - [ ] Implementation of VM interpreter. 
+    - [ ] Implementation of VM

@@ -1,11 +1,10 @@
 .def main: args=0, locals=0
 ; print f(10,20)
-    sconst "hello"
     iconst 10   ; push first param
     iconst 20   ; push second param
     call f()
     print
-    ret
+    halt
 
 ; f(x,y) { z = x + y; return z; }
 .def f: args=2, locals=1     

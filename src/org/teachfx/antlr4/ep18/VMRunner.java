@@ -1,10 +1,8 @@
 package org.teachfx.antlr4.ep18;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -14,7 +12,6 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.teachfx.antlr4.ep18.stackvm.ByteCodeAssembler;
 import org.teachfx.antlr4.ep18.stackvm.BytecodeDefinition;
 import org.teachfx.antlr4.ep18.stackvm.VMAssemblerLexer;
-import org.teachfx.antlr4.ep18.stackvm.VMAssemblerListener;
 import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser;
 
 public class VMRunner {

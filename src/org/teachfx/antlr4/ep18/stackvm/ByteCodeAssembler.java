@@ -5,15 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.FunctionDeclarationContext;
 import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.GlobalsContext;
 import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.InstrContext;
 import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.LabelContext;
-import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.OperandContext;
 import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.ProgramContext;
 
 public class ByteCodeAssembler extends VMAssemblerBaseListener {

@@ -1,6 +1,8 @@
 package org.teachfx.antlr4.ep16.visitor;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -144,8 +146,10 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         Object value = 0;
         if (method.builtin) {
             if (method.getName() == "print") {
-                System.out.println(" eval " +ctx.getText());
-                System.out.println(" ret : " + visit(ctx.getChild(2)));
+                System.out.println(" eval " + ctx.getText());
+                List<ParseTree> args = ctx.children.subList(1, ctx.children.size() - 2);
+                String fmtArgs = args.stream().map(p -> visit(p)).collect(Collectors.joining())
+                System.out.println(" print res :" + fmtArgs);
             }
         } else {
             FunctionSpace methodSpace = new FunctionSpace(method.getName(), method, this.currentSpace);

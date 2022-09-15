@@ -70,7 +70,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     // < Expression evaluation
     @Override
     public Object visitExprBinary(ExprBinaryContext ctx) {
-        System.out.println("exec in line " + ctx.start.getLine() + " : with " + ctx.getText());
+        // System.out.println("exec in line " + ctx.start.getLine() + " : with " + ctx.getText());
         Object left = visit(ctx.getChild(0));
         Object right = visit(ctx.getChild(2));
         String op = ctx.o.getText();
@@ -217,7 +217,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     @Override
     public Object visitStateCondition(StateConditionContext ctx) {
         Object ret = 0;
-        System.out.println("exec in line " + ctx.start.getLine() + ":" + ctx.getText());
+        // System.out.println("exec in line " + ctx.start.getLine() + ":" + ctx.getText());
         if(visit(ctx.cond) == TypeTable.TRUE) {
             visit(ctx.then);
         } else {

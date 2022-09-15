@@ -3,7 +3,6 @@ package org.teachfx.antlr4.ep19.symtab;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.antlr.runtime.tree.CommonTree;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 public class MethodSymbol extends ScopedSymbol {

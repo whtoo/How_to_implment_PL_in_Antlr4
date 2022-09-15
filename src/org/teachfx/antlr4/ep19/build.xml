@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="CymbolParser" default="run" basedir=".">
    <property name="src" value="." />
-   <property name="parserSrc" value="${src}/parser"/>
-   <property name="vmSrc" value="${src}/stackvm"/>
-   <property name="grammar" value="Cymbol"/>
-   <property name="vmGrammar" value="VMAssembler"/> 
+   <property name="parserSrc" value="${src}/parser" />
+   <property name="vmSrc" value="${src}/stackvm" />
+   <property name="grammar" value="Cymbol" />
+   <property name="vmGrammar" value="VMAssembler" />
    <property name="dest" value="" />
    <property name="jar.class.path" value="../../../../../lib/antlr-4.8-complete.jar" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
-   <property name="bsh.path"
-   location="/usr/local/lib/bsh-2.0b5.jar" />
+   <property name="bsh.path" location="/usr/local/lib/bsh-2.0b5.jar" />
+   <path id="classpath">
+      <fileset dir="../../../../../lib">
+         <include name="**/*.jar"></include>
+      </fileset>
+      <pathelement location="${dest}" />
+   </path>
    <target name="detect">
       <script language="beanshell" classpath="${bsh.path}">
          import java.io.File;
@@ -26,26 +31,28 @@
       <mkdir dir="${dest}" />
    </target>
    <target name="gen" depends="init">
-      
+
       <java jar="${jar.class.path}" fork="true">
-         <arg line="${parserSrc}/${grammar}.g4"/>
-         <arg line="-no-listener"/>
-         <arg line="-visitor"/>
+         <arg line="${parserSrc}/${grammar}.g4" />
+         <arg line="-no-listener" />
+         <arg line="-visitor" />
       </java>
 
       <java jar="${jar.class.path}" fork="true">
-         <arg line="${vmSrc}/${vmGrammar}.g4"/>
-         <arg line="-listener"/>
-         <arg line="-no-visitor"/>
+         <arg line="${vmSrc}/${vmGrammar}.g4" />
+         <arg line="-listener" />
+         <arg line="-no-visitor" />
       </java>
    </target>
    <target name="compile" depends="clean,init">
       <delete dir="${parserSrc}/.antlr" />
-      <javac srcdir="${src}" destdir="${dest}" />
+      <javac srcdir="${src}" destdir="${dest}" includeantruntime="false">
+         <classpath refid="classpath"></classpath>
+      </javac>
    </target>
    <target name="build" depends="compile">
-      <jar jarfile="${CymbolParser_jar}" basedir="${dest}" >
-         <zipfileset src="${jar.class.path}"/>
+      <jar jarfile="${CymbolParser_jar}" basedir="${dest}">
+         <zipfileset src="${jar.class.path}" />
          <!-- <fileset dir="${basedir}/resources"></fileset> -->
          <manifest>
             <attribute name="Main-Class" value="org.teachfx.antlr4.ep19.Compiler" />
@@ -53,7 +60,7 @@
       </jar>
    </target>
    <target name="run" depends="build">
-      <java classname="org.teachfx.antlr4.ep19.Compiler" classpath="${CymbolParser_jar}" >
+      <java classname="org.teachfx.antlr4.ep19.Compiler" classpath="${CymbolParser_jar}">
          <arg line="t.cymbol" />
       </java>
    </target>

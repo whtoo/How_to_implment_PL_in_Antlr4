@@ -16,7 +16,7 @@ int fib(int n) {
 }
 
 float k = fib(10);
-print(k);
+print(10,k);
 
 int v = add(a,b);
 int e = v * c;

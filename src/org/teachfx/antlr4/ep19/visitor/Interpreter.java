@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep19.visitor;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -139,13 +140,20 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         // Resolve method symbol from scope unity by calling visitPrimaryID
+        System.out.println("visit func " + ctx.getText());
         MethodSymbol method = (MethodSymbol) visit(ctx.getChild(0));
 
         Object value = 0;
         if (method.builtin) {
             if (method.getName() == "print") {
-                System.out.println(" eval " +ctx.getText());
-                System.out.println(" ret : " + visit(ctx.getChild(2)));
+                System.out.println(" eval " + ctx.getText());
+                List<ParseTree> args = ctx.children.subList(1, ctx.children.size() - 1);
+                String fmtArgs = args.stream()
+                .map(p -> visit(p))
+                .filter(p -> p != null)
+                .map(p -> p.toString())
+                .collect(Collectors.joining(","));
+                System.out.println(" print res :" + fmtArgs);
             }
         } else {
             FunctionSpace methodSpace = new FunctionSpace(method.getName(), method, this.currentSpace);
@@ -155,6 +163,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             int i = 0;
             for (String name : paramNames) {
                 Object paramValue = visit(ctx.getChild(2 * (i + 1)));
+                System.out.println(" name " + name + "," + " val " + paramValue.toString());
                 methodSpace.define(name, paramValue);
                 i++;
             }

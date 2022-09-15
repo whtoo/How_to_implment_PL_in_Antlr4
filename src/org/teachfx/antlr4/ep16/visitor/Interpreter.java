@@ -146,9 +146,12 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         Object value = 0;
         if (method.builtin) {
             if (method.getName() == "print") {
-                System.out.println(" eval " + ctx.getText());
+                System.out.println(" eval print " + ctx.children.size());
                 List<ParseTree> args = ctx.children.subList(1, ctx.children.size() - 2);
-                String fmtArgs = args.stream().map(p -> visit(p)).collect(Collectors.joining())
+                System.out.println("args len is "+ args.size());
+                String fmtArgs = args.stream()
+                .map(p -> visit(p).toString())
+                .collect(Collectors.joining());
                 System.out.println(" print res :" + fmtArgs);
             }
         } else {

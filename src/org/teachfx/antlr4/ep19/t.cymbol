@@ -12,7 +12,7 @@ int add(int x,int y) {
 
 int fib(int n) {
     if (n < 2) return n;
-    else return fib(n-1) + fib(n-2);
+    else return add(fib(n-1),fib(n-2));
 }
 
 print(fib(10));

@@ -8,3 +8,4 @@ src/**/*.jar
 .idea/
 .vscode/
 **/DS_Store
+.metals

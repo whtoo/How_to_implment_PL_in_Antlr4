@@ -5,27 +5,8 @@
    <property name="grammar" value="Cymbol" />
    <property name="vmGrammar" value="VMAssembler" />
    <property name="dest" value="" />
-   <property name="antlr4.jar" value="../../../../../lib/antlr-4.8-complete.jar" />
    <property name="VMRunner_jar" value="VMRunner1.jar" />
-   <property name="bsh.path"
-      location="/usr/local/lib/bsh-2.0b5.jar" />
-      <echo>Java/JVM version: ${ant.java.version}</echo>
-      <echo>Java/JVM detail version: ${java.version}</echo>
-   <target name="detect">
-      <script language="beanshell" classpath="${bsh.path}">
-         import java.io.File;
-
-         File file = pathToFile(vmSrc);
-         String path = file.getAbsolutePath();
-         int idx = path.indexOf("src");
-         workspace = path.substring(0,idx);
-         project.setNewProperty("workspace",workspace);
-         project.setProperty("dest",workspace+"/classes");
-      </script>
-   </target>
-   <path id="classpath">
-      <pathelement location="${antlr4.jar}" />
-   </path>
+   <import file="../../../../../builld.xml" as="parent" />
    <target name="init" depends="detect">
       <mkdir dir="${dest}" />
    </target>

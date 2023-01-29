@@ -14,25 +14,8 @@
    <property name="grammar" value="Cymbol" />
    <property name="vmGrammar" value="VMAssembler" />
    <property name="dest" value="" />
-   <property name="antlr4.jar" value="../../../../../lib/antlr-4.8-complete.jar" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
-   <property name="bsh.path"
-      location="/usr/local/lib/bsh-2.0b5.jar" />
-   <path id="classpath">
-      <pathelement location="${antlr4.jar}" />
-   </path>
-   <target name="detect">
-      <script language="beanshell" classpath="${bsh.path}">
-         import java.io.File;
-
-         File file = pathToFile(parserSrc);
-         String path = file.getAbsolutePath();
-         int idx = path.indexOf("src");
-         workspace = path.substring(0,idx);
-         project.setNewProperty("workspace",workspace);
-         project.setProperty("dest",workspace+"/classes");
-      </script>
-   </target>
+   <import file="../../../../../builld.xml" as="parent" />
    <target name="init" depends="detect">
       <mkdir dir="${dest}" />
    </target>

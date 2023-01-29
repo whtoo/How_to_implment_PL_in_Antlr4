@@ -18,13 +18,10 @@
       </java>
    </target>
 
-   <target name="compile" depends="clean,init">
-      <delete dir="${vmSrc}/.antlr" />
-      <javac includeantruntime="false" srcdir="${src}" destdir="${dest}">
-         <classpath refid="classpath" />
-      </javac>
+   <target name="compile" depends="parent.compile,init">
       <copy file="${src}/t.vm" tofile="${dest}/t.vm"></copy>
    </target>
+
    <target name="build" depends="compile">
       <jar jarfile="${VMRunner_jar}" basedir="${dest}">
          <zipfileset src="${antlr4.jar}" />

@@ -7,7 +7,7 @@
    <property name="vmGrammar" value="VMAssembler"/> 
    <property name="dest" value="" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
-   <import file="../../../../../builld.xml" as="parent" />
+   <import file="../../../../../build.xml" as="parent" />
    <target name="init" depends="detect">
       <mkdir dir="${dest}" />
    </target>

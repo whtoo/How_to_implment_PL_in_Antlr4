@@ -6,7 +6,7 @@
    <property name="vmGrammar" value="VMAssembler" />
    <property name="dest" value="" />
    <property name="VMRunner_jar" value="VMRunner1.jar" />
-   <import file="../../../../../builld.xml" as="parent" />
+   <import file="../../../../../build.xml" as="parent" />
    <target name="init" depends="detect">
       <mkdir dir="${dest}" />
    </target>

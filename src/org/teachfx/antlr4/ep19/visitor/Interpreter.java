@@ -3,12 +3,10 @@ package org.teachfx.antlr4.ep19.visitor;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep19.misc.FunctionSpace;
 import org.teachfx.antlr4.ep19.misc.MemorySpace;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;
-import org.teachfx.antlr4.ep19.misc.Util;
 import org.teachfx.antlr4.ep19.symtab.*;
 import org.teachfx.antlr4.ep19.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.ExprBinaryContext;

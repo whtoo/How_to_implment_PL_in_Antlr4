@@ -3,40 +3,14 @@
    <property name="src" value="." />
    <property name="parserSrc" value="${src}/parser"/>
    <property name="grammar" value="Cymbol"/>
-   <property name="dest" value="/Users/blitz/tmp/Antlr4_Tutorial/classes" />
-   <property name="jar.class.path" value="../../../../../lib/antlr-4.8-complete.jar" />
+   <property name="dest" value="" />
+   <property name="vmSrc" value="" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
-   <property name="bsh.path"
-   location="/usr/local/lib/bsh-2.0b5.jar" />
-   <target name="init">
-      <mkdir dir="${dest}" />
-   </target>
-   <target name="gen">
-      <script language="beanshell" classpath="${bsh.path}">
-         import java.io.File;
+   <import file="../../../../../build.xml" as="parent" />
 
-         File file = pathToFile(parserSrc);
-         String path = file.getAbsolutePath();
-         int idx = path.indexOf("src");
-         path = path.substring(idx+4);
-         pkg = path.replace('/','.');
-         project.setNewProperty("pkg",pkg);
-      </script>
-      
-      <java jar="${jar.class.path}" fork="true">
-         <arg line="${parserSrc}/${grammar}.g4"/>
-         <arg line="-no-listener"/>
-         <arg line="-visitor"/>
-      </java>
-   </target>
-   <target name="compile" depends="clean,init">
-      <delete dir="${parserSrc}/.antlr" />
-      <javac srcdir="${src}" destdir="${dest}" />
-   </target>
    <target name="build" depends="compile">
       <jar jarfile="${CymbolParser_jar}" basedir="${dest}" >
-         <zipfileset src="${jar.class.path}"/>
-         <!-- <fileset dir="${basedir}/resources"></fileset> -->
+         <zipfileset src="${antlr4.jar}"/>
          <manifest>
             <attribute name="Main-Class" value="org.teachfx.antlr4.ep16.Compiler" />
          </manifest>
@@ -47,10 +21,12 @@
          <arg line="t.cymbol" />
       </java>
    </target>
-   <target name="clean">
+   
+   <target name="clean" depends="detect">
       <delete dir="${dest}" />
       <delete file="${CymbolParser_jar}" />
    </target>
+
    <target name="rerun" depends="clean,run">
       <ant target="clean" />
       <ant target="run" />

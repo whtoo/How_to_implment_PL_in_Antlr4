@@ -1,16 +1,14 @@
 package org.teachfx.antlr4.ep16.visitor;
 
-import java.util.*;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep16.misc.FunctionSpace;
 import org.teachfx.antlr4.ep16.misc.MemorySpace;
 import org.teachfx.antlr4.ep16.misc.ScopeUtil;
-import org.teachfx.antlr4.ep16.misc.Util;
-import org.teachfx.antlr4.ep16.symtab.*;
 import org.teachfx.antlr4.ep16.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprBinaryContext;
 import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprFuncCallContext;
@@ -33,6 +31,7 @@ import org.teachfx.antlr4.ep16.parser.CymbolParser.VarDeclContext;
 import org.teachfx.antlr4.ep16.symtab.MethodSymbol;
 import org.teachfx.antlr4.ep16.symtab.ReturnValue;
 import org.teachfx.antlr4.ep16.symtab.Scope;
+import org.teachfx.antlr4.ep16.symtab.ScopedSymbol;
 import org.teachfx.antlr4.ep16.symtab.Symbol;
 import org.teachfx.antlr4.ep16.symtab.TypeTable;
 
@@ -147,11 +146,12 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         if (method.builtin) {
             if (method.getName() == "print") {
                 System.out.println(" eval print " + ctx.children.size());
-                List<ParseTree> args = ctx.children.subList(1, ctx.children.size() - 2);
-                System.out.println("args len is "+ args.size());
+                List<ParseTree> args = ctx.children.subList(1, ctx.children.size() - 1);
                 String fmtArgs = args.stream()
-                .map(p -> visit(p).toString())
-                .collect(Collectors.joining());
+                .map(p -> visit(p))
+                .filter(p -> p != null)
+                .map(p -> p.toString())
+                .collect(Collectors.joining(","));
                 System.out.println(" print res :" + fmtArgs);
             }
         } else {

@@ -2,11 +2,21 @@
 <project name="CymbolParser" default="run" basedir=".">
    <property name="src" value="." />
    <property name="parserSrc" value="${src}/parser"/>
+   <property name="vmSrc" value="${src}/stackvm" />
    <property name="grammar" value="Cymbol"/>
+   <property name="dest" value="" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
    <import file="../../../../../build.xml" as="parent" />
+  
+   <target name="gen" depends="init">
+      <java jar="${antlr4.jar}" fork="true">
+         <arg line="${parserSrc}/${grammar}.g4" />
+         <arg line="-no-listener" />
+         <arg line="-visitor" />
+      </java>
+   </target>
 
-   <target name="compile" depends="parent.clean,init">
+   <target name="compile" depends="parent.compile,init">
       <copy file="./t.cymbol" tofile="${dest}/t.cymbol"/>
    </target>
 
@@ -23,7 +33,7 @@
          <arg line="t.cymbol" />
       </java>
    </target>
-   <target name="clean">
+   <target name="clean" depends="detect">
       <delete dir="${dest}" />
       <delete file="${CymbolParser_jar}" />
    </target>

@@ -2,18 +2,23 @@
 <project name="VMRunner" default="run" basedir=".">
    <property name="src" value="." />
    <property name="vmSrc" value="${src}/stackvm"/>
-   <property name="grammar" value="Cymbol"/>
    <property name="vmGrammar" value="VMAssembler"/> 
    <property name="dest" value="" />
    <property name="jar.class.path" value="../../../../../lib/antlr-4.8-complete.jar" />
    <property name="VMRunner_jar" value="VMRunner1.jar" />
-   <property name="bsh.path"
-   location="/usr/local/lib/bsh-2.0b5.jar" />
+   <property name="bsh.path" location="/usr/local/lib/bsh-2.0b5.jar" />
+
+   <path id="classpath">
+      <fileset dir="../../../../../lib">
+         <include name="**/*.jar"></include>
+      </fileset>
+      <pathelement location="${dest}" />
+   </path>
    <target name="detect">
       <script language="beanshell" classpath="${bsh.path}">
          import java.io.File;
 
-         File file = pathToFile(vmSrc);
+         File file = pathToFile(src);
          String path = file.getAbsolutePath();
          int idx = path.indexOf("src");
          workspace = path.substring(0,idx);
@@ -34,7 +39,9 @@
 
    <target name="compile" depends="clean,init">
       <delete dir="${vmSrc}/.antlr" />
-      <javac srcdir="${src}" destdir="${dest}" />
+      <javac srcdir="${src}" destdir="${dest}" includeantruntime="false">
+         <classpath refid="classpath"></classpath>
+      </javac>
       <copy file="${src}/t.vm" tofile="${dest}/t.vm"></copy>
    </target>
    <target name="build" depends="compile">

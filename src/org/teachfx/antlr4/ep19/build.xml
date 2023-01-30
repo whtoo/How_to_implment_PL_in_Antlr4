@@ -6,53 +6,29 @@
    <property name="grammar" value="Cymbol" />
    <property name="vmGrammar" value="VMAssembler" />
    <property name="dest" value="" />
-   <property name="jar.class.path" value="../../../../../lib/antlr-4.8-complete.jar" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
-   <property name="bsh.path" location="/usr/local/lib/bsh-2.0b5.jar" />
-   <path id="classpath">
-      <fileset dir="../../../../../lib">
-         <include name="**/*.jar"></include>
-      </fileset>
-      <pathelement location="${dest}" />
-   </path>
-   <target name="detect">
-      <script language="beanshell" classpath="${bsh.path}">
-         import java.io.File;
-
-         File file = pathToFile(parserSrc);
-         String path = file.getAbsolutePath();
-         int idx = path.indexOf("src");
-         workspace = path.substring(0,idx);
-         project.setNewProperty("workspace",workspace);
-         project.setProperty("dest",workspace+"/classes");
-      </script>
-   </target>
+   <import file="../../../../../build.xml" as="parent" />
    <target name="init" depends="detect">
       <mkdir dir="${dest}" />
    </target>
    <target name="gen" depends="init">
 
-      <java jar="${jar.class.path}" fork="true">
+      <java jar="${antlr4.jar}" fork="true">
          <arg line="${parserSrc}/${grammar}.g4" />
          <arg line="-no-listener" />
          <arg line="-visitor" />
       </java>
 
-      <java jar="${jar.class.path}" fork="true">
+      <java jar="${antlr4.jar}" fork="true">
          <arg line="${vmSrc}/${vmGrammar}.g4" />
          <arg line="-listener" />
          <arg line="-no-visitor" />
       </java>
    </target>
-   <target name="compile" depends="clean,init">
-      <delete dir="${parserSrc}/.antlr" />
-      <javac srcdir="${src}" destdir="${dest}" includeantruntime="false">
-         <classpath refid="classpath"></classpath>
-      </javac>
-   </target>
+
    <target name="build" depends="compile">
       <jar jarfile="${CymbolParser_jar}" basedir="${dest}">
-         <zipfileset src="${jar.class.path}" />
+         <zipfileset src="${antlr4.jar}" />
          <!-- <fileset dir="${basedir}/resources"></fileset> -->
          <manifest>
             <attribute name="Main-Class" value="org.teachfx.antlr4.ep19.Compiler" />

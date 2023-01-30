@@ -1,59 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="VMRunner" default="run" basedir=".">
    <property name="src" value="." />
-   <property name="vmSrc" value="${src}/stackvm"/>
-   <property name="vmGrammar" value="VMAssembler"/> 
+   <property name="vmSrc" value="${src}/stackvm" />
+   <property name="grammar" value="Cymbol" />
+   <property name="vmGrammar" value="VMAssembler" />
    <property name="dest" value="" />
-   <property name="jar.class.path" value="../../../../../lib/antlr-4.8-complete.jar" />
    <property name="VMRunner_jar" value="VMRunner1.jar" />
-   <property name="bsh.path" location="/usr/local/lib/bsh-2.0b5.jar" />
-
-   <path id="classpath">
-      <fileset dir="../../../../../lib">
-         <include name="**/*.jar"></include>
-      </fileset>
-      <pathelement location="${dest}" />
-   </path>
-   <target name="detect">
-      <script language="beanshell" classpath="${bsh.path}">
-         import java.io.File;
-
-         File file = pathToFile(src);
-         String path = file.getAbsolutePath();
-         int idx = path.indexOf("src");
-         workspace = path.substring(0,idx);
-         project.setNewProperty("workspace",workspace);
-         project.setProperty("dest",workspace+"/classes");
-      </script>
-   </target>
+   <import file="../../../../../build.xml" as="parent" />
    <target name="init" depends="detect">
       <mkdir dir="${dest}" />
    </target>
    <target name="gen" depends="init">
-      <java jar="${jar.class.path}" fork="true">
-         <arg line="${vmSrc}/${vmGrammar}.g4"/>
-         <arg line="-listener"/>
-         <arg line="-no-visitor"/>
+      <java jar="${antlr4.jar}" fork="true">
+         <arg line="${vmSrc}/${vmGrammar}.g4" />
+         <arg line="-listener" />
+         <arg line="-no-visitor" />
       </java>
    </target>
 
-   <target name="compile" depends="clean,init">
-      <delete dir="${vmSrc}/.antlr" />
-      <javac srcdir="${src}" destdir="${dest}" includeantruntime="false">
-         <classpath refid="classpath"></classpath>
-      </javac>
+   <target name="compile" depends="parent.compile,init">
       <copy file="${src}/t.vm" tofile="${dest}/t.vm"></copy>
    </target>
+
    <target name="build" depends="compile">
-      <jar jarfile="${VMRunner_jar}" basedir="${dest}" >
-         <zipfileset src="${jar.class.path}"/>
+      <jar jarfile="${VMRunner_jar}" basedir="${dest}">
+         <zipfileset src="${antlr4.jar}" />
          <manifest>
             <attribute name="Main-Class" value="org.teachfx.antlr4.ep18.VMRunner" />
          </manifest>
       </jar>
    </target>
    <target name="run" depends="build">
-      <java classname="org.teachfx.antlr4.ep18.stackvm.VMInterpreter" classpath="${VMRunner_jar}" >
+      <java classname="org.teachfx.antlr4.ep18.stackvm.VMInterpreter" classpath="${VMRunner_jar}">
          <arg line="t.vm" />
       </java>
    </target>

@@ -12,7 +12,7 @@
 
    <target name="build" depends="compile">
       <jar jarfile="${CymbolParser_jar}" basedir="${dest}" >
-         <zipfileset src="${jar.class.path}"/>
+         <zipfileset src="${antlr4.jar}"/>
          <manifest>
             <attribute name="Main-Class" value="org.teachfx.antlr4.ep17.Compiler" />
          </manifest>

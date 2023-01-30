@@ -6,6 +6,7 @@
     <echo message="JAVA_HOME is set to = ${javac1.8}" />
     <echo>Java/JVM version: ${ant.java.version}</echo>
     <echo>Java/JVM detail version: ${java.version}</echo>
+    <property name="dest" value="" />
 
     <property name="antlr4.jar" value="../../../../../lib/antlr-4.8-complete.jar" />
     <property name="bsh.path"
@@ -28,6 +29,10 @@
     <path id="classpath">
         <pathelement location="${antlr4.jar}" />
     </path>
+    
+    <target name="init" depends="detect">
+        <mkdir dir="${dest}" />
+     </target>
 
     <target name="compile" depends="clean,init">
         <delete dir="${parserSrc}/.antlr" />

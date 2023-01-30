@@ -8,9 +8,7 @@
    <property name="dest" value="" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
    <import file="../../../../../build.xml" as="parent" />
-   <target name="init" depends="detect">
-      <mkdir dir="${dest}" />
-   </target>
+
    <target name="gen" depends="init">
 
       <java jar="${antlr4.jar}" fork="true">

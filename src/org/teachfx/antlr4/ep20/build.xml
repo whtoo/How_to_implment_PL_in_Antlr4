@@ -1,34 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="CymbolParser" default="run" basedir=".">
    <property name="src" value="." />
-   <property name="parserSrc" value="${src}/parser"/>
-   <property name="vmSrc" value="${src}/stackvm"/>
-   <property name="grammar" value="Cymbol"/>
-   <property name="vmGrammar" value="VMAssembler"/> 
+   <property name="parserSrc" value="${src}/parser" />
+   <property name="vmSrc" value="${src}/stackvm" />
+   <property name="grammar" value="Cymbol" />
+   <property name="vmGrammar" value="VMAssembler" />
    <property name="dest" value="" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
    <import file="../../../../../build.xml" as="parent" />
-   <target name="init" depends="detect">
-      <mkdir dir="${dest}" />
-   </target>
+
    <target name="gen" depends="init">
-      
+
       <java jar="${antlr4.jar}" fork="true">
-         <arg line="${parserSrc}/${grammar}.g4"/>
-         <arg line="-no-listener"/>
-         <arg line="-visitor"/>
+         <arg line="${parserSrc}/${grammar}.g4" />
+         <arg line="-no-listener" />
+         <arg line="-visitor" />
       </java>
 
       <java jar="${antlr4.jar}" fork="true">
-         <arg line="${vmSrc}/${vmGrammar}.g4"/>
-         <arg line="-listener"/>
-         <arg line="-no-visitor"/>
+         <arg line="${vmSrc}/${vmGrammar}.g4" />
+         <arg line="-listener" />
+         <arg line="-no-visitor" />
       </java>
    </target>
 
    <target name="build" depends="compile">
-      <jar jarfile="${CymbolParser_jar}" basedir="${dest}" >
-         <zipfileset src="${antlr4.jar}"/>
+      <jar jarfile="${CymbolParser_jar}" basedir="${dest}">
+         <zipfileset src="${antlr4.jar}" />
          <!-- <fileset dir="${basedir}/resources"></fileset> -->
          <manifest>
             <attribute name="Main-Class" value="org.teachfx.antlr4.ep20.Compiler" />
@@ -36,7 +34,7 @@
       </jar>
    </target>
    <target name="run" depends="build">
-      <java classname="org.teachfx.antlr4.ep20.Compiler" classpath="${CymbolParser_jar}" >
+      <java classname="org.teachfx.antlr4.ep20.Compiler" classpath="${CymbolParser_jar}">
          <arg line="t.cymbol" />
       </java>
    </target>

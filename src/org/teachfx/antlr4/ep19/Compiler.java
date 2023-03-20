@@ -14,7 +14,18 @@ import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.visitor.*;
 
 public class Compiler {
-   
+
+    /**
+     *
+     * @param args
+     * @throws IOException
+     * @throws FileNotFoundException
+     *
+     * Input -> CharStream -> Tokens -> ParserTree
+     * --LocalDefine--> AnnotatedParserTree
+     * --LocalResolver--> AnnotatedParserTree
+     * -> Interpreter
+     */
     public static void main(String[] args) throws IOException,FileNotFoundException {
         String fileName = null;
         fileName = new File("classes").getAbsolutePath() + "/t.cymbol";

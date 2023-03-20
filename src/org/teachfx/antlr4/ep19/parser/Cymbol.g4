@@ -2,7 +2,16 @@ grammar Cymbol;
 @header {
 package org.teachfx.antlr4.ep19.parser;
 }
-file :   (functionDecl | varDecl | statetment)+ #compilationUnit ;
+
+file :   (structDecl | functionDecl | varDecl | statetment)+ #compilationUnit ;
+
+structDecl : 'struct' ID '{' structMemeber+ '}'
+;
+
+structMemeber
+     :   type ID ';'
+     |   structDecl
+     ;
 
 varDecl
     :   type ID ('=' expr)? ';' 
@@ -23,6 +32,7 @@ block:  '{' statetment* '}' ;    // possibly empty statement block
 
 statetment:   block               #statBlock
     |   varDecl             #statVarDecl
+    |   structDecl   #statStructDecl
     |   'return' expr? ';' #statReturn
     |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
     |   'while' '(' cond=expr ')' then=statetment #stateWhile

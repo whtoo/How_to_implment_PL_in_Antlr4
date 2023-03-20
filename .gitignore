@@ -9,3 +9,4 @@ src/**/*.jar
 .vscode/
 **/DS_Store
 .metals
+out/

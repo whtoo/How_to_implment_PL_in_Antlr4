@@ -20,6 +20,18 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitCompilationUnit(CymbolParser.CompilationUnitContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link CymbolParser#structDecl}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructDecl(CymbolParser.StructDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CymbolParser#structMemeber}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructMemeber(CymbolParser.StructMemeberContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link CymbolParser#varDecl}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -75,6 +87,13 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitStatVarDecl(CymbolParser.StatVarDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code statStructDecl}
+	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStatStructDecl(CymbolParser.StatStructDeclContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code statReturn}
 	 * labeled alternative in {@link CymbolParser#statetment}.

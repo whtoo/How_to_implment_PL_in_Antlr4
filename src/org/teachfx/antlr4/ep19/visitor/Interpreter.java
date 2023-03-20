@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep19.misc.FunctionSpace;
 import org.teachfx.antlr4.ep19.misc.MemorySpace;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;
+import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.symtab.*;
 import org.teachfx.antlr4.ep19.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.ExprBinaryContext;
@@ -183,6 +184,11 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     public Object visitExprGroup(ExprGroupContext ctx) {
         // visit children
         return visit(ctx.getChild(1));
+    }
+
+    @Override
+    public Object visitStructDecl(CymbolParser.StructDeclContext ctx) {
+        return 0;
     }
 
     @Override

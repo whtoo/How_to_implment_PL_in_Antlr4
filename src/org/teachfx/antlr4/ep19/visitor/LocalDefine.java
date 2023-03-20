@@ -49,6 +49,11 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     }
 
     @Override
+    public Object visitStructDecl(StructDeclContext ctx) {
+        return super.visitStructDecl(ctx);
+    }
+
+    @Override
     public Object visitFunctionDecl(FunctionDeclContext ctx) {
         MethodSymbol methodScope = new MethodSymbol(Util.name(ctx), currentScope, ctx);
         methodScope.blockStmt = ctx.blockDef;

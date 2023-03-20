@@ -4,7 +4,6 @@
    <property name="parserSrc" value="${src}/parser" />
    <property name="vmSrc" value="${src}/stackvm" />
    <property name="grammar" value="Cymbol" />
-   <property name="vmGrammar" value="VMAssembler" />
    <property name="dest" value="" />
    <property name="CymbolParser_jar" value="CymbolParser1.jar" />
    <import file="../../../../../build.xml" as="parent" />
@@ -15,12 +14,6 @@
          <arg line="${parserSrc}/${grammar}.g4" />
          <arg line="-no-listener" />
          <arg line="-visitor" />
-      </java>
-
-      <java jar="${antlr4.jar}" fork="true">
-         <arg line="${vmSrc}/${vmGrammar}.g4" />
-         <arg line="-listener" />
-         <arg line="-no-visitor" />
       </java>
    </target>
 

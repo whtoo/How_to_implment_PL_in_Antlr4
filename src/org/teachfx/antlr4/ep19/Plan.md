@@ -2,7 +2,7 @@
 
 1. *DONE*
 
-- [x] Add Native JVM binding support.
+- [x] Add Native JVM binding support(for `print`).
 
 2. **WIP**
 

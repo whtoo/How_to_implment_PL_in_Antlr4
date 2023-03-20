@@ -3,6 +3,22 @@
 ## overview
 
 ``` plantuml
+digraph G {
+    rankdir=TD
+    Input -> CharStream 
+    CharStream -> Tokens 
+    Tokens -> ParserTree
+    subgraph cluster_0 {
+        label = "语法树注释";
+        rankdir = LR
+         ParserTree -> AnnotatedParserTree1 [label="LocalDefine"]
+        AnnotatedParserTree1 -> AnnotatedParserTree2[label="LocalResolver"]
+        AnnotatedParserTree2 -> Interpreter
+    }
+}
+```
+
+``` plantuml
 @startuml
 
 interface Scope {

@@ -2,6 +2,12 @@ int a = 12;
 int b = 8;
 int c = 16;
 
+struct Point {
+    int x;
+    int y;
+
+}
+
 int add(int x,int y) {
     int d = x + y;
     if (d >= 0) {

@@ -106,6 +106,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         if (ctx.ID() != null) {
             stashScope(ctx);
             VariableSymbol member = new VariableSymbol(Util.name(ctx));
+            System.out.println("get struct - "+Util.name(ctx));
             currentScope.define(member);
         }
         return  null;

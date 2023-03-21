@@ -46,18 +46,4 @@ public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
         return null;
     }
 
-    @Override
-    public T visitCompilationUnit(CompilationUnitContext ctx) {
-        System.out.println(tab + "begin visit compileUnit");
-
-        tab += " ";
-        for (ParseTree rule : ctx.children) {
-            System.out.println(tab + "rule clz " + rule.getClass().toString());
-            visit(rule);
-       }
-       tab = tab.substring(0,tab.length()-1);
-       System.out.println(tab + "end visit compileUnit");
-       return null;
-    }
-
 }

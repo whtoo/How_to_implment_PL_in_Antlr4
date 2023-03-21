@@ -10,6 +10,11 @@ import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.visitor.Interpreter;
 import org.teachfx.antlr4.ep19.visitor.LocalDefine;
 import org.teachfx.antlr4.ep19.visitor.LocalResolver;
+import org.antlr.v4.gui.TreeViewer;
+import java.util.Arrays;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import java.io.*;
 
@@ -28,7 +33,7 @@ public class Compiler {
      */
     public static void main(String[] args) throws IOException,FileNotFoundException {
         String fileName = null;
-        fileName = new File("classes").getAbsolutePath() + "/t.cymbol";
+        fileName = "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/src/org/teachfx/antlr4/ep19/" + "/t.cymbol";
         if(args.length > 0) fileName = args[0];
         InputStream is = System.in;
         if(fileName != null) is = new FileInputStream(fileName);

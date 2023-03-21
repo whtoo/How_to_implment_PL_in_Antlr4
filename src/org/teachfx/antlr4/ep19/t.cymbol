@@ -1,28 +1,6 @@
-int a = 12;
-int b = 8;
-int c = 16;
-
 struct Point {
     int x;
     int y;
 }
 
-
-int add(int x,int y) {
-    // Point s = new Point;
-    int d = x + y;
-    if (d >= 0) {
-        d = d + 1;
-    }
-    return d;
-}
-
-int fib(int n) {
-    if (n < 2) return n;
-    else return add(fib(n-1),fib(n-2));
-}
-
-
-new Point();
-
-print(fib(10);
+Point s = new Point();

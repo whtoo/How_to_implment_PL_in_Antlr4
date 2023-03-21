@@ -9,6 +9,7 @@ import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
 import org.teachfx.antlr4.ep19.symtab.*;
 
+import java.io.Console;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -41,7 +42,8 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
-        if (ctx.getChildCount() > 2) {
+        System.out.println("var as "+ctx.getText());
+        if (ctx.getChildCount() >= 2) {
             this.currentSpace.define(ctx.getChild(1).getText(), visit(ctx.getChild(3)));
         }
         return 0;
@@ -229,10 +231,9 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitExprNew(ExprNewContext ctx) {
-        
-        for (ParseTree node : ctx.children) {
-            System.out.println(String.format("new call ",node.getText()));
-        }
+        System.out.println("visitExprNew "+ctx.getText());
+
+        System.out.println("visitExprNew "+ctx.getChild(1).getText());
 
         return super.visitExprNew(ctx);
     }

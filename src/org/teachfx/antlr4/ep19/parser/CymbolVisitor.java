@@ -13,12 +13,11 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	/**
-	 * Visit a parse tree produced by the {@code compilationUnit}
-	 * labeled alternative in {@link CymbolParser#file}.
+	 * Visit a parse tree produced by {@link CymbolParser#file}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCompilationUnit(CymbolParser.CompilationUnitContext ctx);
+	T visitFile(CymbolParser.FileContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link CymbolParser#structDecl}.
 	 * @param ctx the parse tree
@@ -81,19 +80,19 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatBlock(CymbolParser.StatBlockContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code statVarDecl}
-	 * labeled alternative in {@link CymbolParser#statetment}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitStatVarDecl(CymbolParser.StatVarDeclContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code statStructDecl}
 	 * labeled alternative in {@link CymbolParser#statetment}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitStatStructDecl(CymbolParser.StatStructDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code statVarDecl}
+	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStatVarDecl(CymbolParser.StatVarDeclContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code statReturn}
 	 * labeled alternative in {@link CymbolParser#statetment}.
@@ -129,13 +128,6 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitStat(CymbolParser.StatContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code exprMember}
-	 * labeled alternative in {@link CymbolParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExprMember(CymbolParser.ExprMemberContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code exprNew}
 	 * labeled alternative in {@link CymbolParser#expr}.

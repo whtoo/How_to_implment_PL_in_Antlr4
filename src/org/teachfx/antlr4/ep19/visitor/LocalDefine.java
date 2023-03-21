@@ -33,14 +33,6 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     }
 
     @Override
-    public Object visitCompilationUnit(CompilationUnitContext ctx) {
-        stashScope(ctx);
-        super.visitCompilationUnit(ctx);
-
-        return null;
-    }
-
-    @Override
     public Object visitVarDecl(VarDeclContext ctx) {
         stashScope(ctx);
         return super.visitVarDecl(ctx);
@@ -110,11 +102,6 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
             currentScope.define(member);
         }
         return  null;
-    }
-
-    @Override
-    public Object visitExprMember(ExprMemberContext ctx) {
-        return super.visitExprMember(ctx);
     }
 
     @Override

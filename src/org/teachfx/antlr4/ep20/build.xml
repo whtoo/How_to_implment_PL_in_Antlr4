@@ -33,11 +33,13 @@
          </manifest>
       </jar>
    </target>
+
    <target name="run" depends="build">
-      <java classname="org.teachfx.antlr4.ep20.Compiler" classpath="${CymbolParser_jar}">
+      <java classname="org.teachfx.antlr4.ep20.Compiler" classpath="${CymbolParser_jar}" fork="true">
          <arg line="t.cymbol" />
       </java>
    </target>
+
    <target name="clean" depends="detect">
       <delete dir="${dest}" />
       <delete file="${CymbolParser_jar}" />

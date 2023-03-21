@@ -3,7 +3,7 @@ grammar Cymbol;
 package org.teachfx.antlr4.ep19.parser;
 }
 
-file :   (structDecl | functionDecl | varDecl | statetment)+ #compilationUnit ;
+file :   (structDecl | functionDecl | varDecl)+ ;
 
 structDecl : 'struct' ID '{' structMemeber+ '}'
 ;
@@ -31,8 +31,8 @@ formalParameter
 block:  '{' statetment* '}' ;    // possibly empty statement block
 
 statetment:   block               #statBlock
-    |   varDecl             #statVarDecl
     |   structDecl   #statStructDecl
+    |   varDecl             #statVarDecl
     |   'return' expr? ';' #statReturn
     |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
     |   'while' '(' cond=expr ')' then=statetment #stateWhile
@@ -40,17 +40,18 @@ statetment:   block               #statBlock
     |   expr ';'       #stat // func call
     ;
 
-expr:   expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
-    |   expr o='.' expr    # exprMember         
-    |   '-' expr         #exprUnary       // unary minus
-    |   '!' expr         #exprUnary       // boolean not
-    |   'new' expr '(' (expr (',' expr)* )? ')' #exprNew
-    |   expr o=('*'|'/') expr    #exprBinary
-    |   expr o=('+'|'-') expr #exprBinary
-    |   expr o=('=='|'!='|'>'|'>='|'<'|'<=') expr #exprBinary
-    |   primary #exprPrimary
-    |   '(' expr ')'         #exprGroup
-    ;
+expr
+  : expr '(' ( expr (',' expr)* )? ')'                  # exprFuncCall              
+  | '-' expr                                            # exprUnary
+  | '!' expr                                            # exprUnary
+  | expr o=('*' | '/') expr                             # exprBinary
+  | expr o=('+' | '-') expr                             # exprBinary
+  | expr o=('!=' | '==' | '<' | '>' | '<=' | '>=') expr # exprBinary
+  | 'new' expr '(' (expr (',' expr)* )? ')'             # exprNew // new Point()
+  | primary                                             # exprPrimary 
+  | '(' expr ')'                                        # exprGroup
+  ;
+
 primary:    ID                   #primaryID   // variable reference
     |       INT                  #primaryINT
     |       FLOAT                #primaryFLOAT

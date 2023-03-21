@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep19.misc;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 /** 链式作用域
  * 最简单支持嵌套函数调用（直接递归与间接递归）的实现方式。
  * 它的优化体现在对查询symbol的优化上。

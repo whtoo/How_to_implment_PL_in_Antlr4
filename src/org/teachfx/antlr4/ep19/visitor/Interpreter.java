@@ -1,38 +1,18 @@
 package org.teachfx.antlr4.ep19.visitor;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep19.misc.FunctionSpace;
 import org.teachfx.antlr4.ep19.misc.MemorySpace;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;
-import org.teachfx.antlr4.ep19.parser.CymbolParser;
-import org.teachfx.antlr4.ep19.symtab.*;
 import org.teachfx.antlr4.ep19.parser.CymbolBaseVisitor;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.ExprBinaryContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.ExprFuncCallContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.ExprGroupContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.ExprPrimaryContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.ExprUnaryContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.FunctionDeclContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.PrimaryBOOLContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.PrimaryCHARContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.PrimaryFLOATContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.PrimaryIDContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.PrimaryINTContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.PrimarySTRINGContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.StatAssignContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.StatBlockContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.StatReturnContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.StateConditionContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.StateWhileContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.VarDeclContext;
-import org.teachfx.antlr4.ep19.symtab.MethodSymbol;
-import org.teachfx.antlr4.ep19.symtab.ReturnValue;
-import org.teachfx.antlr4.ep19.symtab.Scope;
-import org.teachfx.antlr4.ep19.symtab.Symbol;
-import org.teachfx.antlr4.ep19.symtab.TypeTable;
+import org.teachfx.antlr4.ep19.parser.CymbolParser;
+import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep19.symtab.*;
+
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
+import java.util.stream.Collectors;
 
 public class Interpreter extends CymbolBaseVisitor<Object> {
     private ScopeUtil scopes;
@@ -158,9 +138,10 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             FunctionSpace methodSpace = new FunctionSpace(method.getName(), method, this.currentSpace);
             // currentSpace is not changed
             // Fill params
-            Set<String> paramNames = method.getMemebers().keySet();
+            Set<String> paramNames = method.getMembers().keySet();
             int i = 0;
             for (String name : paramNames) {
+                
                 Object paramValue = visit(ctx.getChild(2 * (i + 1)));
                 System.out.println(" name " + name + "," + " val " + paramValue.toString());
                 methodSpace.define(name, paramValue);
@@ -244,6 +225,16 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     @Override
     public Object visitStateWhile(StateWhileContext ctx) {
         return super.visitStateWhile(ctx);
+    }
+
+    @Override
+    public Object visitExprNew(ExprNewContext ctx) {
+        
+        for (ParseTree node : ctx.children) {
+            System.out.println(String.format("new call ",node.getText()));
+        }
+
+        return super.visitExprNew(ctx);
     }
 
     @Override

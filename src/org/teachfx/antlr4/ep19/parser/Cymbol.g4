@@ -41,8 +41,10 @@ statetment:   block               #statBlock
     ;
 
 expr:   expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
+    |   expr o='.' expr    # exprMember         
     |   '-' expr         #exprUnary       // unary minus
     |   '!' expr         #exprUnary       // boolean not
+    |   'new' expr '(' (expr (',' expr)* )? ')' #exprNew
     |   expr o=('*'|'/') expr    #exprBinary
     |   expr o=('+'|'-') expr #exprBinary
     |   expr o=('=='|'!='|'>'|'>='|'<'|'<=') expr #exprBinary

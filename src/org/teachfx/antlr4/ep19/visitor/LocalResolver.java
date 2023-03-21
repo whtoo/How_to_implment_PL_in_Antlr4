@@ -2,10 +2,13 @@ package org.teachfx.antlr4.ep19.visitor;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.teachfx.antlr4.ep19.misc.CompilerLogger;
+import org.teachfx.antlr4.ep19.misc.ScopeUtil;
+import org.teachfx.antlr4.ep19.misc.Util;
 import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
 import org.teachfx.antlr4.ep19.symtab.*;
-import org.teachfx.antlr4.ep19.misc.*;
 
 /**
  * @description 给变量分配类型
@@ -87,17 +90,19 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         return null;
     }
     
-    // @Override
-    // public void visitTerminal(TerminalNode node) {
-    //     if(node.getSymbol().getText().equals(".")) {
-    //         ParserRuleContext parent = (ParserRuleContext) node.getParent();
-    //         StructSymbol struct = (StructSymbol) types.get(parent.getChild(STRUCT));
-    //         ParserRuleContext member = (ParserRuleContext) parent.getChild(MEMBER_PARENT).getChild(MEMBER);
-    //         String name = member.start.getText();
-    //         Type memberType = struct.resolveMember(name).type;
-    //         stashType(member, memberType);
-    //     }
-    // }
+     @Override
+     public Object visitTerminal(TerminalNode node) {
+         if(node.getSymbol().getText().equals(".")) {
+             ParserRuleContext parent = (ParserRuleContext) node.getParent();
+             StructSymbol struct = (StructSymbol) types.get(parent.getChild(STRUCT));
+             ParserRuleContext member = (ParserRuleContext) parent.getChild(MEMBER_PARENT).getChild(MEMBER);
+             String name = member.start.getText();
+             Type memberType = struct.resolveMember(name).type;
+             stashType(member, memberType);
+         }
+
+         return null;
+     }
 
     @Override
     public Object visitExprBinary(ExprBinaryContext ctx) {

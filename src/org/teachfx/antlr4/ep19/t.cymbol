@@ -5,10 +5,11 @@ int c = 16;
 struct Point {
     int x;
     int y;
-
 }
 
+
 int add(int x,int y) {
+    // Point s = new Point;
     int d = x + y;
     if (d >= 0) {
         d = d + 1;
@@ -22,17 +23,6 @@ int fib(int n) {
 }
 
 
+new Point();
 
-float k = fib(10);
-print(10,k);
-
-int v = add(a,b);
-int e = v * c;
-
-print(add(a,e));
-
-string name = "Arthur Limon";
-int nameFunc() {
-    return 18;
-}
-print(name);
+print(fib(10);

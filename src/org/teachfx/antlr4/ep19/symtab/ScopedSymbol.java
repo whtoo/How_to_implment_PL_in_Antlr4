@@ -1,8 +1,8 @@
 package org.teachfx.antlr4.ep19.symtab;
 
-import java.util.Map;
-
 import org.antlr.v4.runtime.ParserRuleContext;
+
+import java.util.Map;
 
 
 public abstract class ScopedSymbol extends Symbol implements Scope {
@@ -26,7 +26,7 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
 
     @Override
     public Symbol resolve(String name) {
-        Symbol s = getMemebers().get(name);
+        Symbol s = getMembers().get(name);
         if(s != null) return s;
         if(getEnclosingScope() != null) {
             return getEnclosingScope().resolve(name);
@@ -50,8 +50,8 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
     }
     @Override
     public void define(Symbol sym) {
-        getMemebers().put(sym.name, sym);
+        getMembers().put(sym.name, sym);
         sym.scope = this;
     }
-    public abstract Map<String,Symbol> getMemebers();
+    public abstract Map<String,Symbol> getMembers();
 }

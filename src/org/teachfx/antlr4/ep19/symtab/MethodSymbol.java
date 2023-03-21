@@ -1,11 +1,11 @@
 package org.teachfx.antlr4.ep19.symtab;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-
-public class MethodSymbol extends ScopedSymbol {
+public class MethodSymbol extends ScopedSymbol implements Type {
     Map<String, Symbol> orderedArgs = new LinkedHashMap<String, Symbol>();
     public ParserRuleContext blockStmt;
     public boolean builtin = false;
@@ -22,8 +22,13 @@ public class MethodSymbol extends ScopedSymbol {
     }
 
     @Override
-    public Map<String, Symbol> getMemebers() {       
+    public Map<String, Symbol> getMembers() {       
         return orderedArgs;
+    }
+    @Override
+    public boolean isPrimitive() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'isPrimitive'");
     }
     
 }

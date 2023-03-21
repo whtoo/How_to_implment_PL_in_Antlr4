@@ -1,11 +1,14 @@
 package org.teachfx.antlr4.ep19.visitor;
 
-import org.teachfx.antlr4.ep19.symtab.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.teachfx.antlr4.ep19.misc.Util;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep19.symtab.*;
 
+/**
+ *
+ */
 /*
 * @author Arthur.Bltiz
 * @description 变量消解-标记每个ast节点的作用域归属问题.
@@ -24,7 +27,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         currentScope = globalScope;
         MethodSymbol printFuncSymbol = new MethodSymbol("print",globalScope,null);
         printFuncSymbol.builtin = true;
-        printFuncSymbol.getMemebers().put("value", TypeTable.OBJECT);
+        printFuncSymbol.getMembers().put("value", TypeTable.OBJECT);
         globalScope.define(printFuncSymbol);
         scopes = new ParseTreeProperty<Scope>();
     }
@@ -50,7 +53,13 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
 
     @Override
     public Object visitStructDecl(StructDeclContext ctx) {
-        return super.visitStructDecl(ctx);
+        StructSymbol structScope = new StructSymbol(Util.name(ctx), currentScope,ctx);
+        currentScope.define(structScope);
+        stashScope(ctx);
+        pushScope(structScope);
+        super.visitStructDecl(ctx);
+        popScope();
+        return null;
     }
 
     @Override
@@ -72,6 +81,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         stashScope(ctx);
         return null;
     }
+
     @Override
     public Object visitFormalParameter(FormalParameterContext ctx) {
         super.visitFormalParameter(ctx);
@@ -90,12 +100,28 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
 
         return null;
     }
- 
+
+    @Override
+    public Object visitStructMemeber(StructMemeberContext ctx) {
+        if (ctx.ID() != null) {
+            stashScope(ctx);
+            VariableSymbol member = new VariableSymbol(Util.name(ctx));
+            currentScope.define(member);
+        }
+        return  null;
+    }
+
+    @Override
+    public Object visitExprMember(ExprMemberContext ctx) {
+        return super.visitExprMember(ctx);
+    }
+
     @Override
     public Object visitExprBinary(ExprBinaryContext ctx) {
         stashScope(ctx);
         return super.visitExprBinary(ctx);
     }
+    
     @Override
     public Object visitExprUnary(ExprUnaryContext ctx) {
         stashScope(ctx);

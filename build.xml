@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
     <property environment="env" />
-    <property name="javac1.8" location="${env.JAVA_HOME}/bin/javac" />
-
-    <echo message="JAVA_HOME is set to = ${javac1.8}" />
     <echo>Java/JVM version: ${ant.java.version}</echo>
     <echo>Java/JVM detail version: ${java.version}</echo>
     <property name="dest" value="" />
@@ -12,8 +9,6 @@
     <property name="bsh.path"
         location="/usr/local/lib/bsh-2.0b5.jar" />
     <property name="parserSrc" value="" />
-    <echo>Java/JVM version: ${ant.java.version}</echo>
-    <echo>Java/JVM detail version: ${java.version}</echo>
     <target name="detect">
         <script language="beanshell" classpath="${bsh.path}">
             import java.io.File;

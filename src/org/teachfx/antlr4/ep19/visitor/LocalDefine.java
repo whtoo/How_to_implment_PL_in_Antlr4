@@ -54,10 +54,15 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     @Override
     public Object visitStructDecl(StructDeclContext ctx) {
         StructSymbol structScope = new StructSymbol(Util.name(ctx), currentScope,ctx);
+        // mark struct symbol to current scope
         currentScope.define(structScope);
+        // mark ctx to scope
         stashScope(ctx);
+        // change scope
         pushScope(structScope);
+        // visit sub-nodes
         super.visitStructDecl(ctx);
+        // restore scope
         popScope();
         return null;
     }
@@ -147,10 +152,18 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         return null;
     }
 
+    /**
+     * bind ctx to current scope
+     * @param ctx
+     */
     public void stashScope(ParserRuleContext ctx) {
         scopes.put(ctx,currentScope);
     }
 
+    /**
+     * change scope
+     * @param scope
+     */
     public void pushScope(Scope scope) {
         currentScope = scope;
     }

@@ -21,8 +21,8 @@
 - [x] [ep17](src/org/teachfx/antlr4/ep17)--实现函数的静态声明依赖（并不是我心里想的调用图生成，但是还是加上吧，让其他人避坑。）
 - [x] [ep18](src/org/teachfx/antlr4/ep18)--(~~应该会综合《两周实现脚本语言》与《编程语言的实现模式》中对VM的设计~~)**已经采用栈解释器了，主要就是因为实现简单**😆
 
-- [ ] [ep19](src/org/teachfx/antlr4/ep19)--本来我的TODO里面写的是实现闭包和结构体，但是看情况吧。估计VM还得在这个章节修订。
-- [ ] [ep20](src/org/teachfx/antlr4/ep20)--这里会增加java的native导入，具体实现我会参考《两周实现脚本语言》。VM的修订与扩展。
+- [x] [ep19](src/org/teachfx/antlr4/ep19)--实现简单的struct(~~实现闭包~~)，目前实现了最简单的record类型和main函数以及file作用域，下一章增加类方法和协议支持。
+- [ ] [ep20](src/org/teachfx/antlr4/ep20)--这里会增加java的native导入、类方法、协议支持、字节码生成（可能是自己实现的VM不是JVM）。
 - [ ] [ep21](src/org/teachfx/antlr4/ep21)--希望能够在这一章终结。
 - [ ] [ep22](src/org/teachfx/antlr4/ep22)--如果，我还能坚持写到这里，就增加汇编输出以及编译优化。应该只有SSA以及peep hole，寄存器染色也可能会出现。
 

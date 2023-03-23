@@ -27,8 +27,7 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     }
     @Override
     public boolean isPrimitive() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isPrimitive'");
+        return false;
     }
     
 }

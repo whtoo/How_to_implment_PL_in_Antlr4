@@ -10,13 +10,11 @@ import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.visitor.Interpreter;
 import org.teachfx.antlr4.ep19.visitor.LocalDefine;
 import org.teachfx.antlr4.ep19.visitor.LocalResolver;
-import org.antlr.v4.gui.TreeViewer;
-import java.util.Arrays;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class Compiler {
 

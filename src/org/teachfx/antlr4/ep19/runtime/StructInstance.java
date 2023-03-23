@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep19.misc;
+package org.teachfx.antlr4.ep19.runtime;
 
 import org.teachfx.antlr4.ep19.symtab.StructSymbol;
 

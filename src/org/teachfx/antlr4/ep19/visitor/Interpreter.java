@@ -1,23 +1,19 @@
 package org.teachfx.antlr4.ep19.visitor;
 
-import jdk.nashorn.internal.runtime.regexp.joni.ast.StringNode;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.teachfx.antlr4.ep19.misc.FunctionSpace;
-import org.teachfx.antlr4.ep19.misc.MemorySpace;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;
-import org.teachfx.antlr4.ep19.misc.StructInstance;
 import org.teachfx.antlr4.ep19.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep19.runtime.FunctionSpace;
+import org.teachfx.antlr4.ep19.runtime.MemorySpace;
+import org.teachfx.antlr4.ep19.runtime.StructInstance;
 import org.teachfx.antlr4.ep19.symtab.*;
 
-import java.io.Console;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Interpreter extends CymbolBaseVisitor<Object> {
     private ScopeUtil scopes;

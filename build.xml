@@ -29,10 +29,15 @@
         <mkdir dir="${dest}" />
      </target>
 
-    <target name="compile" depends="clean,init">
+    <target name="compile" depends="init">
         <delete dir="${parserSrc}/.antlr" />
         <javac includeantruntime="false" srcdir="${src}" destdir="${dest}">
             <classpath refid="classpath" />
         </javac>
     </target>
+
+<!--    <target name="run" depends="compile">-->
+<!--        <ant antfile="src/org/teachfx/antlr4/ep19/build.xml" target="run" inheritall="false" />-->
+<!--    </target>-->
+
 </project>

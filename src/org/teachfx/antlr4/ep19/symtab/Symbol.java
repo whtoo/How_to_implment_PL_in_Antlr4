@@ -1,6 +1,6 @@
 package org.teachfx.antlr4.ep19.symtab;
 
-import org.teachfx.antlr4.ep19.misc.MemorySpace;
+import org.teachfx.antlr4.ep19.runtime.MemorySpace;
 
 public class Symbol {
     String name;

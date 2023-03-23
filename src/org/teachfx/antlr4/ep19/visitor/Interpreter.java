@@ -1,9 +1,11 @@
 package org.teachfx.antlr4.ep19.visitor;
 
+import jdk.nashorn.internal.runtime.regexp.joni.ast.StringNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep19.misc.FunctionSpace;
 import org.teachfx.antlr4.ep19.misc.MemorySpace;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;
+import org.teachfx.antlr4.ep19.misc.StructInstance;
 import org.teachfx.antlr4.ep19.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
@@ -11,9 +13,11 @@ import org.teachfx.antlr4.ep19.symtab.*;
 
 import java.io.Console;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Interpreter extends CymbolBaseVisitor<Object> {
     private ScopeUtil scopes;
@@ -42,8 +46,9 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
-        System.out.println("var as "+ctx.getText());
         if (ctx.getChildCount() >= 2) {
+            System.out.println(String.format("var as - %s = %s",ctx.getChild(1).getText(),ctx.getChild(3).getText()));
+
             this.currentSpace.define(ctx.getChild(1).getText(), visit(ctx.getChild(3)));
         }
         return 0;
@@ -231,11 +236,15 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitExprNew(ExprNewContext ctx) {
-        System.out.println("visitExprNew "+ctx.getText());
+        if (ctx.expr().stream().findFirst().isPresent()) {
+            ExprContext structRef = ctx.expr().stream().findFirst().get();
+            StructSymbol symbol = (StructSymbol)visit(structRef);
+            StructInstance instance = new StructInstance(structRef.getText(),currentSpace,symbol);
 
-        System.out.println("visitExprNew "+ctx.getChild(1).getText());
+            return  instance;
+        }
 
-        return super.visitExprNew(ctx);
+        return null;
     }
 
     @Override
@@ -270,6 +279,17 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitFunctionDecl(FunctionDeclContext ctx) {
+        System.out.println("func entry - " + ctx.ID().getText());
+        if (ctx.ID().getText().equalsIgnoreCase("main")) {
+            // exec blockDef
+            try {
+                visit(ctx.blockDef);
+            } catch (ReturnValue ex) {
+                return ex.value;
+            }
+            return  0;
+        }
+
         return 0;
     }
 

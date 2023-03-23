@@ -33,7 +33,7 @@ public class Compiler {
      */
     public static void main(String[] args) throws IOException,FileNotFoundException {
         String fileName = null;
-        fileName = "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/src/org/teachfx/antlr4/ep19/" + "/t.cymbol";
+        fileName = "/Users/aosomapp2/compiler-dev/How_to_implment_PL_in_Antlr4/src/org/teachfx/antlr4/ep19/" + "/t.cymbol";
         if(args.length > 0) fileName = args[0];
         InputStream is = System.in;
         if(fileName != null) is = new FileInputStream(fileName);

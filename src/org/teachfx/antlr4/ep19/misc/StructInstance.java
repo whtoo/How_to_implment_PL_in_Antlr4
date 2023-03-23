@@ -3,7 +3,7 @@ package org.teachfx.antlr4.ep19.misc;
 import org.teachfx.antlr4.ep19.symtab.StructSymbol;
 
 
-class StructInstance extends MemorySpace {
+public class StructInstance extends MemorySpace {
     StructSymbol symbol;
 
     public StructInstance(String name,StructSymbol symbol) {

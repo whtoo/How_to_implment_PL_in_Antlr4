@@ -39,9 +39,7 @@ public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
     @Override
     public T visitFunctionDecl(FunctionDeclContext ctx) {
         tab += " ";
-        System.out.println(tab + "enter func " + Util.name(ctx));
         super.visitFunctionDecl(ctx);
-        System.out.println(tab + "exit func with "+ Util.name(ctx));
         tab = tab.substring(0,tab.length()-1);
         return null;
     }

@@ -41,7 +41,8 @@ statetment:   block               #statBlock
     ;
 
 expr
-  : expr '(' ( expr (',' expr)* )? ')'                  # exprFuncCall              
+  : expr '(' ( expr (',' expr)* )? ')'                  # exprFuncCall
+  | expr o='.' expr                                     # exprStructFieldAccess
   | '-' expr                                            # exprUnary
   | '!' expr                                            # exprUnary
   | expr o=('*' | '/') expr                             # exprBinary

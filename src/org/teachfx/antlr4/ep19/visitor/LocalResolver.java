@@ -39,10 +39,7 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
         super.visitVarDecl(ctx);
-        System.out.println(ctx.getClass().toString());
         Type type = scopes.lookup(ctx.type());
-        System.out.println(ctx.getText());
-
         VariableSymbol var = new VariableSymbol(Util.name(ctx), type);
 
         if(type == null) { CompilerLogger.error(ctx , "Unknown type when declaring variable: " + var); }
@@ -84,6 +81,18 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     // }
 
     @Override
+    public Object visitStructMemeber(StructMemeberContext ctx) {
+        super.visitStructMemeber(ctx);
+
+        if (ctx.type() != null) {
+            Symbol s = scopes.resolve(ctx);
+            Type type = scopes.lookup(ctx.type());
+            s.type = type;
+        }
+        return  null;
+    }
+
+    @Override
     public Object visitExprGroup(ExprGroupContext ctx) {
         super.visitExprGroup(ctx);
         copyType(ctx.expr(),ctx);
@@ -98,6 +107,7 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
              ParserRuleContext member = (ParserRuleContext) parent.getChild(MEMBER_PARENT).getChild(MEMBER);
              String name = member.start.getText();
              Type memberType = struct.resolveMember(name).type;
+             System.out.println(String.format("struct %s access %s with type",struct.getName(),name,memberType.toString()));
              stashType(member, memberType);
          }
 
@@ -200,13 +210,14 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         }
     }
 
+    /// bind (ctx,type)
     private void stashType(ParserRuleContext ctx, Type type) {
         types.put(ctx, type);
     }
-    
+
+    // pass `from` type to `to` type
     private void copyType(ParserRuleContext from, ParserRuleContext to) {
         Type type = types.get(from);
         types.put(to, type);
     }
-    
 }

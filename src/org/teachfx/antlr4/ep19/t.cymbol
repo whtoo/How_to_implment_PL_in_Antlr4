@@ -5,6 +5,10 @@ struct Point {
 
 int main() {
     Point s = new Point();
-    print("work");
+    int x = 18;
+    int y = 12;
+    s.x = 10 + x;
+    s.y = 2  + y;
+    print(s.x);
     return 0;
 }

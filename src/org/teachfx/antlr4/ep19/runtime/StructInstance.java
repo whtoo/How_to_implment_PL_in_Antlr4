@@ -14,6 +14,14 @@ public class StructInstance extends MemorySpace {
     public StructInstance(String name, MemorySpace enclosingSpace, StructSymbol symbol) {
         super(name, enclosingSpace);
         this.symbol = symbol;
+        for(String key : symbol.getMembers().keySet()) {
+            define(key,0);
+        }
     }
-  
+
+    @Override
+    public Object get(String name) {
+
+        return super.get(name);
+    }
 }

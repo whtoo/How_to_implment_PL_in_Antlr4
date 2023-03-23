@@ -114,7 +114,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
             System.out.println("get struct - "+Util.name(ctx));
             currentScope.define(member);
         }
-        return  null;
+        return   super.visitStructMemeber(ctx);
     }
 
     @Override

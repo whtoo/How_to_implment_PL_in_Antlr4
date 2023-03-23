@@ -178,7 +178,6 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     @Override
     public Object visitExprUnary(ExprUnaryContext ctx) {
         Integer i = (Integer) visit(ctx.getChild(1));
-
         if (ctx.getChild(0).getText() == "!") {
             return (i == TypeTable.TRUE ? TypeTable.FALSE : TypeTable.TRUE);
         } else {
@@ -186,10 +185,34 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         }
     }
 
+    @Override
+    public Object visitExprStructFieldAccess(ExprStructFieldAccessContext ctx) {
+
+        StructInstance instance = (StructInstance) this.currentSpace.get(ctx.children.get(0).getText());
+
+        String fieldName = ctx.expr(1).getText();
+
+        return instance.get(fieldName);
+    }
+
     // > Expression evaluation
     @Override
     public Object visitStatAssign(StatAssignContext ctx) {
-        this.currentSpace.update(ctx.getChild(0).getText(), visit(ctx.getChild(2)));
+
+        ExprContext lhs = ctx.expr(0);
+        ExprContext rhs = ctx.expr(1);
+
+        if (lhs instanceof ExprStructFieldAccessContext) {
+            ExprStructFieldAccessContext wlhs = (ExprStructFieldAccessContext)lhs;
+            StructInstance instance = (StructInstance)this.currentSpace.get(lhs.children.get(0).getText());
+            Object assignValue = visit(ctx.expr(1));
+            System.out.println(String.format("assign %s with %s",lhs.getText(),assignValue));
+            instance.update(wlhs.expr(1).getText(),assignValue);
+
+        } else {
+            this.currentSpace.update(lhs.getText(), visit(rhs));
+        }
+
         return 0;
     }
 
@@ -224,6 +247,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         }
         return ret;
     }
+
 
     @Override
     public Object visitStateWhile(StateWhileContext ctx) {

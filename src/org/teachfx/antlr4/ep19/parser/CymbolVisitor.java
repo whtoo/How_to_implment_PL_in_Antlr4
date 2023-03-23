@@ -143,6 +143,13 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprBinary(CymbolParser.ExprBinaryContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code exprStructFieldAccess}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprStructFieldAccess(CymbolParser.ExprStructFieldAccessContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code exprGroup}
 	 * labeled alternative in {@link CymbolParser#expr}.
 	 * @param ctx the parse tree

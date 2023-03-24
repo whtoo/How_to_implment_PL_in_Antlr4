@@ -15,6 +15,9 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+/**
+ * 解释器 - 以visit模式实现
+ */
 public class Interpreter extends CymbolBaseVisitor<Object> {
     private ScopeUtil scopes;
     private Stack<MemorySpace> memoryStack;

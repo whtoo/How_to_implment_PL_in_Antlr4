@@ -14,13 +14,13 @@ import org.teachfx.antlr4.ep16.visitor.LocalResolver;
 import java.io.*;
 
 public class Compiler {
-   
-    public static void main(String[] args) throws IOException,FileNotFoundException {
+
+    public static void main(String[] args) throws IOException {
         String fileName = null;
         fileName = new File("classes").getAbsolutePath() + "/t.cymbol";
-        if(args.length > 0) fileName = args[0];
+        if (args.length > 0) fileName = args[0];
         InputStream is = System.in;
-        if(fileName != null) is = new FileInputStream(fileName);
+        if (fileName != null) is = new FileInputStream(fileName);
         CharStream charStream = CharStreams.fromStream(is);
         CymbolLexer lexer = new CymbolLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);

@@ -6,6 +6,7 @@
 - [x] struct support only record type.
 
 2. **WIP**
+
 - [ ] Type checking
 - [ ] Implementation of translation from cymbol to VM assemble.
 

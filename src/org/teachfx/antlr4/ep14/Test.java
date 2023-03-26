@@ -14,9 +14,9 @@ import java.io.InputStream;
 public class Test {
     public static void main(String[] args) throws IOException {
         String fileName = null;
-        if(args.length > 0) fileName = args[0];
+        if (args.length > 0) fileName = args[0];
         InputStream is = System.in;
-        if(fileName != null) is = new FileInputStream(fileName);
+        if (fileName != null) is = new FileInputStream(fileName);
         SymbolTable syTb = new SymbolTable();
         ANTLRInputStream inputStream = new ANTLRInputStream(is);
         MathExprLexer lexer = new MathExprLexer(inputStream);

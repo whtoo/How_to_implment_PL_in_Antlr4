@@ -9,10 +9,11 @@ import org.teachfx.antlr4.ep19.parser.CymbolParser.StructDeclContext;
 
 public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
     public String tab = "";
-    CymbolASTVisitor() { 
+
+    CymbolASTVisitor() {
 
     }
-    
+
     @Override
     public T visitExprFuncCall(ExprFuncCallContext ctx) {
         System.out.println(tab + "enter expr func calling " + ctx.getText());
@@ -22,9 +23,9 @@ public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
 
     @Override
     public T visitBlock(BlockContext ctx) {
-        tab+= " ";
+        tab += " ";
         super.visitBlock(ctx);
-        tab = tab.substring(0,tab.length()-1);
+        tab = tab.substring(0, tab.length() - 1);
         return null;
     }
 
@@ -33,8 +34,8 @@ public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
         tab += " ";
         System.out.println(tab + "enter struct " + Util.name(ctx));
         super.visitStructDecl(ctx);
-        System.out.println(tab + "exit struct with "+ Util.name(ctx));
-        tab = tab.substring(0,tab.length()-1);
+        System.out.println(tab + "exit struct with " + Util.name(ctx));
+        tab = tab.substring(0, tab.length() - 1);
         return null;
     }
 
@@ -42,7 +43,7 @@ public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
     public T visitFunctionDecl(FunctionDeclContext ctx) {
         tab += " ";
         super.visitFunctionDecl(ctx);
-        tab = tab.substring(0,tab.length()-1);
+        tab = tab.substring(0, tab.length() - 1);
         return null;
     }
 

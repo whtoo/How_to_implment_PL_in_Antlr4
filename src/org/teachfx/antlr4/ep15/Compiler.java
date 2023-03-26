@@ -16,9 +16,9 @@ public class Compiler {
     public static void main(String[] args) throws IOException {
         // TODO: Add test cases for local resolver.
         String fileName = null;
-        if(args.length > 0) fileName = args[0];
+        if (args.length > 0) fileName = args[0];
         InputStream is = System.in;
-        if(fileName != null) is = new FileInputStream(fileName);
+        if (fileName != null) is = new FileInputStream(fileName);
         CharStream charStream = CharStreams.fromStream(is);
         CymbolLexer lexer = new CymbolLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);

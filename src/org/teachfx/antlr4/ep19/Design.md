@@ -59,6 +59,7 @@ end note
 BaseScope . Symbol
 @enduml
 ```
+
 ## symtab
 
 ## visitor

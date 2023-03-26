@@ -22,13 +22,12 @@ public class LabelSymbol {
         this.address = address;
     }
 
-    public LabelSymbol(String name, int address,boolean isForwardRef) {
+    public LabelSymbol(String name, int address, boolean isForwardRef) {
         this(name);
         this.isForwardRef = isForwardRef;
         if (isForwardRef) {
             addForwardRef(address);
-        }
-        else {
+        } else {
             this.address = address;
         }
     }
@@ -41,8 +40,8 @@ public class LabelSymbol {
         isForwardRef = false;
         Vector<Integer> operandsToPath = forwardRefs;
         for (int addrToPath : operandsToPath) {
-            ByteCodeAssembler.writeInt(code,addrToPath,address);
+            ByteCodeAssembler.writeInt(code, addrToPath, address);
         }
     }
-    
+
 }

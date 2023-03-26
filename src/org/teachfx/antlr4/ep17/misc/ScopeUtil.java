@@ -8,7 +8,7 @@ import org.teachfx.antlr4.ep17.symtab.Type;
 
 public class ScopeUtil {
 
-    private ParseTreeProperty<Scope> scopes;
+    private final ParseTreeProperty<Scope> scopes;
 
     public ScopeUtil(ParseTreeProperty<Scope> scopes) {
         this.scopes = scopes;
@@ -16,11 +16,11 @@ public class ScopeUtil {
 
     public Type lookup(ParserRuleContext ctx) {
         String name = Util.name(ctx);
-        System.out.println("lookup type is : "+name);
+        System.out.println("lookup type is : " + name);
         Scope scope = get(ctx);
-        System.out.println("scope is : "+scope);
-        Type type= scope.lookup(name);
-        if(type == null) { 
+        System.out.println("scope is : " + scope);
+        Type type = scope.lookup(name);
+        if (type == null) {
             String msg = "unknown type: " + name;
             CompilerLogger.error(ctx, msg);
         }
@@ -29,13 +29,13 @@ public class ScopeUtil {
 
     public Symbol resolve(ParserRuleContext ctx) {
         String name = Util.name(ctx);
-        System.out.println("lookup func is : "+name);
+        System.out.println("lookup func is : " + name);
 
         Scope scope = get(ctx);
-        System.out.println("func scope is : "+scope);
+        System.out.println("func scope is : " + scope);
 
         Symbol symbol = scope.resolve(name);
-        if(symbol == null) { 
+        if (symbol == null) {
             String msg = "unknown symbol: " + name;
             CompilerLogger.error(ctx, msg);
         }

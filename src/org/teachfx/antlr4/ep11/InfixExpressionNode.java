@@ -8,6 +8,7 @@ public abstract class InfixExpressionNode extends ExpressionNode {
         this.left = left;
         this.right = right;
     }
+
     public InfixExpressionNode() {
         this.left = null;
         this.right = null;

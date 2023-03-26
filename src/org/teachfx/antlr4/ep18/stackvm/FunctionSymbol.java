@@ -6,9 +6,12 @@ public class FunctionSymbol {
     int nlocals; //域内变量个数
 
     int address; // 入口地址
-    public FunctionSymbol(String name) { this.name = name; }
 
-    public FunctionSymbol(String name, int nargs, int nlocals,int address) { 
+    public FunctionSymbol(String name) {
+        this.name = name;
+    }
+
+    public FunctionSymbol(String name, int nargs, int nlocals, int address) {
         this.name = name;
         this.nargs = nargs;
         this.nlocals = nlocals;
@@ -28,10 +31,10 @@ public class FunctionSymbol {
     @Override
     public String toString() {
         return "FunctionSymbol{" +
-        "name='" + name + '\'' +
-        ", args=" + nargs +
-        ", locals=" + nlocals +
-        ", address=" + address +
-        '}';
+                "name='" + name + '\'' +
+                ", args=" + nargs +
+                ", locals=" + nlocals +
+                ", address=" + address +
+                '}';
     }
 }

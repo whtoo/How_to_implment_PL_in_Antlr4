@@ -4,34 +4,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DisAssembler {
+    protected Object[] constPool;
     byte[] code;
     int codeSize;
-    protected Object[] constPool;
     BytecodeDefinition def;
 
-    public DisAssembler(byte[] code, int codeSize,Object[] constPool) {
+    public DisAssembler(byte[] code, int codeSize, Object[] constPool) {
         this.code = code;
         this.codeSize = codeSize;
         this.constPool = constPool;
     }
 
-    public void disassemble() { 
+    public void disassemble() {
         System.out.println("Disassembly:");
         int i = 0;
         while (i < codeSize) {
             i = disassembleInstruction(i);
-            System.out.println("");
+            System.out.println();
         }
-        System.out.println("");
+        System.out.println();
     }
 
-    public int disassembleInstruction(int ip){
+    public int disassembleInstruction(int ip) {
         int opcode = code[ip];
         BytecodeDefinition.Instruction I = BytecodeDefinition.instructions[opcode];
         String instrName = I.name;
-        System.out.printf("%04d:\t%-11s",ip,instrName);
+        System.out.printf("%04d:\t%-11s", ip, instrName);
         ip++;
-        if ( I.n == 0) {
+        if (I.n == 0) {
             System.out.print("  ");
             return ip;
         }
@@ -49,11 +49,11 @@ public class DisAssembler {
                     break;
                 case BytecodeDefinition.INT:
                     operands.add(String.valueOf(opnd));
-            }   
+            }
         }
         for (int i = 0; i < operands.size(); i++) {
-            String s = (String) operands.get(i);
-            if ( i>0 ) System.out.print(", ");
+            String s = operands.get(i);
+            if (i > 0) System.out.print(", ");
             System.out.print(s);
         }
         return ip;
@@ -64,14 +64,13 @@ public class DisAssembler {
         buf.append("#");
         buf.append(poolIndex);
         String s = constPool[poolIndex].toString();
-        if (constPool[poolIndex] instanceof String ) s = '"' + s + '"';
-        else if( constPool[poolIndex] instanceof FunctionSymbol ) {
-            FunctionSymbol fs = (FunctionSymbol) constPool[poolIndex];
-            s = fs.name+"()@"+fs.address;
+        if (constPool[poolIndex] instanceof String) s = '"' + s + '"';
+        else if (constPool[poolIndex] instanceof FunctionSymbol fs) {
+            s = fs.name + "()@" + fs.address;
         }
         buf.append(":");
         buf.append(s);
-        
+
         return buf.toString();
     }
 }

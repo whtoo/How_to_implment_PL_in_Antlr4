@@ -6,7 +6,7 @@
     - [x] Define setjump/ret instructions.
     - [x] Define memory access and modification.
     - [x] Define contro-flow machanism.
-    
+
 - [x] Assembler for cymbol VM.
     - [x] Implementation of assembler.
     - [x] Implementation of symbols used in VM.

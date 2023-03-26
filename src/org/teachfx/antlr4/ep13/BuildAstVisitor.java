@@ -4,9 +4,9 @@ import org.teachfx.antlr4.ep13.MathParser.*;
 import org.teachfx.antlr4.ep13.ast.*;
 
 public class BuildAstVisitor extends MathBaseVisitor<ExpressionNode> {
-   @Override
-   public ExpressionNode visitCompileUnit(CompileUnitContext ctx) {
-        if(ctx.assign() != null) return visit(ctx.assign());
+    @Override
+    public ExpressionNode visitCompileUnit(CompileUnitContext ctx) {
+        if (ctx.assign() != null) return visit(ctx.assign());
 
         return visit(ctx.expr());
     }
@@ -20,11 +20,11 @@ public class BuildAstVisitor extends MathBaseVisitor<ExpressionNode> {
     public ExpressionNode visitParensExpr(ParensExprContext ctx) {
         return visit(ctx.expr());
     }
-    
+
     @Override
     public ExpressionNode visitInfixExpr(InfixExprContext ctx) {
         InfixExpressionNode node;
-        switch(ctx.op.getType()){
+        switch (ctx.op.getType()) {
             case MathLexer.OP_ADD:
                 node = new AdditionNode();
                 break;
@@ -45,9 +45,10 @@ public class BuildAstVisitor extends MathBaseVisitor<ExpressionNode> {
 
         return node;
     }
+
     @Override
     public ExpressionNode visitUnaryExpr(UnaryExprContext ctx) {
-        switch(ctx.op.getType()){
+        switch (ctx.op.getType()) {
             case MathLexer.OP_ADD:
                 return visit(ctx.expr());
             case MathLexer.OP_SUB:

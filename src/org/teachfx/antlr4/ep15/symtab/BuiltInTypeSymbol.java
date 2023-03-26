@@ -10,5 +10,5 @@ public class BuiltInTypeSymbol extends Symbol implements Type {
     public boolean isPrimitive() {
         return true;
     }
-    
+
 }

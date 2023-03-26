@@ -10,11 +10,13 @@ public class StructSymbol extends ScopedSymbol implements Type {
     Map<String, Symbol> fields = new LinkedHashMap<String, Symbol>();
 
     public StructSymbol(String name, Scope parent,
-            ParserRuleContext tree) {
+                        ParserRuleContext tree) {
         super(name, parent, tree);
     }
 
-    /** For a.b, only look in fields to resolve b, not up scope tree */
+    /**
+     * For a.b, only look in fields to resolve b, not up scope tree
+     */
     public Symbol resolveMember(String name) {
         return fields.get(name);
     }
@@ -28,11 +30,11 @@ public class StructSymbol extends ScopedSymbol implements Type {
     public boolean isPrimitive() {
         return false;
     }
-    
+
     @Override
     public String toString() {
         return "struct " + name + ":{"
                 + stripBrackets(fields.keySet().toString()) + "}";
     }
-  
+
 }

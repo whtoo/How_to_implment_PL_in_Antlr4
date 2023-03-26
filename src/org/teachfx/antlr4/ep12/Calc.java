@@ -15,17 +15,17 @@ import java.io.*;
 public class Calc {
     public static void main(String[] args) throws IOException {
         String fileName = null;
-        if(args.length > 0) fileName = args[0];
+        if (args.length > 0) fileName = args[0];
         InputStream is = System.in;
-        if(fileName != null) is = new FileInputStream(fileName);
+        if (fileName != null) is = new FileInputStream(fileName);
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
         String expr = bufferedReader.readLine();
         int line = 1;
         MathParser parser = new MathParser(null);
         ASTVisitor<Double> astVisitor = new EvalExprVisitor();
-        
-        while(expr != null) {
-            ANTLRInputStream input = new ANTLRInputStream(expr+"\n");
+
+        while (expr != null) {
+            ANTLRInputStream input = new ANTLRInputStream(expr + "\n");
             MathLexer lexer = new MathLexer(input);
             lexer.setLine(line);
             lexer.setCharPositionInLine(0);
@@ -37,7 +37,7 @@ public class Calc {
             expr = bufferedReader.readLine();
             line++;
         }
-       
+
     }
-    
+
 }

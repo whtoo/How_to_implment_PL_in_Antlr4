@@ -4,9 +4,10 @@ public class StackFrame {
     FunctionSymbol symbol;
     int returnAddress;
     Object[] locals;
-    public StackFrame(FunctionSymbol symbol,int returnAddress) {
+
+    public StackFrame(FunctionSymbol symbol, int returnAddress) {
         this.symbol = symbol;
         this.returnAddress = returnAddress;
-        locals = new Object[symbol.nargs+symbol.nlocals];
+        locals = new Object[symbol.nargs + symbol.nlocals];
     }
 }

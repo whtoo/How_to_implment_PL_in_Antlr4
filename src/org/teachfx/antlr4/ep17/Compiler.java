@@ -11,7 +11,7 @@ import org.teachfx.antlr4.ep17.visitor.CallGraphVisitor;
 import java.io.*;
 
 public class Compiler {
-   
+
     public static void main(String[] args) throws IOException {
         try {
             File inputFile = new File("t.cymbol");
@@ -23,11 +23,11 @@ public class Compiler {
             ParseTree parseTree = parser.file();
             CallGraphVisitor collector = new CallGraphVisitor();
             parseTree.accept(collector);
-            
+
             File saveFile = new File("call.dot");
             System.out.println(saveFile.getAbsolutePath());
             saveFile.createNewFile();
-            
+
             OutputStream outputStream = new FileOutputStream(saveFile);
             outputStream.write(collector.callGraph.toDOT().getBytes());
             outputStream.close();
@@ -35,6 +35,6 @@ public class Compiler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-       
+
     }
 }

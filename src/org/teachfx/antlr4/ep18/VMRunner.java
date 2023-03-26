@@ -15,13 +15,13 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 
 public class VMRunner {
-    
+
     public static void main(String[] args) throws Exception {
         String fileName = null;
         fileName = new File("classes").getAbsolutePath() + "/t.vm";
-        if(args.length > 0) fileName = args[0];
+        if (args.length > 0) fileName = args[0];
         InputStream is = System.in;
-        if(fileName != null) is = new FileInputStream(fileName);
+        if (fileName != null) is = new FileInputStream(fileName);
         CharStream charStream = CharStreams.fromStream(is);
         VMAssemblerLexer lexer = new VMAssemblerLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
@@ -29,6 +29,6 @@ public class VMRunner {
         ParseTree parseTree = parser.program();
         ParseTreeWalker walker = new ParseTreeWalker();
         ByteCodeAssembler listener = new ByteCodeAssembler(BytecodeDefinition.instructions);
-        walker.walk(listener,parseTree);
+        walker.walk(listener, parseTree);
     }
 }

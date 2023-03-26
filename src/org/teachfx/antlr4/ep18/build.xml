@@ -1,44 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="VMRunner" default="run" basedir=".">
-   <property name="src" value="." />
-   <property name="vmSrc" value="${src}/stackvm" />
-   <property name="grammar" value="Cymbol" />
-   <property name="vmGrammar" value="VMAssembler" />
-   <property name="dest" value="" />
-   <property name="VMRunner_jar" value="VMRunner1.jar" />
-   <import file="../../../../../build.xml" as="parent" />
+    <property name="src" value="."/>
+    <property name="vmSrc" value="${src}/stackvm"/>
+    <property name="grammar" value="Cymbol"/>
+    <property name="vmGrammar" value="VMAssembler"/>
+    <property name="dest" value=""/>
+    <property name="VMRunner_jar" value="VMRunner1.jar"/>
+    <import file="../../../../../build.xml" as="parent"/>
 
-   <target name="gen" depends="init">
-      <java jar="${antlr4.jar}" fork="true">
-         <arg line="${vmSrc}/${vmGrammar}.g4" />
-         <arg line="-listener" />
-         <arg line="-no-visitor" />
-      </java>
-   </target>
+    <target name="gen" depends="init">
+        <java jar="${antlr4.jar}" fork="true">
+            <arg line="${vmSrc}/${vmGrammar}.g4"/>
+            <arg line="-listener"/>
+            <arg line="-no-visitor"/>
+        </java>
+    </target>
 
-   <target name="compile" depends="parent.compile,init">
-      <copy file="${src}/t.vm" tofile="${dest}/t.vm"></copy>
-   </target>
+    <target name="compile" depends="parent.compile,init">
+        <copy file="${src}/t.vm" tofile="${dest}/t.vm"></copy>
+    </target>
 
-   <target name="build" depends="compile">
-      <jar jarfile="${VMRunner_jar}" basedir="${dest}">
-         <zipfileset src="${antlr4.jar}" />
-         <manifest>
-            <attribute name="Main-Class" value="org.teachfx.antlr4.ep18.VMRunner" />
-         </manifest>
-      </jar>
-   </target>
-   <target name="run" depends="build">
-      <java classname="org.teachfx.antlr4.ep18.stackvm.VMInterpreter" classpath="${VMRunner_jar}">
-         <arg line="t.vm" />
-      </java>
-   </target>
-   <target name="clean" depends="detect">
-      <delete dir="${dest}" />
-      <delete file="${VMRunner_jar}" />
-   </target>
-   <target name="rerun" depends="clean,run">
-      <ant target="clean" />
-      <ant target="run" />
-   </target>
+    <target name="build" depends="compile">
+        <jar jarfile="${VMRunner_jar}" basedir="${dest}">
+            <zipfileset src="${antlr4.jar}"/>
+            <manifest>
+                <attribute name="Main-Class" value="org.teachfx.antlr4.ep18.VMRunner"/>
+            </manifest>
+        </jar>
+    </target>
+    <target name="run" depends="build">
+        <java classname="org.teachfx.antlr4.ep18.stackvm.VMInterpreter" classpath="${VMRunner_jar}">
+            <arg line="t.vm"/>
+        </java>
+    </target>
+    <target name="clean" depends="detect">
+        <delete dir="${dest}"/>
+        <delete file="${VMRunner_jar}"/>
+    </target>
+    <target name="rerun" depends="clean,run">
+        <ant target="clean"/>
+        <ant target="run"/>
+    </target>
 </project>

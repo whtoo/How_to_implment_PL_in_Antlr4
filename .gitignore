@@ -11,3 +11,4 @@ src/**/*.jar
 .metals
 out/
 .DS_Store
+*.dot

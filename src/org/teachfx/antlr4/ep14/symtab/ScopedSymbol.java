@@ -1,8 +1,8 @@
 package org.teachfx.antlr4.ep14.symtab;
 
-import java.util.Map;
-
 import org.antlr.v4.runtime.ParserRuleContext;
+
+import java.util.Map;
 
 
 public abstract class ScopedSymbol extends Symbol implements Scope {

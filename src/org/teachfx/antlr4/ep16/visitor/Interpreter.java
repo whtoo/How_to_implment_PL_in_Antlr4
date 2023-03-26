@@ -1,39 +1,17 @@
 package org.teachfx.antlr4.ep16.visitor;
 
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
-import java.util.stream.Collectors;
-
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep16.misc.FunctionSpace;
 import org.teachfx.antlr4.ep16.misc.MemorySpace;
 import org.teachfx.antlr4.ep16.misc.ScopeUtil;
 import org.teachfx.antlr4.ep16.parser.CymbolBaseVisitor;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprBinaryContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprFuncCallContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprGroupContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprPrimaryContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprUnaryContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.FunctionDeclContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimaryBOOLContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimaryCHARContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimaryFLOATContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimaryIDContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimaryINTContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimarySTRINGContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.StatAssignContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.StatBlockContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.StatReturnContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.StateConditionContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.StateWhileContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.VarDeclContext;
-import org.teachfx.antlr4.ep16.symtab.MethodSymbol;
-import org.teachfx.antlr4.ep16.symtab.ReturnValue;
-import org.teachfx.antlr4.ep16.symtab.Scope;
-import org.teachfx.antlr4.ep16.symtab.ScopedSymbol;
-import org.teachfx.antlr4.ep16.symtab.Symbol;
-import org.teachfx.antlr4.ep16.symtab.TypeTable;
+import org.teachfx.antlr4.ep16.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep16.symtab.*;
+
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
+import java.util.stream.Collectors;
 
 public class Interpreter extends CymbolBaseVisitor<Object> {
     private ScopeUtil scopes;

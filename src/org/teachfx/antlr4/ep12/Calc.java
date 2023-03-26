@@ -1,20 +1,16 @@
 package org.teachfx.antlr4.ep12;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
+import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.stringtemplate.v4.ST;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.teachfx.antlr4.ep12.ast.*;
-import org.teachfx.antlr4.ep12.parser.*;
-import org.teachfx.antlr4.ep12.visitor.*;
+import org.teachfx.antlr4.ep12.ast.ExpressionNode;
+import org.teachfx.antlr4.ep12.parser.MathLexer;
+import org.teachfx.antlr4.ep12.parser.MathParser;
+import org.teachfx.antlr4.ep12.visitor.ASTVisitor;
+import org.teachfx.antlr4.ep12.visitor.BuildAstVisitor;
+import org.teachfx.antlr4.ep12.visitor.EvalExprVisitor;
+
+import java.io.*;
 
 public class Calc {
     public static void main(String[] args) throws IOException {

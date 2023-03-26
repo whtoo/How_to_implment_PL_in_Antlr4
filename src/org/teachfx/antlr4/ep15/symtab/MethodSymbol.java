@@ -1,9 +1,9 @@
 package org.teachfx.antlr4.ep15.symtab;
 
+import org.antlr.v4.runtime.ParserRuleContext;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.antlr.v4.runtime.ParserRuleContext;
 
 public class MethodSymbol extends ScopedSymbol {
     Map<String, Symbol> orderedArgs = new LinkedHashMap<String, Symbol>();

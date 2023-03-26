@@ -1,7 +1,8 @@
 package org.teachfx.antlr4.ep2;
 
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 public class Test {
     public static void main(String[] args) throws Exception {

@@ -2,8 +2,9 @@ package org.teachfx.antlr4.ep17.misc;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
-
-import org.teachfx.antlr4.ep17.symtab.*;
+import org.teachfx.antlr4.ep17.symtab.Scope;
+import org.teachfx.antlr4.ep17.symtab.Symbol;
+import org.teachfx.antlr4.ep17.symtab.Type;
 
 public class ScopeUtil {
 

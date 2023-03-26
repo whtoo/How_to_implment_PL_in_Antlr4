@@ -1,16 +1,14 @@
 // Generated from ./compiler/MathExpr.g4 by ANTLR 4.8
 
 package org.teachfx.antlr4.ep14.compiler;
-import org.teachfx.antlr4.ep14.symtab.*;
 
-import org.antlr.v4.runtime.Lexer;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.*;
+import org.antlr.v4.runtime.atn.ATN;
+import org.antlr.v4.runtime.atn.ATNDeserializer;
+import org.antlr.v4.runtime.atn.LexerATNSimulator;
+import org.antlr.v4.runtime.atn.PredictionContextCache;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.misc.*;
+import org.teachfx.antlr4.ep14.symtab.SymbolTable;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class MathExprLexer extends Lexer {

@@ -1,38 +1,14 @@
 package org.teachfx.antlr4.ep20.visitor;
 
-import java.util.*;
-
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep20.misc.FunctionSpace;
 import org.teachfx.antlr4.ep20.misc.MemorySpace;
 import org.teachfx.antlr4.ep20.misc.ScopeUtil;
-import org.teachfx.antlr4.ep20.misc.Util;
-import org.teachfx.antlr4.ep20.symtab.*;
 import org.teachfx.antlr4.ep20.parser.CymbolBaseVisitor;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.ExprBinaryContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.ExprFuncCallContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.ExprGroupContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.ExprPrimaryContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.ExprUnaryContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.FunctionDeclContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.PrimaryBOOLContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.PrimaryCHARContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.PrimaryFLOATContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.PrimaryIDContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.PrimaryINTContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.PrimarySTRINGContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.StatAssignContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.StatBlockContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.StatReturnContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.StateConditionContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.StateWhileContext;
-import org.teachfx.antlr4.ep20.parser.CymbolParser.VarDeclContext;
-import org.teachfx.antlr4.ep20.symtab.MethodSymbol;
-import org.teachfx.antlr4.ep20.symtab.ReturnValue;
-import org.teachfx.antlr4.ep20.symtab.Scope;
-import org.teachfx.antlr4.ep20.symtab.Symbol;
-import org.teachfx.antlr4.ep20.symtab.TypeTable;
+import org.teachfx.antlr4.ep20.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep20.symtab.*;
+
+import java.util.*;
 
 public class Interpreter extends CymbolBaseVisitor<Object> {
     private ScopeUtil scopes;

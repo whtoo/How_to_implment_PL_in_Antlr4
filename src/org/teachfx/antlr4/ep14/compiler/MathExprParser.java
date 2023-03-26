@@ -1,16 +1,21 @@
 // Generated from ./compiler/MathExpr.g4 by ANTLR 4.8
 
 package org.teachfx.antlr4.ep14.compiler;
-import org.teachfx.antlr4.ep14.symtab.*;
 
-import org.antlr.v4.runtime.atn.*;
-import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.misc.*;
-import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.atn.ATN;
+import org.antlr.v4.runtime.atn.ATNDeserializer;
+import org.antlr.v4.runtime.atn.ParserATNSimulator;
+import org.antlr.v4.runtime.atn.PredictionContextCache;
+import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.tree.ParseTreeVisitor;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.teachfx.antlr4.ep14.symtab.BuiltIntTypeSymbol;
+import org.teachfx.antlr4.ep14.symtab.SymbolTable;
+import org.teachfx.antlr4.ep14.symtab.Type;
+import org.teachfx.antlr4.ep14.symtab.VariableSymbol;
+
 import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class MathExprParser extends Parser {

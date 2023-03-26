@@ -1,19 +1,14 @@
 package org.teachfx.antlr4.ep17;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.teachfx.antlr4.ep17.misc.*;
 import org.teachfx.antlr4.ep17.parser.CymbolLexer;
 import org.teachfx.antlr4.ep17.parser.CymbolParser;
+import org.teachfx.antlr4.ep17.visitor.CallGraphVisitor;
 
-import org.teachfx.antlr4.ep17.visitor.*;
+import java.io.*;
 
 public class Compiler {
    

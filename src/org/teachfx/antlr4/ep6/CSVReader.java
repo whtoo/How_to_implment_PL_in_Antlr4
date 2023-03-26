@@ -1,13 +1,13 @@
 package org.teachfx.antlr4.ep6;
 
+import org.teachfx.antlr4.ep6.CSVParser.FieldContext;
+import org.teachfx.antlr4.ep6.CSVParser.HeaderContext;
+import org.teachfx.antlr4.ep6.CSVParser.RowContext;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.teachfx.antlr4.ep6.CSVParser.FieldContext;
-import org.teachfx.antlr4.ep6.CSVParser.HeaderContext;
-import org.teachfx.antlr4.ep6.CSVParser.RowContext;
 
 public class CSVReader extends CSVBaseListener {
     List<String> tableHeader;

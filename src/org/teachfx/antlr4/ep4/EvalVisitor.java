@@ -1,14 +1,9 @@
 package org.teachfx.antlr4.ep4;
+
+import org.teachfx.antlr4.ep4.LabeledExprParser.*;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import org.teachfx.antlr4.ep4.LabeledExprParser.AddSubContext;
-import org.teachfx.antlr4.ep4.LabeledExprParser.AssignContext;
-import org.teachfx.antlr4.ep4.LabeledExprParser.IdContext;
-import org.teachfx.antlr4.ep4.LabeledExprParser.IntContext;
-import org.teachfx.antlr4.ep4.LabeledExprParser.MulDivContext;
-import org.teachfx.antlr4.ep4.LabeledExprParser.ParensContext;
-import org.teachfx.antlr4.ep4.LabeledExprParser.PrintExprContext;
 
 public class EvalVisitor extends LabeledExprBaseVisitor<Integer>{
     Map<String,Integer> memory = new HashMap<>();

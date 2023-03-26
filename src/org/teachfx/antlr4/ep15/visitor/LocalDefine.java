@@ -1,11 +1,11 @@
 package org.teachfx.antlr4.ep15.visitor;
 
-import org.teachfx.antlr4.ep15.symtab.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
-import org.teachfx.antlr4.ep15.parser.*;
+import org.teachfx.antlr4.ep15.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep15.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep15.symtab.*;
 
 /*
 * @author Arthur.Bltiz

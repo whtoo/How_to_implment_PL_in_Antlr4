@@ -1,13 +1,13 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
-import java.io.InputStream;
-import java.io.File;
-import java.io.FileInputStream;
-
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 
 public class VMInterpreter {
     public static final int DEFAULT_OPERAND_STACK_SIZE = 128;

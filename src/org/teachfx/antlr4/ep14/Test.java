@@ -1,13 +1,14 @@
 package org.teachfx.antlr4.ep14;
 
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.teachfx.antlr4.ep14.compiler.MathExprLexer;
+import org.teachfx.antlr4.ep14.compiler.MathExprParser;
+import org.teachfx.antlr4.ep14.symtab.SymbolTable;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.teachfx.antlr4.ep14.compiler.*;
-import org.teachfx.antlr4.ep14.symtab.SymbolTable;
 
 
 public class Test {

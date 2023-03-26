@@ -1,16 +1,12 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
+import org.antlr.v4.runtime.Token;
+import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.antlr.v4.runtime.Token;
-import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.FunctionDeclarationContext;
-import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.GlobalsContext;
-import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.InstrContext;
-import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.LabelContext;
-import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.ProgramContext;
 
 public class ByteCodeAssembler extends VMAssemblerBaseListener {
     public static final int INITIAL_CODE_SIZE = 2048;

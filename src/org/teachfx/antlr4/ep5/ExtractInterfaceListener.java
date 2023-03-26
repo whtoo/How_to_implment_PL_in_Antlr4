@@ -1,9 +1,8 @@
 package org.teachfx.antlr4.ep5;
 
+import org.antlr.v4.runtime.TokenStream;
 import org.teachfx.antlr4.ep5.JavaParser.ClassDeclarationContext;
 import org.teachfx.antlr4.ep5.JavaParser.MethodDeclarationContext;
-
-import org.antlr.v4.runtime.TokenStream;
 
 public class ExtractInterfaceListener extends JavaBaseListener {
     JavaParser parser;

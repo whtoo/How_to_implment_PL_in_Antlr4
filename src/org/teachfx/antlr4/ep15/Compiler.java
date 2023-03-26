@@ -1,19 +1,16 @@
 package org.teachfx.antlr4.ep15;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep15.parser.CymbolLexer;
 import org.teachfx.antlr4.ep15.parser.CymbolParser;
-import org.teachfx.antlr4.ep15.parser.CymbolVisitor;
 import org.teachfx.antlr4.ep15.visitor.LocalDefine;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {

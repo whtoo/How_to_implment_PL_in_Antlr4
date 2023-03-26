@@ -1,9 +1,9 @@
 package org.teachfx.antlr4.ep17.misc;
 
-import java.lang.reflect.Field;
-
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
+
+import java.lang.reflect.Field;
 
 public class Util {
 

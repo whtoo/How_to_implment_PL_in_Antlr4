@@ -2,10 +2,12 @@ package org.teachfx.antlr4.ep20.visitor;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.teachfx.antlr4.ep20.misc.CompilerLogger;
+import org.teachfx.antlr4.ep20.misc.ScopeUtil;
+import org.teachfx.antlr4.ep20.misc.Util;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.parser.CymbolParser.*;
 import org.teachfx.antlr4.ep20.symtab.*;
-import org.teachfx.antlr4.ep20.misc.*;
 
 /**
  * @description 给变量分配类型

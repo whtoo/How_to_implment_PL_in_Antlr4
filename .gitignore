@@ -10,3 +10,4 @@ src/**/*.jar
 **/DS_Store
 .metals
 out/
+.DS_Store

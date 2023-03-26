@@ -23,6 +23,7 @@ public class MemorySpace {
     public MemorySpace(String name) {
         this(name, null);
 
+
     }
     public MemorySpace(String name,MemorySpace enclosingSpace) {
         this.name = name;

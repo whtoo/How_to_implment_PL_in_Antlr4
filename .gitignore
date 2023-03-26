@@ -7,7 +7,7 @@ src/**/*.jar
 **/*.iml
 .idea/
 .vscode/
-**/DS_Store
+**/.DS_Store
 .metals
 out/
 .DS_Store

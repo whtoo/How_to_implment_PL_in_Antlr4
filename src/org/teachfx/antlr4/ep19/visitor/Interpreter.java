@@ -11,6 +11,7 @@ import org.teachfx.antlr4.ep19.runtime.StructInstance;
 import org.teachfx.antlr4.ep19.symtab.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -19,8 +20,8 @@ import java.util.stream.Collectors;
  * 解释器 - 以visit模式实现
  */
 public class Interpreter extends CymbolBaseVisitor<Object> {
-    private ScopeUtil scopes;
-    private Stack<MemorySpace> memoryStack;
+    private final ScopeUtil scopes;
+    private final Stack<MemorySpace> memoryStack;
     private MemorySpace currentSpace;
     private static final ReturnValue sharedRetValue = new ReturnValue(null);
 
@@ -46,7 +47,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
         if (ctx.getChildCount() >= 2) {
-            System.out.println(String.format("var as - %s = %s",ctx.getChild(1).getText(),ctx.getChild(3).getText()));
+            System.out.printf("var as - %s = %s%n",ctx.getChild(1).getText(),ctx.getChild(3).getText());
 
             this.currentSpace.define(ctx.getChild(1).getText(), visit(ctx.getChild(3)));
         }
@@ -130,13 +131,13 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
         Object value = 0;
         if (method.builtin) {
-            if (method.getName() == "print") {
+            if ("print".equalsIgnoreCase(method.getName())) {
                 System.out.println(" eval " + ctx.getText());
                 List<ParseTree> args = ctx.children.subList(1, ctx.children.size() - 1);
                 String fmtArgs = args.stream()
-                .map(p -> visit(p))
-                .filter(p -> p != null)
-                .map(p -> p.toString())
+                .map(this::visit)
+                .filter(Objects::nonNull)
+                .map(Object::toString)
                 .collect(Collectors.joining(","));
                 System.out.println(" print res :" + fmtArgs);
             }
@@ -209,7 +210,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             ExprStructFieldAccessContext wlhs = (ExprStructFieldAccessContext)lhs;
             StructInstance instance = (StructInstance)this.currentSpace.get(lhs.children.get(0).getText());
             Object assignValue = visit(ctx.expr(1));
-            System.out.println(String.format("assign %s with %s",lhs.getText(),assignValue));
+            System.out.printf("assign %s with %s%n",lhs.getText(),assignValue);
             instance.update(wlhs.expr(1).getText(),assignValue);
 
         } else {

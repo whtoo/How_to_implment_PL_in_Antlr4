@@ -26,7 +26,7 @@ public class Compiler {
      * --LocalResolver--> AnnotatedParserTree
      * -> Interpreter
      */
-    public static void main(String[] args) throws IOException,FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException,IOException {
         String fileName = null;
         fileName = new File(".").getAbsolutePath() + "/src/org/teachfx/antlr4/ep19" + "/t.cymbol";
         if(args.length > 0) fileName = args[0];

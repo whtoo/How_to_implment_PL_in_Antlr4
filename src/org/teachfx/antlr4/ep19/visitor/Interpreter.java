@@ -57,7 +57,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     // < Expression evaluation
     @Override
     public Object visitExprBinary(ExprBinaryContext ctx) {
-        // System.out.println("exec in line " + ctx.start.getLine() + " : with " + ctx.getText());
+
         Object left = visit(ctx.getChild(0));
         Object right = visit(ctx.getChild(2));
         String op = ctx.o.getText();
@@ -68,52 +68,40 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         Integer rhs = (Integer) right;
 
         switch (op) {
-        case "+":
-            if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
-                ret = (Float) left + (Float) right;
-            } else {
-                ret = (Integer) left + (Integer) right;
+            case "+" -> {
+                if (left.getClass().toString().equals("Float") || right.getClass().toString().equals("Float")) {
+                    ret = (Float) left + (Float) right;
+                } else {
+                    ret = (Integer) left + (Integer) right;
+                }
             }
-            break;
-        case "-":
-            if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
-                ret = (Float) left - (Float) right;
-            } else {
-                ret = (Integer) left - (Integer) right;
+            case "-" -> {
+                if (left.getClass().toString().equals("Float") || right.getClass().toString().equals("Float")) {
+                    ret = (Float) left - (Float) right;
+                } else {
+                    ret = (Integer) left - (Integer) right;
+                }
             }
-            break;
-        case "*":
-            if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
-                ret = (Float) left * (Float) right;
-            } else {
-                ret = (Integer) left * (Integer) right;
+            case "*" -> {
+                if (left.getClass().toString().equals("Float") || right.getClass().toString().equals("Float")) {
+                    ret = (Float) left * (Float) right;
+                } else {
+                    ret = (Integer) left * (Integer) right;
+                }
             }
-            break;
-        case "/":
-            if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
-                ret = (Float) left / (Float) right;
-            } else {
-                ret = (Integer) left / (Integer) right;
+            case "/" -> {
+                if (left.getClass().toString().equals("Float") || right.getClass().toString().equals("Float")) {
+                    ret = (Float) left / (Float) right;
+                } else {
+                    ret = (Integer) left / (Integer) right;
+                }
             }
-            break;
-        case "<":
-            ret = (lhs < rhs) ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
-        case ">":
-            ret = lhs > rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
-        case "<=":
-            ret = lhs <= rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
-        case ">=":
-            ret = lhs >= rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
-        case "!=":
-            ret = lhs != rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
-        case "==":
-            ret = lhs == rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
+            case "<" -> ret = (lhs < rhs) ? TypeTable.TRUE : TypeTable.FALSE;
+            case ">" -> ret = lhs > rhs ? TypeTable.TRUE : TypeTable.FALSE;
+            case "<=" -> ret = lhs <= rhs ? TypeTable.TRUE : TypeTable.FALSE;
+            case ">=" -> ret = lhs >= rhs ? TypeTable.TRUE : TypeTable.FALSE;
+            case "!=" -> ret = lhs != rhs ? TypeTable.TRUE : TypeTable.FALSE;
+            case "==" -> ret = lhs == rhs ? TypeTable.TRUE : TypeTable.FALSE;
         }
         return ret;
     }
@@ -261,9 +249,8 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         if (ctx.expr().stream().findFirst().isPresent()) {
             ExprContext structRef = ctx.expr().stream().findFirst().get();
             StructSymbol symbol = (StructSymbol)visit(structRef);
-            StructInstance instance = new StructInstance(structRef.getText(),currentSpace,symbol);
 
-            return  instance;
+            return new StructInstance(structRef.getText(),currentSpace,symbol);
         }
 
         return null;
@@ -271,7 +258,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitPrimaryBOOL(PrimaryBOOLContext ctx) {
-        return ctx.getText() == "true" ? TypeTable.TRUE : TypeTable.FALSE;
+        return Objects.equals(ctx.getText(), "true") ? TypeTable.TRUE : TypeTable.FALSE;
     }
 
     @Override

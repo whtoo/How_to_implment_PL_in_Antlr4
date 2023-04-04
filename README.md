@@ -55,7 +55,7 @@ PS: 终于写完了，感觉好忐忑。不过，我还有另外几个也是编�
 
 ## 3. 工程体系介绍
 整个工程需要3种外部环境支持。
-- a. `JDK8+` is required. (JDK环境需要>= 8,我本地是openJDK 14)
+- a. `JDK18+` is required. (JDK环境需要>= 18,我本地是openJDK 18)
 - b. `Antlr4` runtime support.(lib已经有了，并且我在ant构建文件中已经写好了。)
 - c. `Ant` support. (Mac:brew install ant,其他平台：[Baidu一下Ant安装](https://www.baidu.com/s?wd=ant%E5%AE%89%E8%A3%85&rsv_spt=1&rsv_iqid=0x92a5c3ca00098ab3&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=1&rsv_dl=tb&oq=ant&rsv_btype=t&inputT=1837&rsv_t=ec4cvoU9XIugnSk4yfAeGzHEthu95IAGc%2BcxFt188XBik9tpLDQyKTb2S3Y4301WBs3T&rsv_pq=ea06018e001299b9&rsv_sug3=50&rsv_sug1=21&rsv_sug7=100&rsv_sug2=0&rsv_sug4=2109))。
 ### 3.1. 目录如下所述:

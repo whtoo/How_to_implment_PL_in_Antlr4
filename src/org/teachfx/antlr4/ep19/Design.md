@@ -3,13 +3,13 @@
 ## overview
 
 ``` mermaid
-flowchart LR
-    Input --> CharStream 
-    CharStream --> Tokens 
-    Tokens --> ParserTree
-    ParserTree --Define--> AnnotatedParserTree
-    AnnotatedParserTree --Resolve--> AnnotatedParserTree 
-    AnnotatedParserTree --> Interpreter
+    flowchart LR
+        Input --> CharStream 
+        CharStream --> Tokens 
+        Tokens --> ParserTree
+        ParserTree --Define--> AnnotatedParserTree
+        AnnotatedParserTree --Resolve--> AnnotatedParserTree 
+        AnnotatedParserTree --> Interpreter
 ```
 
 ``` plantuml

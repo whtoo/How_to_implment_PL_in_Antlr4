@@ -7,8 +7,8 @@ public class SymbolCollector extends MathExprBaseVisitor {
 
     @Override
     public Object visitCompileUnit(CompileUnitContext ctx) {
-        
+
         return null;
     }
-    
+
 }

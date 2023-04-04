@@ -11,9 +11,9 @@ import java.io.InputStreamReader;
 public class Calc {
     public static void main(String[] args) throws Exception {
         String inputFile = null;
-        if ( args.length>0 ) inputFile = args[0];
+        if (args.length > 0) inputFile = args[0];
         InputStream is = System.in;
-        if ( inputFile!=null ) {
+        if (inputFile != null) {
             is = new FileInputStream(inputFile);
         }
 
@@ -21,12 +21,12 @@ public class Calc {
         String expr = br.readLine();              // get first expression
         int line = 1;                             // track input expr line numbers
 
-		ExprParser parser = new ExprParser(null); // share single parser instance
-  		parser.setBuildParseTree(false);          // don't need trees
+        ExprParser parser = new ExprParser(null); // share single parser instance
+        parser.setBuildParseTree(false);          // don't need trees
 
-        while ( expr!=null ) {             // while we have more expressions
+        while (expr != null) {             // while we have more expressions
             // create new lexer and token stream for each line (expression)
-            ANTLRInputStream input = new ANTLRInputStream(expr+"\n");
+            ANTLRInputStream input = new ANTLRInputStream(expr + "\n");
             ExprLexer lexer = new ExprLexer(input);
             lexer.setLine(line);           // notify lexer of input position
             lexer.setCharPositionInLine(0);

@@ -1,25 +1,23 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
-import java.io.InputStream;
-import java.io.File;
-import java.io.FileInputStream;
-
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+
 public class VMInterpreter {
     public static final int DEFAULT_OPERAND_STACK_SIZE = 128;
     public static final int DEFAULT_CALL_STACK_SIZE = 1024;
-
+    protected Object[] constPool;
     DisAssembler disasm;
     int ip;
     byte[] code;
     int codeSize;
     Object[] globals;
-    protected Object[] constPool;
-
     Object[] operands = new Object[DEFAULT_OPERAND_STACK_SIZE];
     int sp = -1;
 
@@ -92,7 +90,9 @@ public class VMInterpreter {
         return hasErrors;
     }
 
-    /** Execute the bytecodes in code memory starting at mainAddr */
+    /**
+     * Execute the bytecodes in code memory starting at mainAddr
+     */
     public void exec() throws Exception {
         // SIMULATE "call main()"; set up stack as if we'd called main()
         if (mainFunction == null) {
@@ -115,145 +115,145 @@ public class VMInterpreter {
                 trace();
             ip++;
             switch (opcode) {
-            case BytecodeDefinition.INSTR_IADD:
-                a = (Integer) operands[sp - 1];
-                b = (Integer) operands[sp];
-                sp -= 2;
-                operands[++sp] = a + b;
-                break;
-            case BytecodeDefinition.INSTR_ISUB:
-                a = (Integer) operands[sp - 1];
-                b = (Integer) operands[sp];
-                sp -= 2;
-                operands[++sp] = a - b;
-                break;
-            case BytecodeDefinition.INSTR_IMUL:
-                a = (Integer) operands[sp - 1];
-                b = (Integer) operands[sp];
-                sp -= 2;
-                operands[++sp] = a * b;
-                break;
-            case BytecodeDefinition.INSTR_ILT:
-                a = (Integer) operands[sp - 1];
-                b = (Integer) operands[sp];
-                sp -= 2;
-                operands[++sp] = a < b;
-                break;
-            case BytecodeDefinition.INSTR_IEQ:
-                a = (Integer) operands[sp - 1];
-                b = (Integer) operands[sp];
-                sp -= 2;
-                operands[++sp] = a == b;
-                break;
-            case BytecodeDefinition.INSTR_FADD:
-                e = (Float) operands[sp - 1];
-                f = (Float) operands[sp];
-                sp -= 2;
-                operands[++sp] = e + f;
-                break;
-            case BytecodeDefinition.INSTR_FSUB:
-                e = (Float) operands[sp - 1];
-                f = (Float) operands[sp];
-                sp -= 2;
-                operands[++sp] = e - f;
-                break;
-            case BytecodeDefinition.INSTR_FMUL:
-                e = (Float) operands[sp - 1];
-                f = (Float) operands[sp];
-                sp -= 2;
-                operands[++sp] = e * f;
-                break;
-            case BytecodeDefinition.INSTR_FLT:
-                e = (Float) operands[sp - 1];
-                f = (Float) operands[sp];
-                sp -= 2;
-                operands[++sp] = e < f;
-                break;
-            case BytecodeDefinition.INSTR_FEQ:
-                e = (Float) operands[sp - 1];
-                f = (Float) operands[sp];
-                sp -= 2;
-                operands[++sp] = e == f;
-                break;
-            case BytecodeDefinition.INSTR_ITOF:
-                a = (Integer) operands[sp--];
-                operands[++sp] = (float) a;
-                break;
-            case BytecodeDefinition.INSTR_RET:
-                StackFrame fr = calls[fp--];
-                ip = fr.returnAddress;
-                break;
+                case BytecodeDefinition.INSTR_IADD:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = a + b;
+                    break;
+                case BytecodeDefinition.INSTR_ISUB:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = a - b;
+                    break;
+                case BytecodeDefinition.INSTR_IMUL:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = a * b;
+                    break;
+                case BytecodeDefinition.INSTR_ILT:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = a < b;
+                    break;
+                case BytecodeDefinition.INSTR_IEQ:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = a == b;
+                    break;
+                case BytecodeDefinition.INSTR_FADD:
+                    e = (Float) operands[sp - 1];
+                    f = (Float) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = e + f;
+                    break;
+                case BytecodeDefinition.INSTR_FSUB:
+                    e = (Float) operands[sp - 1];
+                    f = (Float) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = e - f;
+                    break;
+                case BytecodeDefinition.INSTR_FMUL:
+                    e = (Float) operands[sp - 1];
+                    f = (Float) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = e * f;
+                    break;
+                case BytecodeDefinition.INSTR_FLT:
+                    e = (Float) operands[sp - 1];
+                    f = (Float) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = e < f;
+                    break;
+                case BytecodeDefinition.INSTR_FEQ:
+                    e = (Float) operands[sp - 1];
+                    f = (Float) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = e == f;
+                    break;
+                case BytecodeDefinition.INSTR_ITOF:
+                    a = (Integer) operands[sp--];
+                    operands[++sp] = (float) a;
+                    break;
+                case BytecodeDefinition.INSTR_RET:
+                    StackFrame fr = calls[fp--];
+                    ip = fr.returnAddress;
+                    break;
 
-            case BytecodeDefinition.INSTR_BR:
-                ip = getIntOperand();
-                break;
-            case BytecodeDefinition.INSTR_BRT:
-                addr = getIntOperand();
-                if (operands[sp--].equals(true))
-                    ip = addr;
-                break;
-            case BytecodeDefinition.INSTR_BRF:
-                addr = getIntOperand();
-                if (operands[sp--].equals(false))
-                    ip = addr;
-                break;
-            case BytecodeDefinition.INSTR_CALL:
-                int functionConstPoolIndex = getIntOperand();
-                call(functionConstPoolIndex);
-                break;
-            case BytecodeDefinition.INSTR_CCONST:
-                operands[++sp] = (char) getIntOperand();
-                break;
-            case BytecodeDefinition.INSTR_ICONST:
-                operands[++sp] = getIntOperand(); // push operand
-                break;
-            case BytecodeDefinition.INSTR_FCONST:
-            case BytecodeDefinition.INSTR_SCONST:
-                int constPoolIndex = getIntOperand();
-                operands[++sp] = constPool[constPoolIndex];
-                break;
-            case BytecodeDefinition.INSTR_LOAD: // load from call stack
-                addr = getIntOperand();
-                operands[++sp] = calls[fp].locals[addr];
-                break;
-            case BytecodeDefinition.INSTR_GLOAD:// load from global memory
-                addr = getIntOperand();
-                operands[++sp] = globals[addr];
-                break;
-            case BytecodeDefinition.INSTR_FLOAD:
-                StructSpace struct = (StructSpace) operands[sp--];
-                int fieldOffset = getIntOperand();
-                operands[++sp] = struct.fields[fieldOffset];
-                break;
-            case BytecodeDefinition.INSTR_STORE:
-                addr = getIntOperand();
-                calls[fp].locals[addr] = operands[sp--];
-                break;
-            case BytecodeDefinition.INSTR_GSTORE:
-                addr = getIntOperand();
-                globals[addr] = operands[sp--];
-                break;
-            case BytecodeDefinition.INSTR_FSTORE:
-                struct = (StructSpace) operands[sp--];
-                v = operands[sp--];
-                fieldOffset = getIntOperand();
-                struct.fields[fieldOffset] = v;
-                break;
-            case BytecodeDefinition.INSTR_PRINT:
-                System.out.println(operands[sp--]);
-                break;
-            case BytecodeDefinition.INSTR_STRUCT:
-                int nfields = getIntOperand();
-                operands[++sp] = new StructSpace(nfields);
-                break;
-            case BytecodeDefinition.INSTR_NULL:
-                operands[++sp] = null;
-                break;
-            case BytecodeDefinition.INSTR_POP:
-                --sp;
-                break;
-            default:
-                throw new Error("invalid opcode: " + opcode + " at ip=" + (ip - 1));
+                case BytecodeDefinition.INSTR_BR:
+                    ip = getIntOperand();
+                    break;
+                case BytecodeDefinition.INSTR_BRT:
+                    addr = getIntOperand();
+                    if (operands[sp--].equals(true))
+                        ip = addr;
+                    break;
+                case BytecodeDefinition.INSTR_BRF:
+                    addr = getIntOperand();
+                    if (operands[sp--].equals(false))
+                        ip = addr;
+                    break;
+                case BytecodeDefinition.INSTR_CALL:
+                    int functionConstPoolIndex = getIntOperand();
+                    call(functionConstPoolIndex);
+                    break;
+                case BytecodeDefinition.INSTR_CCONST:
+                    operands[++sp] = (char) getIntOperand();
+                    break;
+                case BytecodeDefinition.INSTR_ICONST:
+                    operands[++sp] = getIntOperand(); // push operand
+                    break;
+                case BytecodeDefinition.INSTR_FCONST:
+                case BytecodeDefinition.INSTR_SCONST:
+                    int constPoolIndex = getIntOperand();
+                    operands[++sp] = constPool[constPoolIndex];
+                    break;
+                case BytecodeDefinition.INSTR_LOAD: // load from call stack
+                    addr = getIntOperand();
+                    operands[++sp] = calls[fp].locals[addr];
+                    break;
+                case BytecodeDefinition.INSTR_GLOAD:// load from global memory
+                    addr = getIntOperand();
+                    operands[++sp] = globals[addr];
+                    break;
+                case BytecodeDefinition.INSTR_FLOAD:
+                    StructSpace struct = (StructSpace) operands[sp--];
+                    int fieldOffset = getIntOperand();
+                    operands[++sp] = struct.fields[fieldOffset];
+                    break;
+                case BytecodeDefinition.INSTR_STORE:
+                    addr = getIntOperand();
+                    calls[fp].locals[addr] = operands[sp--];
+                    break;
+                case BytecodeDefinition.INSTR_GSTORE:
+                    addr = getIntOperand();
+                    globals[addr] = operands[sp--];
+                    break;
+                case BytecodeDefinition.INSTR_FSTORE:
+                    struct = (StructSpace) operands[sp--];
+                    v = operands[sp--];
+                    fieldOffset = getIntOperand();
+                    struct.fields[fieldOffset] = v;
+                    break;
+                case BytecodeDefinition.INSTR_PRINT:
+                    System.out.println(operands[sp--]);
+                    break;
+                case BytecodeDefinition.INSTR_STRUCT:
+                    int nfields = getIntOperand();
+                    operands[++sp] = new StructSpace(nfields);
+                    break;
+                case BytecodeDefinition.INSTR_NULL:
+                    operands[++sp] = null;
+                    break;
+                case BytecodeDefinition.INSTR_POP:
+                    --sp;
+                    break;
+                default:
+                    throw new Error("invalid opcode: " + opcode + " at ip=" + (ip - 1));
             }
             opcode = code[ip];
         }

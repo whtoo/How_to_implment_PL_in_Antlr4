@@ -1,7 +1,9 @@
 package org.teachfx.antlr4.ep3;
 
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
+
 import java.io.FileInputStream;
 import java.io.InputStream;
 

@@ -4,13 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SymbolTable implements Scope {
-    Map<String,Symbol> symbols; 
     static Type UNDEFINED;
+    Map<String, Symbol> symbols;
 
     public SymbolTable() {
         symbols = new HashMap<>();
         initTypeSystem();
     }
+
     private void initTypeSystem() {
         symbols.put("int", new BuiltIntTypeSymbol("int"));
         symbols.put("float", new BuiltIntTypeSymbol("float"));
@@ -28,7 +29,7 @@ public class SymbolTable implements Scope {
 
     @Override
     public void define(Symbol sym) {
-        symbols.put(sym.name,sym);
+        symbols.put(sym.name, sym);
     }
 
     @Override

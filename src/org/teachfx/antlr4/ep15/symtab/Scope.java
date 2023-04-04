@@ -4,14 +4,14 @@ package org.teachfx.antlr4.ep15.symtab;
  * Scope
  */
 public interface Scope {
-    public String getScopeName();
+    String getScopeName();
 
-    public Scope getEnclosingScope();
+    Scope getEnclosingScope();
 
-    public void define(Symbol sym);
+    void define(Symbol sym);
 
-    public Symbol resolve(String name);
+    Symbol resolve(String name);
 
-    public Type lookup(String name);
-    
+    Type lookup(String name);
+
 }

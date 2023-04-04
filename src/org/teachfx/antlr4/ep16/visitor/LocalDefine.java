@@ -1,32 +1,32 @@
 package org.teachfx.antlr4.ep16.visitor;
 
-import org.teachfx.antlr4.ep16.symtab.*;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.teachfx.antlr4.ep16.misc.Util;
 import org.teachfx.antlr4.ep16.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep16.symtab.*;
 
 /*
-* @author Arthur.Bltiz
-* @description 变量消解-标记每个ast节点的作用域归属问题.
-* @purpose 解决变量的定位问题--属于哪个作用域
-*/
+ * @author Arthur.Bltiz
+ * @description 变量消解-标记每个ast节点的作用域归属问题.
+ * @purpose 解决变量的定位问题--属于哪个作用域
+ */
 public class LocalDefine extends CymbolASTVisitor<Object> {
     private Scope currentScope = null;
-    private ParseTreeProperty<Scope> scopes;
+    private final ParseTreeProperty<Scope> scopes;
 
-    public ParseTreeProperty<Scope> getScopes() {
-        return scopes;
-    }
-    
     public LocalDefine() {
         BaseScope globalScope = new GlobalScope();
         currentScope = globalScope;
-        MethodSymbol printFuncSymbol = new MethodSymbol("print",globalScope,null);
+        MethodSymbol printFuncSymbol = new MethodSymbol("print", globalScope, null);
         printFuncSymbol.builtin = true;
         printFuncSymbol.getMemebers().put("value", TypeTable.OBJECT);
         globalScope.define(printFuncSymbol);
         scopes = new ParseTreeProperty<Scope>();
+    }
+
+    public ParseTreeProperty<Scope> getScopes() {
+        return scopes;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         stashScope(ctx);
         return super.visitVarDecl(ctx);
     }
-    
+
     @Override
     public Object visitStatVarDecl(StatVarDeclContext ctx) {
         System.out.println(tab + "enter stat var decl " + ctx.getText());
@@ -63,17 +63,18 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         System.out.println("enter scope with " + currentScope.getScopeName());
         return null;
     }
-   
+
     @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         super.visitExprFuncCall(ctx);
         stashScope(ctx);
         return null;
     }
+
     @Override
     public Object visitFormalParameter(FormalParameterContext ctx) {
         super.visitFormalParameter(ctx);
-        System.out.println(tab + "collect param with "+ctx.getText());
+        System.out.println(tab + "collect param with " + ctx.getText());
         stashScope(ctx);
         return null;
     }
@@ -91,25 +92,28 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
 
         return null;
     }
- 
+
     @Override
     public Object visitExprBinary(ExprBinaryContext ctx) {
         System.out.println(tab + "enter binary expr " + ctx.getText());
         stashScope(ctx);
         return super.visitExprBinary(ctx);
     }
+
     @Override
     public Object visitExprUnary(ExprUnaryContext ctx) {
         System.out.println(tab + "enter unary expr " + ctx.getText());
         stashScope(ctx);
         return super.visitExprUnary(ctx);
     }
+
     @Override
     public Object visitType(TypeContext ctx) {
         System.out.println(tab + "enter type " + ctx.getText());
         stashScope(ctx);
         return null;
     }
+
     @Override
     public Object visitPrimaryFLOAT(PrimaryFLOATContext ctx) {
         System.out.println(tab + "enter float constant");
@@ -119,7 +123,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
 
     @Override
     public Object visitPrimaryID(PrimaryIDContext ctx) {
-        System.out.println(tab + "enter id  "+ctx.getText());
+        System.out.println(tab + "enter id  " + ctx.getText());
 
         stashScope(ctx);
         return null;
@@ -134,15 +138,15 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     }
 
     public void stashScope(ParserRuleContext ctx) {
-        scopes.put(ctx,currentScope);
+        scopes.put(ctx, currentScope);
     }
 
     public void pushScope(Scope scope) {
         currentScope = scope;
     }
 
-    public void popScope() { 
+    public void popScope() {
         currentScope = currentScope.getEnclosingScope();
     }
-    
+
 }

@@ -15,5 +15,4 @@ public class TypeTable {
     public static Integer FALSE = 0;
 
 
-
 }

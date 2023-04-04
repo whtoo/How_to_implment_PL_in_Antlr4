@@ -5,11 +5,11 @@ import org.teachfx.antlr4.ep17.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep17.parser.CymbolParser.ExprFuncCallContext;
 import org.teachfx.antlr4.ep17.parser.CymbolParser.FunctionDeclContext;
 
-public class CallGraphVisitor extends CymbolBaseVisitor<Object>{
+public class CallGraphVisitor extends CymbolBaseVisitor<Object> {
     public Graph callGraph;
     private String currentFunctionName = null;
 
-    public CallGraphVisitor() { 
+    public CallGraphVisitor() {
         super();
         this.callGraph = new Graph();
         callGraph.nodes.add("print");
@@ -20,9 +20,9 @@ public class CallGraphVisitor extends CymbolBaseVisitor<Object>{
         super.visitExprFuncCall(ctx);
         if (currentFunctionName != null) {
             String funcName = ctx.ID().getText();
-            callGraph.edge(currentFunctionName,funcName);
+            callGraph.edge(currentFunctionName, funcName);
         }
-    
+
         return null;
     }
 

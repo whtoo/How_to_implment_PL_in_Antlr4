@@ -11,9 +11,6 @@ int add(int x,int y) {
     return d;
 }
 
-void println(int x) {
-    print(x);
-}
 
 int v = add(a,b);
 int e = v * c;

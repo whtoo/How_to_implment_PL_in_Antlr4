@@ -3,10 +3,10 @@ package org.teachfx.antlr4.ep19.symtab;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public  abstract class BaseScope implements Scope {
+public abstract class BaseScope implements Scope {
     Scope enclosingScope;
-    Map<String,Symbol> symbols = new LinkedHashMap<>();
-    
+    Map<String, Symbol> symbols = new LinkedHashMap<>();
+
     public BaseScope(Scope parent) {
         this.enclosingScope = parent;
         define(TypeTable.INT);
@@ -23,8 +23,8 @@ public  abstract class BaseScope implements Scope {
     @Override
     public Symbol resolve(String name) {
         Symbol s = symbols.get(name);
-        if(s!=null) return s;
-        if(enclosingScope != null) return enclosingScope.resolve(name);
+        if (s != null) return s;
+        if (enclosingScope != null) return enclosingScope.resolve(name);
         return null;
     }
 
@@ -41,6 +41,6 @@ public  abstract class BaseScope implements Scope {
 
     @Override
     public String toString() {
-        return getScopeName() + symbols.keySet().toString();
+        return getScopeName() + symbols.keySet();
     }
 }

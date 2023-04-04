@@ -1,14 +1,23 @@
 package org.teachfx.antlr4.ep13;
+
 import org.teachfx.antlr4.ep13.ast.*;
-public interface  ASTVisitor<T>
-{
-    public  T visit(AdditionNode node);
-    public  T visit(SubtractionNode node);
-    public  T visit(MultiplicationNode node);
-    public  T visit(DivisionNode node);
-    public  T visit(NegateNode node);
-    public  T visit(NumberNode node);
-    public  T visit(AssignNode node);
-    public  T visit(VarNode node);
-    public  T visit(ExpressionNode node);
+
+public interface ASTVisitor<T> {
+    T visit(AdditionNode node);
+
+    T visit(SubtractionNode node);
+
+    T visit(MultiplicationNode node);
+
+    T visit(DivisionNode node);
+
+    T visit(NegateNode node);
+
+    T visit(NumberNode node);
+
+    T visit(AssignNode node);
+
+    T visit(VarNode node);
+
+    T visit(ExpressionNode node);
 }

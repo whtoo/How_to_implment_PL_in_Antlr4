@@ -6,7 +6,7 @@ import org.teachfx.antlr4.ep19.symtab.StructSymbol;
 public class StructInstance extends MemorySpace {
     StructSymbol symbol;
 
-    public StructInstance(String name,StructSymbol symbol) {
+    public StructInstance(String name, StructSymbol symbol) {
         super(name);
         this.symbol = symbol;
     }
@@ -14,8 +14,8 @@ public class StructInstance extends MemorySpace {
     public StructInstance(String name, MemorySpace enclosingSpace, StructSymbol symbol) {
         super(name, enclosingSpace);
         this.symbol = symbol;
-        for(String key : symbol.getMembers().keySet()) {
-            define(key,0);
+        for (String key : symbol.getMembers().keySet()) {
+            define(key, 0);
         }
     }
 

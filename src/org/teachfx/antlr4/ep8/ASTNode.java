@@ -10,5 +10,5 @@ public class ASTNode {
     public String getRawText() {
         return this.rawText;
     }
-    
+
 }

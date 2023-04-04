@@ -8,10 +8,10 @@ public enum OPType {
 
     String text;
 
-    private OPType(String str) {
+    OPType(String str) {
         this.text = str;
     }
-    
+
     public String getText() {
         return this.text;
     }

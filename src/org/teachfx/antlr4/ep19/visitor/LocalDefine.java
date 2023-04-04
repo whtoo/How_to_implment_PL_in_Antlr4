@@ -10,29 +10,25 @@ import org.teachfx.antlr4.ep19.symtab.*;
  *
  */
 /*
-* @author Arthur.Bltiz
-* @description 变量消解-标记每个ast节点的作用域归属问题.
-* @purpose 解决变量的定位问题--属于哪个作用域
-*/
+ * @author Arthur.Bltiz
+ * @description 变量消解-标记每个ast节点的作用域归属问题.
+ * @purpose 解决变量的定位问题--属于哪个作用域
+ */
 public class LocalDefine extends CymbolASTVisitor<Object> {
     private Scope currentScope = null;
-    private ParseTreeProperty<Scope> scopes;
+    private final ParseTreeProperty<Scope> scopes;
 
-    public ParseTreeProperty<Scope> getScopes() {
-        return scopes;
-    }
-    
     public LocalDefine() {
         BaseScope globalScope = new GlobalScope();
         currentScope = globalScope;
-        MethodSymbol printFuncSymbol = new MethodSymbol("print",globalScope,null);
+        MethodSymbol printFuncSymbol = new MethodSymbol("print", globalScope, null);
         printFuncSymbol.builtin = true;
         printFuncSymbol.getMembers().put("value", TypeTable.OBJECT);
 
         globalScope.define(printFuncSymbol);
 
         /// Define main entry
-        MethodSymbol mainFuncSymbol = new MethodSymbol("main",globalScope,null);
+        MethodSymbol mainFuncSymbol = new MethodSymbol("main", globalScope, null);
         mainFuncSymbol.builtin = true;
 
         globalScope.define(mainFuncSymbol);
@@ -40,12 +36,16 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         scopes = new ParseTreeProperty<Scope>();
     }
 
+    public ParseTreeProperty<Scope> getScopes() {
+        return scopes;
+    }
+
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
         stashScope(ctx);
         return super.visitVarDecl(ctx);
     }
-    
+
     @Override
     public Object visitStatVarDecl(StatVarDeclContext ctx) {
         return super.visitStatVarDecl(ctx);
@@ -53,7 +53,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
 
     @Override
     public Object visitStructDecl(StructDeclContext ctx) {
-        StructSymbol structScope = new StructSymbol(Util.name(ctx), currentScope,ctx);
+        StructSymbol structScope = new StructSymbol(Util.name(ctx), currentScope, ctx);
         // mark struct symbol to current scope
         currentScope.define(structScope);
         // mark ctx to scope
@@ -79,7 +79,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         popScope();
         return null;
     }
-   
+
     @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         super.visitExprFuncCall(ctx);
@@ -111,10 +111,10 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         if (ctx.ID() != null) {
             stashScope(ctx);
             VariableSymbol member = new VariableSymbol(Util.name(ctx));
-            System.out.println("get struct - "+Util.name(ctx));
+            System.out.println("get struct - " + Util.name(ctx));
             currentScope.define(member);
         }
-        return   super.visitStructMemeber(ctx);
+        return super.visitStructMemeber(ctx);
     }
 
     @Override
@@ -122,17 +122,19 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         stashScope(ctx);
         return super.visitExprBinary(ctx);
     }
-    
+
     @Override
     public Object visitExprUnary(ExprUnaryContext ctx) {
         stashScope(ctx);
         return super.visitExprUnary(ctx);
     }
+
     @Override
     public Object visitType(TypeContext ctx) {
         stashScope(ctx);
         return null;
     }
+
     @Override
     public Object visitPrimaryFLOAT(PrimaryFLOATContext ctx) {
         stashScope(ctx);
@@ -154,22 +156,24 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
 
     /**
      * bind ctx to current scope
+     *
      * @param ctx
      */
     public void stashScope(ParserRuleContext ctx) {
-        scopes.put(ctx,currentScope);
+        scopes.put(ctx, currentScope);
     }
 
     /**
      * change scope
+     *
      * @param scope
      */
     public void pushScope(Scope scope) {
         currentScope = scope;
     }
 
-    public void popScope() { 
+    public void popScope() {
         currentScope = currentScope.getEnclosingScope();
     }
-    
+
 }

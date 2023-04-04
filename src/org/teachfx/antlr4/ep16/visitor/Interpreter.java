@@ -1,45 +1,23 @@
 package org.teachfx.antlr4.ep16.visitor;
 
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
-import java.util.stream.Collectors;
-
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep16.misc.FunctionSpace;
 import org.teachfx.antlr4.ep16.misc.MemorySpace;
 import org.teachfx.antlr4.ep16.misc.ScopeUtil;
 import org.teachfx.antlr4.ep16.parser.CymbolBaseVisitor;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprBinaryContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprFuncCallContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprGroupContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprPrimaryContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.ExprUnaryContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.FunctionDeclContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimaryBOOLContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimaryCHARContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimaryFLOATContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimaryIDContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimaryINTContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.PrimarySTRINGContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.StatAssignContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.StatBlockContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.StatReturnContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.StateConditionContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.StateWhileContext;
-import org.teachfx.antlr4.ep16.parser.CymbolParser.VarDeclContext;
-import org.teachfx.antlr4.ep16.symtab.MethodSymbol;
-import org.teachfx.antlr4.ep16.symtab.ReturnValue;
-import org.teachfx.antlr4.ep16.symtab.Scope;
-import org.teachfx.antlr4.ep16.symtab.ScopedSymbol;
-import org.teachfx.antlr4.ep16.symtab.Symbol;
-import org.teachfx.antlr4.ep16.symtab.TypeTable;
+import org.teachfx.antlr4.ep16.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep16.symtab.*;
+
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
+import java.util.stream.Collectors;
 
 public class Interpreter extends CymbolBaseVisitor<Object> {
-    private ScopeUtil scopes;
-    private Stack<MemorySpace> memoryStack;
-    private MemorySpace currentSpace;
     private static final ReturnValue sharedRetValue = new ReturnValue(null);
+    private final ScopeUtil scopes;
+    private final Stack<MemorySpace> memoryStack;
+    private MemorySpace currentSpace;
 
     public Interpreter(ScopeUtil scopes) {
         this.scopes = scopes;
@@ -82,52 +60,52 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         Integer rhs = (Integer) right;
 
         switch (op) {
-        case "+":
-            if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
-                ret = (Float) left + (Float) right;
-            } else {
-                ret = (Integer) left + (Integer) right;
-            }
-            break;
-        case "-":
-            if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
-                ret = (Float) left - (Float) right;
-            } else {
-                ret = (Integer) left - (Integer) right;
-            }
-            break;
-        case "*":
-            if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
-                ret = (Float) left * (Float) right;
-            } else {
-                ret = (Integer) left * (Integer) right;
-            }
-            break;
-        case "/":
-            if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
-                ret = (Float) left / (Float) right;
-            } else {
-                ret = (Integer) left / (Integer) right;
-            }
-            break;
-        case "<":
-            ret = (lhs < rhs) ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
-        case ">":
-            ret = lhs > rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
-        case "<=":
-            ret = lhs <= rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
-        case ">=":
-            ret = lhs >= rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
-        case "!=":
-            ret = lhs != rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
-        case "==":
-            ret = lhs == rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            break;
+            case "+":
+                if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
+                    ret = (Float) left + (Float) right;
+                } else {
+                    ret = (Integer) left + (Integer) right;
+                }
+                break;
+            case "-":
+                if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
+                    ret = (Float) left - (Float) right;
+                } else {
+                    ret = (Integer) left - (Integer) right;
+                }
+                break;
+            case "*":
+                if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
+                    ret = (Float) left * (Float) right;
+                } else {
+                    ret = (Integer) left * (Integer) right;
+                }
+                break;
+            case "/":
+                if (left.getClass().toString() == "Float" || right.getClass().toString() == "Float") {
+                    ret = (Float) left / (Float) right;
+                } else {
+                    ret = (Integer) left / (Integer) right;
+                }
+                break;
+            case "<":
+                ret = (lhs < rhs) ? TypeTable.TRUE : TypeTable.FALSE;
+                break;
+            case ">":
+                ret = lhs > rhs ? TypeTable.TRUE : TypeTable.FALSE;
+                break;
+            case "<=":
+                ret = lhs <= rhs ? TypeTable.TRUE : TypeTable.FALSE;
+                break;
+            case ">=":
+                ret = lhs >= rhs ? TypeTable.TRUE : TypeTable.FALSE;
+                break;
+            case "!=":
+                ret = lhs != rhs ? TypeTable.TRUE : TypeTable.FALSE;
+                break;
+            case "==":
+                ret = lhs == rhs ? TypeTable.TRUE : TypeTable.FALSE;
+                break;
         }
         return ret;
     }
@@ -148,10 +126,10 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
                 System.out.println(" eval print " + ctx.children.size());
                 List<ParseTree> args = ctx.children.subList(1, ctx.children.size() - 1);
                 String fmtArgs = args.stream()
-                .map(p -> visit(p))
-                .filter(p -> p != null)
-                .map(p -> p.toString())
-                .collect(Collectors.joining(","));
+                        .map(p -> visit(p))
+                        .filter(p -> p != null)
+                        .map(p -> p.toString())
+                        .collect(Collectors.joining(","));
                 System.out.println(" print res :" + fmtArgs);
             }
         } else {
@@ -211,12 +189,12 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitStatBlock(StatBlockContext ctx) {
-        MemorySpace local = new MemorySpace("local",this.currentSpace);
+        MemorySpace local = new MemorySpace("local", this.currentSpace);
         Object ret = 0;
         stashSpace(local);
-        
+
         super.visitStatBlock(ctx);
-       
+
         restoreSpace();
         return ret;
     }
@@ -225,10 +203,10 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     public Object visitStateCondition(StateConditionContext ctx) {
         Object ret = 0;
         System.out.println("exec in line " + ctx.start.getLine() + ":" + ctx.getText());
-        if(visit(ctx.cond) == TypeTable.TRUE) {
+        if (visit(ctx.cond) == TypeTable.TRUE) {
             visit(ctx.then);
         } else {
-            if(ctx.elseDo != null) {
+            if (ctx.elseDo != null) {
                 visit(ctx.elseDo);
             }
         }

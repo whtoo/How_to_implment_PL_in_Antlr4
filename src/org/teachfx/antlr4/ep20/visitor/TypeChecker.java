@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep20.visitor;
 
 import org.teachfx.antlr4.ep20.parser.CymbolParser.BlockContext;
+
 /**
  * 类型检查 -- 对于目前的脚本来说并没有必要，因为我是typed scirpt。
  * 而且，在解释器中有runtime check。

@@ -1,4 +1,5 @@
 package org.teachfx.antlr4.ep20.stackvm;
+
 /**
  * 字节码定义
  * 所有用到的指令和寄存器定义都在这里
@@ -9,22 +10,6 @@ public class BytecodeDefinition {
     public static final int FUNC = VMAssemblerParser.FUNC;
     public static final int INT = VMAssemblerParser.INT;
     public static final int POOL = 1000;
-
-    public static class Instruction {
-        String name;
-        int[] type = new int[3];
-        int n = 0;
-        public Instruction(String name) { this(name,0,0,0);n=0; }
-        public Instruction(String name,int a) { this(name,a,0,0); n=1;}
-        public Instruction(String name,int a,int b) { this(name,a,b,0);n=2;}
-        public Instruction(String name,int a,int b,int c) {
-            this.name = name;
-            type[0] = a;
-            type[1] = b;
-            type[2] = c;
-            n = 3;
-        }
-    }
     //字节码都是有符号整数，以字节为单位计算长度，后面我们说3或者4都是指的3 bytes or 4 bytes.(1 byte means 1 signed byte -- [0..255] )
     public static final short INSTR_IADD = 1; // int add
     public static final short INSTR_ISUB = 2; // int subtract
@@ -57,40 +42,68 @@ public class BytecodeDefinition {
     public static final short INSTR_NULL = 29;   // push null onto stack
     public static final short INSTR_POP = 30;    // throw away top of stack
     public static final short INSTR_HALT = 31;
-
-    public static Instruction[] instructions = new Instruction[] {
-        null, // <INVALID>
-        new Instruction("iadd"), // index is the opcode
-        new Instruction("isub"),
-        new Instruction("imul"),
-        new Instruction("ilt"),
-        new Instruction("ieq"),
-        new Instruction("fadd"),
-        new Instruction("fsub"),
-        new Instruction("fmul"),
-        new Instruction("flt"),
-        new Instruction("feq"),
-        new Instruction("itof"),
-        new Instruction("call", FUNC),
-        new Instruction("ret"),
-        new Instruction("br", INT),
-        new Instruction("brt", INT),
-        new Instruction("brf", INT),
-        new Instruction("cconst", INT),
-        new Instruction("iconst", INT),
-        new Instruction("fconst", POOL),
-        new Instruction("sconst", POOL),
-        new Instruction("load", INT),
-        new Instruction("gload", INT),
-        new Instruction("fload", INT),
-        new Instruction("store", INT),
-        new Instruction("gstore", INT),
-        new Instruction("fstore", INT),
-        new Instruction("print"),
-        new Instruction("struct", INT),
-        new Instruction("null"),
-        new Instruction("pop"),
-        new Instruction("halt") 
+    public static Instruction[] instructions = new Instruction[]{
+            null, // <INVALID>
+            new Instruction("iadd"), // index is the opcode
+            new Instruction("isub"),
+            new Instruction("imul"),
+            new Instruction("ilt"),
+            new Instruction("ieq"),
+            new Instruction("fadd"),
+            new Instruction("fsub"),
+            new Instruction("fmul"),
+            new Instruction("flt"),
+            new Instruction("feq"),
+            new Instruction("itof"),
+            new Instruction("call", FUNC),
+            new Instruction("ret"),
+            new Instruction("br", INT),
+            new Instruction("brt", INT),
+            new Instruction("brf", INT),
+            new Instruction("cconst", INT),
+            new Instruction("iconst", INT),
+            new Instruction("fconst", POOL),
+            new Instruction("sconst", POOL),
+            new Instruction("load", INT),
+            new Instruction("gload", INT),
+            new Instruction("fload", INT),
+            new Instruction("store", INT),
+            new Instruction("gstore", INT),
+            new Instruction("fstore", INT),
+            new Instruction("print"),
+            new Instruction("struct", INT),
+            new Instruction("null"),
+            new Instruction("pop"),
+            new Instruction("halt")
     };
+
+    public static class Instruction {
+        String name;
+        int[] type = new int[3];
+        int n = 0;
+
+        public Instruction(String name) {
+            this(name, 0, 0, 0);
+            n = 0;
+        }
+
+        public Instruction(String name, int a) {
+            this(name, a, 0, 0);
+            n = 1;
+        }
+
+        public Instruction(String name, int a, int b) {
+            this(name, a, b, 0);
+            n = 2;
+        }
+
+        public Instruction(String name, int a, int b, int c) {
+            this.name = name;
+            type[0] = a;
+            type[1] = b;
+            type[2] = c;
+            n = 3;
+        }
+    }
 
 }

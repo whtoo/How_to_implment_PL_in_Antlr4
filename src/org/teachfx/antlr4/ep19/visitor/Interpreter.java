@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * 解释器 - 以visit模式实现
  */
 public class Interpreter extends CymbolBaseVisitor<Object> {
-  
+
     private static final ReturnValue sharedRetValue = new ReturnValue(null);
     private final ScopeUtil scopes;
     private final Stack<MemorySpace> memoryStack;
@@ -48,7 +48,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
         if (ctx.getChildCount() >= 2) {
-            System.out.printf("var as - %s = %s%n",ctx.getChild(1).getText(),ctx.getChild(3).getText());
+            System.out.printf("var as - %s = %s%n", ctx.getChild(1).getText(), ctx.getChild(3).getText());
 
             this.currentSpace.define(ctx.getChild(1).getText(), visit(ctx.getChild(3)));
         }
@@ -118,16 +118,16 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         System.out.println("visit func " + ctx.getText());
         MethodSymbol method = (MethodSymbol) visit(ctx.getChild(0));
 
-        Object value = 0;
+        Object val = 0;
         if (method.builtin) {
             if ("print".equalsIgnoreCase(method.getName())) {
                 System.out.println(" eval " + ctx.getText());
                 List<ParseTree> args = ctx.children.subList(1, ctx.children.size() - 1);
                 String fmtArgs = args.stream()
-                .map(this::visit)
-                .filter(Objects::nonNull)
-                .map(Object::toString)
-                .collect(Collectors.joining(","));
+                        .map(this::visit)
+                        .filter(Objects::nonNull)
+                        .map(Object::toString)
+                        .collect(Collectors.joining(","));
                 System.out.println(" print res :" + fmtArgs);
             }
         } else {
@@ -149,12 +149,12 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             try {
                 visit(method.blockStmt);
             } catch (ReturnValue e) {
-                value = e.value;
+                val = e.value;
             }
 
             restoreSpace();
         }
-        return value;
+        return val;
     }
 
     @Override
@@ -196,10 +196,10 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         ExprContext rhs = ctx.expr(1);
 
         if (lhs instanceof ExprStructFieldAccessContext swaps) {
-            StructInstance instance = (StructInstance)this.currentSpace.get(lhs.children.get(0).getText());
+            StructInstance instance = (StructInstance) this.currentSpace.get(lhs.children.get(0).getText());
             Object assignValue = visit(ctx.expr(1));
-            System.out.printf("assign %s with %s%n",lhs.getText(),assignValue);
-            instance.update(swaps.expr(1).getText(),assignValue);
+            System.out.printf("assign %s with %s%n", lhs.getText(), assignValue);
+            instance.update(swaps.expr(1).getText(), assignValue);
         } else {
             this.currentSpace.update(lhs.getText(), visit(rhs));
         }
@@ -249,9 +249,9 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     public Object visitExprNew(ExprNewContext ctx) {
         if (ctx.expr().stream().findFirst().isPresent()) {
             ExprContext structRef = ctx.expr().stream().findFirst().get();
-            StructSymbol symbol = (StructSymbol)visit(structRef);
+            StructSymbol symbol = (StructSymbol) visit(structRef);
 
-            return new StructInstance(structRef.getText(),currentSpace,symbol);
+            return new StructInstance(structRef.getText(), currentSpace, symbol);
         }
 
         return null;

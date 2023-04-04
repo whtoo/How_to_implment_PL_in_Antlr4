@@ -182,8 +182,8 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     @Override
     public Object visitExprUnary(ExprUnaryContext ctx) {
         Integer i = (Integer) visit(ctx.getChild(1));
-        if (ctx.getChild(0).getText() == "!") {
-            return (i == TypeTable.TRUE ? TypeTable.FALSE : TypeTable.TRUE);
+        if (Objects.equals(ctx.getChild(0).getText(), "!")) {
+            return (Objects.equals(i, TypeTable.TRUE) ? TypeTable.FALSE : TypeTable.TRUE);
         } else {
             return -i;
         }
@@ -206,13 +206,11 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         ExprContext lhs = ctx.expr(0);
         ExprContext rhs = ctx.expr(1);
 
-        if (lhs instanceof ExprStructFieldAccessContext) {
-            ExprStructFieldAccessContext wlhs = (ExprStructFieldAccessContext)lhs;
+        if (lhs instanceof ExprStructFieldAccessContext swaps) {
             StructInstance instance = (StructInstance)this.currentSpace.get(lhs.children.get(0).getText());
             Object assignValue = visit(ctx.expr(1));
             System.out.printf("assign %s with %s%n",lhs.getText(),assignValue);
-            instance.update(wlhs.expr(1).getText(),assignValue);
-
+            instance.update(swaps.expr(1).getText(),assignValue);
         } else {
             this.currentSpace.update(lhs.getText(), visit(rhs));
         }

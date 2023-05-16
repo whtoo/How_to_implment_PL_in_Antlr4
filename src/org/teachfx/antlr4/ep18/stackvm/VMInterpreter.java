@@ -104,6 +104,7 @@ public class VMInterpreter {
         cpu();
     }
 
+    // simulation by software
     protected void cpu() {
         Object v = null;
         int a, b;

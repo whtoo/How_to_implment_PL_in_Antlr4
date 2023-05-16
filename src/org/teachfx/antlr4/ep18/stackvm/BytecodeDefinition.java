@@ -10,7 +10,7 @@ public class BytecodeDefinition {
     public static final int FUNC = VMAssemblerParser.FUNC;
     public static final int INT = VMAssemblerParser.INT;
     public static final int POOL = 1000;
-    //字节码都是有符号整数，以字节为单位计算长度，后面我们说3或者4都是指的3 bytes or 4 bytes.(1 byte means 1 signed byte -- [0..255] )
+    //字节码都是有符号整数，以字节为单位计算长度，后面我们说3或者4都是指的3 bytes or 4 bytes.(1 byte means 1 unsigned byte -- [0..255] )
     public static final short INSTR_IADD = 1; // int add
     public static final short INSTR_ISUB = 2; // int subtract
     public static final short INSTR_IMUL = 3; // int mul

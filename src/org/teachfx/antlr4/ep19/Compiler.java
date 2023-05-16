@@ -15,15 +15,14 @@ import java.io.*;
 
 public class Compiler {
 
+
     /**
-     * @param args
-     * @throws IOException
      * @throws FileNotFoundException Input -> CharStream -> Tokens -> ParserTree
      *                               --LocalDefine--> AnnotatedParserTree
      *                               --LocalResolver--> AnnotatedParserTree
      *                               -> Interpreter
      */
-    public static void main(String[] args) throws FileNotFoundException,IOException {
+    public static void main(String[] args) throws IOException {
         String fileName = null;
         fileName = new File(".").getAbsolutePath() + "/src/org/teachfx/antlr4/ep19" + "/t.cymbol";
         if (args.length > 0) fileName = args[0];

@@ -69,13 +69,16 @@ PS: 终于写完了，感觉好忐忑。不过，我还有另外几个也是编�
 ### 3.2. 从哪儿开始？
 当所有依赖都安装完毕后，以ep16为例
 
-> `cd your_project_dir`
+```Bash
+cd your_project_dir
 
-> `cd src/org/teachfx/antlr4/ep16`
+cd src/org/teachfx/antlr4/ep16
 
-> `ant gen`
+ant gen
 
-> `ant run`
+ant run
+```
+
 ### 3.3. 如何从Ant构建并运行工程
 这部分就是Ant的一般使用，我之前是参考《Ant使用指南》--一本很老的书。
 大家可以百度一下，教程很多我就不浪费篇幅了。

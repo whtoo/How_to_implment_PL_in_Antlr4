@@ -10,13 +10,13 @@ import org.teachfx.antlr4.ep19.symtab.*;
  *
  */
 /*
- * @author Arthur.Bltiz
+ * @author Arthur.Blitz
  * @description 变量消解-标记每个ast节点的作用域归属问题.
  * @purpose 解决变量的定位问题--属于哪个作用域
  */
 public class LocalDefine extends CymbolASTVisitor<Object> {
-    private Scope currentScope = null;
     private final ParseTreeProperty<Scope> scopes;
+    private Scope currentScope = null;
 
     public LocalDefine() {
         BaseScope globalScope = new GlobalScope();

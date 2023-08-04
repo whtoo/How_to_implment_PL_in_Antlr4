@@ -12,3 +12,6 @@ src/**/*.jar
 out/
 .DS_Store
 *.dot
+*.log
+.scala-build
+.bsp

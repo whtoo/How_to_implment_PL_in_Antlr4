@@ -10,7 +10,7 @@ public class Util {
     public static String name(ParserRuleContext ctx) {
 
         try {
-            TerminalNode id = (TerminalNode) ctx.getClass().getMethod("ID", new Class[0])
+            TerminalNode id = (TerminalNode) ctx.getClass().getMethod("ID")
                     .invoke(ctx, new Object[0]);
             if (id != null) {
                 return id.getSymbol().getText();

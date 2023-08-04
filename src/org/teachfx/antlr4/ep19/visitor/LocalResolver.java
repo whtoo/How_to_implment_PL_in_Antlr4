@@ -26,8 +26,8 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     private static final int MEMBER_PARENT = 2;
     // ID.(ID|FUNC-CALL)
     private static final int MEMBER = 0;
-    public ParseTreeProperty<Type> types;
     private final ScopeUtil scopes;
+    public ParseTreeProperty<Type> types;
 
     public LocalResolver(ScopeUtil scopes) {
         this.scopes = scopes;

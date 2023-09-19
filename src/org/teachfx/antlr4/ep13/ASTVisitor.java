@@ -3,6 +3,14 @@ package org.teachfx.antlr4.ep13;
 import org.teachfx.antlr4.ep13.ast.*;
 
 public interface ASTVisitor<T> {
+    
+    // Stmt
+
+    T visit(AssignNode node);
+
+    T visit(VarNode node);
+
+    // Expr
     T visit(AdditionNode node);
 
     T visit(SubtractionNode node);
@@ -14,10 +22,6 @@ public interface ASTVisitor<T> {
     T visit(NegateNode node);
 
     T visit(NumberNode node);
-
-    T visit(AssignNode node);
-
-    T visit(VarNode node);
 
     T visit(ExpressionNode node);
 }

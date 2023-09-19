@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep3;
 
-import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -13,7 +14,7 @@ public class ExprJoyRide {
         if (args.length > 0) inputFile = args[0];
         InputStream is = System.in;
         if (inputFile != null) is = new FileInputStream(inputFile);
-        ANTLRInputStream input = new ANTLRInputStream(is);
+        CharStream input = CharStreams.fromStream(is);
         LibExprLexer lexer = new LibExprLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         LibExprParser parser = new LibExprParser(tokens);

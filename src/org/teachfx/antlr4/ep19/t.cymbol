@@ -20,9 +20,10 @@ int fib(int n) {
 int main() {
 
     Point s = new Point(1,2);
-    int y = 12;
-    s.x = 10 + fib(6);
-    s.y = 2  + y;
+    print(s.x);
+    // int y = 12;
+     s.x = 10 ;
+    // s.y = 2  + y;
     print(s.x);
     return 0;
 }

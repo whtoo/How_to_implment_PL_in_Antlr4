@@ -34,7 +34,7 @@ public class BytecodeDefinition {
     public static final short INSTR_LOAD = 21;   // load from local context
     public static final short INSTR_GLOAD = 22;  // load from global memory
     public static final short INSTR_FLOAD = 23;  // field load
-    public static final short INSTR_STORE = 24;  // storein local context
+    public static final short INSTR_STORE = 24;  // store in local context
     public static final short INSTR_GSTORE = 25; // store in global memory
     public static final short INSTR_FSTORE = 26; // field store
     public static final short INSTR_PRINT = 27;  // print stack top

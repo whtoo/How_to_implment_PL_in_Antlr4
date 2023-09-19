@@ -1,4 +1,9 @@
 grammar Math;
+
+@header {
+package org.teachfx.antlr4.ep13;
+}
+
 tokens {
     
 }

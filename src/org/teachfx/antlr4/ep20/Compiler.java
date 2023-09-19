@@ -4,14 +4,13 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.teachfx.antlr4.ep20.misc.ScopeUtil;
 import org.teachfx.antlr4.ep20.parser.CymbolLexer;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
-import org.teachfx.antlr4.ep20.visitor.Interpreter;
-import org.teachfx.antlr4.ep20.visitor.LocalDefine;
-import org.teachfx.antlr4.ep20.visitor.LocalResolver;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class Compiler {
 
@@ -26,15 +25,7 @@ public class Compiler {
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         CymbolParser parser = new CymbolParser(tokenStream);
         ParseTree parseTree = parser.file();
-        LocalDefine localDefine = new LocalDefine();
-        parseTree.accept(localDefine);
-        //System.out.println("scope attached with " + localDefine.getScopes());
-        ScopeUtil scopeUtil = new ScopeUtil(localDefine.getScopes());
-        LocalResolver localResolver = new LocalResolver(scopeUtil);
-        parseTree.accept(localResolver);
-        //System.out.println("types attached with " + localDefine.getScopes());
-        Interpreter interpreter = new Interpreter(scopeUtil);
-        interpreter.interpret(parseTree);
+        
 
     }
 }

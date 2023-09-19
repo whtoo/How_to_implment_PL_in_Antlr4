@@ -28,6 +28,7 @@ public class Compiler {
         if (args.length > 0) fileName = args[0];
         InputStream is = System.in;
         if (fileName != null) is = new FileInputStream(fileName);
+
         CharStream charStream = CharStreams.fromStream(is);
         CymbolLexer lexer = new CymbolLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);

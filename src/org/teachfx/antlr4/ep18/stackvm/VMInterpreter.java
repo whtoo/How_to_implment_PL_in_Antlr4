@@ -28,24 +28,29 @@ public class VMInterpreter {
     boolean trace = false;
 
     public static void main(String[] args) throws Exception {
-        boolean trace = true;
-        boolean disassemble = true;
-        boolean dump = true;
+        boolean trace = false;
+        boolean disassemble = false;
+        boolean dump = false;
         String fileName = new File("classes").getAbsolutePath() + "/t.vm";
         int i = 0;
         while (i < args.length) {
-            if (args[i].equals("-trace")) {
-                trace = true;
-                i++;
-            } else if (args[i].equals("-dis")) {
-                disassemble = true;
-                i++;
-            } else if (args[i].equals("-dump")) {
-                dump = true;
-                i++;
-            } else {
-                fileName = args[i];
-                i++;
+            switch (args[i]) {
+                case "-trace" -> {
+                    trace = true;
+                    i++;
+                }
+                case "-dis" -> {
+                    disassemble = true;
+                    i++;
+                }
+                case "-dump" -> {
+                    dump = true;
+                    i++;
+                }
+                default -> {
+                    fileName = args[i];
+                    i++;
+                }
             }
         }
 
@@ -67,7 +72,7 @@ public class VMInterpreter {
 
     public static boolean load(VMInterpreter interp, InputStream input) throws Exception {
         boolean hasErrors = false;
-        try {
+        try (input) {
             VMAssemblerLexer assemblerLexer = new VMAssemblerLexer(CharStreams.fromStream(input));
             CommonTokenStream tokenStream = new CommonTokenStream(assemblerLexer);
             VMAssemblerParser parser = new VMAssemblerParser(tokenStream);
@@ -84,8 +89,6 @@ public class VMInterpreter {
             interp.disasm = new DisAssembler(interp.code, interp.codeSize, interp.constPool);
 
             hasErrors = parser.getNumberOfSyntaxErrors() > 0;
-        } finally {
-            input.close();
         }
         return hasErrors;
     }
@@ -213,10 +216,17 @@ public class VMInterpreter {
                     int constPoolIndex = getIntOperand();
                     operands[++sp] = constPool[constPoolIndex];
                     break;
+
                 case BytecodeDefinition.INSTR_LOAD: // load from call stack
                     addr = getIntOperand();
                     operands[++sp] = calls[fp].locals[addr];
                     break;
+
+                case BytecodeDefinition.INSTR_STORE:
+                    addr = getIntOperand();
+                    calls[fp].locals[addr] = operands[sp--];
+                    break;
+
                 case BytecodeDefinition.INSTR_GLOAD:// load from global memory
                     addr = getIntOperand();
                     operands[++sp] = globals[addr];
@@ -225,10 +235,6 @@ public class VMInterpreter {
                     StructSpace struct = (StructSpace) operands[sp--];
                     int fieldOffset = getIntOperand();
                     operands[++sp] = struct.fields[fieldOffset];
-                    break;
-                case BytecodeDefinition.INSTR_STORE:
-                    addr = getIntOperand();
-                    calls[fp].locals[addr] = operands[sp--];
                     break;
                 case BytecodeDefinition.INSTR_GSTORE:
                     addr = getIntOperand();

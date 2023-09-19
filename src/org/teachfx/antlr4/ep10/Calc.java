@@ -1,6 +1,8 @@
 package org.teachfx.antlr4.ep10;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.FileInputStream;
@@ -15,7 +17,7 @@ public class Calc {
             is = new FileInputStream(inputFile);
         }
 
-        ANTLRInputStream input = new ANTLRInputStream(is);
+        CharStream input = CharStreams.fromStream(is);
         CSVLexer lexer = new CSVLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         CSVParser parser = new CSVParser(tokens); // share single parser instance

@@ -1,6 +1,8 @@
 package org.teachfx.antlr4.ep11;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -17,7 +19,7 @@ public class Calc {
         int line = 1;
         MathParser parser = new MathParser(null);
         while (expr != null) {
-            ANTLRInputStream input = new ANTLRInputStream(expr + "\n");
+            CharStream input = CharStreams.fromString(expr + "\n");
             MathLexer lexer = new MathLexer(input);
             lexer.setLine(line);
             lexer.setCharPositionInLine(0);

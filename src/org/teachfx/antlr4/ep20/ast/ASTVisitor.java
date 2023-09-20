@@ -1,5 +1,8 @@
 package org.teachfx.antlr4.ep20.ast;
 
+import  org.teachfx.antlr4.ep20.ast.expr.*;
+import  org.teachfx.antlr4.ep20.ast.type.*;
+
 public interface ASTVisitor {
 //    void visit(ArrayIndexExprNode arrayIndexExprNode);
 //    void visit(ArrayTypeNode arrayTypeNode);
@@ -18,14 +21,14 @@ public interface ASTVisitor {
 //    void visit(FuncDeclNode funcDeclNode);
 //    void visit(IDExprNode idExprNode);
 //    void visit(IfStmtNode ifStmtNode);
-//    void visit(IntExprNode intExprNode);
+    void visit(IntExprNode intExprNode);
 //    void visit(NewExprNode newExprNode);
 //    void visit(NullExprNode nullExprNode);
 //    void visit(ProgNode progNode);
 //    void visit(ReturnStmtNode returnStmtNode);
-//    void visit(StringExprNode stringExprNode);
+    void visit(StringExprNode stringExprNode);
 //    void visit(SuffixExprNode suffixExprNode);
-//    void visit(TypeNode typeNode);
+    void visit(TypeNode typeNode);
 //    void visit(UnaryExprNode unaryExprNode);
 //    void visit(VarDeclNode varDeclNode);
 //    void visit(VarDeclStmtNode varDeclStmtNode);

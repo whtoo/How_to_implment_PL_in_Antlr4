@@ -7,9 +7,9 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;
 import org.teachfx.antlr4.ep19.parser.CymbolLexer;
 import org.teachfx.antlr4.ep19.parser.CymbolParser;
-import org.teachfx.antlr4.ep19.visitor.Interpreter;
-import org.teachfx.antlr4.ep19.visitor.LocalDefine;
-import org.teachfx.antlr4.ep19.visitor.LocalResolver;
+import org.teachfx.antlr4.ep19.pass.Interpreter;
+import org.teachfx.antlr4.ep19.pass.LocalDefine;
+import org.teachfx.antlr4.ep19.pass.LocalResolver;
 
 import java.io.*;
 

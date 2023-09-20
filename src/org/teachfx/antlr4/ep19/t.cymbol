@@ -1,16 +1,5 @@
-struct Point {
-    int x = 0;
-    int y = 0;
 
-    // init(int ix,int iy) {
-    //   this.x = ix;
-    //   this.y = iy;
-    //
-    // void incX() {
-    //   this.x = this.x + 1;
-    // }
-
-}
+int a = 5;
 
 int fib(int n) {
     if (n <= 2) return n;
@@ -19,11 +8,7 @@ int fib(int n) {
 
 int main() {
 
-    Point s = new Point(1,2);
-    print(s.x);
-    // int y = 12;
-     s.x = 10 ;
-    // s.y = 2  + y;
-    print(s.x);
+    /* a = fib(a); */
+    print(a);
     return 0;
 }

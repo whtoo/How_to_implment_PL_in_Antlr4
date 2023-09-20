@@ -6,6 +6,6 @@ public class ClassDeclNode extends DeclNode {
 
     @Override
     public void setCtx(ParserRuleContext ctx) {
-
+        
     }
 }

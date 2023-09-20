@@ -38,6 +38,7 @@ WS=37
 CHAR=38
 STRING=39
 SLCOMMENT=40
+COMMNET=41
 'struct'=1
 '{'=2
 '}'=3

@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep19.visitor;
+package org.teachfx.antlr4.ep19.pass;
 
 import org.teachfx.antlr4.ep19.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep19.parser.CymbolParser;

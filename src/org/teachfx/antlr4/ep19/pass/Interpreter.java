@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep19.visitor;
+package org.teachfx.antlr4.ep19.pass;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;

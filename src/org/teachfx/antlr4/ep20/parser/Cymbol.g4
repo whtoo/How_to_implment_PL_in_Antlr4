@@ -2,7 +2,7 @@ grammar Cymbol;
 @header {
 package org.teachfx.antlr4.ep20.parser;
 }
-file :   (functionDecl | varDecl | statetment)+ #compilationUnit ;
+file :   (functionDecl | varDecl)+ #compilationUnit ;
 
 varDecl
     :   type ID ('=' expr)? ';' 
@@ -62,4 +62,8 @@ STRING: '"' ~( '"' | '\r' | '\n' )* '"';
 
 SLCOMMENT
     :   '//' .*? '\n' -> skip
+    ;
+
+COMMNET
+    : '/*' .*? '\n' -> skip
     ;

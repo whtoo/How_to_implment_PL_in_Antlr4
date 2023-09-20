@@ -77,3 +77,7 @@ STRING: '"' ~( '"' | '\r' | '\n' )* '"';
 SLCOMMENT
     :   '//' .*? '\n' -> skip
     ;
+
+COMMNET
+    : '/*' .*? '\n' -> skip
+    ;

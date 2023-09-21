@@ -1,13 +1,8 @@
 package org.teachfx.antlr4.ep19.symtab;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-
-import static java.util.List.*;
 
 public abstract class BaseScope implements Scope {
     Scope enclosingScope;
@@ -21,7 +16,6 @@ public abstract class BaseScope implements Scope {
             }
         }
     }
-
 
     public BaseScope(Scope parent) {
         preDefineSymbol();

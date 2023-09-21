@@ -11,4 +11,19 @@ public class BuiltInTypeSymbol extends Symbol implements Type {
         return true;
     }
 
+    @Override
+    public boolean isFunc() {
+        return false;
+    }
+
+    @Override
+    public Type getFuncType() {
+        return null;
+    }
+
+    @Override
+    public Type getPrimitiveType() {
+        return this;
+    }
+
 }

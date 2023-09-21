@@ -1,11 +1,13 @@
-package org.teachfx.antlr4.ep19.symtab;
+package org.teachfx.antlr4.ep19.symtab.scope;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.teachfx.antlr4.ep19.symtab.Type;
+import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
 
 import java.util.Map;
 
 
-public abstract class ScopedSymbol extends Symbol implements Scope {
+public abstract class ScopedSymbol extends org.teachfx.antlr4.ep19.symtab.symbol.Symbol implements Scope {
     public ParserRuleContext tree;
     Scope enclosingScope;
 
@@ -26,8 +28,8 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
     }
 
     @Override
-    public Symbol resolve(String name) {
-        Symbol s = getMembers().get(name);
+    public org.teachfx.antlr4.ep19.symtab.symbol.Symbol resolve(String name) {
+        org.teachfx.antlr4.ep19.symtab.symbol.Symbol s = getMembers().get(name);
         if (s != null) return s;
         if (getEnclosingScope() != null) {
             return getEnclosingScope().resolve(name);
@@ -36,7 +38,7 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
         return null;
     }
 
-    public Symbol resolveType(String name) {
+    public org.teachfx.antlr4.ep19.symtab.symbol.Symbol resolveType(String name) {
         return resolve(name);
     }
 
@@ -51,8 +53,8 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
     }
 
     @Override
-    public void define(Symbol sym) {
-        getMembers().put(sym.name, sym);
+    public void define(org.teachfx.antlr4.ep19.symtab.symbol.Symbol sym) {
+        getMembers().put(sym.getName(), sym);
         sym.scope = this;
     }
 

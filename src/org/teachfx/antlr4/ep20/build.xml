@@ -16,12 +16,6 @@
             <arg line="-no-listener"/>
             <arg line="-visitor"/>
         </java>
-
-        <java jar="${antlr4.jar}" fork="true">
-            <arg line="${vmSrc}/${vmGrammar}.g4"/>
-            <arg line="-listener"/>
-            <arg line="-no-visitor"/>
-        </java>
     </target>
 
     <target name="build" depends="compile">

@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class MethodSymbol extends ScopedSymbol {
+public class MethodSymbol extends ScopedSymbol implements Type {
     public ParserRuleContext blockStmt;
     public boolean builtin = false;
     public ParserRuleContext callee = null;
@@ -23,9 +23,33 @@ public class MethodSymbol extends ScopedSymbol {
         super(name, parent, tree);
     }
 
+
+    public void defineMember(Symbol symbol) {
+        orderedArgs.put(symbol.getName(),symbol);
+    }
     @Override
-    public Map<String, Symbol> getMemebers() {
+    public Map<String, Symbol> getMembers() {
         return orderedArgs;
     }
 
+
+    @Override
+    public boolean isPrimitive() {
+        return builtin;
+    }
+
+    @Override
+    public boolean isFunc() {
+        return true;
+    }
+
+    @Override
+    public Type getFuncType() {
+        return this;
+    }
+
+    @Override
+    public Type getPrimitiveType() {
+        return null;
+    }
 }

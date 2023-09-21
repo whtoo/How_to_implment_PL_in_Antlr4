@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep19.symtab;
+package org.teachfx.antlr4.ep19.symtab.scope;
 
 public class LocalScope extends BaseScope {
 

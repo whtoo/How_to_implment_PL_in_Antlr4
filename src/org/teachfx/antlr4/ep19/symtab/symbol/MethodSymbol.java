@@ -1,6 +1,9 @@
-package org.teachfx.antlr4.ep19.symtab;
+package org.teachfx.antlr4.ep19.symtab.symbol;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.teachfx.antlr4.ep19.symtab.scope.Scope;
+import org.teachfx.antlr4.ep19.symtab.scope.ScopedSymbol;
+import org.teachfx.antlr4.ep19.symtab.Type;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

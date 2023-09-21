@@ -1,4 +1,8 @@
-package org.teachfx.antlr4.ep19.symtab;
+package org.teachfx.antlr4.ep19.symtab.scope;
+
+import org.teachfx.antlr4.ep19.symtab.Type;
+import org.teachfx.antlr4.ep19.symtab.TypeTable;
+import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -6,8 +10,8 @@ import java.util.Map;
 
 public abstract class BaseScope implements Scope {
     Scope enclosingScope;
-    Map<String, Symbol> symbols = new LinkedHashMap<>();
-    private final static Map<String, Symbol> builtSymbols = new LinkedHashMap<>();
+    Map<String, org.teachfx.antlr4.ep19.symtab.symbol.Symbol> symbols = new LinkedHashMap<>();
+    private final static Map<String, org.teachfx.antlr4.ep19.symtab.symbol.Symbol> builtSymbols = new LinkedHashMap<>();
 
     public void  preDefineSymbol() {
         if (builtSymbols.isEmpty()) {
@@ -28,8 +32,8 @@ public abstract class BaseScope implements Scope {
     }
 
     @Override
-    public Symbol resolve(String name) {
-        Symbol s = builtSymbols.get(name);
+    public org.teachfx.antlr4.ep19.symtab.symbol.Symbol resolve(String name) {
+        org.teachfx.antlr4.ep19.symtab.symbol.Symbol s = builtSymbols.get(name);
         if (s != null) return s;
 
         s = symbols.get(name);
@@ -41,7 +45,7 @@ public abstract class BaseScope implements Scope {
 
     @Override
     public void define(Symbol sym) {
-        symbols.put(sym.name, sym);
+        symbols.put(sym.getName(), sym);
         sym.scope = this;
     }
 

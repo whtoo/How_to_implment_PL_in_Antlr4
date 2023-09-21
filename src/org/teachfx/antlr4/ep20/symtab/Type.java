@@ -4,4 +4,9 @@ public interface Type {
     String getName();
 
     boolean isPrimitive();
+
+    boolean isFunc();
+
+    public Type getFuncType();
+    public Type getPrimitiveType();
 }

@@ -27,7 +27,7 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
 
     @Override
     public Symbol resolve(String name) {
-        Symbol s = getMemebers().get(name);
+        Symbol s = getMembers().get(name);
         if (s != null) return s;
         if (getEnclosingScope() != null) {
             return getEnclosingScope().resolve(name);
@@ -52,9 +52,10 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
 
     @Override
     public void define(Symbol sym) {
-        getMemebers().put(sym.name, sym);
+        defineMember(sym);
         sym.scope = this;
     }
 
-    public abstract Map<String, Symbol> getMemebers();
+    public abstract Map<String, Symbol> getMembers();
+    public abstract void defineMember(Symbol sym);
 }

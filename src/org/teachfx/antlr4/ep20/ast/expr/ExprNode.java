@@ -1,9 +1,8 @@
 package org.teachfx.antlr4.ep20.ast.expr;
 
 import org.teachfx.antlr4.ep20.ast.ASTNode;
-import org.teachfx.antlr4.ep20.ast.ASTVisitor;
-import org.teachfx.antlr4.ep20.ast.type.BuiltInTypes;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
+import org.teachfx.antlr4.ep20.symtab.Type;
 
 abstract public class ExprNode extends ASTNode {
 
@@ -15,7 +14,7 @@ abstract public class ExprNode extends ASTNode {
         isLValue = false;
     }
 
-    public boolean isEqual(BuiltInTypes types) {
+    public boolean isEqual(Type types) {
         return exprType.isEqual(new TypeNode(types));
     }
 

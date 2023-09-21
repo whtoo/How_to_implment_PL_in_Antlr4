@@ -1,6 +1,6 @@
 package org.teachfx.antlr4.ep19.runtime;
 
-import org.teachfx.antlr4.ep19.symtab.StructSymbol;
+import org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol;
 
 
 public class StructInstance extends MemorySpace {

@@ -1,4 +1,6 @@
-package org.teachfx.antlr4.ep19.symtab;
+package org.teachfx.antlr4.ep19.symtab.symbol;
+
+import org.teachfx.antlr4.ep19.symtab.Type;
 
 public class BuiltInTypeSymbol extends Symbol implements Type {
 

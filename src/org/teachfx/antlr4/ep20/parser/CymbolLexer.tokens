@@ -35,12 +35,13 @@ WS=34
 CHAR=35
 STRING=36
 SLCOMMENT=37
+COMMNET=38
 '='=1
 ';'=2
-'float'=3
-'int'=4
-'void'=5
-'bool'=6
+'Float'=3
+'Int'=4
+'Void'=5
+'Bool'=6
 'String'=7
 'Object'=8
 '('=9

@@ -3,16 +3,17 @@ package org.teachfx.antlr4.ep20.ast.type;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.ast.ASTVisitor;
+import org.teachfx.antlr4.ep20.symtab.*;
 
 public class TypeNode extends ASTNode {
-    protected BuiltInTypes baseType;
+    protected Type baseType;
     protected int dim;
 
-    public BuiltInTypes getBaseType() {
-        return baseType;
+    public Type getBaseType() {
+        return baseType.getPrimitiveType();
     }
 
-    public void setBaseType(BuiltInTypes baseType) {
+    public void setBaseType(Type baseType) {
         this.baseType = baseType;
     }
 
@@ -25,16 +26,16 @@ public class TypeNode extends ASTNode {
     }
 
     public TypeNode() {
-        baseType = BuiltInTypes.NUll;
+        baseType = TypeTable.NULL;
         dim = 0;
     }
 
-    public TypeNode(BuiltInTypes baseType) {
+    public TypeNode(Type baseType) {
         this.baseType = baseType;
         this.dim = 0;
     }
 
-    public TypeNode(BuiltInTypes type,ParserRuleContext ctx){
+    public TypeNode(Type type,ParserRuleContext ctx){
         this.baseType = type;
         this.dim = 0;
         this.ctx = ctx;
@@ -44,7 +45,7 @@ public class TypeNode extends ASTNode {
         return  (baseType == obj.baseType && dim == obj.dim);
     }
 
-    public boolean isEqual(BuiltInTypes types){
+    public boolean isEqual(Type types){
         return this.isEqual(new TypeNode(types));
     }
 

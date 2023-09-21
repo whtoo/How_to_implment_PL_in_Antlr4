@@ -5,18 +5,19 @@ package org.teachfx.antlr4.ep20.parser;
 file :   (functionDecl | varDecl)+ #compilationUnit ;
 
 varDecl
-    :   type ID ('=' expr)? ';' 
+    :   primaryType ID ('=' expr)? ';'
     ;
-type:  primaryType | ID ; // pre-defined types
-primaryType: 'float' | 'int' | 'void' | 'bool' | 'String' | 'Object';
+
+primaryType: 'Float' | 'Int' | 'Void' | 'Bool' | 'String' | 'Object';
+
 functionDecl
-    :   retType=type funcName=ID '(' params=formalParameters? ')' blockDef=block // "void f(int x) {...}"
+    :   retType=primaryType funcName=ID '(' params=formalParameters? ')' blockDef=block // "void f(int x) {...}"
     ;
 formalParameters
     :   formalParameter (',' formalParameter)*
     ;
 formalParameter
-    :   type ID
+    :   primaryType ID
     ;
 
 block:  '{' statetment* '}' ;    // possibly empty statement block

@@ -26,12 +26,6 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVarDecl(CymbolParser.VarDeclContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link CymbolParser#type}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitType(CymbolParser.TypeContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link CymbolParser#primaryType}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

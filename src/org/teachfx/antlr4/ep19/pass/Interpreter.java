@@ -8,7 +8,8 @@ import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
 import org.teachfx.antlr4.ep19.runtime.FunctionSpace;
 import org.teachfx.antlr4.ep19.runtime.MemorySpace;
 import org.teachfx.antlr4.ep19.runtime.StructInstance;
-import org.teachfx.antlr4.ep19.symtab.*;
+import org.teachfx.antlr4.ep19.symtab.ReturnValue;
+import org.teachfx.antlr4.ep19.symtab.TypeTable;
 import org.teachfx.antlr4.ep19.symtab.scope.Scope;
 import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
 

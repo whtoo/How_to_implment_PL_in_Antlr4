@@ -4,8 +4,17 @@ import org.teachfx.antlr4.ep20.misc.MemorySpace;
 
 public class Symbol {
     static Type UNDEFINED;
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
     // Mark which type
-    public Type type;
+    protected Type type;
     // Locate where I am.
     public Scope scope;
     public MemorySpace space;

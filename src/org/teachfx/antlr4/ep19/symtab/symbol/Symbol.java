@@ -1,8 +1,8 @@
 package org.teachfx.antlr4.ep19.symtab.symbol;
 
 import org.teachfx.antlr4.ep19.runtime.MemorySpace;
-import org.teachfx.antlr4.ep19.symtab.scope.Scope;
 import org.teachfx.antlr4.ep19.symtab.Type;
+import org.teachfx.antlr4.ep19.symtab.scope.Scope;
 
 public class Symbol {
     static Type UNDEFINED;

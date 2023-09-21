@@ -1,14 +1,27 @@
 package org.teachfx.antlr4.ep20.ast.decl;
 
 import org.teachfx.antlr4.ep20.ast.ASTNode;
+import org.teachfx.antlr4.ep20.symtab.Symbol;
 
 public abstract class DeclNode extends ASTNode {
     protected String declName;
+
+
+
+    protected Symbol refSymbol;
 
     public String getDeclName() {
         return declName;
     }
 
+    public Symbol getRefSymbol() {
+        return refSymbol;
+    }
+
+    public void setRefSymbol(Symbol refSymbol) {
+        this.refSymbol = refSymbol;
+    }
+    
     public DeclNode() {
 
     }

@@ -8,9 +8,12 @@ import org.teachfx.antlr4.ep19.misc.ScopeUtil;
 import org.teachfx.antlr4.ep19.misc.Util;
 import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
-import org.teachfx.antlr4.ep19.symtab.*;
+import org.teachfx.antlr4.ep19.symtab.Type;
+import org.teachfx.antlr4.ep19.symtab.TypeTable;
 import org.teachfx.antlr4.ep19.symtab.scope.Scope;
+import org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
+import org.teachfx.antlr4.ep19.symtab.symbol.VariableSymbol;
 
 /**
  * @description 给变量分配类型
@@ -41,12 +44,12 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     public Object visitVarDecl(VarDeclContext ctx) {
         super.visitVarDecl(ctx);
         Type type = scopes.lookup(ctx.type());
-        org.teachfx.antlr4.ep19.symtab.symbol.VariableSymbol var = new org.teachfx.antlr4.ep19.symtab.symbol.VariableSymbol(Util.name(ctx), type);
+        VariableSymbol var = new VariableSymbol(Util.name(ctx), type);
 
         if (type == null) {
             CompilerLogger.error(ctx, "Unknown type when declaring variable: " + var);
         }
-        org.teachfx.antlr4.ep19.symtab.scope.Scope scope = scopes.get(ctx);
+        Scope scope = scopes.get(ctx);
         scope.define(var);
         return null;
     }
@@ -54,8 +57,9 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     @Override
     public Object visitFormalParameter(FormalParameterContext ctx) {
         Type type = scopes.lookup(ctx.type());
-        org.teachfx.antlr4.ep19.symtab.symbol.VariableSymbol var = new org.teachfx.antlr4.ep19.symtab.symbol.VariableSymbol(Util.name(ctx), type);
-        org.teachfx.antlr4.ep19.symtab.scope.Scope scope = scopes.get(ctx);
+        VariableSymbol var = new VariableSymbol(Util.name(ctx), type);
+        Scope scope = scopes.get(ctx);
+
         scope.define(var);
         return null;
     }
@@ -63,7 +67,7 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     @Override
     public Object visitFunctionDecl(FunctionDeclContext ctx) {
         super.visitFunctionDecl(ctx);
-        org.teachfx.antlr4.ep19.symtab.symbol.Symbol method = this.scopes.resolve(ctx);
+        Symbol method = this.scopes.resolve(ctx);
         String returnType = ctx.type().getStart().getText();
         method.type = method.scope.lookup(returnType);
 
@@ -89,9 +93,8 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         super.visitStructMemeber(ctx);
 
         if (ctx.type() != null) {
-            org.teachfx.antlr4.ep19.symtab.symbol.Symbol s = scopes.resolve(ctx);
-            Type type = scopes.lookup(ctx.type());
-            s.type = type;
+            Symbol s = scopes.resolve(ctx);
+            s.type = scopes.lookup(ctx.type());
         }
         return null;
     }
@@ -107,7 +110,7 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     public Object visitTerminal(TerminalNode node) {
         if (node.getSymbol().getText().equals(".")) {
             ParserRuleContext parent = (ParserRuleContext) node.getParent();
-            org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol struct = (org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol) types.get(parent.getChild(STRUCT));
+            StructSymbol struct = (StructSymbol) types.get(parent.getChild(STRUCT));
             ParserRuleContext member = (ParserRuleContext) parent.getChild(MEMBER_PARENT).getChild(MEMBER);
             String name = member.start.getText();
             Type memberType = struct.resolveMember(name).type;

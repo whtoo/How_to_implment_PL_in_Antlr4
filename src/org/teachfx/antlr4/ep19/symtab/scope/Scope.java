@@ -11,7 +11,7 @@ public interface Scope {
 
     Scope getEnclosingScope();
 
-    void define(org.teachfx.antlr4.ep19.symtab.symbol.Symbol sym);
+    void define(Symbol sym);
 
     Symbol resolve(String name);
 

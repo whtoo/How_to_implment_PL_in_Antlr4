@@ -57,8 +57,4 @@ public class BinaryNode extends ExprNode{
         this.rhs = rhs;
     }
 
-    @Override
-    public void setCtx(ParserRuleContext ctx) {
-        this.ctx = ctx;
-    }
 }

@@ -5,9 +5,6 @@ import org.teachfx.antlr4.ep20.symtab.Symbol;
 
 public abstract class DeclNode extends ASTNode {
     protected String declName;
-
-
-
     protected Symbol refSymbol;
 
     public String getDeclName() {

@@ -7,7 +7,7 @@ import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
 import java.util.Map;
 
 
-public abstract class ScopedSymbol extends org.teachfx.antlr4.ep19.symtab.symbol.Symbol implements Scope {
+public abstract class ScopedSymbol extends Symbol implements Scope {
     public ParserRuleContext tree;
     Scope enclosingScope;
 
@@ -28,8 +28,8 @@ public abstract class ScopedSymbol extends org.teachfx.antlr4.ep19.symtab.symbol
     }
 
     @Override
-    public org.teachfx.antlr4.ep19.symtab.symbol.Symbol resolve(String name) {
-        org.teachfx.antlr4.ep19.symtab.symbol.Symbol s = getMembers().get(name);
+    public Symbol resolve(String name) {
+        Symbol s = getMembers().get(name);
         if (s != null) return s;
         if (getEnclosingScope() != null) {
             return getEnclosingScope().resolve(name);
@@ -38,7 +38,7 @@ public abstract class ScopedSymbol extends org.teachfx.antlr4.ep19.symtab.symbol
         return null;
     }
 
-    public org.teachfx.antlr4.ep19.symtab.symbol.Symbol resolveType(String name) {
+    public Symbol resolveType(String name) {
         return resolve(name);
     }
 

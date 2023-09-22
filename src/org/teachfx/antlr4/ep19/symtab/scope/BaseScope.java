@@ -10,8 +10,8 @@ import java.util.Map;
 
 public abstract class BaseScope implements Scope {
     Scope enclosingScope;
-    Map<String, org.teachfx.antlr4.ep19.symtab.symbol.Symbol> symbols = new LinkedHashMap<>();
-    private final static Map<String, org.teachfx.antlr4.ep19.symtab.symbol.Symbol> builtSymbols = new LinkedHashMap<>();
+    Map<String, Symbol> symbols = new LinkedHashMap<>();
+    private final static Map<String, Symbol> builtSymbols = new LinkedHashMap<>();
 
     public void  preDefineSymbol() {
         if (builtSymbols.isEmpty()) {
@@ -32,8 +32,8 @@ public abstract class BaseScope implements Scope {
     }
 
     @Override
-    public org.teachfx.antlr4.ep19.symtab.symbol.Symbol resolve(String name) {
-        org.teachfx.antlr4.ep19.symtab.symbol.Symbol s = builtSymbols.get(name);
+    public Symbol resolve(String name) {
+        Symbol s = builtSymbols.get(name);
         if (s != null) return s;
 
         s = symbols.get(name);

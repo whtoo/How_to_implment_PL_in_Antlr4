@@ -11,6 +11,8 @@ import org.teachfx.antlr4.ep19.runtime.StructInstance;
 import org.teachfx.antlr4.ep19.symtab.ReturnValue;
 import org.teachfx.antlr4.ep19.symtab.TypeTable;
 import org.teachfx.antlr4.ep19.symtab.scope.Scope;
+import org.teachfx.antlr4.ep19.symtab.scope.ScopedSymbol;
+import org.teachfx.antlr4.ep19.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
 
 import java.util.List;
@@ -119,7 +121,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         // Resolve method symbol from scope unity by calling visitPrimaryID
         System.out.println("visit func " + ctx.getText());
-        org.teachfx.antlr4.ep19.symtab.symbol.MethodSymbol method = (org.teachfx.antlr4.ep19.symtab.symbol.MethodSymbol) visit(ctx.getChild(0));
+        MethodSymbol method = (org.teachfx.antlr4.ep19.symtab.symbol.MethodSymbol) visit(ctx.getChild(0));
 
         Object val = 0;
         if (method.builtin) {
@@ -282,7 +284,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         String tokenName = ctx.start.getText();
 
         Symbol symbol = scope.resolve(tokenName);
-        if (org.teachfx.antlr4.ep19.symtab.scope.ScopedSymbol.class.isAssignableFrom(symbol.getClass())) {
+        if (ScopedSymbol.class.isAssignableFrom(symbol.getClass())) {
             // 作用域符号统统直接返回，它们都是一个自封闭的作用域和求值环境。
             // 针对它们的求值只能发生在其内部某个方法或者表达式的调用上。
             return symbol;

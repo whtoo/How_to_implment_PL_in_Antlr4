@@ -113,11 +113,6 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitExprPrimary(ExprPrimaryContext ctx) {
-        return super.visitExprPrimary(ctx);
-    }
-
-    @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         // Resolve method symbol from scope unity by calling visitPrimaryID
         System.out.println("visit func " + ctx.getText());

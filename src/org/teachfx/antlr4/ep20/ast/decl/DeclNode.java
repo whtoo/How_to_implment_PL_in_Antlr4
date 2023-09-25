@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep20.ast.decl;
 
 import org.teachfx.antlr4.ep20.ast.ASTNode;
+import org.teachfx.antlr4.ep20.debugger.Dumper;
 import org.teachfx.antlr4.ep20.symtab.Symbol;
 
 public abstract class DeclNode extends ASTNode {
@@ -25,5 +26,10 @@ public abstract class DeclNode extends ASTNode {
 
     public DeclNode(String name) {
         this.declName = name;
+    }
+
+    @Override
+    protected void _dump(Dumper d) {
+
     }
 }

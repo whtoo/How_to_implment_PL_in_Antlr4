@@ -6,22 +6,21 @@ import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.debugger.Dumper;
 import org.teachfx.antlr4.ep20.symtab.TypeTable;
 
-public class StringExprNode extends LiteralNode<String> {
+public class BoolExprNode extends LiteralNode<Boolean> {
+    @Override
+    protected void _dump(Dumper d) {
+        super._dump(d);
+        d.printMember("raw",rawValue);
+    }
 
-    public  StringExprNode(String literalStr,ParserRuleContext ctx) {
+    public BoolExprNode(Boolean literalInt, ParserRuleContext ctx) {
         this.ctx = ctx;
-        this.rawValue = literalStr;
-        this.exprType = new TypeNode(TypeTable.STRING);
+        this.rawValue = literalInt;
+        this.exprType = new TypeNode(TypeTable.BOOLEAN);
     }
 
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
-    }
-
-    @Override
-    protected void _dump(Dumper d) {
-        super._dump(d);
-        d.printMember("raw",rawValue);
     }
 }

@@ -1,6 +1,8 @@
 package org.teachfx.antlr4.ep20.ast.expr;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.teachfx.antlr4.ep20.ast.ASTVisitor;
+import org.teachfx.antlr4.ep20.debugger.Dumper;
 import org.teachfx.antlr4.ep20.symtab.Symbol;
 
 public class IDExprNode extends ExprNode {
@@ -12,6 +14,7 @@ public class IDExprNode extends ExprNode {
     public IDExprNode(String image,ParserRuleContext ctx) {
         this.image = image;
         this.ctx = ctx;
+
     }
 
 
@@ -31,4 +34,14 @@ public class IDExprNode extends ExprNode {
         this.image = image;
     }
 
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    protected void _dump(Dumper d) {
+        super._dump(d);
+        d.printMember("id",image);
+    }
 }

@@ -38,8 +38,8 @@ public class CymbolParser extends Parser {
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'='", "';'", "'Float'", "'Int'", "'Void'", "'Bool'", "'String'", 
-			"'Object'", "'('", "')'", "','", "'{'", "'}'", "'return'", "'if'", "'else'", 
+			null, "'='", "';'", "'float'", "'int'", "'void'", "'bool'", "'string'", 
+			"'object'", "'('", "')'", "','", "'{'", "'}'", "'return'", "'if'", "'else'", 
 			"'while'", "'-'", "'!'", "'*'", "'/'", "'+'", "'=='", "'!='", "'>'", 
 			"'>='", "'<'", "'<='", null, null, "'null'"
 		};
@@ -444,6 +444,7 @@ public class CymbolParser extends Parser {
 	}
 
 	public static class BlockContext extends ParserRuleContext {
+		public StatetmentContext stmts;
 		public List<StatetmentContext> statetment() {
 			return getRuleContexts(StatetmentContext.class);
 		}
@@ -477,7 +478,7 @@ public class CymbolParser extends Parser {
 				{
 				{
 				setState(57);
-				statetment();
+				((BlockContext)_localctx).stmts = statetment();
 				}
 				}
 				setState(62);
@@ -521,17 +522,6 @@ public class CymbolParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
-	public static class StatContext extends StatetmentContext {
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
-		}
-		public StatContext(StatetmentContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitStat(this);
-			else return visitor.visitChildren(this);
-		}
-	}
 	public static class StatVarDeclContext extends StatetmentContext {
 		public VarDeclContext varDecl() {
 			return getRuleContext(VarDeclContext.class,0);
@@ -540,6 +530,17 @@ public class CymbolParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitStatVarDecl(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ExprStatContext extends StatetmentContext {
+		public ExprContext expr() {
+			return getRuleContext(ExprContext.class,0);
+		}
+		public ExprStatContext(StatetmentContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof CymbolVisitor ) return ((CymbolVisitor<? extends T>)visitor).visitExprStat(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -708,7 +709,7 @@ public class CymbolParser extends Parser {
 				}
 				break;
 			case 7:
-				_localctx = new StatContext(_localctx);
+				_localctx = new ExprStatContext(_localctx);
 				enterOuterAlt(_localctx, 7);
 				{
 				setState(92);
@@ -768,6 +769,7 @@ public class CymbolParser extends Parser {
 		}
 	}
 	public static class ExprUnaryContext extends ExprContext {
+		public Token o;
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
@@ -790,6 +792,7 @@ public class CymbolParser extends Parser {
 		}
 	}
 	public static class ExprFuncCallContext extends ExprContext {
+		public ExprContext callFunc;
 		public List<ExprContext> expr() {
 			return getRuleContexts(ExprContext.class);
 		}
@@ -830,7 +833,7 @@ public class CymbolParser extends Parser {
 				_prevctx = _localctx;
 
 				setState(98);
-				match(T__17);
+				((ExprUnaryContext)_localctx).o = match(T__17);
 				setState(99);
 				expr(7);
 				}
@@ -841,7 +844,7 @@ public class CymbolParser extends Parser {
 				_ctx = _localctx;
 				_prevctx = _localctx;
 				setState(100);
-				match(T__18);
+				((ExprUnaryContext)_localctx).o = match(T__18);
 				setState(101);
 				expr(6);
 				}
@@ -954,6 +957,7 @@ public class CymbolParser extends Parser {
 					case 4:
 						{
 						_localctx = new ExprFuncCallContext(new ExprContext(_parentctx, _parentState));
+						((ExprFuncCallContext)_localctx).callFunc = _prevctx;
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
 						setState(118);
 						if (!(precpred(_ctx, 8))) throw new FailedPredicateException(this, "precpred(_ctx, 8)");

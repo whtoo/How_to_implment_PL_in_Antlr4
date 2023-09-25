@@ -1,6 +1,6 @@
 package org.teachfx.antlr4.ep20.ast.expr;
 
-import org.antlr.v4.runtime.ParserRuleContext;
+import org.teachfx.antlr4.ep20.debugger.Dumper;
 
 abstract public class LiteralNode<T> extends ExprNode {
 
@@ -15,8 +15,4 @@ abstract public class LiteralNode<T> extends ExprNode {
     }
 
 
-    @Override
-    public void setCtx(ParserRuleContext ctx) {
-        this.ctx = ctx;
-    }
 }

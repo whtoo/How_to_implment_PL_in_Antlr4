@@ -6,12 +6,11 @@ import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.debugger.Dumper;
 import org.teachfx.antlr4.ep20.symtab.TypeTable;
 
-public class StringExprNode extends LiteralNode<String> {
-
-    public  StringExprNode(String literalStr,ParserRuleContext ctx) {
+public class FloatExprNode extends LiteralNode<Float>{
+    public FloatExprNode(Float literalInt, ParserRuleContext ctx) {
         this.ctx = ctx;
-        this.rawValue = literalStr;
-        this.exprType = new TypeNode(TypeTable.STRING);
+        this.rawValue = literalInt;
+        this.exprType = new TypeNode(TypeTable.FLOAT);
     }
 
     @Override
@@ -22,6 +21,6 @@ public class StringExprNode extends LiteralNode<String> {
     @Override
     protected void _dump(Dumper d) {
         super._dump(d);
-        d.printMember("raw",rawValue);
+        d.printMember("raw",rawValue.toString());
     }
 }

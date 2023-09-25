@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep20.ast;
 import org.teachfx.antlr4.ep20.ast.decl.*;
+import org.teachfx.antlr4.ep20.debugger.Dumper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,5 +39,12 @@ public class CompileUnit extends ASTNode {
 
     public void setFuncDeclarations(List<FuncDeclNode> funcDeclarations) {
         this.funcDeclarations = funcDeclarations;
+    }
+
+    @Override
+    protected void _dump(Dumper d) {
+        d.printClass(this,getLocation());
+        d.printNodeList("varDecl",varDeclarations);
+        d.printNodeList("funcDecl",funcDeclarations);
     }
 }

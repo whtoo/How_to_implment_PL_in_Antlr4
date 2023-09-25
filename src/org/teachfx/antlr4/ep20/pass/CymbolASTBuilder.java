@@ -1,134 +1,194 @@
 package org.teachfx.antlr4.ep20.pass;
 
 import org.teachfx.antlr4.ep20.ast.ASTNode;
+import org.teachfx.antlr4.ep20.ast.CompileUnit;
+import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.VarDeclListNode;
+import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
+import org.teachfx.antlr4.ep20.ast.expr.*;
+import org.teachfx.antlr4.ep20.symtab.OperatorType.*;
+import org.teachfx.antlr4.ep20.ast.stmt.*;
+import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.parser.CymbolVisitor;
+import org.teachfx.antlr4.ep20.symtab.OperatorType;
+import org.teachfx.antlr4.ep20.symtab.VariableSymbol;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements CymbolVisitor<ASTNode> {
+
     @Override
     public ASTNode visitCompilationUnit(CymbolParser.CompilationUnitContext ctx) {
-
-        return super.visitCompilationUnit(ctx);
+        var compilationUnit = new CompileUnit();
+        for(var childNode : ctx.children) {
+            var node = visit(childNode);
+            if(node instanceof VarDeclNode varDeclNode) {
+                compilationUnit.addVarDecl(varDeclNode);
+            } else if (node instanceof FuncDeclNode funcDeclNode) {
+                compilationUnit.addFuncDecl(funcDeclNode);
+            }
+        }
+        return compilationUnit;
     }
 
     @Override
     public ASTNode visitVarDecl(CymbolParser.VarDeclContext ctx) {
-        return super.visitVarDecl(ctx);
+        var typeNode = (TypeNode)visit(ctx.primaryType());
+        var symbol = new VariableSymbol(ctx.ID().getText(),typeNode.getBaseType());
+        var assignNode  = (ExprNode) visit(ctx.expr());
+        return new VarDeclNode(symbol,assignNode,ctx);
     }
 
     @Override
     public ASTNode visitPrimaryType(CymbolParser.PrimaryTypeContext ctx) {
-        return super.visitPrimaryType(ctx);
+
+        switch(ctx.getText()) {
+            case "Bool" -> {
+                return TypeNode.BoolNode;
+            }
+            case "Void" -> {
+                return TypeNode.VoidNode;
+            }
+            case "String" -> {
+                return TypeNode.StrNode;
+            }
+            case "Object" -> {
+                return TypeNode.ObjNode;
+            }
+            default -> {
+                return TypeNode.IntNode;
+            }
+        }
     }
 
     @Override
     public ASTNode visitFunctionDecl(CymbolParser.FunctionDeclContext ctx) {
-        return super.visitFunctionDecl(ctx);
+        var paramSlots = (VarDeclListNode)visit(ctx.params);
+        var retType = (TypeNode)visit(ctx.retType);
+        var funcName = ctx.funcName.getText();
+
+        var bodyStmt = (BlockStmtNode) (ctx.blockDef != null ? visit(ctx.blockDef) : null);
+
+        return new FuncDeclNode(retType,funcName,paramSlots,bodyStmt,ctx);
     }
 
     @Override
     public ASTNode visitFormalParameters(CymbolParser.FormalParametersContext ctx) {
-        return super.visitFormalParameters(ctx);
+        var paramSlots = ctx.children.stream().filter(n -> n instanceof CymbolParser.FormalParameterContext).map((paramNode)-> (VarDeclNode)visit(paramNode)).toList();
+
+        return new VarDeclListNode(paramSlots,ctx);
     }
 
     @Override
     public ASTNode visitFormalParameter(CymbolParser.FormalParameterContext ctx) {
-        return super.visitFormalParameter(ctx);
-    }
+         TypeNode paramTypeNode = (TypeNode)visit(ctx.primaryType());
+         String paramName = ctx.ID().getText();
 
-    @Override
-    public ASTNode visitBlock(CymbolParser.BlockContext ctx) {
-        return super.visitBlock(ctx);
+         return new VarDeclNode(new VariableSymbol(paramName, paramTypeNode.getBaseType()),null,ctx);
     }
 
     @Override
     public ASTNode visitStatBlock(CymbolParser.StatBlockContext ctx) {
-        return super.visitStatBlock(ctx);
+        var stmtList = ctx.block().statetment().stream().map((stmtCtx)-> (StmtNode)visit(stmtCtx))
+                .toList();
+
+        return new BlockStmtNode(stmtList,ctx);
     }
 
     @Override
     public ASTNode visitStatVarDecl(CymbolParser.StatVarDeclContext ctx) {
-        return super.visitStatVarDecl(ctx);
+        var varDeclNode = (VarDeclNode)visit(ctx.varDecl());
+        return new VarDeclStmtNode(varDeclNode,ctx);
     }
 
     @Override
     public ASTNode visitStatReturn(CymbolParser.StatReturnContext ctx) {
-        return super.visitStatReturn(ctx);
+        var retVal = (ExprNode)visit(ctx.expr());
+        return new ReturnStmtNode(retVal,ctx);
     }
 
     @Override
     public ASTNode visitStateCondition(CymbolParser.StateConditionContext ctx) {
-        return super.visitStateCondition(ctx);
+        ExprNode condNode = (ExprNode) visit(ctx.cond);
+        StmtNode thenBlock = (StmtNode) visit(ctx.then);
+        StmtNode elseBlock = (StmtNode) (ctx.elseDo != null ? visit(ctx.elseDo) : null);
+
+        return new IfStmtNode(condNode,thenBlock,elseBlock,ctx);
     }
 
     @Override
     public ASTNode visitStateWhile(CymbolParser.StateWhileContext ctx) {
-        return super.visitStateWhile(ctx);
+        var condNode  = (ExprNode) visit(ctx.cond);
+        var thenBlock = (BlockStmtNode) visit(ctx.then);
+        return new WhileStmtNode(condNode,thenBlock,ctx);
     }
 
     @Override
     public ASTNode visitStatAssign(CymbolParser.StatAssignContext ctx) {
-        return super.visitStatAssign(ctx);
+        var lhs = (ExprNode) visit(ctx.expr(0));
+        var rhs = (ExprNode) visit(ctx.expr(1));
+        return new AssignStmtNode(lhs,rhs,ctx);
     }
 
     @Override
-    public ASTNode visitStat(CymbolParser.StatContext ctx) {
-        return super.visitStat(ctx);
+    public ASTNode visitExprStat(CymbolParser.ExprStatContext ctx) {
+        var exprNode = (ExprNode) visit(ctx.expr());
+        return  new ExprStmtNode(exprNode,ctx);
     }
 
     @Override
     public ASTNode visitExprBinary(CymbolParser.ExprBinaryContext ctx) {
-        return super.visitExprBinary(ctx);
+        var lhs = (ExprNode)visit(ctx.expr(0));
+        var rhs = (ExprNode)visit(ctx.expr(1));
+        var operator = ctx.o.getText();
+
+        return new BinaryExprNode(BinaryOpType.fromString(operator),lhs,rhs,ctx);
     }
 
     @Override
     public ASTNode visitExprGroup(CymbolParser.ExprGroupContext ctx) {
-        return super.visitExprGroup(ctx);
+        return visit(ctx.expr());
     }
 
     @Override
     public ASTNode visitExprUnary(CymbolParser.ExprUnaryContext ctx) {
-        return super.visitExprUnary(ctx);
-    }
-
-    @Override
-    public ASTNode visitExprPrimary(CymbolParser.ExprPrimaryContext ctx) {
-        return super.visitExprPrimary(ctx);
+        var exprNode = (ExprNode) visit(ctx.expr());
+        return new UnaryExprNode(UnaryOpType.fromString(ctx.o.getText()),exprNode,ctx);
     }
 
     @Override
     public ASTNode visitExprFuncCall(CymbolParser.ExprFuncCallContext ctx) {
-        return super.visitExprFuncCall(ctx);
+        List<ExprNode> argsNode = ctx.expr().stream().skip(0).map(arg -> (ExprNode) visit(arg)).toList();
+        return new CallFuncNode(ctx.expr(0).getText(),argsNode,ctx);
     }
 
     @Override
     public ASTNode visitPrimaryID(CymbolParser.PrimaryIDContext ctx) {
-        return super.visitPrimaryID(ctx);
+        return new IDExprNode(ctx.getText(),ctx);
     }
 
     @Override
     public ASTNode visitPrimaryINT(CymbolParser.PrimaryINTContext ctx) {
-        return super.visitPrimaryINT(ctx);
+        return new IntExprNode(Integer.valueOf(ctx.getText()),ctx);
     }
 
     @Override
     public ASTNode visitPrimaryFLOAT(CymbolParser.PrimaryFLOATContext ctx) {
-        return super.visitPrimaryFLOAT(ctx);
-    }
-
-    @Override
-    public ASTNode visitPrimaryCHAR(CymbolParser.PrimaryCHARContext ctx) {
-        return super.visitPrimaryCHAR(ctx);
+        return new FloatExprNode(Float.valueOf(ctx.getText()),ctx);
     }
 
     @Override
     public ASTNode visitPrimarySTRING(CymbolParser.PrimarySTRINGContext ctx) {
-        return super.visitPrimarySTRING(ctx);
+        return new StringExprNode(ctx.getText(),ctx);
     }
 
     @Override
     public ASTNode visitPrimaryBOOL(CymbolParser.PrimaryBOOLContext ctx) {
-        return super.visitPrimaryBOOL(ctx);
+        return new BoolExprNode(Boolean.valueOf(ctx.getText()),ctx);
     }
 }

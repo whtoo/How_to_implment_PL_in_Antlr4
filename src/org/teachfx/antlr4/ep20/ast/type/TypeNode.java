@@ -3,6 +3,7 @@ package org.teachfx.antlr4.ep20.ast.type;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.ast.ASTVisitor;
+import org.teachfx.antlr4.ep20.debugger.Dumper;
 import org.teachfx.antlr4.ep20.symtab.*;
 
 public class TypeNode extends ASTNode {
@@ -24,6 +25,13 @@ public class TypeNode extends ASTNode {
     public void setDim(int dim) {
         this.dim = dim;
     }
+    public static TypeNode IntNode = new TypeNode(TypeTable.INT);
+    public static TypeNode VoidNode = new TypeNode(TypeTable.NULL);
+    public static TypeNode StrNode = new TypeNode(TypeTable.STRING);
+    public static TypeNode ObjNode = new TypeNode(TypeTable.OBJECT);
+
+    public static TypeNode BoolNode = new TypeNode(TypeTable.BOOLEAN);
+
 
     public TypeNode() {
         baseType = TypeTable.NULL;
@@ -55,7 +63,7 @@ public class TypeNode extends ASTNode {
     }
 
     @Override
-    public void setCtx(ParserRuleContext ctx) {
-        this.ctx = ctx;
+    protected void _dump(Dumper d) {
+
     }
 }

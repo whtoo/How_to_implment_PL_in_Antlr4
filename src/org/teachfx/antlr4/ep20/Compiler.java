@@ -4,9 +4,10 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.parser.CymbolLexer;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
-
+import org.teachfx.antlr4.ep20.pass.CymbolASTBuilder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,7 +26,8 @@ public class Compiler {
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         CymbolParser parser = new CymbolParser(tokenStream);
         ParseTree parseTree = parser.file();
-        
-
+        CymbolASTBuilder astBuilder = new CymbolASTBuilder();
+        ASTNode astRoot = parseTree.accept(astBuilder);
+        astRoot.dump();
     }
 }

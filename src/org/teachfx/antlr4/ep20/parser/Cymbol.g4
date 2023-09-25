@@ -1,14 +1,16 @@
 grammar Cymbol;
+
 @header {
 package org.teachfx.antlr4.ep20.parser;
 }
+
 file :   (functionDecl | varDecl)+ #compilationUnit ;
 
 varDecl
     :   primaryType ID ('=' expr)? ';'
     ;
 
-primaryType: 'Float' | 'Int' | 'Void' | 'Bool' | 'String' | 'Object';
+primaryType: 'float' | 'int' | 'void' | 'bool' | 'string' | 'object';
 
 functionDecl
     :   retType=primaryType funcName=ID '(' params=formalParameters? ')' blockDef=block // "void f(int x) {...}"
@@ -20,7 +22,7 @@ formalParameter
     :   primaryType ID
     ;
 
-block:  '{' statetment* '}' ;    // possibly empty statement block
+block:  '{' stmts=statetment* '}' ;    // possibly empty statement block
 
 statetment:   block               #statBlock
     |   varDecl             #statVarDecl
@@ -28,18 +30,19 @@ statetment:   block               #statBlock
     |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
     |   'while' '(' cond=expr ')' then=statetment #stateWhile
     |   expr '=' expr ';' #statAssign // assignment 
-    |   expr ';'       #stat // func call
+    |   expr ';'       #exprStat // func call
     ;
 
-expr:   expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
-    |   '-' expr         #exprUnary       // unary minus
-    |   '!' expr         #exprUnary       // boolean not
+expr:   callFunc=expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
+    |   o='-' expr         #exprUnary       // unary minus
+    |   o='!' expr         #exprUnary       // boolean not
     |   expr o=('*'|'/') expr    #exprBinary
     |   expr o=('+'|'-') expr #exprBinary
     |   expr o=('=='|'!='|'>'|'>='|'<'|'<=') expr #exprBinary
     |   primary #exprPrimary
     |   '(' expr ')'         #exprGroup
     ;
+
 primary:    ID                   #primaryID   // variable reference
     |       INT                  #primaryINT
     |       FLOAT                #primaryFLOAT

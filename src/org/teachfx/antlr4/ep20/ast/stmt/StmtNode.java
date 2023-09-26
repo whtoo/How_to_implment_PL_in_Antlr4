@@ -6,6 +6,6 @@ import org.teachfx.antlr4.ep20.debugger.Dumper;
 public abstract class StmtNode extends ASTNode {
     @Override
     protected void _dump(Dumper d) {
-        d.printClass(this,getLocation());
+
     }
 }

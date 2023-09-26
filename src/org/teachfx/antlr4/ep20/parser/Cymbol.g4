@@ -24,13 +24,13 @@ formalParameter
 
 block:  '{' stmts=statetment* '}' ;    // possibly empty statement block
 
-statetment:   block               #statBlock
-    |   varDecl             #statVarDecl
+statetment:   varDecl             #statVarDecl
     |   'return' expr? ';' #statReturn
     |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
     |   'while' '(' cond=expr ')' then=statetment #stateWhile
     |   expr '=' expr ';' #statAssign // assignment 
     |   expr ';'       #exprStat // func call
+    |   block               #statBlock
     ;
 
 expr:   callFunc=expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)

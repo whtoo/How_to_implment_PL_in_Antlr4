@@ -37,6 +37,5 @@ abstract public class ExprNode extends ASTNode {
 
     @Override
     protected void _dump(Dumper d) {
-        d.printClass(this,getLocation());
     }
 }

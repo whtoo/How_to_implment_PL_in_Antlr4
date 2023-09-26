@@ -6,8 +6,6 @@ import org.teachfx.antlr4.ep20.ast.expr.ExprNode;
 import org.teachfx.antlr4.ep20.debugger.Dumper;
 import org.teachfx.antlr4.ep20.symtab.Type;
 
-import java.util.List;
-
 public class AssignStmtNode extends StmtNode{
     protected Type type;
     protected ExprNode lhs;

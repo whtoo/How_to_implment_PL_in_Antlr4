@@ -11,6 +11,10 @@ abstract public class ASTNode implements Dumpable {
 
     public Location getLocation() {
         if(ctx == null) { return null; }
+        if(ctx.getStart() != ctx.getStop()) {
+            return new Location(ctx.getStart().getLine(),ctx.getStart().getStartIndex(),ctx.stop.getLine(),ctx.stop.getStopIndex());
+        }
+
         return new Location(ctx.getStart().getLine(),ctx.getStart().getStartIndex(),ctx.stop.getLine(),ctx.stop.getStopIndex());
     }
 

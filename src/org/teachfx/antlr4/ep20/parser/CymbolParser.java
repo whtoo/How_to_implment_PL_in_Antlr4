@@ -615,107 +615,107 @@ public class CymbolParser extends Parser {
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,8,_ctx) ) {
 			case 1:
-				_localctx = new StatBlockContext(_localctx);
+				_localctx = new StatVarDeclContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(65);
-				block();
-				}
-				break;
-			case 2:
-				_localctx = new StatVarDeclContext(_localctx);
-				enterOuterAlt(_localctx, 2);
-				{
-				setState(66);
 				varDecl();
 				}
 				break;
-			case 3:
+			case 2:
 				_localctx = new StatReturnContext(_localctx);
-				enterOuterAlt(_localctx, 3);
+				enterOuterAlt(_localctx, 2);
 				{
-				setState(67);
+				setState(66);
 				match(T__13);
-				setState(69);
+				setState(68);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << T__8) | (1L << T__17) | (1L << T__18) | (1L << ID) | (1L << BOOLEAN) | (1L << INT) | (1L << FLOAT) | (1L << CHAR) | (1L << STRING))) != 0)) {
 					{
-					setState(68);
+					setState(67);
 					expr(0);
 					}
 				}
 
-				setState(71);
+				setState(70);
 				match(T__1);
 				}
 				break;
-			case 4:
+			case 3:
 				_localctx = new StateConditionContext(_localctx);
-				enterOuterAlt(_localctx, 4);
+				enterOuterAlt(_localctx, 3);
 				{
-				setState(72);
+				setState(71);
 				match(T__14);
-				setState(73);
+				setState(72);
 				match(T__8);
-				setState(74);
+				setState(73);
 				((StateConditionContext)_localctx).cond = expr(0);
-				setState(75);
+				setState(74);
 				match(T__9);
-				setState(76);
+				setState(75);
 				((StateConditionContext)_localctx).then = statetment();
-				setState(79);
+				setState(78);
 				_errHandler.sync(this);
 				switch ( getInterpreter().adaptivePredict(_input,7,_ctx) ) {
 				case 1:
 					{
-					setState(77);
+					setState(76);
 					match(T__15);
-					setState(78);
+					setState(77);
 					((StateConditionContext)_localctx).elseDo = statetment();
 					}
 					break;
 				}
 				}
 				break;
-			case 5:
+			case 4:
 				_localctx = new StateWhileContext(_localctx);
-				enterOuterAlt(_localctx, 5);
+				enterOuterAlt(_localctx, 4);
 				{
-				setState(81);
+				setState(80);
 				match(T__16);
-				setState(82);
+				setState(81);
 				match(T__8);
-				setState(83);
+				setState(82);
 				((StateWhileContext)_localctx).cond = expr(0);
-				setState(84);
+				setState(83);
 				match(T__9);
-				setState(85);
+				setState(84);
 				((StateWhileContext)_localctx).then = statetment();
 				}
 				break;
-			case 6:
+			case 5:
 				_localctx = new StatAssignContext(_localctx);
+				enterOuterAlt(_localctx, 5);
+				{
+				setState(86);
+				expr(0);
+				setState(87);
+				match(T__0);
+				setState(88);
+				expr(0);
+				setState(89);
+				match(T__1);
+				}
+				break;
+			case 6:
+				_localctx = new ExprStatContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(87);
+				setState(91);
 				expr(0);
-				setState(88);
-				match(T__0);
-				setState(89);
-				expr(0);
-				setState(90);
+				setState(92);
 				match(T__1);
 				}
 				break;
 			case 7:
-				_localctx = new ExprStatContext(_localctx);
+				_localctx = new StatBlockContext(_localctx);
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(92);
-				expr(0);
-				setState(93);
-				match(T__1);
+				setState(94);
+				block();
 				}
 				break;
 			}
@@ -1176,7 +1176,7 @@ public class CymbolParser extends Parser {
 		"\13\3\2\3\2\6\2\31\n\2\r\2\16\2\32\3\3\3\3\3\3\3\3\5\3!\n\3\3\3\3\3\3"+
 		"\4\3\4\3\5\3\5\3\5\3\5\5\5+\n\5\3\5\3\5\3\5\3\6\3\6\3\6\7\6\63\n\6\f\6"+
 		"\16\6\66\13\6\3\7\3\7\3\7\3\b\3\b\7\b=\n\b\f\b\16\b@\13\b\3\b\3\b\3\t"+
-		"\3\t\3\t\3\t\5\tH\n\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\5\tR\n\t\3\t\3\t"+
+		"\3\t\3\t\5\tG\n\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\5\tQ\n\t\3\t\3\t\3\t"+
 		"\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\5\tb\n\t\3\n\3\n\3\n"+
 		"\3\n\3\n\3\n\3\n\3\n\3\n\3\n\5\nn\n\n\3\n\3\n\3\n\3\n\3\n\3\n\3\n\3\n"+
 		"\3\n\3\n\3\n\3\n\3\n\3\n\7\n~\n\n\f\n\16\n\u0081\13\n\5\n\u0083\n\n\3"+
@@ -1193,12 +1193,12 @@ public class CymbolParser extends Parser {
 		"\2\2\2\63\66\3\2\2\2\64\62\3\2\2\2\64\65\3\2\2\2\65\13\3\2\2\2\66\64\3"+
 		"\2\2\2\678\5\6\4\289\7\37\2\29\r\3\2\2\2:>\7\16\2\2;=\5\20\t\2<;\3\2\2"+
 		"\2=@\3\2\2\2><\3\2\2\2>?\3\2\2\2?A\3\2\2\2@>\3\2\2\2AB\7\17\2\2B\17\3"+
-		"\2\2\2Cb\5\16\b\2Db\5\4\3\2EG\7\20\2\2FH\5\22\n\2GF\3\2\2\2GH\3\2\2\2"+
-		"HI\3\2\2\2Ib\7\4\2\2JK\7\21\2\2KL\7\13\2\2LM\5\22\n\2MN\7\f\2\2NQ\5\20"+
-		"\t\2OP\7\22\2\2PR\5\20\t\2QO\3\2\2\2QR\3\2\2\2Rb\3\2\2\2ST\7\23\2\2TU"+
-		"\7\13\2\2UV\5\22\n\2VW\7\f\2\2WX\5\20\t\2Xb\3\2\2\2YZ\5\22\n\2Z[\7\3\2"+
-		"\2[\\\5\22\n\2\\]\7\4\2\2]b\3\2\2\2^_\5\22\n\2_`\7\4\2\2`b\3\2\2\2aC\3"+
-		"\2\2\2aD\3\2\2\2aE\3\2\2\2aJ\3\2\2\2aS\3\2\2\2aY\3\2\2\2a^\3\2\2\2b\21"+
+		"\2\2\2Cb\5\4\3\2DF\7\20\2\2EG\5\22\n\2FE\3\2\2\2FG\3\2\2\2GH\3\2\2\2H"+
+		"b\7\4\2\2IJ\7\21\2\2JK\7\13\2\2KL\5\22\n\2LM\7\f\2\2MP\5\20\t\2NO\7\22"+
+		"\2\2OQ\5\20\t\2PN\3\2\2\2PQ\3\2\2\2Qb\3\2\2\2RS\7\23\2\2ST\7\13\2\2TU"+
+		"\5\22\n\2UV\7\f\2\2VW\5\20\t\2Wb\3\2\2\2XY\5\22\n\2YZ\7\3\2\2Z[\5\22\n"+
+		"\2[\\\7\4\2\2\\b\3\2\2\2]^\5\22\n\2^_\7\4\2\2_b\3\2\2\2`b\5\16\b\2aC\3"+
+		"\2\2\2aD\3\2\2\2aI\3\2\2\2aR\3\2\2\2aX\3\2\2\2a]\3\2\2\2a`\3\2\2\2b\21"+
 		"\3\2\2\2cd\b\n\1\2de\7\24\2\2en\5\22\n\tfg\7\25\2\2gn\5\22\n\bhn\5\24"+
 		"\13\2ij\7\13\2\2jk\5\22\n\2kl\7\f\2\2ln\3\2\2\2mc\3\2\2\2mf\3\2\2\2mh"+
 		"\3\2\2\2mi\3\2\2\2n\u0087\3\2\2\2op\f\7\2\2pq\t\3\2\2q\u0086\5\22\n\b"+
@@ -1212,7 +1212,7 @@ public class CymbolParser extends Parser {
 		"\u0091\7\"\2\2\u008c\u0091\7#\2\2\u008d\u0091\7%\2\2\u008e\u0091\7&\2"+
 		"\2\u008f\u0091\7 \2\2\u0090\u008a\3\2\2\2\u0090\u008b\3\2\2\2\u0090\u008c"+
 		"\3\2\2\2\u0090\u008d\3\2\2\2\u0090\u008e\3\2\2\2\u0090\u008f\3\2\2\2\u0091"+
-		"\25\3\2\2\2\21\30\32 *\64>GQam\177\u0082\u0085\u0087\u0090";
+		"\25\3\2\2\2\21\30\32 *\64>FPam\177\u0082\u0085\u0087\u0090";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

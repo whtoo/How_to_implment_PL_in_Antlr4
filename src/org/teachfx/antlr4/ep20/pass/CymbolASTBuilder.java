@@ -12,19 +12,23 @@ import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.parser.CymbolVisitor;
-import org.teachfx.antlr4.ep20.symtab.OperatorType;
 import org.teachfx.antlr4.ep20.symtab.VariableSymbol;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+
 
 public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements CymbolVisitor<ASTNode> {
 
+    protected String srcName;
+    public CymbolASTBuilder(String srcName) {
+        super();
+        this.srcName = srcName;
+    }
+
     @Override
     public ASTNode visitCompilationUnit(CymbolParser.CompilationUnitContext ctx) {
-        var compilationUnit = new CompileUnit();
+        var compilationUnit = new CompileUnit(srcName);
         for(var childNode : ctx.children) {
             var node = visit(childNode);
             if(node instanceof VarDeclNode varDeclNode) {
@@ -33,6 +37,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
                 compilationUnit.addFuncDecl(funcDeclNode);
             }
         }
+        compilationUnit.setCtx(ctx);
         return compilationUnit;
     }
 
@@ -90,6 +95,13 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
          String paramName = ctx.ID().getText();
 
          return new VarDeclNode(new VariableSymbol(paramName, paramTypeNode.getBaseType()),null,ctx);
+    }
+
+    @Override
+    public ASTNode visitBlock(CymbolParser.BlockContext ctx) {
+        var stmtNodeStream = ctx.children.stream().map((stmtCtx)-> (StmtNode)visit(stmtCtx));
+        var stmtList = stmtNodeStream.filter(Objects::nonNull).toList();
+        return new BlockStmtNode(stmtList,ctx);
     }
 
     @Override
@@ -163,7 +175,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitExprFuncCall(CymbolParser.ExprFuncCallContext ctx) {
-        List<ExprNode> argsNode = ctx.expr().stream().skip(0).map(arg -> (ExprNode) visit(arg)).toList();
+        List<ExprNode> argsNode = ctx.expr().stream().map(arg -> (ExprNode) visit(arg)).filter(x -> !(x instanceof IDExprNode)).toList();
         return new CallFuncNode(ctx.expr(0).getText(),argsNode,ctx);
     }
 

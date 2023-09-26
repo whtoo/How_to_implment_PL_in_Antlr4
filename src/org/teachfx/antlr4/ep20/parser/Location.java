@@ -15,6 +15,7 @@ public class Location {
 
     @Override
     public String toString() {
-        return "Line"+startLine+":"+startColumn+"-"+endColumn;
+        String lineRange = startLine == endLine ? " %d ".formatted(startLine) : " %d-%d ".formatted(startLine,endLine);
+        return "Line"+lineRange+":"+startColumn+"-"+endColumn;
     }
 }

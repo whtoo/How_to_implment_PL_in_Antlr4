@@ -72,8 +72,11 @@ public class BinaryExprNode extends ExprNode{
     @Override
     protected void _dump(Dumper d) {
         super._dump(d);
-        d.printMember("rhs",rhs);
+        d.printMember("lhs",lhs);
+
         d.printMember("operator",opType.getOpRawVal());
-        d.printMember("lhs",rhs);
+
+        d.printMember("rhs",rhs);
+
     }
 }

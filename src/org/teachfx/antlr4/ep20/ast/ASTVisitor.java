@@ -1,9 +1,10 @@
 package org.teachfx.antlr4.ep20.ast;
 
-import org.teachfx.antlr4.ep20.ast.decl.*;
+import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
-import org.teachfx.antlr4.ep20.ast.type.*;
+import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 
 public interface ASTVisitor {
     void visit(BinaryExprNode binaryExprNode);

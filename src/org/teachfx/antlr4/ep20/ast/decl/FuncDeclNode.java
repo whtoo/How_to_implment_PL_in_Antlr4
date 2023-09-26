@@ -2,12 +2,9 @@ package org.teachfx.antlr4.ep20.ast.decl;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.teachfx.antlr4.ep20.ast.ASTVisitor;
-import org.teachfx.antlr4.ep20.ast.expr.IDExprNode;
 import org.teachfx.antlr4.ep20.ast.stmt.BlockStmtNode;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.debugger.Dumper;
-
-import java.util.List;
 
 public class FuncDeclNode extends DeclNode {
     /// pairs of formal param with its type

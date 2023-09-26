@@ -26,7 +26,7 @@ public class Compiler {
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         CymbolParser parser = new CymbolParser(tokenStream);
         ParseTree parseTree = parser.file();
-        CymbolASTBuilder astBuilder = new CymbolASTBuilder();
+        CymbolASTBuilder astBuilder = new CymbolASTBuilder("t.cymbol");
         ASTNode astRoot = parseTree.accept(astBuilder);
         astRoot.dump();
     }

@@ -1,11 +1,16 @@
 package org.teachfx.antlr4.ep20.ast;
-import org.teachfx.antlr4.ep20.ast.decl.*;
+
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.debugger.Dumper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CompileUnit extends ASTNode {
+    private String srcName;
+
     public void addFuncDecl(FuncDeclNode funcDecl) {
         this.funcDeclarations.add(funcDecl);
     }
@@ -18,12 +23,15 @@ public class CompileUnit extends ASTNode {
 
     private List<FuncDeclNode> funcDeclarations = new ArrayList<>();
 
-    public CompileUnit(List<VarDeclNode> varDeclarations,List<FuncDeclNode> funcDeclarations) {
+    public CompileUnit(List<VarDeclNode> varDeclarations, List<FuncDeclNode> funcDeclarations, ParserRuleContext ctx) {
         this.varDeclarations = varDeclarations;
         this.funcDeclarations = funcDeclarations;
+        this.ctx = ctx;
     }
 
-    public CompileUnit() {}
+    public CompileUnit(String srcName) {
+        this.srcName = srcName;
+    }
 
     public List<VarDeclNode> getVarDeclarations() {
         return varDeclarations;
@@ -47,4 +55,14 @@ public class CompileUnit extends ASTNode {
         d.printNodeList("varDecl",varDeclarations);
         d.printNodeList("funcDecl",funcDeclarations);
     }
+
+    public String getSrcName() {
+        return srcName;
+    }
+
+    public void setSrcName(String srcName) {
+        this.srcName = srcName;
+    }
+
+
 }

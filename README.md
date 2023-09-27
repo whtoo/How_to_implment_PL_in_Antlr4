@@ -19,12 +19,13 @@
 - [x] [ep15](src/org/teachfx/antlr4/ep15)--实现变量的作用域确定。
 - [x] [ep16](src/org/teachfx/antlr4/ep16)--实现变量的消解和类型检查，并实现函数作用域与有函数调用的脚本求值。
 - [x] [ep17](src/org/teachfx/antlr4/ep17)--实现函数的静态声明依赖（并不是我心里想的调用图生成，但是还是加上吧，让其他人避坑。）
-- [x] [ep18](src/org/teachfx/antlr4/ep18)--(~~应该会综合《两周实现脚本语言》与《编程语言的实现模式》中对VM的设计~~)**已经采用栈解释器了，主要就是因为实现简单**😆
+- [x] [ep18](src/org/teachfx/antlr4/ep18)--(~~应该会综合《两周实现脚本语言》与《编程语言的实现模式》中对VM的设计~~)**已经采用栈解释器了，目前很简陋子啊实现ep20的时候会做一个升级**😆
 
-- [x] [ep19](src/org/teachfx/antlr4/ep19)--实现简单的struct(~~实现闭包~~)，目前实现了最简单的record类型和main函数以及file作用域，下一章增加类方法和协议支持。
-- [ ] [ep20](src/org/teachfx/antlr4/ep20)--这里会增加java的native导入、类方法、协议支持、字节码生成（可能是自己实现的VM不是JVM）。
-- [ ] [ep21](src/org/teachfx/antlr4/ep21)--希望能够在这一章终结。
-- [ ] [ep22](src/org/teachfx/antlr4/ep22)--如果，我还能坚持写到这里，就增加汇编输出以及编译优化。应该只有SSA以及peep hole，寄存器染色也可能会出现。
+- [x] [ep19](src/org/teachfx/antlr4/ep19)--实现简单的struct(~~实现闭包~~)，目前实现了最简单的record类型和main函数以及file作用域~~下一章增加类方法和协议支持~~。
+- [ ] [ep20](src/org/teachfx/antlr4/ep20)--重点放在IR和字节码生成，生成的字节码目标机就是我们[ep18](src/org/teachfx/antlr4/ep18)实现的VM。这么做的原因是这个过程足够简单、精确地表现编译后端中最重要的一步是如何执行的。
+- [ ] [ep21](src/org/teachfx/antlr4/ep21)--解释语法检查和数据流分析的核心实现方式。
+- [ ] [ep22](src/org/teachfx/antlr4/ep22)--重点放在基础优化上，力求简明扼要。
+- [ ] [ep23](src/org/teachfx/antlr4/ep23)--在Cyson上进行高级静态分析
 
 PS: 终于写完了，感觉好忐忑。不过，我还有另外几个也是编译原理相关的坑也要填。
 

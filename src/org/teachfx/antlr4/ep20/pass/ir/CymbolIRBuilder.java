@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep20.pass;
+package org.teachfx.antlr4.ep20.pass.ir;
 
 import org.teachfx.antlr4.ep20.ast.ASTVisitor;
 import org.teachfx.antlr4.ep20.ast.CompileUnit;
@@ -18,6 +18,15 @@ public class CymbolIRBuilder implements ASTVisitor {
         for (var funcDecl : rootNode.getFuncDeclarations()) {
             visit(funcDecl);
         }
+    }
+
+
+    void transExprNode(ExprNode node) {
+
+    }
+
+    void transStmtNode(StmtNode node) {
+
     }
 
     @Override

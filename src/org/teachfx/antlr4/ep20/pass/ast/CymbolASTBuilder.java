@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep20.pass;
+package org.teachfx.antlr4.ep20.pass.ast;
 
 import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.ast.CompileUnit;

@@ -7,7 +7,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.parser.CymbolLexer;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
-import org.teachfx.antlr4.ep20.pass.CymbolASTBuilder;
+import org.teachfx.antlr4.ep20.pass.ast.CymbolASTBuilder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

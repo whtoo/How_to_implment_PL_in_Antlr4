@@ -7,28 +7,32 @@ import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 
 public interface ASTVisitor {
-    void visit(BinaryExprNode binaryExprNode);
+    /// Root Node
+    void visit(CompileUnit rootNode);
 
-    void visit(ExprStmtNode exprStmtNode);
-
+    /// Decl
+    void visit(VarDeclNode varDeclNode);
     void visit(FuncDeclNode funcDeclNode);
+    void visit(VarDeclStmtNode varDeclStmtNode);
+    /// Type
+    void visit(TypeNode typeNode);
+    // Expr
+    void visit(BinaryExprNode binaryExprNode);
     void visit(IDExprNode idExprNode);
-    void visit(IfStmtNode ifStmtNode);
+
     /// literal value
     void visit(BoolExprNode boolExprNode);
     void visit(IntExprNode intExprNode);
     void visit(FloatExprNode floatExprNode);
     void visit(NullExprNode nullExprNode);
     void visit(StringExprNode stringExprNode);
-    /// type specifier
-    void visit(TypeNode typeNode);
+    void visit(UnaryExprNode unaryExprNode);
 
+    /// Stmt
+    void visit(IfStmtNode ifStmtNode);
+    void visit(ExprStmtNode exprStmtNode);
     void visit(BlockStmtNode blockStmtNode);
     void visit(ReturnStmtNode returnStmtNode);
-    void visit(UnaryExprNode unaryExprNode);
-    void visit(VarDeclNode varDeclNode);
     void visit(WhileStmtNode whileStmtNode);
-    void visit(VarDeclStmtNode varDeclStmtNode);
-
     void visit(AssignStmtNode assignStmtNode);
 }

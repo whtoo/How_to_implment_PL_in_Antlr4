@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep20.pass;
 
 import org.teachfx.antlr4.ep20.ast.ASTVisitor;
+import org.teachfx.antlr4.ep20.ast.CompileUnit;
 import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
 import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
@@ -9,6 +10,16 @@ import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 
 
 public class CymbolIRBuilder implements ASTVisitor {
+    @Override
+    public void visit(CompileUnit rootNode) {
+        for (var varDecl : rootNode.getVarDeclarations()) {
+            visit(varDecl);
+        }
+        for (var funcDecl : rootNode.getFuncDeclarations()) {
+            visit(funcDecl);
+        }
+    }
+
     @Override
     public void visit(BinaryExprNode binaryExprNode) {
 

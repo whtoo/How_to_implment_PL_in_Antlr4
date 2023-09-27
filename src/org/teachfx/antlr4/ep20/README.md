@@ -3,8 +3,8 @@
 
 ParseTree --[ASTBuilder]--> AST -- 
 [LocalDefine]--> RevisedAST --[LocalResolver]--> RevisedAST
---[TypeChecker]--> RevisedAST
---[DataFlowAnalysis]--> IR
+--ALT[TypeChecker]--> RevisedAST
+--ALT[DataFlowAnalysis]--> IR
 --[Optimizer]--> TargetCodes
 
 ```

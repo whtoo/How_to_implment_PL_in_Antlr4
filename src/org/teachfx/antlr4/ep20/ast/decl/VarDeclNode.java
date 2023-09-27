@@ -6,8 +6,19 @@ import org.teachfx.antlr4.ep20.ast.expr.ExprNode;
 import org.teachfx.antlr4.ep20.debugger.Dumper;
 import org.teachfx.antlr4.ep20.symtab.VariableSymbol;
 
+import java.util.Objects;
+
 public class VarDeclNode extends DeclNode {
     private ExprNode assignExprNode;
+
+    public ExprNode initializerExpr() {
+        return assignExprNode;
+    }
+
+    public boolean hasInitializer() {
+        return Objects.nonNull(assignExprNode);
+    }
+
 
     public VarDeclNode(VariableSymbol variableSymbol,ExprNode assignExprNode, ParserRuleContext ctx) {
         this.refSymbol = variableSymbol;

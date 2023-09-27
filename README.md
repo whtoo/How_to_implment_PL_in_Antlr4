@@ -9,7 +9,7 @@
 - [x] [ep5](src/org/teachfx/antlr4/ep5)--实现一个Java接口提取工具。
 - [x] [ep6](src/org/teachfx/antlr4/ep6)--实现一个CVS提取器。
 - [x] [ep7](src/org/teachfx/antlr4/ep7)--实现一个JSON解析工具。
-- [x] [ep8](src/org/teachfx/antlr4/ep8)--抽象语法书提取器
+- [x] [ep8](src/org/teachfx/antlr4/ep8)--抽象语法书提取器
 - [x] [ep9](src/org/teachfx/antlr4/ep9)--ep4增强版本
 - [x] [ep10](src/org/teachfx/antlr4/ep10)--ep6的另一种实现
 - [x] [ep11](src/org/teachfx/antlr4/ep11)--基于ep8的算术解释器（AST Tree walking)

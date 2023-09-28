@@ -1,23 +1,21 @@
 ## 编译步骤流程图
-```plantuml
-@startuml
-start
-:ParseTree;
-:ASTBuilder;
-:AST;
-if (DefineSymbol) then (yes)
-  :LocalResolver;
-elseif (TypeCheck) then (yes)
-  :TypeChecker;
-else (DataFlow)
-  :DataFlowAnalysis;
-endif
-:RevisedAST;
-:IR;
-:Optimizer;
-:TargetCodes;
-stop
-@enduml
+
+```mermaid
+---
+title: 编译流程图
+---
+graph LR
+    A[ParseTree] --> B[ASTBuilder]
+    B --> C[AST]
+    C --> D[RevisedAST]
+    D -->|LocalDefine| E(LocalResolver)
+    D -->|TypeChecker| F(TypeChecker)
+    D -->|DataFlowAnalysis| G(DataFlowAnalysis)
+    E --> H[IR]
+    F --> H
+    G --> H
+    H --> I[Optimizer]
+    I --> J[TargetCodes]
 ```
 
 ## DONE

@@ -1,12 +1,23 @@
-
-``` 
-
-ParseTree --[ASTBuilder]--> AST -- 
-[LocalDefine]--> RevisedAST --[LocalResolver]--> RevisedAST
---ALT[TypeChecker]--> RevisedAST
---ALT[DataFlowAnalysis]--> IR
---[Optimizer]--> TargetCodes
-
+## 编译步骤流程图
+```plantuml
+@startuml
+start
+:ParseTree;
+:ASTBuilder;
+:AST;
+if (DefineSymbol) then (yes)
+  :LocalResolver;
+elseif (TypeCheck) then (yes)
+  :TypeChecker;
+else (DataFlow)
+  :DataFlowAnalysis;
+endif
+:RevisedAST;
+:IR;
+:Optimizer;
+:TargetCodes;
+stop
+@enduml
 ```
 
 ## DONE

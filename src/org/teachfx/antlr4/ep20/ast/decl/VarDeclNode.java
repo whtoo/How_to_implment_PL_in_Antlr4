@@ -49,5 +49,6 @@ public class VarDeclNode extends DeclNode {
         super._dump(d);
         d.printMember("name",getDeclName());
         d.printMember("type",getRefSymbol().getType());
+        if (Objects.nonNull(assignExprNode)) d.printMember("assignee",assignExprNode);
     }
 }

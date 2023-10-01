@@ -9,7 +9,7 @@ graph LR
     B --> C[AST]
     C --> D[RevisedAST]
     D -->|LocalDefine| E(LocalResolver)
-    D -->|TypeChecker| F(TypeChecker)
+    E -->|TypeChecker| F(TypeChecker)
     D -->|DataFlowAnalysis| G(DataFlowAnalysis)
     E --> H[IR]
     F --> H

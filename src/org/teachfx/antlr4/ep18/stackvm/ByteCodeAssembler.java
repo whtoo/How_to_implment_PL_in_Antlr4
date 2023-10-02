@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.BOOL;
+
 public class ByteCodeAssembler extends VMAssemblerBaseListener {
     public static final int INITIAL_CODE_SIZE = 2048;
     private static final int INT = VMAssemblerParser.INT;
@@ -95,6 +97,7 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
     public void genOperand(Token operandToken) {
         String text = operandToken.getText();
         int v = 0;
+        boolean p = false;
         switch (operandToken.getType()) {
             case INT:
                 v = Integer.valueOf(text);
@@ -104,6 +107,9 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
                 break;
             case FLOAT:
                 v = getConstantPoolIndex(Float.valueOf(text));
+                break;
+            case BOOL:
+                v = getConstantPoolIndex(Boolean.parseBoolean(text));
                 break;
             case STRING:
                 v = getConstantPoolIndex(String.valueOf(text));

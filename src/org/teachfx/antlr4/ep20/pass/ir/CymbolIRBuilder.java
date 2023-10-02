@@ -10,32 +10,14 @@ import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 
 
 public class CymbolIRBuilder implements ASTVisitor {
+
     @Override
     public void visit(CompileUnit rootNode) {
-        for (var varDecl : rootNode.getVarDeclarations()) {
-            visit(varDecl);
-        }
-        for (var funcDecl : rootNode.getFuncDeclarations()) {
-            visit(funcDecl);
-        }
-    }
-
-
-    void transExprNode(ExprNode node) {
-
-    }
-
-    void transStmtNode(StmtNode node) {
 
     }
 
     @Override
-    public void visit(BinaryExprNode binaryExprNode) {
-
-    }
-
-    @Override
-    public void visit(ExprStmtNode exprStmtNode) {
+    public void visit(VarDeclNode varDeclNode) {
 
     }
 
@@ -45,12 +27,22 @@ public class CymbolIRBuilder implements ASTVisitor {
     }
 
     @Override
-    public void visit(IDExprNode idExprNode) {
+    public void visit(VarDeclStmtNode varDeclStmtNode) {
 
     }
 
     @Override
-    public void visit(IfStmtNode ifStmtNode) {
+    public void visit(TypeNode typeNode) {
+
+    }
+
+    @Override
+    public void visit(BinaryExprNode binaryExprNode) {
+
+    }
+
+    @Override
+    public void visit(IDExprNode idExprNode) {
 
     }
 
@@ -80,7 +72,17 @@ public class CymbolIRBuilder implements ASTVisitor {
     }
 
     @Override
-    public void visit(TypeNode typeNode) {
+    public void visit(UnaryExprNode unaryExprNode) {
+
+    }
+
+    @Override
+    public void visit(IfStmtNode ifStmtNode) {
+
+    }
+
+    @Override
+    public void visit(ExprStmtNode exprStmtNode) {
 
     }
 
@@ -95,22 +97,7 @@ public class CymbolIRBuilder implements ASTVisitor {
     }
 
     @Override
-    public void visit(UnaryExprNode unaryExprNode) {
-
-    }
-
-    @Override
-    public void visit(VarDeclNode varDeclNode) {
-
-    }
-
-    @Override
     public void visit(WhileStmtNode whileStmtNode) {
-
-    }
-
-    @Override
-    public void visit(VarDeclStmtNode varDeclStmtNode) {
 
     }
 

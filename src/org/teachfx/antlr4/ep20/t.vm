@@ -1,0 +1,28 @@
+.def fib: args=1 ,locals=0
+    load 0
+    iconst 2
+    ilt
+    brt L1
+    load 0
+    iconst 1
+    isub
+    call fib()
+    load 0
+    iconst 2
+    isub
+    call fib()
+    iadd
+    ret
+L1:
+    load 0
+    ret
+
+
+.def main:args=0,locals=0
+    iconst 10
+    call fib()
+    print
+
+    halt
+
+

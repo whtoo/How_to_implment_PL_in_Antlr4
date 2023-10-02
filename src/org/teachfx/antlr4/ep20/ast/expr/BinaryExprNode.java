@@ -20,7 +20,7 @@ public class BinaryExprNode extends ExprNode{
     }
 
     public static BinaryExprNode createMinNode(ExprNode lhs, ExprNode rhs, ParserRuleContext ctx) {
-        return new BinaryExprNode(OperatorType.BinaryOpType.MIN,lhs,rhs,ctx);
+        return new BinaryExprNode(OperatorType.BinaryOpType.SUB,lhs,rhs,ctx);
     }
 
     public static BinaryExprNode createMulNode(ExprNode lhs, ExprNode rhs, ParserRuleContext ctx) {

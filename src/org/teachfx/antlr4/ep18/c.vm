@@ -1,0 +1,27 @@
+.def main: args=0, locals=0
+; print f(10,20)
+    iconst 10   ; push first param
+    iconst 20   ; push second param
+    call f()
+    print
+    halt
+
+; f(x,y) { return ck(x, y); }
+.def f: args=2, locals=1
+    load 0
+    load 1
+    ; pop two params and add them
+    ; z = ck(x,y)
+    call ck()
+    ret
+
+.def ck: args=2, locals=0
+    load 0
+    iconst 2
+    imul
+    load 1
+    iconst 3
+    iadd
+    iadd
+    ret
+

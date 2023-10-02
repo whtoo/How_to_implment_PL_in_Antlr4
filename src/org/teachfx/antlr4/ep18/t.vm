@@ -1,12 +1,12 @@
 .def main: args=0, locals=0
 ; print f(10,20)
-    iconst 10   ; push first param
+    iconst 12   ; push first param
     iconst 20   ; push second param
     call f()
     print
     halt
 
-; f(x,y) { z = x + y; return z; }
+; f(x,y) { int z = x + y; return z; }
 .def f: args=2, locals=1     
     load 0      
     load 1

@@ -14,41 +14,66 @@ public class BytecodeDefinition {
     public static final short INSTR_IADD = 1; // int add
     public static final short INSTR_ISUB = 2; // int subtract
     public static final short INSTR_IMUL = 3; // int mul
-    public static final short INSTR_ILT = 4; // int lessthan
-    public static final short INSTR_IEQ = 5; // int equals
-    public static final short INSTR_FADD = 6; // float add
-    public static final short INSTR_FSUB = 7; // float subtract
-    public static final short INSTR_FMUL = 8; // float mul
-    public static final short INSTR_FLT = 9; // float lessthan
-    public static final short INSTR_FEQ = 10; // float equals
-    public static final short INSTR_ITOF = 11; // int to float
-    public static final short INSTR_CALL = 12; // call function
-    public static final short INSTR_RET = 13; // return with/without value
-    public static final short INSTR_BR = 14; //brach jump without condition means goto
-    public static final short INSTR_BRT = 15; // brach jump if true
-    public static final short INSTR_BRF = 16; // brach jump if false
-    public static final short INSTR_CCONST = 17; // push constant char
-    public static final short INSTR_ICONST = 18; // push constant integer
-    public static final short INSTR_FCONST = 19; // push constant float
-    public static final short INSTR_SCONST = 20; // push constant string
-    public static final short INSTR_LOAD = 21;   // load from local context
-    public static final short INSTR_GLOAD = 22;  // load from global memory
-    public static final short INSTR_FLOAD = 23;  // field load
-    public static final short INSTR_STORE = 24;  // store in local context
-    public static final short INSTR_GSTORE = 25; // store in global memory
-    public static final short INSTR_FSTORE = 26; // field store
-    public static final short INSTR_PRINT = 27;  // print stack top
-    public static final short INSTR_STRUCT = 28; // push new struct on stack
-    public static final short INSTR_NULL = 29;   // push null onto stack
-    public static final short INSTR_POP = 30;    // throw away top of stack
-    public static final short INSTR_HALT = 31;
+    // generate other cases for `instructions`
+    public static final short INSTR_IDIV = 4; // int divide
+    public static final short INSTR_ILT = 5; // int less than
+    public static final short INSTR_ILE = 6; // int less or equal
+    public static final short INSTR_IGT = 7; // int greater than
+    public static final short INSTR_IGE = 8; // int greater or equal
+    public static final short INSTR_IEQ = 9; // int equal
+    public static final short INSTR_INE = 10; // int not equal
+    public static final short INSTR_INEG = 11; // int negate
+    public static final short INSTR_INOT = 12; // int not
+    public static final short INSTR_IAND = 13; // int and
+    public static final short INSTR_IOR = 14; // int or
+    public static final short INSTR_IXOR = 15; // int xor
+    public static final short INSTR_FADD = 16; // float add
+    public static final short INSTR_FSUB = 17; // float subtract
+    public static final short INSTR_FMUL = 18; // float mul
+    public static final short INSTR_FLT = 19; // float less than
+    public static final short INSTR_FEQ = 20;
+    public static final short INSTR_ITOF = 21;
+    public static final short INSTR_CALL = 22; // call
+    public static final short INSTR_RET = 23; // return
+    public static final short INSTR_BR = 24;
+    // generate other cases for `instructions`
+    public static final short INSTR_BRT = 25;
+    public static final short INSTR_BRF = 26;
+    public static final short INSTR_CCONST = 27; // const
+    public static final short INSTR_ICONST = 28; // const
+    public static final short INSTR_FCONST = 29; // const
+    public static final short INSTR_SCONST = 30; // const
+    public static final short INSTR_LOAD = 31;
+    public static final short INSTR_GLOAD = 32;
+    public static final short INSTR_FLOAD = 33;
+    public static final short INSTR_STORE = 34;
+    public static final short INSTR_GSTORE = 35;
+    public static final short INSTR_FSTORE = 36;
+    public static final short INSTR_PRINT = 37;
+    public static final short INSTR_STRUCT = 38;
+    public static final short INSTR_NULL = 39;
+    public static final short INSTR_POP = 40;
+    public static final short INSTR_HALT = 41;
+
+
+    // all instructions
     public static Instruction[] instructions = new Instruction[]{
             null, // <INVALID>
             new Instruction("iadd"), // index is the opcode
             new Instruction("isub"),
             new Instruction("imul"),
+            new Instruction("idiv"),
             new Instruction("ilt"),
+            new Instruction("ile"),
+            new Instruction("igt"),
+            new Instruction("ige"),
             new Instruction("ieq"),
+            new Instruction("ine"),
+            new Instruction("ineg"),
+            new Instruction("inot"),
+            new Instruction("iand"),
+            new Instruction("ior"),
+            new Instruction("ixor"),
             new Instruction("fadd"),
             new Instruction("fsub"),
             new Instruction("fmul"),
@@ -74,7 +99,7 @@ public class BytecodeDefinition {
             new Instruction("struct", INT),
             new Instruction("null"),
             new Instruction("pop"),
-            new Instruction("halt")
+            new Instruction("halt"),
     };
 
     public static class Instruction {

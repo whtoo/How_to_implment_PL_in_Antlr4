@@ -28,7 +28,7 @@ statetment:   varDecl             #statVarDecl
     |   'return' expr? ';' #statReturn
     |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
     |   'while' '(' cond=expr ')' then=statetment #stateWhile
-    |   expr '=' expr ';' #statAssign // assignment 
+    |   expr '=' expr ';' #statAssign // assignment
     |   expr ';'       #exprStat // func call
     |   block               #statBlock
     ;
@@ -69,5 +69,5 @@ SLCOMMENT
     ;
 
 COMMNET
-    : '/*' .*? '\n' -> skip
+    : '/*' .*? '*/' '\n' -> skip
     ;

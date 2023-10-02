@@ -19,8 +19,7 @@
 - [x] [ep15](src/org/teachfx/antlr4/ep15)--实现变量的作用域确定。
 - [x] [ep16](src/org/teachfx/antlr4/ep16)--实现变量的消解和类型检查，并实现函数作用域与有函数调用的脚本求值。
 - [x] [ep17](src/org/teachfx/antlr4/ep17)--实现函数的静态声明依赖（并不是我心里想的调用图生成，但是还是加上吧，让其他人避坑。）
-- [x] [ep18](src/org/teachfx/antlr4/ep18)--采用栈解释器，目前很简陋。但在**实现ep20**以后，我会做一个**升级**
-
+- [x] [ep18](src/org/teachfx/antlr4/ep18)--采用栈解释器，目前很简陋。增加VM指令，更新[VM设计文档](src%2Forg%2Fteachfx%2Fantlr4%2Fep18%2FVM_Design.md)
 - [x] [ep19](src/org/teachfx/antlr4/ep19)--实现简单的struct(~~实现闭包~~)，目前实现了最简单的record类型和main函数以及file作用域~~下一章增加类方法和协议支持~~。
 - [ ] [ep20](src/org/teachfx/antlr4/ep20)--重点放在IR和字节码生成，生成的字节码目标机就是我们[ep18](src/org/teachfx/antlr4/ep18)实现的VM。这么做的原因是这个过程足够简单、精确地表现编译后端中最重要的一步是如何执行的。
 - [ ] [ep21](src/org/teachfx/antlr4/ep21)--解释语法检查和数据流分析的核心实现方式。

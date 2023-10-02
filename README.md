@@ -1,6 +1,9 @@
-# 从解释和构造的视角：动手创造一门编程语言(Cyson:dog:)
+# 从解释计算的视角：如何亲手创造一门编程语言(Cyson:dog:)
 
-**🙏谢谢每一个给我一点关注的朋友，你们是我更新的动力**
+**每一个watch和star都是这场梦幻之旅的⛽️与干柴**
+
+**兴❤️如🔥，其势如风.意许如油，汩汩不息。**
+
 ## 1. 全局鸟瞰
 - [x] [ep1](src/org/teachfx/antlr4/ep1)--antlr支持的EBNF语法描述hello world示例。
 - [x] [ep2](src/org/teachfx/antlr4/ep2)--如何使用g4描述形如`{1,2,{3,4..}...}`的数组，并在listener中print它。
@@ -25,7 +28,7 @@
 - [ ] [ep21](src/org/teachfx/antlr4/ep21)--解释语法检查和数据流分析的核心实现方式。
 - [ ] [ep22](src/org/teachfx/antlr4/ep22)--重点放在基础优化上，力求简明扼要。
 - [ ] [ep23](src/org/teachfx/antlr4/ep23)--在Cyson上进行高级静态分析
-
+[VM_Design.md](src%2Forg%2Fteachfx%2Fantlr4%2Fep18%2FVM_Design.md)
 PS: 终于写完了，感觉好忐忑。不过，我还有另外几个也是编译原理相关的坑也要填。
 
 首先，我得感谢父母，他们给了我莫大支持。

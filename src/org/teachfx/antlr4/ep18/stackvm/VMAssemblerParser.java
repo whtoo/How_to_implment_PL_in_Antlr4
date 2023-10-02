@@ -2,16 +2,14 @@
 
 package org.teachfx.antlr4.ep18.stackvm;
 
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.ATN;
-import org.antlr.v4.runtime.atn.ATNDeserializer;
-import org.antlr.v4.runtime.atn.ParserATNSimulator;
-import org.antlr.v4.runtime.atn.PredictionContextCache;
+import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.tree.ParseTreeListener;
-import org.antlr.v4.runtime.tree.TerminalNode;
-
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.*;
+import org.antlr.v4.runtime.tree.*;
 import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class VMAssemblerParser extends Parser {
@@ -22,7 +20,7 @@ public class VMAssemblerParser extends Parser {
 		new PredictionContextCache();
 	public static final int
 		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, REG=8, ID=9, FUNC=10, 
-		INT=11, CHAR=12, STRING=13, FLOAT=14, WS=15, NEWLINE=16;
+		INT=11, CHAR=12, BOOL=13, STRING=14, FLOAT=15, WS=16, NEWLINE=17;
 	public static final int
 		RULE_program = 0, RULE_globals = 1, RULE_functionDeclaration = 2, RULE_instr = 3, 
 		RULE_operand = 4, RULE_label = 5;
@@ -42,7 +40,7 @@ public class VMAssemblerParser extends Parser {
 	private static String[] makeSymbolicNames() {
 		return new String[] {
 			null, null, null, null, null, null, null, null, "REG", "ID", "FUNC", 
-			"INT", "CHAR", "STRING", "FLOAT", "WS", "NEWLINE"
+			"INT", "CHAR", "BOOL", "STRING", "FLOAT", "WS", "NEWLINE"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -436,6 +434,7 @@ public class VMAssemblerParser extends Parser {
 		public TerminalNode REG() { return getToken(VMAssemblerParser.REG, 0); }
 		public TerminalNode FUNC() { return getToken(VMAssemblerParser.FUNC, 0); }
 		public TerminalNode INT() { return getToken(VMAssemblerParser.INT, 0); }
+		public TerminalNode BOOL() { return getToken(VMAssemblerParser.BOOL, 0); }
 		public TerminalNode CHAR() { return getToken(VMAssemblerParser.CHAR, 0); }
 		public TerminalNode STRING() { return getToken(VMAssemblerParser.STRING, 0); }
 		public TerminalNode FLOAT() { return getToken(VMAssemblerParser.FLOAT, 0); }
@@ -462,7 +461,7 @@ public class VMAssemblerParser extends Parser {
 			{
 			setState(67);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << REG) | (1L << ID) | (1L << FUNC) | (1L << INT) | (1L << CHAR) | (1L << STRING) | (1L << FLOAT))) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << REG) | (1L << ID) | (1L << FUNC) | (1L << INT) | (1L << CHAR) | (1L << BOOL) | (1L << STRING) | (1L << FLOAT))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -523,24 +522,24 @@ public class VMAssemblerParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\22K\4\2\t\2\4\3\t"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\23K\4\2\t\2\4\3\t"+
 		"\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\3\2\5\2\20\n\2\3\2\3\2\3\2\3\2\6\2"+
 		"\26\n\2\r\2\16\2\27\3\3\7\3\33\n\3\f\3\16\3\36\13\3\3\3\3\3\3\3\3\3\3"+
 		"\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\5\3\5\3\5\3\5\3\5\3\5"+
 		"\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\3\5\5\5D\n\5\3\6"+
-		"\3\6\3\7\3\7\3\7\3\7\2\2\b\2\4\6\b\n\f\2\3\3\2\n\20\2M\2\17\3\2\2\2\4"+
+		"\3\6\3\7\3\7\3\7\3\7\2\2\b\2\4\6\b\n\f\2\3\3\2\n\21\2M\2\17\3\2\2\2\4"+
 		"\34\3\2\2\2\6#\3\2\2\2\bC\3\2\2\2\nE\3\2\2\2\fG\3\2\2\2\16\20\5\4\3\2"+
 		"\17\16\3\2\2\2\17\20\3\2\2\2\20\25\3\2\2\2\21\26\5\6\4\2\22\26\5\b\5\2"+
-		"\23\26\5\f\7\2\24\26\7\22\2\2\25\21\3\2\2\2\25\22\3\2\2\2\25\23\3\2\2"+
+		"\23\26\5\f\7\2\24\26\7\23\2\2\25\21\3\2\2\2\25\22\3\2\2\2\25\23\3\2\2"+
 		"\2\25\24\3\2\2\2\26\27\3\2\2\2\27\25\3\2\2\2\27\30\3\2\2\2\30\3\3\2\2"+
-		"\2\31\33\7\22\2\2\32\31\3\2\2\2\33\36\3\2\2\2\34\32\3\2\2\2\34\35\3\2"+
-		"\2\2\35\37\3\2\2\2\36\34\3\2\2\2\37 \7\3\2\2 !\7\r\2\2!\"\7\22\2\2\"\5"+
+		"\2\31\33\7\23\2\2\32\31\3\2\2\2\33\36\3\2\2\2\34\32\3\2\2\2\34\35\3\2"+
+		"\2\2\35\37\3\2\2\2\36\34\3\2\2\2\37 \7\3\2\2 !\7\r\2\2!\"\7\23\2\2\"\5"+
 		"\3\2\2\2#$\7\4\2\2$%\7\13\2\2%&\7\5\2\2&\'\7\6\2\2\'(\7\7\2\2()\7\r\2"+
-		"\2)*\7\b\2\2*+\7\t\2\2+,\7\7\2\2,-\7\r\2\2-.\7\22\2\2.\7\3\2\2\2/\60\7"+
-		"\13\2\2\60D\7\22\2\2\61\62\7\13\2\2\62\63\5\n\6\2\63\64\7\22\2\2\64D\3"+
-		"\2\2\2\65\66\7\13\2\2\66\67\5\n\6\2\678\7\b\2\289\5\n\6\29:\7\22\2\2:"+
+		"\2)*\7\b\2\2*+\7\t\2\2+,\7\7\2\2,-\7\r\2\2-.\7\23\2\2.\7\3\2\2\2/\60\7"+
+		"\13\2\2\60D\7\23\2\2\61\62\7\13\2\2\62\63\5\n\6\2\63\64\7\23\2\2\64D\3"+
+		"\2\2\2\65\66\7\13\2\2\66\67\5\n\6\2\678\7\b\2\289\5\n\6\29:\7\23\2\2:"+
 		"D\3\2\2\2;<\7\13\2\2<=\5\n\6\2=>\7\b\2\2>?\5\n\6\2?@\7\b\2\2@A\5\n\6\2"+
-		"AB\7\22\2\2BD\3\2\2\2C/\3\2\2\2C\61\3\2\2\2C\65\3\2\2\2C;\3\2\2\2D\t\3"+
+		"AB\7\23\2\2BD\3\2\2\2C/\3\2\2\2C\61\3\2\2\2C\65\3\2\2\2C;\3\2\2\2D\t\3"+
 		"\2\2\2EF\t\2\2\2F\13\3\2\2\2GH\7\13\2\2HI\7\5\2\2I\r\3\2\2\2\7\17\25\27"+
 		"\34C";
 	public static final ATN _ATN =

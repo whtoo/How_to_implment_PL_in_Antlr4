@@ -112,6 +112,7 @@ public class VMInterpreter {
         Object v = null;
         int a, b;
         float e, f;
+        boolean p,q;
         int addr = 0;
         short opcode = code[ip];
         while (opcode != BytecodeDefinition.INSTR_HALT && ip < codeSize) {
@@ -143,11 +144,61 @@ public class VMInterpreter {
                     sp -= 2;
                     operands[++sp] = a < b;
                     break;
+                case BytecodeDefinition.INSTR_IGT:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = a > b;
+                    break;
+                case BytecodeDefinition.INSTR_IDIV:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = a / b;
+                    break;
+                case BytecodeDefinition.INSTR_INEG:
+                    a = (Integer) operands[sp--];
+                    operands[++sp] = -a;
+                    break;
                 case BytecodeDefinition.INSTR_IEQ:
                     a = (Integer) operands[sp - 1];
                     b = (Integer) operands[sp];
                     sp -= 2;
                     operands[++sp] = a == b;
+                    break;
+                case BytecodeDefinition.INSTR_ILE:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = a <= b;
+                    break;
+                case BytecodeDefinition.INSTR_IGE:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = (a >= b);
+                    break;
+                case BytecodeDefinition.INSTR_INE:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = a != b;
+                    break;
+                case BytecodeDefinition.INSTR_INOT:
+                    p = (boolean)operands[sp--];
+                    operands[++sp] = !p;
+                    break;
+                case BytecodeDefinition.INSTR_IAND:
+                    p = (boolean) operands[sp - 1];
+                    q = (boolean) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = p && q;
+                    break;
+                case BytecodeDefinition.INSTR_IOR:
+                    p = (boolean) operands[sp - 1];
+                    q = (boolean) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = p || q;
                     break;
                 case BytecodeDefinition.INSTR_FADD:
                     e = (Float) operands[sp - 1];

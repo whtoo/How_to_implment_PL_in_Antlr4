@@ -35,12 +35,13 @@ operand
     :   ID   // basic code label; E.g., "loop"
     |   REG  // register name; E.g., "r0"
     |   FUNC // function label; E.g., "f()"
-    |   INT
-// ...
 // END: operand
+    |   INT
+    |   BOOL
     |   CHAR
     |   STRING
     |   FLOAT
+
     ;
 
 label
@@ -60,6 +61,8 @@ LETTER
 INT :   '-'? '0'..'9'+ ;
 
 CHAR:   '\'' . '\'' ;
+
+BOOL: 'true' | 'false';
 
 STRING: '"' STR_CHARS '"' { setText(getText().substring(1, getText().length() - 1)); };
 

@@ -17,7 +17,7 @@ public class Symbol {
     protected Type type;
     // Locate where I am.
     public Scope scope;
-    public MemorySpace space;
+
     String name;
 
     public Symbol(String name) {

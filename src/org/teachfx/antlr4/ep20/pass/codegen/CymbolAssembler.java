@@ -49,7 +49,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(BoolVal node) {
-        emit("iconst %d".formatted(node.value ? true : false));
+        emit("iconst %b".formatted(node.value));
         return null;
     }
 

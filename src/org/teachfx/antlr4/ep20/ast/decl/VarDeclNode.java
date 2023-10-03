@@ -3,7 +3,7 @@ package org.teachfx.antlr4.ep20.ast.decl;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.teachfx.antlr4.ep20.ast.ASTVisitor;
 import org.teachfx.antlr4.ep20.ast.expr.ExprNode;
-import org.teachfx.antlr4.ep20.debugger.Dumper;
+import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
 import org.teachfx.antlr4.ep20.symtab.VariableSymbol;
 
 import java.util.Objects;

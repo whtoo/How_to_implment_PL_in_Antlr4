@@ -1,7 +1,7 @@
 package org.teachfx.antlr4.ep20.ast.stmt;
 
 import org.teachfx.antlr4.ep20.ast.ASTNode;
-import org.teachfx.antlr4.ep20.debugger.Dumper;
+import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
 
 public abstract class StmtNode extends ASTNode {
     @Override

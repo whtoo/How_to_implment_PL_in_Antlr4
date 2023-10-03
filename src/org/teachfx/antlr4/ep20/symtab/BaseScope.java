@@ -43,4 +43,9 @@ public abstract class BaseScope implements Scope {
     public String toString() {
         return getScopeName() + symbols.keySet();
     }
+
+    @Override
+    public void setParentScope(Scope currentScope) {
+        this.enclosingScope = currentScope;
+    }
 }

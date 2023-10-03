@@ -1,14 +1,16 @@
 package org.teachfx.antlr4.ep20.ast;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.teachfx.antlr4.ep20.debugger.Dumpable;
-import org.teachfx.antlr4.ep20.debugger.Dumper;
+import org.teachfx.antlr4.ep20.debugger.ast.Dumpable;
+import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
 import org.teachfx.antlr4.ep20.parser.Location;
 
 import java.io.PrintStream;
 
 abstract public class ASTNode implements Dumpable {
     public ParserRuleContext ctx;
-
+    public ParserRuleContext getCtx() {
+        return  ctx;
+    }
     public Location getLocation() {
         if(ctx == null) { return null; }
         if(ctx.getStart() != ctx.getStop()) {

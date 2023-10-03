@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep20.debugger;
+package org.teachfx.antlr4.ep20.debugger.ast;
 
 import org.teachfx.antlr4.ep20.ast.type.*;
 import org.teachfx.antlr4.ep20.parser.Location;

@@ -84,12 +84,12 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
             case MUL -> emit("imul");
             case DIV -> emit("idiv");
             case MOD -> emit("irem");
-            case EQ -> emit("if_icmpeq");
-            case NE -> emit("if_icmpne");
-            case LT -> emit("if_icmplt");
-            case GT -> emit("if_icmpgt");
-            case LE -> emit("if_icmple");
-            case GE -> emit("if_icmpge");
+            case EQ -> emit("ieq");
+            case NE -> emit("ine");
+            case LT -> emit("ilt");
+            case GT -> emit("igt");
+            case LE -> emit("ile");
+            case GE -> emit("ige");
             case AND -> emit("iand");
             case OR -> emit("ior");
         }

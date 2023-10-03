@@ -14,4 +14,5 @@ public interface Scope {
 
     Type lookup(String name);
 
+    void setParentScope(Scope currentScope);
 }

@@ -8,6 +8,6 @@ public class LocalScope extends BaseScope {
 
     @Override
     public String getScopeName() {
-        return "Local";
+        return "Local-"+getEnclosingScope().getScopeName();
     }
 }

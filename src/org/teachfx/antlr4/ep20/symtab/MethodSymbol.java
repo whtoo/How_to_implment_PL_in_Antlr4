@@ -1,25 +1,28 @@
 package org.teachfx.antlr4.ep20.symtab;
 
-import org.antlr.v4.runtime.ParserRuleContext;
+import org.teachfx.antlr4.ep20.ast.ASTNode;
+import org.teachfx.antlr4.ep20.ast.expr.ExprNode;
+import org.teachfx.antlr4.ep20.ast.stmt.StmtNode;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class MethodSymbol extends ScopedSymbol implements Type {
-    public ParserRuleContext blockStmt;
+    public StmtNode blockStmt = null;
     public boolean builtin = false;
-    public ParserRuleContext callee = null;
+    public ExprNode callee = null;
     Map<String, Symbol> orderedArgs = new LinkedHashMap<String, Symbol>();
 
     // Language func
     public MethodSymbol(String name, Type retType, Scope parent,
-                        ParserRuleContext tree) {
+                        ASTNode tree) {
         super(name, retType, parent);
+        this.tree = tree;
     }
 
     // Native func
     public MethodSymbol(String name, Scope parent,
-                        ParserRuleContext tree) {
+                        ASTNode tree) {
         super(name, parent, tree);
     }
 
@@ -51,5 +54,10 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     @Override
     public Type getPrimitiveType() {
         return null;
+    }
+
+    @Override
+    public void setParentScope(Scope currentScope) {
+        this.enclosingScope = currentScope;
     }
 }

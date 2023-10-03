@@ -1,12 +1,13 @@
 package org.teachfx.antlr4.ep20.symtab;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.teachfx.antlr4.ep20.ast.ASTNode;
 
 import java.util.Map;
 
 
 public abstract class ScopedSymbol extends Symbol implements Scope {
-    public ParserRuleContext tree;
+    public ASTNode tree;
     Scope enclosingScope;
 
     public ScopedSymbol(String name, Type type, Scope enclosingScope) {
@@ -14,7 +15,7 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
         this.enclosingScope = enclosingScope;
     }
 
-    public ScopedSymbol(String name, Scope enclosingScope, ParserRuleContext tree) {
+    public ScopedSymbol(String name, Scope enclosingScope, ASTNode tree) {
         super(name);
         this.enclosingScope = enclosingScope;
         this.tree = tree;
@@ -58,4 +59,9 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
 
     public abstract Map<String, Symbol> getMembers();
     public abstract void defineMember(Symbol sym);
+
+    @Override
+    public void setParentScope(Scope currentScope) {
+        this.enclosingScope = scope;
+    }
 }

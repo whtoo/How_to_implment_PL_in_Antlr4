@@ -15,7 +15,7 @@ public class OperatorType {
             return opRawVal;
         }
 
-        private String opRawVal;
+        private final String opRawVal;
 
         BinaryOpType(String s) {
             this.opRawVal = s;
@@ -41,7 +41,7 @@ public class OperatorType {
             return opRawVal;
         }
 
-        private String opRawVal;
+        private final String opRawVal;
 
         UnaryOpType(String s) {
             this.opRawVal = s;

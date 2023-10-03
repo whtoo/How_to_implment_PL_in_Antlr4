@@ -4,7 +4,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.teachfx.antlr4.ep20.ast.ASTVisitor;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
-import org.teachfx.antlr4.ep20.symtab.TypeTable;
+import org.teachfx.antlr4.ep20.symtab.type.TypeTable;
 
 public class IntExprNode extends LiteralNode<Integer> {
 

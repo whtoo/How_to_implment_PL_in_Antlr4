@@ -1,8 +1,11 @@
-package org.teachfx.antlr4.ep20.symtab;
+package org.teachfx.antlr4.ep20.symtab.symbol;
 
-import org.teachfx.antlr4.ep20.misc.MemorySpace;
+import org.teachfx.antlr4.ep20.debugger.ast.Dumpable;
+import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
+import org.teachfx.antlr4.ep20.symtab.type.Type;
+import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
-public class Symbol {
+public class Symbol implements Dumpable {
     static Type UNDEFINED;
 
     public Type getType() {
@@ -18,7 +21,7 @@ public class Symbol {
     // Locate where I am.
     public Scope scope;
 
-    String name;
+    public String name;
 
     public Symbol(String name) {
         this.name = name;
@@ -43,5 +46,10 @@ public class Symbol {
         if (scope != null) s = scope.getScopeName() + ".";
         if (type != null) return '<' + s + getName() + ":" + type + ">";
         return s + getName();
+    }
+
+    @Override
+    public void dump(Dumper dumper) {
+        dumper.printMember("symbol", toString());
     }
 }

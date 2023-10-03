@@ -1,7 +1,7 @@
 package org.teachfx.antlr4.ep20.ir.def;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
-import org.teachfx.antlr4.ep20.symtab.Symbol;
+import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
 
 public abstract class Define {
     public Symbol symbol;

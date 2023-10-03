@@ -8,6 +8,8 @@ import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 
+import java.util.Optional;
+
 public class ASTBaseVisitor implements ASTVisitor {
 
     @Override
@@ -26,7 +28,7 @@ public class ASTBaseVisitor implements ASTVisitor {
 
     @Override
     public void visit(VarDeclNode varDeclNode) {
-
+        Optional.ofNullable(varDeclNode.getAssignExprNode()).ifPresent(exprNode -> exprNode.accept(this));
     }
 
     @Override
@@ -50,8 +52,10 @@ public class ASTBaseVisitor implements ASTVisitor {
 
     @Override
     public void visit(BinaryExprNode binaryExprNode) {
-        binaryExprNode.getLhs().accept(this);
-        binaryExprNode.getRhs().accept(this);
+        binaryExprNode.getLhs()
+                .accept(this);
+        binaryExprNode.getRhs()
+                .accept(this);
     }
 
     @Override
@@ -62,6 +66,11 @@ public class ASTBaseVisitor implements ASTVisitor {
     @Override
     public void visit(BoolExprNode boolExprNode) {
 
+    }
+
+    @Override
+    public void visit(CallFuncNode callExprNode) {
+        callExprNode.getArgsNode().forEach(arg -> arg.accept(this));
     }
 
     @Override
@@ -93,7 +102,8 @@ public class ASTBaseVisitor implements ASTVisitor {
     public void visit(IfStmtNode ifStmtNode) {
         ifStmtNode.getConditionalNode().accept(this);
         ifStmtNode.getThenBlock().accept(this);
-        ifStmtNode.getElseBlock().accept(this);
+
+        Optional.ofNullable(ifStmtNode.getElseBlock()).ifPresent(block -> block.accept(this));
     }
 
     @Override
@@ -122,4 +132,6 @@ public class ASTBaseVisitor implements ASTVisitor {
         assignStmtNode.getRhs().accept(this);
         assignStmtNode.getLhs().accept(this);
     }
+
+
 }

@@ -1,8 +1,10 @@
-package org.teachfx.antlr4.ep20.symtab;
+package org.teachfx.antlr4.ep20.symtab.symbol;
 
 import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.ast.expr.ExprNode;
 import org.teachfx.antlr4.ep20.ast.stmt.StmtNode;
+import org.teachfx.antlr4.ep20.symtab.type.Type;
+import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,14 +16,14 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     Map<String, Symbol> orderedArgs = new LinkedHashMap<String, Symbol>();
 
     // Language func
-    public MethodSymbol(String name, Type retType, Scope parent,
+    public MethodSymbol(String name, Type retType, org.teachfx.antlr4.ep20.symtab.scope.Scope parent,
                         ASTNode tree) {
         super(name, retType, parent);
         this.tree = tree;
     }
 
     // Native func
-    public MethodSymbol(String name, Scope parent,
+    public MethodSymbol(String name, org.teachfx.antlr4.ep20.symtab.scope.Scope parent,
                         ASTNode tree) {
         super(name, parent, tree);
     }

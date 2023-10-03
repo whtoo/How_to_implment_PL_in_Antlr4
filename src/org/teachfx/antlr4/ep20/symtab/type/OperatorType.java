@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep20.symtab;
+package org.teachfx.antlr4.ep20.symtab.type;
 
 public class OperatorType {
     public enum BinaryOpType  {

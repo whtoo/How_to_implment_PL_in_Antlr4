@@ -1,4 +1,6 @@
-package org.teachfx.antlr4.ep20.symtab;
+package org.teachfx.antlr4.ep20.symtab.symbol;
+
+import org.teachfx.antlr4.ep20.symtab.type.Type;
 
 public class VariableSymbol extends Symbol {
 

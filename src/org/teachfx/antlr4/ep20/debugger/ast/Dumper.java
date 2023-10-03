@@ -2,7 +2,7 @@ package org.teachfx.antlr4.ep20.debugger.ast;
 
 import org.teachfx.antlr4.ep20.ast.type.*;
 import org.teachfx.antlr4.ep20.parser.Location;
-import org.teachfx.antlr4.ep20.symtab.Type;
+import org.teachfx.antlr4.ep20.symtab.type.Type;
 
 import java.io.PrintStream;
 import java.util.List;

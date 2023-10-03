@@ -3,8 +3,8 @@ package org.teachfx.antlr4.ep20.ast.expr;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.teachfx.antlr4.ep20.ast.ASTVisitor;
 import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
-import org.teachfx.antlr4.ep20.symtab.OperatorType;
-import org.teachfx.antlr4.ep20.symtab.Type;
+import org.teachfx.antlr4.ep20.symtab.type.OperatorType;
+import org.teachfx.antlr4.ep20.symtab.type.Type;
 
 public class BinaryExprNode extends ExprNode{
 

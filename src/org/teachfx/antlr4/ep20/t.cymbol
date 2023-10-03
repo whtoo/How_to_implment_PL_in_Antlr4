@@ -1,9 +1,4 @@
 
-int a = 12;
-
-int b = 8;
-int c = 16;
-
 int add(int x,int y) {
     int d = x + y;
     if (d >= 0) {
@@ -17,12 +12,8 @@ int fib(int n) {
     else return fib(n-1) + fib(n-2);
 }
 
-/*
-print(fib(10));
+int main() {
 
-int v = add(a,b);
-int e = v * c;
-*/
-
-print("skip comments above");
+    return 0;
+}
 

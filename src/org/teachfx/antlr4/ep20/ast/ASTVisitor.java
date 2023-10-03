@@ -22,6 +22,9 @@ public interface ASTVisitor {
 
     /// literal value
     void visit(BoolExprNode boolExprNode);
+
+    void visit(CallFuncNode callExprNode);
+
     void visit(IntExprNode intExprNode);
     void visit(FloatExprNode floatExprNode);
     void visit(NullExprNode nullExprNode);

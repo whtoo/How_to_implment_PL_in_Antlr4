@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.parser.CymbolLexer;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
+import org.teachfx.antlr4.ep20.pass.symtab.LocalDefine;
 import org.teachfx.antlr4.ep20.pass.ast.CymbolASTBuilder;
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,6 +29,7 @@ public class Compiler {
         ParseTree parseTree = parser.file();
         CymbolASTBuilder astBuilder = new CymbolASTBuilder("t.cymbol");
         ASTNode astRoot = parseTree.accept(astBuilder);
+        astRoot.accept(new LocalDefine());
         astRoot.dump();
     }
 }

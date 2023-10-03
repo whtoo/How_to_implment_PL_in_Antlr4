@@ -77,6 +77,11 @@ public class CymbolIRBuilder implements ASTVisitor {
     }
 
     @Override
+    public void visit(CallFuncNode callExprNode) {
+
+    }
+
+    @Override
     public void visit(IfStmtNode ifStmtNode) {
 
     }

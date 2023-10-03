@@ -1,4 +1,7 @@
-package org.teachfx.antlr4.ep20.symtab;
+package org.teachfx.antlr4.ep20.symtab.scope;
+
+import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
+import org.teachfx.antlr4.ep20.symtab.type.Type;
 
 /**
  * Scope

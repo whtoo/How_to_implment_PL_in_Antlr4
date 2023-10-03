@@ -64,5 +64,8 @@ public class CompileUnit extends ASTNode {
         this.srcName = srcName;
     }
 
-
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
+    }
 }

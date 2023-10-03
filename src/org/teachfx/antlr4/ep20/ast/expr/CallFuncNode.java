@@ -1,9 +1,10 @@
 package org.teachfx.antlr4.ep20.ast.expr;
 
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.teachfx.antlr4.ep20.ast.ASTVisitor;
 import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
-import org.teachfx.antlr4.ep20.symtab.MethodSymbol;
-import org.teachfx.antlr4.ep20.symtab.Type;
+import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
+import org.teachfx.antlr4.ep20.symtab.type.Type;
 
 import java.util.List;
 
@@ -53,5 +54,10 @@ public class CallFuncNode extends ExprNode {
     @Override
     public Type getExprType() {
         return callFuncSymbol.getFuncType();
+    }
+
+    @Override
+    public void accept(ASTVisitor visitor) {
+        visitor.visit(this);
     }
 }

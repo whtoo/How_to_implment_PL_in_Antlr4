@@ -1,21 +1,22 @@
-package org.teachfx.antlr4.ep20.symtab;
+package org.teachfx.antlr4.ep20.symtab.symbol;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.teachfx.antlr4.ep20.ast.ASTNode;
+import org.teachfx.antlr4.ep20.symtab.type.Type;
+import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
 import java.util.Map;
 
 
-public abstract class ScopedSymbol extends Symbol implements Scope {
+public abstract class ScopedSymbol extends Symbol implements org.teachfx.antlr4.ep20.symtab.scope.Scope {
     public ASTNode tree;
-    Scope enclosingScope;
+    org.teachfx.antlr4.ep20.symtab.scope.Scope enclosingScope;
 
-    public ScopedSymbol(String name, Type type, Scope enclosingScope) {
+    public ScopedSymbol(String name, Type type, org.teachfx.antlr4.ep20.symtab.scope.Scope enclosingScope) {
         super(name, type);
         this.enclosingScope = enclosingScope;
     }
 
-    public ScopedSymbol(String name, Scope enclosingScope, ASTNode tree) {
+    public ScopedSymbol(String name, org.teachfx.antlr4.ep20.symtab.scope.Scope enclosingScope, ASTNode tree) {
         super(name);
         this.enclosingScope = enclosingScope;
         this.tree = tree;
@@ -42,7 +43,7 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
     }
 
     @Override
-    public Scope getEnclosingScope() {
+    public org.teachfx.antlr4.ep20.symtab.scope.Scope getEnclosingScope() {
         return enclosingScope;
     }
 

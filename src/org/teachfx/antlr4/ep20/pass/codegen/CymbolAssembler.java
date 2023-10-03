@@ -9,8 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import static org.teachfx.antlr4.ep20.symtab.OperatorType.BinaryOpType.*;
-
 
 public class CymbolAssembler implements IRVisitor<Void,Void> {
     protected PrintWriter printWriter;

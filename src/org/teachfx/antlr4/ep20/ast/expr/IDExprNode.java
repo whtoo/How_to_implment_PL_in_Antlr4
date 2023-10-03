@@ -3,7 +3,7 @@ package org.teachfx.antlr4.ep20.ast.expr;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.teachfx.antlr4.ep20.ast.ASTVisitor;
 import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
-import org.teachfx.antlr4.ep20.symtab.Symbol;
+import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
 
 public class IDExprNode extends ExprNode {
 
@@ -43,5 +43,6 @@ public class IDExprNode extends ExprNode {
     protected void _dump(Dumper d) {
         super._dump(d);
         d.printMember("id",image);
+        d.printMember("refSymbol",getRefSymbol());
     }
 }

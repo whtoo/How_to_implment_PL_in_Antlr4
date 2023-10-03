@@ -1,4 +1,8 @@
-package org.teachfx.antlr4.ep20.symtab;
+package org.teachfx.antlr4.ep20.symtab.scope;
+
+import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
+import org.teachfx.antlr4.ep20.symtab.type.Type;
+import org.teachfx.antlr4.ep20.symtab.type.TypeTable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

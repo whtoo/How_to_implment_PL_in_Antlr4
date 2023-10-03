@@ -6,13 +6,13 @@ import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
 import org.teachfx.antlr4.ep20.ast.decl.VarDeclListNode;
 import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
-import org.teachfx.antlr4.ep20.symtab.OperatorType.*;
+import org.teachfx.antlr4.ep20.symtab.type.OperatorType.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.parser.CymbolVisitor;
-import org.teachfx.antlr4.ep20.symtab.VariableSymbol;
+import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
 import java.util.List;
 import java.util.Objects;
@@ -73,7 +73,8 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitFunctionDecl(CymbolParser.FunctionDeclContext ctx) {
-        var paramSlots = (VarDeclListNode)visit(ctx.params);
+        var paramSlots = Objects.nonNull(ctx.params) ? (VarDeclListNode)visit(ctx.params) : null;
+        paramSlots = paramSlots == null ? new VarDeclListNode(List.of(),ctx) : paramSlots;
         var retType = (TypeNode)visit(ctx.retType);
         var funcName = ctx.funcName.getText();
 
@@ -101,15 +102,18 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
     public ASTNode visitBlock(CymbolParser.BlockContext ctx) {
         var stmtNodeStream = ctx.children.stream().map((stmtCtx)-> (StmtNode)visit(stmtCtx));
         var stmtList = stmtNodeStream.filter(Objects::nonNull).toList();
-        return new BlockStmtNode(stmtList,ctx);
+        var stmtNode = new BlockStmtNode(stmtList,ctx);
+        stmtNode.setParentScopeType(BlockStmtNode.ParentScopeType.FuncScope);
+        return stmtNode;
     }
 
     @Override
     public ASTNode visitStatBlock(CymbolParser.StatBlockContext ctx) {
         var stmtList = ctx.block().statetment().stream().map((stmtCtx)-> (StmtNode)visit(stmtCtx))
                 .toList();
-
-        return new BlockStmtNode(stmtList,ctx);
+        var stmtNode = new BlockStmtNode(stmtList,ctx);
+        stmtNode.setParentScopeType(BlockStmtNode.ParentScopeType.StmtScope);
+        return stmtNode;
     }
 
     @Override

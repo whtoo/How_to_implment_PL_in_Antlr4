@@ -2,7 +2,7 @@ package org.teachfx.antlr4.ep20.ir.def;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.stmt.Stmt;
-import org.teachfx.antlr4.ep20.symtab.MethodSymbol;
+import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 
 import java.util.List;
 

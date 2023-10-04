@@ -8,9 +8,8 @@ import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
+import java.io.OutputStreamWriter;
 
 
 public class CymbolAssembler implements IRVisitor<Void,Void> {
@@ -213,5 +212,12 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     public Void visit(ExprStmt exprStmt) {
         visit(exprStmt.getExpr());
         return null;
+    }
+
+    public void saveToFile(File savedFile) throws FileNotFoundException {
+        var os = new FileOutputStream(savedFile);
+        var osw = new OutputStreamWriter(os);
+        var pw = new PrintWriter(osw);
+        pw.write(flushCode());
     }
 }

@@ -38,6 +38,7 @@ public class Compiler {
         var assembler = new CymbolAssembler();
         irBuilder.root.accept(assembler);
         System.out.println(assembler.flushCode());
-
+        var savedFile = new File("./%s.vm".formatted("t"));
+        assembler.saveToFile(savedFile);
     }
 }

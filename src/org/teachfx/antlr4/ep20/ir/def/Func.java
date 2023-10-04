@@ -9,14 +9,13 @@ import java.util.List;
 public class Func extends Define {
     /// filed
     public String funcName;
-    private int args;
     private int locals;
     public List<Stmt> body;
 
     public Func(String funcName, MethodSymbol symbol , List<Stmt> body) {
         // init
         this.funcName = funcName;
-        this.args = symbol.getMembers().size();
+        this.symbol = symbol;
         this.body = body;
     }
 
@@ -29,13 +28,11 @@ public class Func extends Define {
     }
 
     public int getArgs() {
-        return args;
+        return getFuncSymbol().getMembers().size();
     }
-
-    public void setArgs(int args) {
-        this.args = args;
+    protected MethodSymbol getFuncSymbol() {
+        return (MethodSymbol)symbol;
     }
-
     public int getLocals() {
         return locals;
     }
@@ -63,6 +60,6 @@ public class Func extends Define {
     }
 
     public String toSource() {
-        return ".def %s: args=%d ,locals=%d".formatted(getFuncName(),args,locals);
+        return ".def %s: args=%d ,locals=%d".formatted(getFuncName(), getFuncSymbol().getArgs(),getFuncSymbol().getMembers().size() -  getFuncSymbol().getArgs());
     }
 }

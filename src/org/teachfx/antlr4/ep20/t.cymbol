@@ -5,8 +5,12 @@ int add(int x,int y) {
     return d;
 }
 
-int main() {
+int sub(int p,int q) {
+    return p * 2 - q;
+}
 
+int main() {
+    print(sub(10,21));
     return add(1,2);
 }
 

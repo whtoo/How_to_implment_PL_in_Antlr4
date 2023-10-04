@@ -30,7 +30,7 @@
     </target>
     <target name="run" depends="build">
         <java classname="org.teachfx.antlr4.ep18.stackvm.VMInterpreter" classpath="${VMRunner_jar}">
-            <arg line="c.vm"/>
+            <arg line="t.vm"/>
         </java>
     </target>
     <target name="clean" depends="detect">

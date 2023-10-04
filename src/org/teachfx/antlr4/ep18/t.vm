@@ -1,17 +1,23 @@
-.def main: args=0, locals=0
-; print f(10,20)
-    iconst 12   ; push first param
-    iconst 20   ; push second param
-    call f()
-    print
-    halt
-
-; f(x,y) { int z = x + y; return z; }
-.def f: args=2, locals=1     
-    load 0      
+.def add: args=2 ,locals=1
+    load 0
     load 1
-    iadd        ; pop two params and add them 
-    store 2     ; z = t
-;   return z
+    iadd
+    store 2
     load 2
     ret
+.def sub: args=2 ,locals=0
+    load 0
+    iconst 2
+    imul
+    load 1
+    isub
+    ret
+.def main: args=0 ,locals=0
+    iconst 10
+    iconst 21
+    call sub()
+    print
+    iconst 1
+    iconst 2
+    call add()
+    halt

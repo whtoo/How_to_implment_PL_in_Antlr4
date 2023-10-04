@@ -3,37 +3,42 @@ package org.teachfx.antlr4.ep20.symtab.symbol;
 import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.ast.expr.ExprNode;
 import org.teachfx.antlr4.ep20.ast.stmt.StmtNode;
-import org.teachfx.antlr4.ep20.symtab.type.Type;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
+import org.teachfx.antlr4.ep20.symtab.type.Type;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class MethodSymbol extends ScopedSymbol implements Type {
-    static int LABEL_SEQ = 0;
-    static int VAR_SLOT_SEQ = 0;
-    public StmtNode blockStmt = null;
+    private int LABEL_SEQ = 0;
+    private int VAR_SLOT_SEQ = 0;
+
     public boolean builtin = false;
-    public ExprNode callee = null;
+    private int args = 0;
+
     Map<String, Symbol> orderedArgs = new LinkedHashMap<String, Symbol>();
 
     // Language func
-    public MethodSymbol(String name, Type retType, org.teachfx.antlr4.ep20.symtab.scope.Scope parent,
+    public MethodSymbol(String name, Type retType, Scope parent,
                         ASTNode tree) {
         super(name, retType, parent);
         this.tree = tree;
     }
 
     // Native func
-    public MethodSymbol(String name, org.teachfx.antlr4.ep20.symtab.scope.Scope parent,
+    public MethodSymbol(String name, Scope parent,
                         ASTNode tree) {
         super(name, parent, tree);
     }
 
 
     public void defineMember(Symbol symbol) {
-        orderedArgs.put(symbol.getName(),symbol);
+        if (symbol instanceof VariableSymbol variableSymbol) {
+            variableSymbol.setSlotIdx(getVarSlotSeq());
+        }
+        orderedArgs.put(symbol.getName(), symbol);
     }
+
     @Override
     public Map<String, Symbol> getMembers() {
         return orderedArgs;
@@ -41,7 +46,7 @@ public class MethodSymbol extends ScopedSymbol implements Type {
 
 
     @Override
-    public boolean isPrimitive() {
+    public boolean isPreDefined() {
         return builtin;
     }
 
@@ -76,4 +81,11 @@ public class MethodSymbol extends ScopedSymbol implements Type {
         return VAR_SLOT_SEQ++;
     }
 
+    public int getArgs() {
+        return args;
+    }
+
+    public void setArgs(int args) {
+        this.args = args;
+    }
 }

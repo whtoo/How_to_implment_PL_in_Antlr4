@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep20.symtab.scope;
 
+import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
 import org.teachfx.antlr4.ep20.symtab.type.Type;
 import org.teachfx.antlr4.ep20.symtab.type.TypeTable;
@@ -17,6 +18,9 @@ public abstract class BaseScope implements Scope {
         define(TypeTable.FLOAT);
         define(TypeTable.VOID);
         define(TypeTable.BOOLEAN);
+        var printFn = new MethodSymbol("print", TypeTable.VOID, this, null);
+        printFn.builtin = true;
+        define(printFn);
     }
 
     @Override

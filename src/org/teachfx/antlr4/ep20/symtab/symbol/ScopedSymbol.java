@@ -7,16 +7,16 @@ import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import java.util.Map;
 
 
-public abstract class ScopedSymbol extends Symbol implements org.teachfx.antlr4.ep20.symtab.scope.Scope {
+public abstract class ScopedSymbol extends Symbol implements Scope {
     public ASTNode tree;
-    org.teachfx.antlr4.ep20.symtab.scope.Scope enclosingScope;
+    Scope enclosingScope;
 
-    public ScopedSymbol(String name, Type type, org.teachfx.antlr4.ep20.symtab.scope.Scope enclosingScope) {
+    public ScopedSymbol(String name, Type type, Scope enclosingScope) {
         super(name, type);
         this.enclosingScope = enclosingScope;
     }
 
-    public ScopedSymbol(String name, org.teachfx.antlr4.ep20.symtab.scope.Scope enclosingScope, ASTNode tree) {
+    public ScopedSymbol(String name, Scope enclosingScope, ASTNode tree) {
         super(name);
         this.enclosingScope = enclosingScope;
         this.tree = tree;
@@ -43,7 +43,7 @@ public abstract class ScopedSymbol extends Symbol implements org.teachfx.antlr4.
     }
 
     @Override
-    public org.teachfx.antlr4.ep20.symtab.scope.Scope getEnclosingScope() {
+    public Scope getEnclosingScope() {
         return enclosingScope;
     }
 

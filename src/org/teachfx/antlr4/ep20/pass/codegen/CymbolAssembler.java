@@ -5,6 +5,8 @@ import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.def.*;
 import org.teachfx.antlr4.ep20.ir.expr.*;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
+import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
+import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -82,6 +84,8 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
             visit((BoolVal) expr);
         } else if (expr instanceof StringVal) {
             visit((StringVal) expr);
+        } else {
+            visit((Var) expr);
         }
     }
     @Override
@@ -123,8 +127,12 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
         callFunc.getArgs().forEach(this::visit);
         var varDef =  callFunc.getFuncExpr();
-        emit("call %s()".formatted(varDef.getDeclName()));
-
+        var methodSymbol = (MethodSymbol) varDef.getSymbol();
+        if(!methodSymbol.isPreDefined()) {
+            emit("call %s()".formatted(varDef.getDeclName()));
+        } else {
+            emit("%s".formatted(varDef.getDeclName()));
+        }
         return null;
     }
 
@@ -152,7 +160,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
         var var = assign.getLhs();
         var expr = assign.getRhs();
         visit(expr);
-        emit(var.toSource(true));
+        emit(var.toSource(false));
         return null;
     }
 
@@ -178,7 +186,9 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(Var var) {
-        emit(var.toSource(false));
+        if(var.getSymbol() instanceof VariableSymbol) {
+            emit(var.toSource(true));
+        }
         return null;
     }
 

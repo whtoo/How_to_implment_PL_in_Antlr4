@@ -57,7 +57,8 @@ public class LocalDefine extends ASTBaseVisitor {
     public Void visit(FuncDeclNode funcDeclNode) {
         var methodScope = new MethodSymbol(funcDeclNode.getDeclName(),
                 funcDeclNode.getRetTypeNode().getBaseType(),
-                currentScope,funcDeclNode);
+                currentScope, funcDeclNode);
+        methodScope.setArgs(funcDeclNode.getParamSlots().getVarDeclNodeList().size());
         funcDeclNode.setRefSymbol(methodScope);
         currentScope.define(methodScope);
         stashScope(methodScope);
@@ -92,11 +93,13 @@ public class LocalDefine extends ASTBaseVisitor {
     }
 
     protected Scope popScope() {
-        return scopeStack.pop();
+        if (!scopeStack.empty()) scopeStack.pop();
+        if (!scopeStack.empty()) scopeStack.peek();
+        return topScope;
     }
 
     protected Scope getTopScope() {
-        return  topScope;
+        return topScope;
     }
 
     public void setTopScope(Scope topScope) {

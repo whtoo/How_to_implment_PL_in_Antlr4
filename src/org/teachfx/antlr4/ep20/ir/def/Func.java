@@ -61,4 +61,8 @@ public class Func extends Define {
     public <S, E> S accept(IRVisitor<S, E> visitor) {
         return visitor.visit(this);
     }
+
+    public String toSource() {
+        return ".def %s: args=%d ,locals=%d".formatted(getFuncName(),args,locals);
+    }
 }

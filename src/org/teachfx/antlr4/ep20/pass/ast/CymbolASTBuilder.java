@@ -103,7 +103,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
         var stmtNodeStream = ctx.children.stream().map((stmtCtx)-> (StmtNode)visit(stmtCtx));
         var stmtList = stmtNodeStream.filter(Objects::nonNull).toList();
         var stmtNode = new BlockStmtNode(stmtList,ctx);
-        stmtNode.setParentScopeType(BlockStmtNode.ParentScopeType.FuncScope);
+        stmtNode.setParentScopeType(BlockStmtNode.ScopeType.FuncScope);
         return stmtNode;
     }
 
@@ -112,7 +112,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
         var stmtList = ctx.block().statetment().stream().map((stmtCtx)-> (StmtNode)visit(stmtCtx))
                 .toList();
         var stmtNode = new BlockStmtNode(stmtList,ctx);
-        stmtNode.setParentScopeType(BlockStmtNode.ParentScopeType.StmtScope);
+        stmtNode.setParentScopeType(BlockStmtNode.ScopeType.StmtScope);
         return stmtNode;
     }
 

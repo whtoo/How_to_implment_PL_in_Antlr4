@@ -21,6 +21,8 @@ public class Symbol implements Dumpable {
     // Locate where I am.
     public Scope scope;
 
+    private int slotIdx = -1;
+
     public String name;
 
     public Symbol(String name) {
@@ -51,5 +53,13 @@ public class Symbol implements Dumpable {
     @Override
     public void dump(Dumper dumper) {
         dumper.printMember("symbol", toString());
+    }
+
+    public int getSlotIdx() {
+        return slotIdx;
+    }
+
+    public void setSlotIdx(int slotIdx) {
+        this.slotIdx = slotIdx;
     }
 }

@@ -7,15 +7,19 @@ import org.teachfx.antlr4.ep20.symtab.type.Type;
  * Scope
  */
 public interface Scope {
-    String getScopeName();
+    public String getScopeName();
 
-    Scope getEnclosingScope();
+    public Scope getEnclosingScope();
 
-    void define(Symbol sym);
+    public void define(Symbol sym);
 
-    Symbol resolve(String name);
+    public Symbol resolve(String name);
 
-    Type lookup(String name);
+    public Type lookup(String name);
 
-    void setParentScope(Scope currentScope);
+    public void setParentScope(Scope currentScope);
+
+    public int getLabelSeq();
+
+    public int getVarSlotSeq();
 }

@@ -14,4 +14,9 @@ public class JMP extends Stmt
         this.label = label;
     }
     public String label;
+
+    @Override
+    public StmtType getStmtType() {
+        return StmtType.JMP;
+    }
 }

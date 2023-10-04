@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep20.pass.codegen;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
+import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.def.*;
 import org.teachfx.antlr4.ep20.ir.expr.*;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
@@ -26,6 +27,10 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     }
 
     protected void emit(String str) {
+        this.printWriter.write("    %s\n".formatted(str));
+    }
+
+    protected void emitNoPadding(String str) {
         this.printWriter.write("%s\n".formatted(str));
     }
 
@@ -39,6 +44,13 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
         return this.stringWriter.toString();
     };
+
+    @Override
+    public Void visit(Prog prog) {
+        prog.defuncs.forEach(this::visit);
+        return null;
+    }
+
     @Override
     public Void visit(IntVal node) {
         emit("iconst %d".formatted(node.value));
@@ -96,16 +108,29 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(UnaryExpr node) {
+        visit(node.expr);
+
+        switch (node.op) {
+            case NEG -> emit("ineg");
+            case NOT -> emit("inot");
+        }
+
         return null;
     }
 
     @Override
     public Void visit(CallFunc callFunc) {
+
+        callFunc.getArgs().forEach(this::visit);
+        var varDef =  callFunc.getFuncExpr();
+        emit("call %s()".formatted(varDef.getDeclName()));
+
         return null;
     }
 
     @Override
-    public Void visit(LabelStmt labelStmt) {
+    public Void visit(Label label) {
+        emitNoPadding(label.toSource());
         return null;
     }
 
@@ -116,21 +141,67 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(CJMP cjmp) {
+        visit(cjmp.cond);
+        emit("brt %s".formatted(cjmp.thenLabel));
+        visit(cjmp.elseLabel);
         return null;
     }
 
     @Override
     public Void visit(Assign assign) {
+        var var = assign.getLhs();
+        var expr = assign.getRhs();
+        visit(expr);
+        emit(var.toSource(true));
         return null;
     }
 
     @Override
     public Void visit(Func func) {
+        emitNoPadding(func.toSource());
+        func.getBody().forEach(this::visit);
+        return null;
+    }
+
+    @Override
+    public Void visit(Stmt stmt) {
+        switch (stmt.getStmtType()) {
+            case ASSIGN -> visit((Assign) stmt);
+            case JMP -> visit((JMP) stmt);
+            case CJMP -> visit((CJMP) stmt);
+            case LABEL -> visit((Label) stmt);
+            case EXPR -> visit((ExprStmt) stmt);
+            case RETURN -> visit((ReturnVal) stmt);
+        }
         return null;
     }
 
     @Override
     public Void visit(Var var) {
+        emit(var.toSource(false));
+        return null;
+    }
+
+    @Override
+    public Void visit(ArrayAccessExpr arrayAccessExpr) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ClassAccessExpr classAccessExpr) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ReturnVal returnVal) {
+        visit(returnVal.getRetVal());
+        emit("ret");
+        return null;
+    }
+
+    @Override
+    public Void visit(ExprStmt exprStmt) {
+        visit(exprStmt.getExpr());
         return null;
     }
 }

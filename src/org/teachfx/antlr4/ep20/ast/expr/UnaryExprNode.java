@@ -36,4 +36,8 @@ public class UnaryExprNode extends ExprNode{
         d.printMember("operator",opType.getOpRawVal());
         d.printNodeList("val", List.of(valExpr));
     }
+
+    public UnaryOpType getOpType() {
+        return opType;
+    }
 }

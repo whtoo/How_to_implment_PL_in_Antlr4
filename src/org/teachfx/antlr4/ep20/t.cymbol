@@ -1,19 +1,12 @@
 
 int add(int x,int y) {
     int d = x + y;
-    if (d >= 0) {
-        d = d + 1;
-    }
-    return d;
-}
 
-int fib(int n) {
-    if (n < 2) return n;
-    else return fib(n-1) + fib(n-2);
+    return d;
 }
 
 int main() {
 
-    return 0;
+    return add(1,2);
 }
 

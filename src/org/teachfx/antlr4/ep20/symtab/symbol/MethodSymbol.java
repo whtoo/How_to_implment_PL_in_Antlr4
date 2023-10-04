@@ -10,6 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class MethodSymbol extends ScopedSymbol implements Type {
+    static int LABEL_SEQ = 0;
+    static int VAR_SLOT_SEQ = 0;
     public StmtNode blockStmt = null;
     public boolean builtin = false;
     public ExprNode callee = null;
@@ -62,4 +64,16 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     public void setParentScope(Scope currentScope) {
         this.enclosingScope = currentScope;
     }
+
+    @Override
+    public int getLabelSeq() {
+        return LABEL_SEQ++;
+    }
+
+
+    @Override
+    public int getVarSlotSeq() {
+        return VAR_SLOT_SEQ++;
+    }
+
 }

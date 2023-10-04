@@ -2,20 +2,28 @@ package org.teachfx.antlr4.ep20.ir.stmt;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.expr.Expr;
+import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
 public class CJMP extends Stmt {
     public Expr cond;
-    public Stmt thenStmt;
-    public Stmt elseStmt;
 
-    public CJMP(Expr cond, Stmt thenStmt, Stmt elseStmt) {
+    public Label thenLabel;
+    public Label elseLabel;
+
+
+    public CJMP(Expr cond,Label thenLabel,Label elseLabel) {
         this.cond = cond;
-        this.thenStmt = thenStmt;
-        this.elseStmt = elseStmt;
+        this.thenLabel = thenLabel;
+        this.elseLabel = elseLabel;
     }
 
     @Override
     public <S, E> S accept(IRVisitor<S, E> visitor) {
         return visitor.visit(this);
+    }
+
+    @Override
+    public StmtType getStmtType() {
+        return StmtType.CJMP;
     }
 }

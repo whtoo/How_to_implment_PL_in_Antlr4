@@ -8,7 +8,7 @@ import java.util.List;
 
 public class BlockStmtNode extends StmtNode {
 
-    public enum ParentScopeType {
+    public enum ScopeType {
         FuncScope,
         StmtScope,
         ClassScope,
@@ -18,18 +18,18 @@ public class BlockStmtNode extends StmtNode {
 
     private List<StmtNode> stmtNodes;
 
-    private ParentScopeType scopeType;
+    private ScopeType scopeType;
 
     public BlockStmtNode(List<StmtNode> childrenNodes, ParserRuleContext ctx) {
         this.stmtNodes = childrenNodes;
         this.ctx = ctx;
     }
 
-    public ParentScopeType getParentScopeType() {
+    public ScopeType getParentScopeType() {
         return scopeType;
     }
 
-    public void setParentScopeType(ParentScopeType scopeType) {
+    public void setParentScopeType(ScopeType scopeType) {
         this.scopeType = scopeType;
     }
 

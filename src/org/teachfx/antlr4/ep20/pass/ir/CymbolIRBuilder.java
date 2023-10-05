@@ -167,13 +167,16 @@ public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
 
     @Override
     public Void visit(WhileStmtNode whileStmtNode) {
+        var beginLabel = new Label(null, whileStmtNode.getScope());
         var thenLabel = new Label(null, whileStmtNode.getScope());
         var endLabel = new Label(null,whileStmtNode.getScope());
 
         var condExpr = (Expr) visit(whileStmtNode.getConditionNode());
+        label(beginLabel);
         cjump(condExpr,thenLabel,endLabel);
         label(thenLabel);
         transformBlockStmt(whileStmtNode.getBlockNode());
+        jump(beginLabel);
         label(endLabel);
         return null;
     }

@@ -11,6 +11,7 @@ import org.teachfx.antlr4.ep20.ast.stmt.StmtNode;
 import org.teachfx.antlr4.ep20.ast.stmt.WhileStmtNode;
 import org.teachfx.antlr4.ep20.pass.ast.ASTBaseVisitor;
 import org.teachfx.antlr4.ep20.symtab.scope.GlobalScope;
+import org.teachfx.antlr4.ep20.symtab.scope.LocalScope;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
@@ -77,7 +78,7 @@ public class LocalDefine extends ASTBaseVisitor {
             return null;
         }
         blockStmtNode.setScope(currentScope);
-        var blockScope = new org.teachfx.antlr4.ep20.symtab.scope.LocalScope(currentScope);
+        var blockScope = new LocalScope(currentScope);
         stashScope(blockScope);
         super.visit(blockStmtNode);
         currentScope = popScope();
@@ -109,8 +110,8 @@ public class LocalDefine extends ASTBaseVisitor {
     }
 
     protected Scope popScope() {
-        if (!scopeStack.empty()) scopeStack.pop();
-        if (!scopeStack.empty()) scopeStack.peek();
+        if (!scopeStack.empty()) return scopeStack.pop();
+        if (!scopeStack.empty()) return scopeStack.peek();
         return topScope;
     }
 

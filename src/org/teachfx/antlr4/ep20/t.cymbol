@@ -1,11 +1,12 @@
 
 int add(int x,int y) {
     int d = x + y;
-
+    if (d <= 2) { return d; }
+    else { d = d * 2 + 1 }
     return d;
 }
 
-int main() {
-    return add(1,2);
+void main() {
+   print(add(1,2) * 2 - 3);
 }
 

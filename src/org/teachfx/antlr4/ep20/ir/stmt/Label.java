@@ -43,10 +43,10 @@ public class Label extends Stmt {
 
     public String toSource() {
         if (Objects.nonNull(rawLabel)) {
-            return scope.getScopeName() + "_" + rawLabel + ":";
+            return scope.getScopeName() + "_" + rawLabel ;
         }
 
-        return scope.getScopeName() + "_" + seq + ":";
+        return scope.getScopeName() + "_" + seq ;
     }
 
     @Override

@@ -179,7 +179,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitExprFuncCall(CymbolParser.ExprFuncCallContext ctx) {
-        List<ExprNode> argsNode = ctx.expr().stream().map(arg -> (ExprNode) visit(arg)).filter(x -> !(x instanceof IDExprNode)).toList();
+        List<ExprNode> argsNode = ctx.expr().stream().skip(1).map(arg -> (ExprNode) visit(arg)).toList();
         return new CallFuncNode(ctx.expr(0).getText(),argsNode,ctx);
     }
 

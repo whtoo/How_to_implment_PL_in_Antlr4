@@ -8,12 +8,12 @@ import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 
 public interface ASTVisitor<S,E> {
     /// Root Node
-    E visit(CompileUnit rootNode);
+    S visit(CompileUnit rootNode);
 
     /// Decl
-    E visit(VarDeclNode varDeclNode);
+    S visit(VarDeclNode varDeclNode);
 
-    E visit(FuncDeclNode funcDeclNode);
+    S visit(FuncDeclNode funcDeclNode);
 
     S visit(VarDeclStmtNode varDeclStmtNode);
 

@@ -6,7 +6,7 @@ import org.teachfx.antlr4.ep20.ir.expr.Expr;
 
 public class ReturnVal extends Stmt {
     private Expr retVal;
-
+    private boolean isMainEntry = false;
     public ReturnVal(Expr retVal) {
         this.retVal = retVal;
     }
@@ -27,5 +27,13 @@ public class ReturnVal extends Stmt {
 
     public void setRetVal(Expr retVal) {
         this.retVal = retVal;
+    }
+
+    public boolean isMainEntry() {
+        return isMainEntry;
+    }
+
+    public void setMainEntry(boolean mainEntry) {
+        isMainEntry = mainEntry;
     }
 }

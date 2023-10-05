@@ -2,7 +2,6 @@ package org.teachfx.antlr4.ep20.ir.stmt;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 
-// TODO: Impletement JMP in code generation phase
 public class JMP extends Stmt
 {
     @Override
@@ -10,11 +9,11 @@ public class JMP extends Stmt
         return visitor.visit(this);
     }
 
-    public JMP(String label)
+    public JMP(Label label)
     {
         this.label = label;
     }
-    public String label;
+    public Label label;
 
     @Override
     public StmtType getStmtType() {

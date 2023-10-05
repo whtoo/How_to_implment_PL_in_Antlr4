@@ -10,6 +10,7 @@ import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
 import java.io.*;
 import java.io.OutputStreamWriter;
+import java.util.Optional;
 
 
 public class CymbolAssembler implements IRVisitor<Void,Void> {
@@ -133,20 +134,21 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(Label label) {
-        emitNoPadding(label.toSource());
+        emitNoPadding("%s :".formatted(label.toSource()));
         return null;
     }
 
     @Override
     public Void visit(JMP jmp) {
+        emit("br %s".formatted(jmp.label.toSource()));
         return null;
     }
 
     @Override
     public Void visit(CJMP cjmp) {
         visit(cjmp.cond);
-        emit("brt %s".formatted(cjmp.thenLabel));
-        visit(cjmp.elseLabel);
+        emit("brt %s".formatted(cjmp.thenLabel.toSource()));
+        emit("br %s".formatted(cjmp.elseLabel.toSource()));
         return null;
     }
 
@@ -199,8 +201,9 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(ReturnVal returnVal) {
-        visit(returnVal.getRetVal());
-        emit("ret");
+        Optional.ofNullable(returnVal.getRetVal()).ifPresent(x -> x.accept(this));
+        if (returnVal.isMainEntry()) { emit("halt"); }
+        else { emit("ret"); }
         return null;
     }
 
@@ -210,7 +213,9 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
         return null;
     }
 
-    public void saveToFile(File savedFile) throws FileNotFoundException {
+    public void saveToFile(File savedFile) throws IOException {
+        if (!savedFile.exists()) savedFile.createNewFile();
+
         var os = new FileOutputStream(savedFile);
         var osw = new OutputStreamWriter(os);
         var pw = new PrintWriter(osw);

@@ -48,7 +48,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(Prog prog) {
-        prog.defuncs.forEach(this::visit);
+        prog.defuncList.forEach(this::visit);
         return null;
     }
 

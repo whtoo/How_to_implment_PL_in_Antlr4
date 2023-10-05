@@ -32,12 +32,10 @@ public class Compiler {
         CymbolASTBuilder astBuilder = new CymbolASTBuilder("t.cymbol");
         ASTNode astRoot = parseTree.accept(astBuilder);
         astRoot.accept(new LocalDefine());
-        astRoot.dump();
         var irBuilder = new CymbolIRBuilder();
         astRoot.accept(irBuilder);
         var assembler = new CymbolAssembler();
         irBuilder.root.accept(assembler);
-        System.out.println(assembler.flushCode());
         var savedFile = new File("./%s.vm".formatted("t"));
         assembler.saveToFile(savedFile);
     }

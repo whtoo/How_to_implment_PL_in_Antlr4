@@ -10,7 +10,7 @@ public class Prog extends IRNode {
     public List<Func> defuncList;
 
     public Prog(List<Func> stmts) {
-        this.defuncList = Objects.isNull(stmts) ? new ArrayList<>() : stmts;;
+        this.defuncList = Objects.isNull(stmts) ? new ArrayList<>() : stmts;
     }
 
     public <S,E> S accept(IRVisitor<S,E> visitor){

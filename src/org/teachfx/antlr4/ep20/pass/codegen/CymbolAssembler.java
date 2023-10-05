@@ -20,7 +20,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     private CymbolAssembler(PrintWriter printWriter) throws FileNotFoundException {
         this.printWriter = printWriter;
-    };
+    }
 
     public CymbolAssembler() {
         this.stringWriter = new StringWriter();
@@ -44,7 +44,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
         }
 
         return this.stringWriter.toString();
-    };
+    }
 
     @Override
     public Void visit(Prog prog) {

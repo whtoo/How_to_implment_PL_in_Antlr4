@@ -36,7 +36,8 @@ public class Compiler {
         astRoot.accept(irBuilder);
         var assembler = new CymbolAssembler();
         irBuilder.root.accept(assembler);
-        var savedFile = new File("./%s.vm".formatted("t"));
+        System.out.println(assembler.flushCode());
+        var savedFile = new File("./classes/%s.vm".formatted("t"));
         assembler.saveToFile(savedFile);
     }
 }

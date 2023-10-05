@@ -88,4 +88,9 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     public void setArgs(int args) {
         this.args = args;
     }
+
+    @Override
+    public String toString() {
+        return "%s<%s:%s>".formatted(getName(),getScopeName(),getType());
+    }
 }

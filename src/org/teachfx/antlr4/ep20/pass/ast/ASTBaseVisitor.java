@@ -10,7 +10,7 @@ import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 
 import java.util.Optional;
 
-public class ASTBaseVisitor implements ASTVisitor<Void> {
+public class ASTBaseVisitor implements ASTVisitor<Void,Void> {
     // rewrite below visit method to accept Void as return type
     @Override
     public Void visit(CompileUnit rootNode) {
@@ -116,7 +116,7 @@ public class ASTBaseVisitor implements ASTVisitor<Void> {
         ifStmtNode.getConditionalNode().accept(this);
         ifStmtNode.getThenBlock().accept(this);
 
-        Optional.ofNullable(ifStmtNode.getElseBlock()).ifPresent(block -> block.accept(this));
+        ifStmtNode.getElseBlock().ifPresent(block -> block.accept(this));
         return null;
     }
 

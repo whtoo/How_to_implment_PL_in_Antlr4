@@ -5,24 +5,23 @@ import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
-import org.teachfx.antlr4.ep20.ir.IRNode;
 
-public interface ASTVisitor<T> {
+public interface ASTVisitor<S,E> {
     /// Root Node
-    T visit(CompileUnit rootNode);
+    E visit(CompileUnit rootNode);
 
     /// Decl
-    T visit(VarDeclNode varDeclNode);
+    E visit(VarDeclNode varDeclNode);
 
-    T visit(FuncDeclNode funcDeclNode);
+    E visit(FuncDeclNode funcDeclNode);
 
-    T visit(VarDeclStmtNode varDeclStmtNode);
+    S visit(VarDeclStmtNode varDeclStmtNode);
 
     /// Type
-    T visit(TypeNode typeNode);
+    E visit(TypeNode typeNode);
 
     // Expr
-    default T visit(ExprNode node) {
+    default E visit(ExprNode node) {
         if (node instanceof BinaryExprNode) {
             return visit((BinaryExprNode) node);
         } else if (node instanceof IDExprNode) {
@@ -44,39 +43,39 @@ public interface ASTVisitor<T> {
         }
         return null;
     }
-    T visit(BinaryExprNode binaryExprNode);
+    E visit(BinaryExprNode binaryExprNode);
 
-    T visit(IDExprNode idExprNode);
+    E visit(IDExprNode idExprNode);
 
     /// literal value
-    T visit(BoolExprNode boolExprNode);
+    E visit(BoolExprNode boolExprNode);
 
-    T visit(CallFuncNode callExprNode);
+    E visit(CallFuncNode callExprNode);
 
-    T visit(IntExprNode intExprNode);
+    E visit(IntExprNode intExprNode);
 
-    T visit(FloatExprNode floatExprNode);
+    E visit(FloatExprNode floatExprNode);
 
-    T visit(NullExprNode nullExprNode);
+    E visit(NullExprNode nullExprNode);
 
-    T visit(StringExprNode stringExprNode);
+    E visit(StringExprNode stringExprNode);
 
-    T visit(UnaryExprNode unaryExprNode);
+    E visit(UnaryExprNode unaryExprNode);
 
     /// Stmt
-    T visit(IfStmtNode ifStmtNode);
+    S visit(IfStmtNode ifStmtNode);
 
-    T visit(ExprStmtNode exprStmtNode);
+    S visit(ExprStmtNode exprStmtNode);
 
-    T visit(BlockStmtNode blockStmtNode);
+    S visit(BlockStmtNode blockStmtNode);
 
-    T visit(ReturnStmtNode returnStmtNode);
+    S visit(ReturnStmtNode returnStmtNode);
 
-    T visit(WhileStmtNode whileStmtNode);
+    S visit(WhileStmtNode whileStmtNode);
 
-    T visit(AssignStmtNode assignStmtNode);
+    S visit(AssignStmtNode assignStmtNode);
 
-    default T visit(StmtNode node) {
+    default S visit(StmtNode node) {
         if (node instanceof IfStmtNode) {
             return visit((IfStmtNode) node);
         } else if (node instanceof WhileStmtNode) {

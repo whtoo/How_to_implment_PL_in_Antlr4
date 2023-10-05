@@ -219,5 +219,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
         var osw = new OutputStreamWriter(os);
         var pw = new PrintWriter(osw);
         pw.write(flushCode());
+        pw.flush();
+        pw.close();
     }
 }

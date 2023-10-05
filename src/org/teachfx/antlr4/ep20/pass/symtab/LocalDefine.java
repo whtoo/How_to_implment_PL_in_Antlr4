@@ -6,6 +6,9 @@ import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.CallFuncNode;
 import org.teachfx.antlr4.ep20.ast.expr.IDExprNode;
 import org.teachfx.antlr4.ep20.ast.stmt.BlockStmtNode;
+import org.teachfx.antlr4.ep20.ast.stmt.IfStmtNode;
+import org.teachfx.antlr4.ep20.ast.stmt.StmtNode;
+import org.teachfx.antlr4.ep20.ast.stmt.WhileStmtNode;
 import org.teachfx.antlr4.ep20.pass.ast.ASTBaseVisitor;
 import org.teachfx.antlr4.ep20.symtab.scope.GlobalScope;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
@@ -73,11 +76,24 @@ public class LocalDefine extends ASTBaseVisitor {
             super.visit(blockStmtNode);
             return null;
         }
+        blockStmtNode.setScope(currentScope);
         var blockScope = new org.teachfx.antlr4.ep20.symtab.scope.LocalScope(currentScope);
         stashScope(blockScope);
         super.visit(blockStmtNode);
         currentScope = popScope();
         return null;
+    }
+
+    @Override
+    public Void visit(WhileStmtNode whileStmtNode) {
+        whileStmtNode.setScope(currentScope);
+        return super.visit(whileStmtNode);
+    }
+
+    @Override
+    public Void visit(IfStmtNode ifStmtNode) {
+        ifStmtNode.setScope(currentScope);
+        return super.visit(ifStmtNode);
     }
 
     @Override

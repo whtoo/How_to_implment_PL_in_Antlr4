@@ -4,7 +4,7 @@ package org.teachfx.antlr4.ep20.ir.expr;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 
 public class ArrayAccessExpr extends Expr {
-    // Fowllow ClassAccessExpr Style to complete this class
+
     private Expr arrayExpr;
     private Expr indexExpr;
 

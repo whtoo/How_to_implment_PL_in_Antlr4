@@ -12,14 +12,13 @@ import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.def.Func;
 import org.teachfx.antlr4.ep20.ir.expr.Var;
 import org.teachfx.antlr4.ep20.ir.expr.*;
-import org.teachfx.antlr4.ep20.ir.stmt.Assign;
-import org.teachfx.antlr4.ep20.ir.stmt.ExprStmt;
-import org.teachfx.antlr4.ep20.ir.stmt.ReturnVal;
-import org.teachfx.antlr4.ep20.ir.stmt.Stmt;
+import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 
+import java.util.List;
 
-public class CymbolIRBuilder implements ASTVisitor<IRNode> {
+
+public class CymbolIRBuilder implements ASTVisitor<IRNode,IRNode> {
     public Prog root = null;
     @Override
     public IRNode visit(CompileUnit rootNode) {
@@ -108,6 +107,18 @@ public class CymbolIRBuilder implements ASTVisitor<IRNode> {
 
     @Override
     public IRNode visit(IfStmtNode ifStmtNode) {
+        var thenLabel = new Label(null, ifStmtNode.getScope());
+        var elseLabel = new Label(null, ifStmtNode.getScope());
+        var endLabel = new Label(null, ifStmtNode.getScope());
+
+        var condExpr = (Expr) visit(ifStmtNode.getConditionalNode());
+
+        new CJMP(condExpr,thenLabel,elseLabel);
+
+        visit(ifStmtNode.getThenBlock());
+
+        ifStmtNode.getElseBlock().ifPresent(this::visit);
+
         return null;
     }
 
@@ -116,15 +127,11 @@ public class CymbolIRBuilder implements ASTVisitor<IRNode> {
         return new ExprStmt((Expr) visit(exprStmtNode.getExprNode()));
     }
 
-    @Override
-    public IRNode visit(BlockStmtNode blockStmtNode) {
-        // blockStmtNode.getStmtNodes().stream().map(this::visit).map(Stmt.class::cast).toList();
-        return null;
-    }
 
     @Override
     public IRNode visit(ReturnStmtNode returnStmtNode) {
-        return new ReturnVal((Expr)visit(returnStmtNode.getRetNode()));
+        var retVal = new ReturnVal((Expr)visit(returnStmtNode.getRetNode()));
+        return retVal;
     }
 
     @Override
@@ -137,4 +144,8 @@ public class CymbolIRBuilder implements ASTVisitor<IRNode> {
         return new Assign((Var) visit(assignStmtNode.getLhs()),(Expr) visit(assignStmtNode.getRhs()));
     }
 
+    @Override
+    public IRNode visit(BlockStmtNode blockStmtNode) {
+        return null;
+    }
 }

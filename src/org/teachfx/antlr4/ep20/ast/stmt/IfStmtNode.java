@@ -6,6 +6,8 @@ import org.teachfx.antlr4.ep20.ast.ASTVisitor;
 import org.teachfx.antlr4.ep20.ast.expr.ExprNode;
 import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
 
+import java.util.Optional;
+
 public class IfStmtNode extends StmtNode {
     private ExprNode conditionalNode;
     private StmtNode thenBlock;
@@ -35,8 +37,8 @@ public class IfStmtNode extends StmtNode {
         this.thenBlock = thenBlock;
     }
 
-    public StmtNode getElseBlock() {
-        return elseBlock;
+    public Optional<StmtNode> getElseBlock() {
+        return Optional.ofNullable(elseBlock);
     }
 
     public void setElseBlock(StmtNode elseBlock) {

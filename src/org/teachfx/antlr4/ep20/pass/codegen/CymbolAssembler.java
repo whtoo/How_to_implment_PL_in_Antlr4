@@ -18,10 +18,6 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     protected boolean emitted = false;
 
-    private CymbolAssembler(PrintWriter printWriter) throws FileNotFoundException {
-        this.printWriter = printWriter;
-    }
-
     public CymbolAssembler() {
         this.stringWriter = new StringWriter();
         this.printWriter = new PrintWriter(stringWriter);

@@ -1,8 +1,10 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
 import org.antlr.v4.runtime.Token;
-import org.teachfx.antlr4.ep18.stackvm.parser.*;
-import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerParser.*;
+import org.teachfx.antlr4.ep18.parser.VMAssemblerBaseListener;
+import org.teachfx.antlr4.ep18.parser.VMAssemblerParser;
+import org.teachfx.antlr4.ep18.parser.*;
+import org.teachfx.antlr4.ep18.parser.VMAssemblerParser.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;

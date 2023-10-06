@@ -53,7 +53,7 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
     }
 
     @Override
-    public void define(org.teachfx.antlr4.ep19.symtab.symbol.Symbol sym) {
+    public void define(Symbol sym) {
         getMembers().put(sym.getName(), sym);
         sym.scope = this;
     }

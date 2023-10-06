@@ -24,7 +24,7 @@
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
-                <version>4.9.2</version>
+                <version>4.11.0</version>
                 <executions>
                     <execution>
                         <goals>
@@ -34,9 +34,8 @@
                 </executions>
                 <configuration>
                     <visitor>true</visitor>
-<!--                    <sourceDirectory>${basedir}/${parser.g4.file}</sourceDirectory>-->
                     <!-- 指定 ANTLR4 生成代码的目录 -->
-                    <outputDirectory>${basedir}/src/main/java/org/teachfx/antlr4/parser</outputDirectory>
+                    <outputDirectory>src/main/java/org/teachfx/antlr4/ep18/parser</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>

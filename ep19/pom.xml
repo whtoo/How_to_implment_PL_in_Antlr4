@@ -1,4 +1,4 @@
-<!-- ep20 POM -->
+<!-- ep19 POM -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -15,8 +15,8 @@
     <version>1.0.0</version>
     <properties>
         <!-- 这里为包含g4文件的文件夹-->
-        <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep20/parser</parser.g4.dir>
-        <run.main.entry>org.teachfx.antlr4.ep20.Compiler</run.main.entry>
+        <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep19/parser</parser.g4.dir>
+        <run.main.entry>org.teachfx.antlr4.ep19.Compiler</run.main.entry>
     </properties>
     <!-- 添加ANTLR4插件 -->
     <build>
@@ -34,9 +34,8 @@
                 </executions>
                 <configuration>
                     <visitor>true</visitor>
-                    <sourceDirectory>${basedir}/${parser.g4.file}</sourceDirectory>
                     <!-- 指定 ANTLR4 生成代码的目录 -->
-                    <outputDirectory>${basedir}/src/main/java/org/teachfx/antlr4/ep20/parser</outputDirectory>
+                    <outputDirectory>${basedir}/src/main/java/org/teachfx/antlr4/ep19/parser</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>

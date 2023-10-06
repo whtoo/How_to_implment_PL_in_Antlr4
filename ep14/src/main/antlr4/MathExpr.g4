@@ -1,8 +1,13 @@
 grammar MathExpr;
+@lexer::header {
+    package org.teachfx.antlr4.ep14.compiler;
+
+}
 
 @parser::header {
-package org.teachfx.antlr4.ep14.compiler;
-import org.teachfx.antlr4.ep14.symtab.*;
+    package org.teachfx.antlr4.ep14.compiler;
+
+    import org.teachfx.antlr4.ep14.symtab.*;
 }
 
 @parser::members {SymbolTable symtab;}

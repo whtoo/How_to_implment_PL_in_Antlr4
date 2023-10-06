@@ -65,7 +65,7 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     }
 
     @Override
-    public Object visitFunctionDecl(FunctionDeclContext ctx) {
+    public Object visitFunctionDecl(CymbolParser.FunctionDeclContext ctx) {
         super.visitFunctionDecl(ctx);
         Symbol method = this.scopes.resolve(ctx);
         String returnType = ctx.type().getStart().getText();

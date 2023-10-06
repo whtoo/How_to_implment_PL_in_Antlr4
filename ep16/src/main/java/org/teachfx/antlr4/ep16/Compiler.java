@@ -17,7 +17,7 @@ public class Compiler {
 
     public static void main(String[] args) throws IOException {
         String fileName = null;
-        fileName = new File("classes").getAbsolutePath() + "/t.cymbol";
+        fileName = "src/main/resources/t.cymbol";
         if (args.length > 0) fileName = args[0];
         InputStream is = System.in;
         if (fileName != null) is = new FileInputStream(fileName);
@@ -28,11 +28,11 @@ public class Compiler {
         ParseTree parseTree = parser.file();
         LocalDefine localDefine = new LocalDefine();
         parseTree.accept(localDefine);
-        //System.out.println("scope attached with " + localDefine.getScopes());
+
         ScopeUtil scopeUtil = new ScopeUtil(localDefine.getScopes());
         LocalResolver localResolver = new LocalResolver(scopeUtil);
         parseTree.accept(localResolver);
-        //System.out.println("types attached with " + localDefine.getScopes());
+
         Interpreter interpreter = new Interpreter(scopeUtil);
         interpreter.interpret(parseTree);
 

@@ -24,7 +24,7 @@ public class Compiler {
      */
     public static void main(String[] args) throws IOException {
         String fileName = null;
-        fileName = new File(".").getAbsolutePath() + "/src/org/teachfx/antlr4/ep19" + "/t.cymbol";
+        fileName = "src/main/resources/t.cymbol";
         if (args.length > 0) fileName = args[0];
         InputStream is = System.in;
         if (fileName != null) is = new FileInputStream(fileName);

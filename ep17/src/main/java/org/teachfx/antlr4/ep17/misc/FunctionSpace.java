@@ -1,6 +1,6 @@
 package org.teachfx.antlr4.ep17.misc;
 
-import org.teachfx.antlr4.ep17.symtab.MethodSymbol;
+import org.teachfx.antlr4.ep14.symtab.MethodSymbol;
 
 public class FunctionSpace extends MemorySpace {
     MethodSymbol def;

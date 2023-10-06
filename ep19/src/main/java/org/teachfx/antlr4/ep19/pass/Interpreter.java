@@ -3,7 +3,6 @@ package org.teachfx.antlr4.ep19.pass;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;
 import org.teachfx.antlr4.ep19.parser.CymbolBaseVisitor;
-import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
 import org.teachfx.antlr4.ep19.runtime.FunctionSpace;
 import org.teachfx.antlr4.ep19.runtime.MemorySpace;
@@ -116,7 +115,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         // Resolve method symbol from scope unity by calling visitPrimaryID
         System.out.println("visit func " + ctx.getText());
-        MethodSymbol method = (org.teachfx.antlr4.ep19.symtab.symbol.MethodSymbol) visit(ctx.getChild(0));
+        MethodSymbol method = (MethodSymbol) visit(ctx.getChild(0));
 
         Object val = 0;
         if (method.builtin) {
@@ -164,7 +163,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     }
 
     @Override
-    public Object visitStructDecl(CymbolParser.StructDeclContext ctx) {
+    public Object visitStructDecl(StructDeclContext ctx) {
         return 0;
     }
 

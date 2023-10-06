@@ -1,7 +1,7 @@
 grammar VMAssembler;
 // END: members
 @header {
-package org.teachfx.antlr4.ep18.stackvm.parser;
+package org.teachfx.antlr4.ep18.parser;
 }
 program
     :   globals?

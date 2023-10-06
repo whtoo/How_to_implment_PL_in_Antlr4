@@ -1,6 +1,6 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
-import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerParser;
+import org.teachfx.antlr4.ep18.parser.VMAssemblerParser;
 
 /**
  * 字节码定义

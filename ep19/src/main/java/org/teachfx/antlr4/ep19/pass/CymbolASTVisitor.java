@@ -2,10 +2,7 @@ package org.teachfx.antlr4.ep19.pass;
 
 import org.teachfx.antlr4.ep19.misc.Util;
 import org.teachfx.antlr4.ep19.parser.CymbolBaseVisitor;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.BlockContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.ExprFuncCallContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.FunctionDeclContext;
-import org.teachfx.antlr4.ep19.parser.CymbolParser.StructDeclContext;
+import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
 
 public abstract class CymbolASTVisitor<T> extends CymbolBaseVisitor<T> {
     public String tab = "";

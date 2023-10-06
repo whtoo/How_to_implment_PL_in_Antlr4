@@ -1,6 +1,6 @@
-// Generated from VMAssembler.g4 by ANTLR 4.9.2
+// Generated from java-escape by ANTLR 4.11.0-SNAPSHOT
 
-package org.teachfx.antlr4.ep18.stackvm.parser;
+package org.teachfx.antlr4.ep18.parser;
 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 

@@ -5,11 +5,9 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.teachfx.antlr4.ep18.stackvm.*;
-import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerLexer;
-import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerParser;
-import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerParser.*;
+import org.teachfx.antlr4.ep18.parser.VMAssemblerLexer;
+import org.teachfx.antlr4.ep18.parser.VMAssemblerParser;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 

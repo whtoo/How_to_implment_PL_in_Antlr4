@@ -1,6 +1,6 @@
-// Generated from VMAssembler.g4 by ANTLR 4.9.2
+// Generated from java-escape by ANTLR 4.11.0-SNAPSHOT
 
-package org.teachfx.antlr4.ep18.stackvm.parser;
+package org.teachfx.antlr4.ep18.parser;
 
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * which can be extended to create a listener which only needs to handle a subset
  * of the available methods.
  */
+@SuppressWarnings("CheckReturnValue")
 public class VMAssemblerBaseListener implements VMAssemblerListener {
 	/**
 	 * {@inheritDoc}

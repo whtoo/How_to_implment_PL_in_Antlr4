@@ -1,0 +1,43 @@
+.def add: args=2 ,locals=2
+    load 0
+    load 1
+    iadd
+    store 2
+    load 2
+    iconst 2
+    ile
+    brt add_0
+    br add_1
+add_0 :
+    load 2
+    ret
+add_1 :
+    load 2
+    iconst 2
+    imul
+    iconst 1
+    iadd
+    store 2
+    br add_2
+add_2 :
+    load 2
+    ret
+.def main: args=0 ,locals=1
+    iconst 10
+    store 0
+main_0 :
+    load 0
+    iconst 0
+    igt
+    brt main_1
+    br main_2
+main_1 :
+    load 0
+    iconst 1
+    isub
+    store 0
+    load 0
+    print
+    br main_0
+main_2 :
+    halt

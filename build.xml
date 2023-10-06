@@ -5,7 +5,7 @@
     <echo>Java/JVM detail version: ${java.version}</echo>
     <property name="dest" value="" />
 
-    <property name="antlr4.jar" value="../../../../../lib/antlr-4.8-complete.jar" />
+    <property name="antlr4.jar" value="../../../../../../../lib/antlr-4.8-complete.jar" />
     <property name="bsh.path"
         location="/usr/local/lib/bsh-2.0b5.jar" />
     <property name="parserSrc" value="" />

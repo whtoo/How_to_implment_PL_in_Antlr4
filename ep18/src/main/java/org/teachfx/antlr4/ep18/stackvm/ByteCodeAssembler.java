@@ -1,14 +1,13 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
 import org.antlr.v4.runtime.Token;
-import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.*;
+import org.teachfx.antlr4.ep18.stackvm.parser.*;
+import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerParser.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser.BOOL;
 
 public class ByteCodeAssembler extends VMAssemblerBaseListener {
     public static final int INITIAL_CODE_SIZE = 2048;
@@ -16,6 +15,7 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
     private static final int CHAR = VMAssemblerParser.CHAR;
     private static final int FLOAT = VMAssemblerParser.FLOAT;
     private static final int STRING = VMAssemblerParser.STRING;
+    private static final int BOOL = VMAssemblerParser.BOOL;
     private static final int ID = VMAssemblerParser.ID;
     private static final int FUNC = VMAssemblerParser.FUNC;
     private static final int REG = VMAssemblerParser.REG;
@@ -214,7 +214,7 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
     }
 
     @Override
-    public void exitProgram(ProgramContext ctx) {
+    public void exitProgram(VMAssemblerParser.ProgramContext ctx) {
         checkForUnresolvedReferences();
     }
 

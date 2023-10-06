@@ -1,5 +1,5 @@
-// Generated from java-escape by ANTLR 4.11.0-SNAPSHOT
-package org.teachfx.antlr4.ep18.stackvm;
+// Generated from src/main/java/org/teachfx/antlr4/ep18/stackvm/parser/VMAssembler.g4 by ANTLR 4.9.2
+package org.teachfx.antlr4.ep18.stackvm.parser;
 
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
@@ -11,7 +11,6 @@ import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
  * @param <T> The return type of the visit operation. Use {@link Void} for
  * operations with no return type.
  */
-@SuppressWarnings("CheckReturnValue")
 public class VMAssemblerBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements VMAssemblerVisitor<T> {
 	/**
 	 * {@inheritDoc}

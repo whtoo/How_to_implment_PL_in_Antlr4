@@ -1,9 +1,13 @@
-package org.teachfx.antlr4.ep18.stackvm;
+package org.teachfx.antlr4.ep18;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.teachfx.antlr4.ep18.stackvm.*;
+import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerLexer;
+import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerParser;
+import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerParser.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,7 +35,7 @@ public class VMInterpreter {
         boolean trace = false;
         boolean disassemble = false;
         boolean dump = false;
-        String fileName = new File("classes").getAbsolutePath() + "/t.vm";
+        String fileName = "src/main/resources/t.vm";
         int i = 0;
         while (i < args.length) {
             switch (args[i]) {

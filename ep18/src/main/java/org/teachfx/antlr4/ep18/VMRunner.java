@@ -7,8 +7,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.teachfx.antlr4.ep18.stackvm.ByteCodeAssembler;
 import org.teachfx.antlr4.ep18.stackvm.BytecodeDefinition;
-import org.teachfx.antlr4.ep18.stackvm.VMAssemblerLexer;
-import org.teachfx.antlr4.ep18.stackvm.VMAssemblerParser;
+import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerLexer;
+import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerParser;
 
 import java.io.FileInputStream;
 import java.io.InputStream;

@@ -1,5 +1,7 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
+import org.teachfx.antlr4.ep18.stackvm.parser.VMAssemblerParser;
+
 /**
  * 字节码定义
  * 所有用到的指令和寄存器定义都在这里

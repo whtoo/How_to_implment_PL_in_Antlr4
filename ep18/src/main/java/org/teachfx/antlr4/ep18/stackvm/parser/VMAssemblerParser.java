@@ -1,6 +1,6 @@
-// Generated from ./stackvm/VMAssembler.g4 by ANTLR 4.8
+// Generated from src/main/java/org/teachfx/antlr4/ep18/stackvm/parser/VMAssembler.g4 by ANTLR 4.9.2
 
-package org.teachfx.antlr4.ep18.stackvm;
+package org.teachfx.antlr4.ep18.stackvm.parser;
 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class VMAssemblerParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.9.2", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -132,6 +132,11 @@ public class VMAssemblerParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof VMAssemblerListener ) ((VMAssemblerListener)listener).exitProgram(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof VMAssemblerVisitor ) return ((VMAssemblerVisitor<? extends T>)visitor).visitProgram(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ProgramContext program() throws RecognitionException {
@@ -221,6 +226,11 @@ public class VMAssemblerParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof VMAssemblerListener ) ((VMAssemblerListener)listener).exitGlobals(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof VMAssemblerVisitor ) return ((VMAssemblerVisitor<? extends T>)visitor).visitGlobals(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final GlobalsContext globals() throws RecognitionException {
@@ -284,6 +294,11 @@ public class VMAssemblerParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof VMAssemblerListener ) ((VMAssemblerListener)listener).exitFunctionDeclaration(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof VMAssemblerVisitor ) return ((VMAssemblerVisitor<? extends T>)visitor).visitFunctionDeclaration(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -352,6 +367,11 @@ public class VMAssemblerParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof VMAssemblerListener ) ((VMAssemblerListener)listener).exitInstr(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof VMAssemblerVisitor ) return ((VMAssemblerVisitor<? extends T>)visitor).visitInstr(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
@@ -450,6 +470,11 @@ public class VMAssemblerParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof VMAssemblerListener ) ((VMAssemblerListener)listener).exitOperand(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof VMAssemblerVisitor ) return ((VMAssemblerVisitor<? extends T>)visitor).visitOperand(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final OperandContext operand() throws RecognitionException {
@@ -495,6 +520,11 @@ public class VMAssemblerParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof VMAssemblerListener ) ((VMAssemblerListener)listener).exitLabel(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof VMAssemblerVisitor ) return ((VMAssemblerVisitor<? extends T>)visitor).visitLabel(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 

@@ -1,11 +1,11 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
 public class FunctionSymbol {
-    String name;
-    int nargs; //函数参数个数
-    int nlocals; //域内变量个数
+    public String name;
+    public int nargs; //函数参数个数
+    public int nlocals; //域内变量个数
 
-    int address; // 入口地址
+    public int address; // 入口地址
 
     public FunctionSymbol(String name) {
         this.name = name;

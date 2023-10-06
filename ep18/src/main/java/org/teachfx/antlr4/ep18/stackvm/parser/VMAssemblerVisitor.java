@@ -1,5 +1,5 @@
-// Generated from java-escape by ANTLR 4.11.0-SNAPSHOT
-package org.teachfx.antlr4.ep18.stackvm;
+// Generated from src/main/java/org/teachfx/antlr4/ep18/stackvm/parser/VMAssembler.g4 by ANTLR 4.9.2
+package org.teachfx.antlr4.ep18.stackvm.parser;
 
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 

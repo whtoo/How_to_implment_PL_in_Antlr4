@@ -1,6 +1,5 @@
-// Generated from ./stackvm/VMAssembler.g4 by ANTLR 4.8
-
-package org.teachfx.antlr4.ep18.stackvm;
+// Generated from src/main/java/org/teachfx/antlr4/ep18/stackvm/parser/VMAssembler.g4 by ANTLR 4.9.2
+package org.teachfx.antlr4.ep18.stackvm.parser;
 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -13,7 +12,7 @@ import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class VMAssemblerLexer extends Lexer {
-	static { RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.9.2", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =

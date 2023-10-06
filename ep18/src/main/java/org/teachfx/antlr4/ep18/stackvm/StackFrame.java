@@ -1,9 +1,9 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
 public class StackFrame {
-    FunctionSymbol symbol;
-    int returnAddress;
-    Object[] locals;
+    public FunctionSymbol symbol;
+    public int returnAddress;
+    public Object[] locals;
 
     public StackFrame(FunctionSymbol symbol, int returnAddress) {
         this.symbol = symbol;

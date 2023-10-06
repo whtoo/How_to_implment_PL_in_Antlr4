@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="CymbolParser" default="run" basedir=".">
+    <property name="src" value="."/>
+    <property name="parserSrc" value="${src}/parser"/>
+    <property name="grammar" value="Cymbol"/>
+    <property name="dest" value=""/>
+    <property name="vmSrc" value=""/>
+    <property name="CymbolParser_jar" value="CymbolParser1.jar"/>
+    <import file="../../../../../../../build.xml" as="parent"/>
+
+    <target name="build" depends="compile">
+        <jar jarfile="${CymbolParser_jar}" basedir="${dest}">
+            <zipfileset src="${antlr4.jar}"/>
+            <manifest>
+                <attribute name="Main-Class" value="org.teachfx.antlr4.ep16.Compiler"/>
+            </manifest>
+        </jar>
+    </target>
+    <target name="run" depends="build">
+        <java classname="org.teachfx.antlr4.ep16.Compiler" classpath="${CymbolParser_jar}">
+            <arg line="t.cymbol"/>
+        </java>
+    </target>
+
+    <target name="clean" depends="detect">
+        <delete dir="${dest}"/>
+        <delete file="${CymbolParser_jar}"/>
+    </target>
+
+    <target name="rerun" depends="clean,run">
+        <ant target="clean"/>
+        <ant target="run"/>
+    </target>
+</project>

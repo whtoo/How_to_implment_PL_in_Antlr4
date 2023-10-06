@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="CymbolParser" default="run" basedir=".">
+    <property name="src" value="."/>
+    <property name="parserSrc" value="${src}/parser"/>
+    <property name="grammar" value="Cymbol"/>
+    <property name="dest" value="classes"/>
+    <import file="../../../../../../../build.xml" as="parent"/>
+
+    <target name="init">
+        <mkdir dir="${dest}"/>
+    </target>
+    <target name="compile" depends="parent.compile,init">
+        <copy file="./t.cymbol" tofile="${dest}/t.cymbol"/>
+    </target>
+
+</project>

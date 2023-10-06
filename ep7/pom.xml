@@ -1,0 +1,65 @@
+<!-- ep20 POM -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.teachfx</groupId>
+        <artifactId>antlr4-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>ep20</artifactId>
+    <version>1.0.0</version>
+    <properties>
+        <!-- 这里为包含g4文件的文件夹-->
+        <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep20/parser</parser.g4.dir>
+        <run.main.entry>org.teachfx.antlr4.ep20.Compiler</run.main.entry>
+    </properties>
+    <!-- 添加ANTLR4插件 -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>4.11.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <visitor>true</visitor>
+                    <sourceDirectory>${basedir}/${parser.g4.file}</sourceDirectory>
+                    <!-- 指定 ANTLR4 生成代码的目录 -->
+                    <outputDirectory>${basedir}/src/main/java/org/teachfx/antlr4/ep20/parser</outputDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+        <!-- 定义源码目录 -->
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <targetPath>${project.build.directory}/classes</targetPath>
+                <includes>
+                    <include>**/*.cymbol</include> <!-- 要包含的资源文件的模式 -->
+                </includes>
+            </resource>
+        </resources>
+    </build>
+
+    <!-- 运行测试 -->
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

@@ -16,3 +16,4 @@ out/
 .scala-build
 .bsp
 .chat
+**/target/*

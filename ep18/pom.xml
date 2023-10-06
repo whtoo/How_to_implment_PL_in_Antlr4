@@ -11,12 +11,12 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>ep20</artifactId>
+    <artifactId>ep18</artifactId>
     <version>1.0.0</version>
     <properties>
         <!-- 这里为包含g4文件的文件夹-->
-        <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep20/parser</parser.g4.dir>
-        <run.main.entry>org.teachfx.antlr4.ep20.Compiler</run.main.entry>
+        <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep18/stackvm</parser.g4.dir>
+        <run.main.entry>org.teachfx.antlr4.ep18.VMRunner</run.main.entry>
     </properties>
     <!-- 添加ANTLR4插件 -->
     <build>

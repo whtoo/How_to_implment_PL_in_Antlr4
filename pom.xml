@@ -12,6 +12,7 @@
 
 
     <properties>
+        <parser.g4.file></parser.g4.file>
         <antlr4.version>4.11.0</antlr4.version>
         <run.main.entry>org.teachfx.antlr4.ep01</run.main.entry>
         <maven.compiler.source>18</maven.compiler.source>
@@ -118,7 +119,27 @@
     </build>
 
     <modules>
+        <module>ep1</module>
+        <module>ep2</module>
+        <module>ep3</module>
+        <module>ep4</module>
+        <module>ep5</module>
+        <module>ep6</module>
+        <module>ep7</module>
+        <module>ep8</module>
+        <module>ep9</module>
+        <module>ep10</module>
+        <module>ep11</module>
+        <module>ep12</module>
+        <module>ep13</module>
+        <module>ep14</module>
+        <module>ep15</module>
+        <module>ep16</module>
+        <module>ep17</module>
+        <module>ep18</module>
+        <module>ep19</module>
         <module>ep20</module>
         <!-- 添加其他子模块的名称 -->
+
     </modules>
 </project>

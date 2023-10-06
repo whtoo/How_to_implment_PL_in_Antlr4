@@ -11,7 +11,7 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>ep20</artifactId>
+    <artifactId>ep2</artifactId>
     <version>1.0.0</version>
     <properties>
         <!-- 这里为包含g4文件的文件夹-->

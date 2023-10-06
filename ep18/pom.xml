@@ -36,7 +36,7 @@
                     <visitor>true</visitor>
 <!--                    <sourceDirectory>${basedir}/${parser.g4.file}</sourceDirectory>-->
                     <!-- 指定 ANTLR4 生成代码的目录 -->
-                    <outputDirectory>${basedir}</outputDirectory>
+                    <outputDirectory>${basedir}/src/main/java/org/teachfx/antlr4/parser</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>

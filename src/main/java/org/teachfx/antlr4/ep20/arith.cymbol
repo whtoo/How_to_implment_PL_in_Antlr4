@@ -1,7 +1,0 @@
-
-int main() {
-    int c = a * b + b * 2 - 3 * a;
-    print(c);
-
-    return 0;
-}

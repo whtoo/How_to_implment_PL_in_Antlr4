@@ -12,4 +12,8 @@ public class VariableSymbol extends Symbol {
         super(name, type);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
+    }
 }

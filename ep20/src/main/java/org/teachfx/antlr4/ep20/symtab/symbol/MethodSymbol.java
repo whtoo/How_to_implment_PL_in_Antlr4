@@ -8,6 +8,7 @@ import org.teachfx.antlr4.ep20.symtab.type.Type;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class MethodSymbol extends ScopedSymbol implements Type {
     private int LABEL_SEQ = 0;
@@ -92,5 +93,21 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     @Override
     public String toString() {
         return "%s<%s:%s>".formatted(getName(),getScopeName(),getType());
+    }
+    public Type getReturnType() {
+        return getType();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MethodSymbol that)) return false;
+        if (!super.equals(o)) return false;
+        return Objects.equals(getReturnType(),((MethodSymbol) o).getReturnType()) && Objects.equals(orderedArgs, that.orderedArgs);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), orderedArgs);
     }
 }

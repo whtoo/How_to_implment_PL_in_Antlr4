@@ -5,6 +5,8 @@ import org.teachfx.antlr4.ep20.ast.ASTVisitor;
 import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
 import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
 
+import java.util.Objects;
+
 public class IDExprNode extends ExprNode {
 
     protected String image;
@@ -44,5 +46,17 @@ public class IDExprNode extends ExprNode {
         super._dump(d);
         d.printMember("id",image);
         d.printMember("refSymbol",getRefSymbol());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof IDExprNode that)) return false;
+        return Objects.equals(getImage(), that.getImage()) && Objects.equals(getRefSymbol(), that.getRefSymbol());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getImage(), getRefSymbol());
     }
 }

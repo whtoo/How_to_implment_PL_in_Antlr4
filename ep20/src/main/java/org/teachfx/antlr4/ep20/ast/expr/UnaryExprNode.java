@@ -6,6 +6,7 @@ import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
 import org.teachfx.antlr4.ep20.symtab.type.OperatorType.UnaryOpType;
 
 import java.util.List;
+import java.util.Objects;
 
 public class UnaryExprNode extends ExprNode{
     protected ExprNode valExpr;
@@ -39,5 +40,17 @@ public class UnaryExprNode extends ExprNode{
 
     public UnaryOpType getOpType() {
         return opType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UnaryExprNode that)) return false;
+        return Objects.equals(getValExpr(), that.getValExpr()) && getOpType() == that.getOpType();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getValExpr(), getOpType());
     }
 }

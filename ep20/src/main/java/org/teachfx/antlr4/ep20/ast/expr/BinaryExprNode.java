@@ -6,6 +6,8 @@ import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
 import org.teachfx.antlr4.ep20.symtab.type.OperatorType;
 import org.teachfx.antlr4.ep20.symtab.type.Type;
 
+import java.util.Objects;
+
 public class BinaryExprNode extends ExprNode{
 
     public BinaryExprNode(OperatorType.BinaryOpType opType, ExprNode lhs, ExprNode rhs, ParserRuleContext ctx) {
@@ -78,5 +80,17 @@ public class BinaryExprNode extends ExprNode{
 
         d.printMember("rhs",rhs);
 
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BinaryExprNode that)) return false;
+        return getOpType() == that.getOpType() && Objects.equals(getLhs(), that.getLhs()) && Objects.equals(getRhs(), that.getRhs());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getOpType(), getLhs(), getRhs());
     }
 }

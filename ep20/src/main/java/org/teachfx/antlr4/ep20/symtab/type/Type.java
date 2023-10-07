@@ -9,4 +9,6 @@ public interface Type {
 
     public Type getFuncType();
     public Type getPrimitiveType();
+
+
 }

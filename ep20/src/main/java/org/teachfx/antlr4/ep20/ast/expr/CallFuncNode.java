@@ -7,6 +7,7 @@ import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.type.Type;
 
 import java.util.List;
+import java.util.Objects;
 
 public class CallFuncNode extends ExprNode {
     @Override
@@ -59,5 +60,17 @@ public class CallFuncNode extends ExprNode {
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CallFuncNode that)) return false;
+        return Objects.equals(getArgsNode(), that.getArgsNode()) && Objects.equals(getCallFuncSymbol(), that.getCallFuncSymbol()) && Objects.equals(getFuncName(), that.getFuncName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getArgsNode(), getCallFuncSymbol(), getFuncName());
     }
 }

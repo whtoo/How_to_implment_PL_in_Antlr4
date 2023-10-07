@@ -65,4 +65,6 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
     public void setParentScope(Scope currentScope) {
         this.enclosingScope = scope;
     }
+
+
 }

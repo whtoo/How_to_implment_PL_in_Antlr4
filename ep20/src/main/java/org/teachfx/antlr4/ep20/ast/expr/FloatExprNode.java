@@ -6,8 +6,8 @@ import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
 import org.teachfx.antlr4.ep20.symtab.type.TypeTable;
 
-public class FloatExprNode extends LiteralNode<Float>{
-    public FloatExprNode(Float literalInt, ParserRuleContext ctx) {
+public class FloatExprNode extends LiteralNode<Double>{
+    public FloatExprNode(Double literalInt, ParserRuleContext ctx) {
         this.ctx = ctx;
         this.rawValue = literalInt;
         this.exprType = new TypeNode(TypeTable.FLOAT);

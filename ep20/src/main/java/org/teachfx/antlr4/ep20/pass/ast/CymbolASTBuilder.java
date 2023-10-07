@@ -196,7 +196,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitPrimaryFLOAT(CymbolParser.PrimaryFLOATContext ctx) {
-        return new FloatExprNode(Float.valueOf(ctx.getText()),ctx);
+        return new FloatExprNode(Double.valueOf(ctx.getText()),ctx);
     }
 
     @Override

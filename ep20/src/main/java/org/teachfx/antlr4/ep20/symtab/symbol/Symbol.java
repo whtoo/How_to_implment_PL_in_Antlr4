@@ -5,6 +5,8 @@ import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
 import org.teachfx.antlr4.ep20.symtab.type.Type;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
+import java.util.Objects;
+
 public class Symbol implements Dumpable {
     static Type UNDEFINED;
 
@@ -61,5 +63,17 @@ public class Symbol implements Dumpable {
 
     public void setSlotIdx(int slotIdx) {
         this.slotIdx = slotIdx;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Symbol symbol)) return false;
+        return Objects.equals(getType(), symbol.getType()) && Objects.equals(getName(), symbol.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getType(), getName());
     }
 }

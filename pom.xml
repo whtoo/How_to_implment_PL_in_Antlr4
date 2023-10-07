@@ -14,7 +14,7 @@
     <properties>
         <parser.g4.file></parser.g4.file>
         <antlr4.version>4.11.0</antlr4.version>
-        <run.main.entry>org.teachfx.antlr4.ep01</run.main.entry>
+        <run.main.entry>org.teachfx.antlr4.ep20.Compiler</run.main.entry>
         <maven.compiler.source>18</maven.compiler.source>
         <maven.compiler.target>18</maven.compiler.target>
     </properties>
@@ -75,15 +75,15 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <id>run</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                    </execution>
-                </executions>
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>run</id>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>java</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
                 <configuration>
                     <mainClass>${run.main.entry}</mainClass> <!-- 替换为你的主类 -->
                 </configuration>
@@ -119,21 +119,21 @@
     </build>
 
     <modules>
-        <module>ep1</module>
-        <module>ep2</module>
-        <module>ep3</module>
-        <module>ep4</module>
-        <module>ep5</module>
-        <module>ep6</module>
-        <module>ep7</module>
-        <module>ep8</module>
-        <module>ep9</module>
-        <module>ep10</module>
-        <module>ep11</module>
-        <module>ep12</module>
-        <module>ep13</module>
-        <module>ep14</module>
-        <module>ep15</module>
+<!--        <module>ep1</module>-->
+<!--        <module>ep2</module>-->
+<!--        <module>ep3</module>-->
+<!--        <module>ep4</module>-->
+<!--        <module>ep5</module>-->
+<!--        <module>ep6</module>-->
+<!--        <module>ep7</module>-->
+<!--        <module>ep8</module>-->
+<!--        <module>ep9</module>-->
+<!--        <module>ep10</module>-->
+<!--        <module>ep11</module>-->
+<!--        <module>ep12</module>-->
+<!--        <module>ep13</module>-->
+<!--        <module>ep14</module>-->
+<!--        <module>ep15</module>-->
         <module>ep16</module>
         <module>ep17</module>
         <module>ep18</module>

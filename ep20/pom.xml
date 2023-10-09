@@ -34,7 +34,6 @@
                 </executions>
                 <configuration>
                     <visitor>true</visitor>
-                    <sourceDirectory>${basedir}/${parser.g4.file}</sourceDirectory>
                     <!-- 指定 ANTLR4 生成代码的目录 -->
                     <outputDirectory>${basedir}/src/main/java/org/teachfx/antlr4/ep20/parser</outputDirectory>
                 </configuration>

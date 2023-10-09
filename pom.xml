@@ -60,17 +60,20 @@
     </dependencies>
 
     <build>
+
         <!-- 定义运行目标 -->
         <plugins>
             <!-- 编译插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.11.0</version>
                 <configuration>
+
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
                 </configuration>
+
             </plugin>
 
             <!-- Maven JAR 插件 -->
@@ -94,7 +97,20 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
-<!--                <executions>-->
+                <executions>
+<!--                    <execution>-->
+<!--                        <id>print-jdk-info</id>-->
+<!--                        <phase>validate</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>exec</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <executable>java</executable>-->
+<!--                            <arguments>-->
+<!--                                <argument>-version</argument>-->
+<!--                            </arguments>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
 <!--                    <execution>-->
 <!--                        <id>run</id>-->
 <!--                        <phase>package</phase>-->
@@ -102,7 +118,7 @@
 <!--                            <goal>java</goal>-->
 <!--                        </goals>-->
 <!--                    </execution>-->
-<!--                </executions>-->
+                </executions>
                 <configuration>
                     <mainClass>${run.main.entry}</mainClass> <!-- 替换为你的主类 -->
                 </configuration>
@@ -111,7 +127,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.4.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -129,7 +145,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.3.1</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>

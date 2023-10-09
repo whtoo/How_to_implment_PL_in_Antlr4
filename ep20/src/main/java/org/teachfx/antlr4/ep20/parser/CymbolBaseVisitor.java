@@ -1,7 +1,6 @@
 // Generated from java-escape by ANTLR 4.11.0-SNAPSHOT
 
 package org.teachfx.antlr4.ep20.parser;
-
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
 /**

@@ -35,7 +35,7 @@
                     <artifactId>antlr-runtime</artifactId>
                 </exclusion>
             </exclusions>
-            <scope>provided</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -111,13 +111,13 @@
 <!--                            </arguments>-->
 <!--                        </configuration>-->
 <!--                    </execution>-->
-<!--                    <execution>-->
-<!--                        <id>run</id>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>java</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
+                    <execution>
+                        <id>run</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
                 </executions>
                 <configuration>
                     <mainClass>${run.main.entry}</mainClass> <!-- 替换为你的主类 -->

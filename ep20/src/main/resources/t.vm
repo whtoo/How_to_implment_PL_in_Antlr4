@@ -37,6 +37,14 @@ main_1 :
     isub
     store 0
     load 0
+    iconst 3
+    ile
+    brt Local_Local_main_0
+    br Local_Local_main_2
+Local_Local_main_0 :
+    br main_2
+Local_Local_main_2 :
+    load 0
     print
     br main_0
 main_2 :

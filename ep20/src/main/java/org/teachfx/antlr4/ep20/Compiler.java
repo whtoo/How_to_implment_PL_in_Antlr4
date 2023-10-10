@@ -14,15 +14,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URISyntaxException;
 
 public class Compiler {
 
     public static void main(String[] args) throws IOException {
-        String fileName = null;
-        File file = new File("src/main/resources/t.cymbol");
-        fileName = file.getAbsolutePath();
-        if (args.length > 0) fileName = args[0];
+        String fileName = args.length > 0 ? args[0] : (new File("src/main/resources/t.cymbol")).getAbsolutePath();
+
         InputStream is = System.in;
         if (fileName != null) is = new FileInputStream(fileName);
         CharStream charStream = CharStreams.fromStream(is);
@@ -39,8 +37,8 @@ public class Compiler {
         irBuilder.root.accept(assembler);
         System.out.println(assembler.flushCode());
         var url = Compiler.class.getClassLoader().getResource("t.vm");
-        assert url != null;
-        var savedFile = new File("src/main/resources/t.vm");
-        assembler.saveToFile(savedFile);
+        System.out.println(">>>=" + new File(".").getAbsolutePath());
+
+        assembler.saveToFile("output/t.vm");
     }
 }

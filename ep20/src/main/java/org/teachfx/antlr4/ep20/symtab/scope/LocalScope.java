@@ -18,7 +18,7 @@ public class LocalScope extends BaseScope {
 
     @Override
     public String getScopeName() {
-        return "Local-"+getEnclosingScope().getScopeName();
+        return "Local_"+getEnclosingScope().getScopeName();
     }
 
     @Override

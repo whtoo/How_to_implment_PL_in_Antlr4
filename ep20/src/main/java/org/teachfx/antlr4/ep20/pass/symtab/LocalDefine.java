@@ -18,6 +18,9 @@ import java.util.Stack;
 
 public class LocalDefine extends ASTBaseVisitor {
     Stack<Scope> scopeStack = new Stack<>();
+
+    Stack<Scope> loopStack = new Stack<>();
+
     private Scope currentScope = new GlobalScope();
     private Scope topScope = currentScope;
 
@@ -87,10 +90,12 @@ public class LocalDefine extends ASTBaseVisitor {
         var loopScope = new LocalScope(currentScope,ScopeType.LoopScope);
 
         whileStmtNode.setScope(currentScope);
-
+        pushLoopScope(loopScope);
         stashScope(loopScope);
         super.visit(whileStmtNode);
         currentScope= popScope();
+        popLoopScope();
+
         return null;
     }
 
@@ -108,9 +113,11 @@ public class LocalDefine extends ASTBaseVisitor {
     @Override
     public Void visit(BreakStmtNode breakStmtNode) {
         breakStmtNode.setScope(currentScope);
-        if (breakStmtNode.getScope().getScopeType() == ScopeType.LoopScope) {
+
+        if (!loopStack.isEmpty()) {
             return super.visit(breakStmtNode);
         }
+
         System.out.println("Break stmt must be in while scope");
         return null;
     }
@@ -118,7 +125,7 @@ public class LocalDefine extends ASTBaseVisitor {
     @Override
     public Void visit(ContinueStmtNode continueStmtNode) {
         continueStmtNode.setScope(currentScope);
-        if (continueStmtNode.getScope().getScopeType() == ScopeType.LoopScope) {
+        if (!loopStack.isEmpty()) {
             return super.visit(continueStmtNode);
         }
         System.out.println("Continue stmt must be in while scope");
@@ -149,5 +156,15 @@ public class LocalDefine extends ASTBaseVisitor {
 
     public void setTopScope(Scope topScope) {
         this.topScope = topScope;
+    }
+
+    // generate push/pop loop scope methods for loopStack
+    public void pushLoopScope(Scope scope) {
+        loopStack.push(scope);
+    }
+
+    public Scope popLoopScope() {
+        if (loopStack.isEmpty()) return null;
+        return loopStack.pop();
     }
 }

@@ -153,4 +153,13 @@ public class ASTBaseVisitor implements ASTVisitor<Void,Void> {
     }
 
 
+    @Override
+    public Void visit(BreakStmtNode breakStmtNode) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ContinueStmtNode continueStmtNode) {
+        return null;
+    }
 }

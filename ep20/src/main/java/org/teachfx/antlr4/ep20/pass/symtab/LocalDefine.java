@@ -5,10 +5,7 @@ import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
 import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.CallFuncNode;
 import org.teachfx.antlr4.ep20.ast.expr.IDExprNode;
-import org.teachfx.antlr4.ep20.ast.stmt.BlockStmtNode;
-import org.teachfx.antlr4.ep20.ast.stmt.IfStmtNode;
-import org.teachfx.antlr4.ep20.ast.stmt.StmtNode;
-import org.teachfx.antlr4.ep20.ast.stmt.WhileStmtNode;
+import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.pass.ast.ASTBaseVisitor;
 import org.teachfx.antlr4.ep20.symtab.scope.GlobalScope;
 import org.teachfx.antlr4.ep20.symtab.scope.LocalScope;
@@ -16,7 +13,6 @@ import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
 
-import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.Stack;
 
@@ -73,10 +69,11 @@ public class LocalDefine extends ASTBaseVisitor {
 
     @Override
     public Void visit(BlockStmtNode blockStmtNode) {
-        if (blockStmtNode.getParentScopeType() == BlockStmtNode.ScopeType.FuncScope) {
+        if (blockStmtNode.getParentScopeType() == ScopeType.FuncScope) {
             super.visit(blockStmtNode);
             return null;
         }
+
         blockStmtNode.setScope(currentScope);
         var blockScope = new LocalScope(currentScope);
         stashScope(blockScope);
@@ -87,14 +84,45 @@ public class LocalDefine extends ASTBaseVisitor {
 
     @Override
     public Void visit(WhileStmtNode whileStmtNode) {
+        var loopScope = new LocalScope(currentScope,ScopeType.LoopScope);
+
         whileStmtNode.setScope(currentScope);
-        return super.visit(whileStmtNode);
+
+        stashScope(loopScope);
+        super.visit(whileStmtNode);
+        currentScope= popScope();
+        return null;
     }
 
     @Override
     public Void visit(IfStmtNode ifStmtNode) {
+        var ifScope = new LocalScope(currentScope);
+
         ifStmtNode.setScope(currentScope);
-        return super.visit(ifStmtNode);
+        stashScope(ifScope);
+        super.visit(ifStmtNode);
+        currentScope = popScope();
+        return null;
+    }
+
+    @Override
+    public Void visit(BreakStmtNode breakStmtNode) {
+        breakStmtNode.setScope(currentScope);
+        if (breakStmtNode.getScope().getScopeType() == ScopeType.LoopScope) {
+            return super.visit(breakStmtNode);
+        }
+        System.out.println("Break stmt must be in while scope");
+        return null;
+    }
+
+    @Override
+    public Void visit(ContinueStmtNode continueStmtNode) {
+        continueStmtNode.setScope(currentScope);
+        if (continueStmtNode.getScope().getScopeType() == ScopeType.LoopScope) {
+            return super.visit(continueStmtNode);
+        }
+        System.out.println("Continue stmt must be in while scope");
+        return null;
     }
 
     @Override

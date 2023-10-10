@@ -75,6 +75,9 @@ public interface ASTVisitor<S,E> {
 
     S visit(AssignStmtNode assignStmtNode);
 
+    S visit(BreakStmtNode breakStmtNode);
+
+    S visit(ContinueStmtNode continueStmtNode);
     default S visit(StmtNode node) {
         if (node instanceof IfStmtNode) {
             return visit((IfStmtNode) node);
@@ -88,6 +91,10 @@ public interface ASTVisitor<S,E> {
             return visit((ReturnStmtNode) node);
         } else if (node instanceof AssignStmtNode) {
             return visit((AssignStmtNode) node);
+        } else if (node instanceof BreakStmtNode) {
+            return visit((BreakStmtNode) node);
+        } else if (node instanceof ContinueStmtNode) {
+            return visit((ContinueStmtNode) node);
         } else {
             return visit((VarDeclStmtNode) node);
         }

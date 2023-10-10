@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep20.symtab.scope;
 
+import org.teachfx.antlr4.ep20.ast.stmt.ScopeType;
 import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
 import org.teachfx.antlr4.ep20.symtab.type.Type;
 
@@ -7,6 +8,11 @@ import org.teachfx.antlr4.ep20.symtab.type.Type;
  * Scope
  */
 public interface Scope {
+
+    public ScopeType getScopeType();
+
+    public void setScopeType(ScopeType scopeType);
+
     public String getScopeName();
 
     public Scope getEnclosingScope();

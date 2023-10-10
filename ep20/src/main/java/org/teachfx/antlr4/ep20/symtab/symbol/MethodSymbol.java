@@ -2,6 +2,7 @@ package org.teachfx.antlr4.ep20.symtab.symbol;
 
 import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.ast.expr.ExprNode;
+import org.teachfx.antlr4.ep20.ast.stmt.ScopeType;
 import org.teachfx.antlr4.ep20.ast.stmt.StmtNode;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.symtab.type.Type;
@@ -109,5 +110,16 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), orderedArgs);
+    }
+
+    private ScopeType scopeType = ScopeType.FuncScope;
+    @Override
+    public ScopeType getScopeType() {
+        return scopeType;
+    }
+
+    @Override
+    public void setScopeType(ScopeType scopeType) {
+        this.scopeType = scopeType;
     }
 }

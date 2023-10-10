@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep20.symtab.scope;
 
+import org.teachfx.antlr4.ep20.ast.stmt.ScopeType;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
 import org.teachfx.antlr4.ep20.symtab.type.Type;
@@ -55,5 +56,16 @@ public abstract class BaseScope implements Scope {
     @Override
     public void setParentScope(Scope currentScope) {
         this.enclosingScope = currentScope;
+    }
+
+    protected ScopeType scopeType;
+    @Override
+    public ScopeType getScopeType() {
+        return scopeType;
+    }
+
+    @Override
+    public void setScopeType(ScopeType scopeType) {
+        this.scopeType = scopeType;
     }
 }

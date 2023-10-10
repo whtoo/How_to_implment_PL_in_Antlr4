@@ -89,4 +89,14 @@ public class TypeChecker extends ASTBaseVisitor
     public Void visit(AssignStmtNode assignStmtNode) {
         return super.visit(assignStmtNode);
     }
+
+    @Override
+    public Void visit(BreakStmtNode breakStmtNode) {
+        return super.visit(breakStmtNode);
+    }
+
+    @Override
+    public Void visit(ContinueStmtNode continueStmtNode) {
+        return super.visit(continueStmtNode);
+    }
 }

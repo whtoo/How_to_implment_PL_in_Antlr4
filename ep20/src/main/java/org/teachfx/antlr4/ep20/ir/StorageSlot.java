@@ -1,8 +1,8 @@
 package org.teachfx.antlr4.ep20.ir;
 
-import org.teachfx.antlr4.ep20.ast.stmt.BlockStmtNode;
+import org.teachfx.antlr4.ep20.ast.stmt.ScopeType;
 
 public class StorageSlot extends IRNode {
-    private BlockStmtNode.ScopeType scopeType;
+    private ScopeType scopeType;
 
 }

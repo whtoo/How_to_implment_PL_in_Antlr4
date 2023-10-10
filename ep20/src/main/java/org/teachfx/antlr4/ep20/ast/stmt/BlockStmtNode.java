@@ -8,14 +8,6 @@ import java.util.List;
 
 public class BlockStmtNode extends StmtNode {
 
-    public enum ScopeType {
-        FuncScope,
-        StmtScope,
-        ClassScope,
-
-        GlobalScope
-    }
-
     private List<StmtNode> stmtNodes;
 
     private ScopeType scopeType;

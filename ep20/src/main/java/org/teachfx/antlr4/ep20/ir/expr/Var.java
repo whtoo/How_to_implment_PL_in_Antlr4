@@ -1,19 +1,17 @@
 package org.teachfx.antlr4.ep20.ir.expr;
 
-import org.teachfx.antlr4.ep20.ast.stmt.BlockStmtNode;
+import org.teachfx.antlr4.ep20.ast.stmt.ScopeType;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
-import org.teachfx.antlr4.ep20.ir.StorageSlot;
-import org.teachfx.antlr4.ep20.ir.expr.Expr;
 import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
 
 public class Var extends Expr {
     public Symbol symbol;
 
-    private BlockStmtNode.ScopeType scopeType;
+    private ScopeType scopeType;
 
     public Var(Symbol varSymbol) {
         this.symbol = varSymbol;
-        this.scopeType = BlockStmtNode.ScopeType.FuncScope;
+        this.scopeType = ScopeType.FuncScope;
     }
 
     public String getDeclName() {
@@ -28,11 +26,11 @@ public class Var extends Expr {
         this.symbol = symbol;
     }
 
-    public BlockStmtNode.ScopeType getScopeType() {
+    public ScopeType getScopeType() {
         return scopeType;
     }
 
-    public void setScopeType(BlockStmtNode.ScopeType scopeType) {
+    public void setScopeType(ScopeType scopeType) {
         this.scopeType = scopeType;
     }
 

@@ -7,31 +7,28 @@ import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
-import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.def.Func;
-import org.teachfx.antlr4.ep20.ir.expr.Var;
 import org.teachfx.antlr4.ep20.ir.expr.*;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
-import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 
 import java.util.*;
 
 
-public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
+public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
     public Prog root = null;
 
     private List<Stmt> stmts;
-    private LinkedList<Label> breakStack;
-    private LinkedList<Label> continueStack;
+    private LinkedList<Label> breakQueue;
+    private LinkedList<Label> continueQueue;
 
     private Stack<MethodSymbol> methodSymbolStack = new Stack<>();
 
     @Override
     public Void visit(CompileUnit rootNode) {
         root = new Prog(null);
-        
+
         var funcLst = rootNode.getFuncDeclarations().stream().map(this::visit);
         funcLst.map(Func.class::cast).forEach(root::addFunc);
 
@@ -40,8 +37,8 @@ public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
 
     @Override
     public Void visit(VarDeclNode varDeclNode) {
-        if(varDeclNode.hasInitializer()) {
-           addStmt(new Assign(new Var(varDeclNode.getRefSymbol()),(Expr) visit(varDeclNode.getAssignExprNode())));
+        if (varDeclNode.hasInitializer()) {
+            addStmt(new Assign(new Var(varDeclNode.getRefSymbol()), (Expr) visit(varDeclNode.getAssignExprNode())));
         }
         return null;
     }
@@ -50,22 +47,22 @@ public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
     public Void visit(FuncDeclNode funcDeclNode) {
         methodSymbolStack.push((MethodSymbol) funcDeclNode.getRefSymbol());
         stmts = new ArrayList<>();
-        breakStack = new LinkedList<>();
-        continueStack = new LinkedList<>();
+        breakQueue = new LinkedList<>();
+        continueQueue = new LinkedList<>();
         transformBlockStmt(funcDeclNode.getBody());
-        if(methodSymbolStack.peek().getName().equalsIgnoreCase("main")) {
+        if (methodSymbolStack.peek().getName().equalsIgnoreCase("main")) {
             var mainRet = new ReturnVal(null);
             mainRet.setMainEntry(true);
             addStmt(mainRet);
         }
-        root.addFunc(new Func(funcDeclNode.getDeclName(), (MethodSymbol) funcDeclNode.getRefSymbol(),stmts));
+        root.addFunc(new Func(funcDeclNode.getDeclName(), (MethodSymbol) funcDeclNode.getRefSymbol(), stmts));
         methodSymbolStack.pop();
         return null;
     }
 
     @Override
     public Void visit(VarDeclStmtNode varDeclStmtNode) {
-        if(varDeclStmtNode.getVarDeclNode().getAssignExprNode() != null) {
+        if (varDeclStmtNode.getVarDeclNode().getAssignExprNode() != null) {
             varDeclStmtNode.getVarDeclNode().accept(this);
         }
         return null;
@@ -80,7 +77,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
     public Expr visit(BinaryExprNode binaryExprNode) {
         var lhs = (Expr) visit(binaryExprNode.getLhs());
         var rhs = (Expr) visit(binaryExprNode.getRhs());
-        return new BinExpr(binaryExprNode.getOpType(),lhs,rhs);
+        return new BinExpr(binaryExprNode.getOpType(), lhs, rhs);
     }
 
     @Override
@@ -117,13 +114,13 @@ public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
     @Override
     public Expr visit(UnaryExprNode unaryExprNode) {
         var expr = (Expr) visit(unaryExprNode.getValExpr());
-        return new UnaryExpr(unaryExprNode.getOpType(),expr);
+        return new UnaryExpr(unaryExprNode.getOpType(), expr);
     }
 
     @Override
     public Expr visit(CallFuncNode callExprNode) {
         var args = callExprNode.getArgsNode().stream().map(this::visit).map(Expr.class::cast).toList();
-        return new CallFunc(new Var(callExprNode.getCallFuncSymbol()),args);
+        return new CallFunc(new Var(callExprNode.getCallFuncSymbol()), args);
     }
 
     @Override
@@ -134,7 +131,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
 
         var condExpr = (Expr) visit(ifStmtNode.getConditionalNode());
         var thenSuccLabel = ifStmtNode.getElseBlock().isPresent() ? elseLabel : endLabel;
-        cjump(condExpr,thenLabel,thenSuccLabel);
+        cjump(condExpr, thenLabel, thenSuccLabel);
         label(thenLabel);
         transformBlockStmt(ifStmtNode.getThenBlock());
 
@@ -150,6 +147,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
     protected void transformBlockStmt(StmtNode blockStmt) {
         blockStmt.accept(this);
     }
+
     @Override
     public Void visit(ExprStmtNode exprStmtNode) {
         addStmt(new ExprStmt((Expr) visit(exprStmtNode.getExprNode())));
@@ -159,7 +157,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
 
     @Override
     public Void visit(ReturnStmtNode returnStmtNode) {
-        var retVal = new ReturnVal((Expr)visit(returnStmtNode.getRetNode()));
+        var retVal = new ReturnVal((Expr) visit(returnStmtNode.getRetNode()));
         retVal.setMainEntry(methodSymbolStack.peek().getName().equalsIgnoreCase("main"));
         addStmt(retVal);
         return null;
@@ -169,21 +167,37 @@ public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
     public Void visit(WhileStmtNode whileStmtNode) {
         var beginLabel = new Label(null, whileStmtNode.getScope());
         var thenLabel = new Label(null, whileStmtNode.getScope());
-        var endLabel = new Label(null,whileStmtNode.getScope());
+        var endLabel = new Label(null, whileStmtNode.getScope());
 
+        pushBreakTarget(endLabel);
+        pushContinueTarget(beginLabel);
         var condExpr = (Expr) visit(whileStmtNode.getConditionNode());
         label(beginLabel);
-        cjump(condExpr,thenLabel,endLabel);
+        cjump(condExpr, thenLabel, endLabel);
         label(thenLabel);
         transformBlockStmt(whileStmtNode.getBlockNode());
         jump(beginLabel);
         label(endLabel);
+        popBreakTarget();
+        popContinueTarget();
         return null;
     }
 
     @Override
     public Void visit(AssignStmtNode assignStmtNode) {
-        addStmt(new Assign((Var) visit(assignStmtNode.getLhs()),(Expr) visit(assignStmtNode.getRhs())));
+        addStmt(new Assign((Var) visit(assignStmtNode.getLhs()), (Expr) visit(assignStmtNode.getRhs())));
+        return null;
+    }
+
+    @Override
+    public Void visit(BreakStmtNode breakStmtNode) {
+        addStmt(new JMP(currentBreakTarget()));
+        return null;
+    }
+
+    @Override
+    public Void visit(ContinueStmtNode continueStmtNode) {
+        addStmt(new JMP(currentContinueTarget()));
         return null;
     }
 
@@ -207,7 +221,31 @@ public class CymbolIRBuilder implements ASTVisitor<Void,Expr> {
         addStmt(label);
     }
 
-    protected void cjump(Expr cond,Label thenLabel,Label elseLabel) {
-        addStmt(new CJMP(cond,thenLabel,elseLabel));
+    protected void cjump(Expr cond, Label thenLabel, Label elseLabel) {
+        addStmt(new CJMP(cond, thenLabel, elseLabel));
+    }
+
+    protected Label currentBreakTarget() {
+        return breakQueue.peek();
+    }
+
+    private Label currentContinueTarget() {
+        return continueQueue.peek();
+    }
+
+    protected void pushBreakTarget(Label label) {
+        breakQueue.push(label);
+    }
+
+    protected void pushContinueTarget(Label label) {
+        continueQueue.push(label);
+    }
+
+    protected void popBreakTarget() {
+        breakQueue.removeLast();
+    }
+
+    protected void popContinueTarget() {
+        continueQueue.removeLast();
     }
 }

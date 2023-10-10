@@ -28,6 +28,8 @@ statetment:   varDecl             #statVarDecl
     |   'return' expr? ';' #statReturn
     |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
     |   'while' '(' cond=expr ')' then=statetment #stateWhile
+    |   'break' ';' #visitBreak
+    |   'continue' ';' #visitContinue
     |   expr '=' expr ';' #statAssign // assignment
     |   expr ';'       #exprStat // func call
     |   block               #statBlock

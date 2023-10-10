@@ -2,6 +2,7 @@
 
 package org.teachfx.antlr4.ep20.parser;
 
+
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -145,6 +146,30 @@ public class CymbolBaseListener implements CymbolListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitStateWhile(CymbolParser.StateWhileContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterVisitBreak(CymbolParser.VisitBreakContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitVisitBreak(CymbolParser.VisitBreakContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterVisitContinue(CymbolParser.VisitContinueContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitVisitContinue(CymbolParser.VisitContinueContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

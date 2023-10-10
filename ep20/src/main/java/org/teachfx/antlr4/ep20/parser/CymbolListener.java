@@ -1,6 +1,7 @@
 // Generated from java-escape by ANTLR 4.11.0-SNAPSHOT
 
 package org.teachfx.antlr4.ep20.parser;
+
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -128,6 +129,30 @@ public interface CymbolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitStateWhile(CymbolParser.StateWhileContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code visitBreak}
+	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * @param ctx the parse tree
+	 */
+	void enterVisitBreak(CymbolParser.VisitBreakContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code visitBreak}
+	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * @param ctx the parse tree
+	 */
+	void exitVisitBreak(CymbolParser.VisitBreakContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code visitContinue}
+	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * @param ctx the parse tree
+	 */
+	void enterVisitContinue(CymbolParser.VisitContinueContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code visitContinue}
+	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * @param ctx the parse tree
+	 */
+	void exitVisitContinue(CymbolParser.VisitContinueContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code statAssign}
 	 * labeled alternative in {@link CymbolParser#statetment}.

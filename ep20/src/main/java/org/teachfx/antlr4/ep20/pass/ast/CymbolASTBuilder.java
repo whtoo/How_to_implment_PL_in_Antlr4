@@ -146,6 +146,16 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
     }
 
     @Override
+    public ASTNode visitVisitBreak(CymbolParser.VisitBreakContext ctx) {
+        return new BreakStmtNode(ctx);
+    }
+
+    @Override
+    public ASTNode visitVisitContinue(CymbolParser.VisitContinueContext ctx) {
+        return new ContinueStmtNode(ctx);
+    }
+
+    @Override
     public ASTNode visitStatAssign(CymbolParser.StatAssignContext ctx) {
         var lhs = (ExprNode) visit(ctx.expr(0));
         var rhs = (ExprNode) visit(ctx.expr(1));

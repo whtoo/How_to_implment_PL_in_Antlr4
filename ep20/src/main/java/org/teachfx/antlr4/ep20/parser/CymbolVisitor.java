@@ -1,6 +1,7 @@
 // Generated from java-escape by ANTLR 4.11.0-SNAPSHOT
 
 package org.teachfx.antlr4.ep20.parser;
+
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -82,6 +83,20 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitStateWhile(CymbolParser.StateWhileContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code visitBreak}
+	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVisitBreak(CymbolParser.VisitBreakContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code visitContinue}
+	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVisitContinue(CymbolParser.VisitContinueContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code statAssign}
 	 * labeled alternative in {@link CymbolParser#statetment}.

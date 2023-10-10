@@ -10,6 +10,9 @@ import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
 import java.io.*;
 import java.io.OutputStreamWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 
@@ -213,9 +216,23 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
         return null;
     }
 
-    public void saveToFile(File savedFile) throws IOException {
-        boolean isExist = false;
-        if (!savedFile.exists()) isExist = savedFile.createNewFile();
+    public void saveToFile(String filePath) throws IOException {
+        Path path = null;
+        try {
+            // 创建多级文件夹
+            path = Paths.get(filePath);
+            Files.createDirectories(path.getParent());
+            System.out.println("文件夹创建成功!");
+        } catch (IOException e) {
+            System.out.println("文件夹创建失败: " + e.getMessage());
+        }
+
+        if (!Files.exists(path)) {
+            Files.createFile(path);
+        }
+
+        var savedFile = new File(filePath);
+
         if (savedFile.exists()) {
             var os = new FileOutputStream(savedFile);
             var osw = new OutputStreamWriter(os);

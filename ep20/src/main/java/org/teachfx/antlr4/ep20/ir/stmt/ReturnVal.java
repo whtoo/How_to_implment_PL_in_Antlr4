@@ -2,18 +2,24 @@ package org.teachfx.antlr4.ep20.ir.stmt;
 
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
+import org.teachfx.antlr4.ep20.ir.JumpEntryType;
 import org.teachfx.antlr4.ep20.ir.expr.Expr;
+import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
 public class ReturnVal extends Stmt {
+    public Label retFuncLabel;
     private Expr retVal;
     private boolean isMainEntry = false;
-    public ReturnVal(Expr retVal) {
+    public ReturnVal(Expr retVal, Scope scope) {
+        retFuncLabel = new Label(null,scope);
+        retFuncLabel.setEntryType(JumpEntryType.funcType);
         this.retVal = retVal;
     }
 
     @Override
     public <S, E> S accept(IRVisitor<S, E> visitor) {
-        return null;
+
+        return visitor.visit(this);
     }
 
     @Override

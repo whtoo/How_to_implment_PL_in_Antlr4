@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep20.ir.def;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
+import org.teachfx.antlr4.ep20.ir.stmt.ReturnVal;
 import org.teachfx.antlr4.ep20.ir.stmt.Stmt;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 
@@ -11,6 +12,7 @@ public class Func extends Define {
     public String funcName;
     private int locals;
     public List<Stmt> body;
+    public ReturnVal retHook;
 
     public Func(String funcName, MethodSymbol symbol , List<Stmt> body) {
         // init

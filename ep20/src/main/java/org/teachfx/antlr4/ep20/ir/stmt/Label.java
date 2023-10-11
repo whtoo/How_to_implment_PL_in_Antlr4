@@ -1,13 +1,13 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
+import org.teachfx.antlr4.ep20.ir.JumpEntryType;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
 import java.util.Objects;
 
-// TODO: Impletement Label in code generation phase
 public class Label extends Stmt {
-
+    private JumpEntryType entryType = JumpEntryType.blockType;
     private String rawLabel;
     private Scope scope;
     protected int seq;
@@ -52,5 +52,18 @@ public class Label extends Stmt {
     @Override
     public StmtType getStmtType() {
         return StmtType.LABEL;
+    }
+
+    public JumpEntryType getEntryType() {
+        return entryType;
+    }
+
+    public void setEntryType(JumpEntryType entryType) {
+        this.entryType = entryType;
+    }
+
+    @Override
+    public String toString() {
+        return toSource();
     }
 }

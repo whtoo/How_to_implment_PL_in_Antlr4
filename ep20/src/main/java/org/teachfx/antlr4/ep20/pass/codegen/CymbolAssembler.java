@@ -151,19 +151,13 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     public Void visit(Func func) {
         emitNoPadding(func.toSource());
         func.getBody().forEach(this::visit);
+        func.retHook.accept(this);
         return null;
     }
 
     @Override
     public Void visit(Stmt stmt) {
-        switch (stmt.getStmtType()) {
-            case ASSIGN -> visit((Assign) stmt);
-            case JMP -> visit((JMP) stmt);
-            case CJMP -> visit((CJMP) stmt);
-            case LABEL -> visit((Label) stmt);
-            case EXPR -> visit((ExprStmt) stmt);
-            case RETURN -> visit((ReturnVal) stmt);
-        }
+        stmt.accept(this);
         return null;
     }
 
@@ -187,6 +181,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(ReturnVal returnVal) {
+        returnVal.retFuncLabel.accept(this);
         Optional.ofNullable(returnVal.getRetVal()).ifPresent(x -> x.accept(this));
         if (returnVal.isMainEntry()) { emit("halt"); }
         else { emit("ret"); }

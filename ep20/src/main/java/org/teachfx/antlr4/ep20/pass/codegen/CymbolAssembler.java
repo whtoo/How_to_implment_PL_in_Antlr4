@@ -70,27 +70,10 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
         return null;
     }
 
-    protected void visit(Expr expr) {
-        if (expr instanceof BinExpr) {
-            visit((BinExpr) expr);
-        } else if (expr instanceof UnaryExpr) {
-            visit((UnaryExpr) expr);
-        } else if (expr instanceof CallFunc) {
-            visit((CallFunc) expr);
-        } else if (expr instanceof IntVal) {
-            visit((IntVal) expr);
-        } else if (expr instanceof BoolVal) {
-            visit((BoolVal) expr);
-        } else if (expr instanceof StringVal) {
-            visit((StringVal) expr);
-        } else {
-            visit((Var) expr);
-        }
-    }
     @Override
     public Void visit(BinExpr node) {
-        visit(node.getLhs());
-        visit(node.getRhs());
+        node.getLhs().accept(this);
+        node.getRhs().accept(this);
         switch (node.getOpType()) {
             case ADD -> emit("iadd");
             case SUB -> emit("isub");
@@ -111,7 +94,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(UnaryExpr node) {
-        visit(node.expr);
+        node.expr.accept(this);
 
         switch (node.op) {
             case NEG -> emit("ineg");
@@ -124,7 +107,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     @Override
     public Void visit(CallFunc callFunc) {
 
-        callFunc.getArgs().forEach(this::visit);
+        callFunc.getArgs().forEach(expr -> expr.accept(this));
         var varDef =  callFunc.getFuncExpr();
         var methodSymbol = (MethodSymbol) varDef.getSymbol();
         if(!methodSymbol.isPreDefined()) {
@@ -149,7 +132,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(CJMP cjmp) {
-        visit(cjmp.cond);
+        cjmp.cond.accept(this);
         emit("brt %s".formatted(cjmp.thenLabel.toSource()));
         emit("br %s".formatted(cjmp.elseLabel.toSource()));
         return null;
@@ -159,7 +142,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     public Void visit(Assign assign) {
         var var = assign.getLhs();
         var expr = assign.getRhs();
-        visit(expr);
+        expr.accept(this);
         emit(var.toSource(false));
         return null;
     }
@@ -212,7 +195,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(ExprStmt exprStmt) {
-        visit(exprStmt.getExpr());
+        exprStmt.getExpr().accept(this);
         return null;
     }
 

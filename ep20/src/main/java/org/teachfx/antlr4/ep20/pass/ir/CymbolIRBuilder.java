@@ -7,7 +7,6 @@ import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
-import org.teachfx.antlr4.ep20.ir.JumpEntryType;
 import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.def.Func;
 import org.teachfx.antlr4.ep20.ir.expr.*;
@@ -25,7 +24,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
     public Prog root = null;
     private Func currentFunc = null;
     private List<Stmt> stmts;
-    private Stack<Label> labelStack;
+    private Stack<Label> breakStack;
     private Stack<Label> continueStack;
     private Stack<Label> returnBlockStack;
 
@@ -53,7 +52,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
         /**/
         stmts = new ArrayList<>();
         /**/
-        labelStack = new Stack<>();
+        breakStack = new Stack<>();
         continueStack = new Stack<>();
         returnBlockStack = new Stack<>();
 
@@ -61,13 +60,13 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
 
         setRetHook(methodSymbolStack.peek());
 
-        pushReturnEntry(currentFunc.retHook.retFuncLabel);
+        pushExitEntry(currentFunc.retHook.retFuncLabel);
 
         transformBlockStmt(funcDeclNode.getBody());
 
         currentFunc.setBody(stmts);
 
-        popReturnEntry();
+        popExitEntry();
 
         root.addFunc(currentFunc);
 
@@ -196,7 +195,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
     public Void visit(ReturnStmtNode returnStmtNode) {
         var retVal = (Expr) visit(returnStmtNode.getRetNode());
         addStmt(new ExprStmt(retVal));
-        jump(currentReturnEntry());
+        jump(currentExitEntry());
         return null;
     }
 
@@ -206,7 +205,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
         var thenLabel = new Label(null, whileStmtNode.getScope());
         var endLabel = new Label(null, whileStmtNode.getScope());
 
-//        endLabel = currentReturnEntry();
+        pushExitEntry(endLabel);
 
         pushBreakTarget(endLabel);
         pushContinueTarget(beginLabel);
@@ -216,9 +215,9 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
         label(thenLabel);
         transformBlockStmt(whileStmtNode.getBlockNode());
         jump(beginLabel);
-        if (endLabel.getEntryType() == JumpEntryType.blockType) {
-            label(endLabel);
-        }
+
+        label(endLabel);
+
         popBreakTarget();
         popContinueTarget();
         return null;
@@ -254,14 +253,10 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
     }
 
     protected void jump(Label thenLabel) {
-        System.out.println(thenLabel.toSource());
         addStmt(new JMP(thenLabel));
     }
 
     protected void label(Label label) {
-        if (label.toSource().equalsIgnoreCase("Local_Local_fib_0")) {
-            System.out.println(">>>>=====");
-        }
         addStmt(label);
     }
 
@@ -270,7 +265,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
     }
 
     protected Label currentBreakTarget() {
-        return labelStack.peek();
+        return breakStack.peek();
     }
 
     private Label currentContinueTarget() {
@@ -278,7 +273,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
     }
 
     protected void pushBreakTarget(Label label) {
-        labelStack.push(label);
+        breakStack.push(label);
     }
 
     protected void pushContinueTarget(Label label) {
@@ -286,31 +281,22 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
     }
 
     protected void popBreakTarget() {
-        labelStack.pop();
+        breakStack.pop();
     }
 
     protected void popContinueTarget() {
         continueStack.pop();
     }
 
-    protected void pushReturnEntry(Label retLabel) {
-
-        if (returnBlockStack.isEmpty()) {
-            returnBlockStack.push(retLabel);
-            return;
-        }
-
-        if (returnBlockStack.peek().getEntryType() == JumpEntryType.funcType && retLabel.getEntryType() == JumpEntryType.blockType) {
-            return;
-        }
+    protected void pushExitEntry(Label retLabel) {
         returnBlockStack.push(retLabel);
     }
 
-    protected void popReturnEntry() {
+    protected void popExitEntry() {
         returnBlockStack.pop();
     }
 
-    protected Label currentReturnEntry() {
+    protected Label currentExitEntry() {
         return returnBlockStack.peek();
     }
 }

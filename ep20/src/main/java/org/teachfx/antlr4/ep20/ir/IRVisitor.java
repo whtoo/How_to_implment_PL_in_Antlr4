@@ -1,7 +1,6 @@
 package org.teachfx.antlr4.ep20.ir;
 
 import org.teachfx.antlr4.ep20.ir.def.Func;
-import org.teachfx.antlr4.ep20.ir.expr.Var;
 import org.teachfx.antlr4.ep20.ir.expr.*;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 

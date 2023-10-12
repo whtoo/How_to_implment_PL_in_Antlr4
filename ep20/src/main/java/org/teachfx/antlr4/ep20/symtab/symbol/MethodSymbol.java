@@ -1,9 +1,7 @@
 package org.teachfx.antlr4.ep20.symtab.symbol;
 
 import org.teachfx.antlr4.ep20.ast.ASTNode;
-import org.teachfx.antlr4.ep20.ast.expr.ExprNode;
 import org.teachfx.antlr4.ep20.ast.stmt.ScopeType;
-import org.teachfx.antlr4.ep20.ast.stmt.StmtNode;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.symtab.type.Type;
 

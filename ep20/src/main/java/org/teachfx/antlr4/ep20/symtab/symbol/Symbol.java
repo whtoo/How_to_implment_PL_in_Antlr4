@@ -2,8 +2,8 @@ package org.teachfx.antlr4.ep20.symtab.symbol;
 
 import org.teachfx.antlr4.ep20.debugger.ast.Dumpable;
 import org.teachfx.antlr4.ep20.debugger.ast.Dumper;
-import org.teachfx.antlr4.ep20.symtab.type.Type;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
+import org.teachfx.antlr4.ep20.symtab.type.Type;
 
 import java.util.Objects;
 

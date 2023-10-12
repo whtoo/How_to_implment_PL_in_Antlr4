@@ -5,16 +5,17 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep20.ast.ASTNode;
-import org.teachfx.antlr4.ep20.parser.*;
+import org.teachfx.antlr4.ep20.parser.CymbolLexer;
+import org.teachfx.antlr4.ep20.parser.CymbolParser;
+import org.teachfx.antlr4.ep20.pass.ast.CymbolASTBuilder;
 import org.teachfx.antlr4.ep20.pass.codegen.CymbolAssembler;
 import org.teachfx.antlr4.ep20.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep20.pass.symtab.LocalDefine;
-import org.teachfx.antlr4.ep20.pass.ast.CymbolASTBuilder;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 
 public class Compiler {
 

@@ -1,7 +1,6 @@
 package org.teachfx.antlr4.ep20.pass.sematic;
 
 import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
-import org.teachfx.antlr4.ep20.ast.decl.VarDeclListNode;
 import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;

@@ -2,14 +2,13 @@ package org.teachfx.antlr4.ep20.pass.codegen;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.Prog;
-import org.teachfx.antlr4.ep20.ir.def.*;
+import org.teachfx.antlr4.ep20.ir.def.Func;
 import org.teachfx.antlr4.ep20.ir.expr.*;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
 import java.io.*;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

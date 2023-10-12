@@ -7,7 +7,10 @@ import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import java.util.Objects;
 
 public class Label extends Stmt {
+
     private JumpEntryType entryType = JumpEntryType.blockType;
+    private Stmt nextEntry = null;
+
     private String rawLabel;
     private Scope scope;
     protected int seq;
@@ -65,5 +68,27 @@ public class Label extends Stmt {
     @Override
     public String toString() {
         return toSource();
+    }
+
+    public Stmt getNextEntry() {
+        return nextEntry;
+    }
+
+    public void setNextEntry(Stmt nextEntry) {
+        this.nextEntry = nextEntry;
+    }
+
+    public boolean hasNextEntry() {
+        return Objects.nonNull(nextEntry) && nextEntry.getStmtType() != StmtType.LABEL;
+    }
+
+    public Stmt fetchNextJumpEntry() {
+        var item = getNextEntry();
+        Stmt stmtEntry = item;
+        while (item.getStmtType() == StmtType.LABEL) {
+            item = ((Label) item).getNextEntry();
+        }
+
+        return item;
     }
 }

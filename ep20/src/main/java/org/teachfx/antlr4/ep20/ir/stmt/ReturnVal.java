@@ -13,6 +13,7 @@ public class ReturnVal extends Stmt {
     public ReturnVal(Expr retVal, Scope scope) {
         retFuncLabel = new Label(null,scope);
         retFuncLabel.setEntryType(JumpEntryType.funcType);
+        retFuncLabel.setNextEntry(this);
         this.retVal = retVal;
     }
 

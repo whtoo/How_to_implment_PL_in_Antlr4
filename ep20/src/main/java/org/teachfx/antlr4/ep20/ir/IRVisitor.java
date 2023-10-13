@@ -29,7 +29,7 @@ public interface IRVisitor<S,E> {
 
     E visit(ArrayAccessExpr arrayAccessExpr);
 
-    S visit(Stmt stmt);
+    default S visit(Stmt stmt) { return stmt.accept(this);}
 
     S visit(ReturnVal returnVal);
     S visit(ExprStmt exprStmt);

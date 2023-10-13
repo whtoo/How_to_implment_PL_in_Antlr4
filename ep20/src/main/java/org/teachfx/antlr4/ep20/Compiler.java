@@ -8,6 +8,7 @@ import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.parser.CymbolLexer;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.pass.ast.CymbolASTBuilder;
+import org.teachfx.antlr4.ep20.pass.cfg.DataFlowAnalysis;
 import org.teachfx.antlr4.ep20.pass.codegen.CymbolAssembler;
 import org.teachfx.antlr4.ep20.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep20.pass.symtab.LocalDefine;
@@ -16,6 +17,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 public class Compiler {
 
@@ -33,9 +35,15 @@ public class Compiler {
         ASTNode astRoot = parseTree.accept(astBuilder);
         astRoot.accept(new LocalDefine());
         var irBuilder = new CymbolIRBuilder();
+
         astRoot.accept(irBuilder);
+
+        var dataFlowAnalysis = new DataFlowAnalysis();
+
         var assembler = new CymbolAssembler();
-        irBuilder.root.accept(assembler);
+
+        List.of(dataFlowAnalysis,assembler).forEach(irBuilder.root::accept);
+
         System.out.println(assembler.flushCode());
         var url = Compiler.class.getClassLoader().getResource("t.vm");
         System.out.println(">>>=" + new File(".").getAbsolutePath());

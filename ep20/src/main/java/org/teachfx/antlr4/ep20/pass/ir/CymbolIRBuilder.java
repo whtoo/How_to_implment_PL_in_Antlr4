@@ -60,13 +60,9 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
 
         setRetHook(methodSymbolStack.peek());
 
-        pushExitEntry(currentFunc.retHook.retFuncLabel);
-
         transformBlockStmt(funcDeclNode.getBody());
 
         currentFunc.setBody(stmts);
-
-        popExitEntry();
 
         root.addFunc(currentFunc);
 
@@ -195,7 +191,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
     public Void visit(ReturnStmtNode returnStmtNode) {
         var retVal = (Expr) visit(returnStmtNode.getRetNode());
         addStmt(new ExprStmt(retVal));
-        jump(currentExitEntry());
+        jump(currentFuncExitEntry());
         return null;
     }
 
@@ -205,10 +201,9 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
         var thenLabel = new Label(null, whileStmtNode.getScope());
         var endLabel = new Label(null, whileStmtNode.getScope());
 
-        pushExitEntry(endLabel);
-
         pushBreakTarget(endLabel);
         pushContinueTarget(beginLabel);
+
         var condExpr = (Expr) visit(whileStmtNode.getConditionNode());
         label(beginLabel);
         cjump(condExpr, thenLabel, endLabel);
@@ -220,6 +215,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
 
         popBreakTarget();
         popContinueTarget();
+
         return null;
     }
 
@@ -288,15 +284,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
         continueStack.pop();
     }
 
-    protected void pushExitEntry(Label retLabel) {
-        returnBlockStack.push(retLabel);
-    }
-
-    protected void popExitEntry() {
-        returnBlockStack.pop();
-    }
-
-    protected Label currentExitEntry() {
-        return returnBlockStack.peek();
+    protected Label currentFuncExitEntry() {
+        return currentFunc.retHook.retFuncLabel;
     }
 }

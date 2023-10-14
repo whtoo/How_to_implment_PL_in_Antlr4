@@ -1,19 +1,21 @@
 package org.teachfx.antlr4.ep20.symtab.scope;
 
 import org.teachfx.antlr4.ep20.ast.stmt.ScopeType;
+import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
+import org.teachfx.antlr4.ep20.symtab.type.BuiltInTypeSymbol;
 
 public class LocalScope extends BaseScope {
     // Generate seq code for local variables follow GlobalScope
     static int LABEL_SEQ = 0;
     static int VAR_SLOT_SEQ = 0;
     public LocalScope(Scope parent) {
-        super(parent);
-        this.setScopeType(ScopeType.BlockScope);
+        this(parent, ScopeType.BlockScope);
     }
 
     public LocalScope(Scope parent, ScopeType scopeType) {
         super(parent);
-        this.setScopeType(scopeType);
+        setBaseVarSlotSeq(parent.getVarSlots());
+        setScopeType(scopeType);
     }
 
     @Override
@@ -26,6 +28,12 @@ public class LocalScope extends BaseScope {
         return LABEL_SEQ++;
    }
 
+    @Override
+    public void define(Symbol sym) {
+        super.define(sym);
+        if (sym.isBuiltIn()) return;
+        sym.setSlotIdx(getVarSlotSeq());
+    }
 
     @Override
     public int getVarSlotSeq() {
@@ -33,5 +41,13 @@ public class LocalScope extends BaseScope {
     }
 
 
+    @Override
+    public int getVarSlots() {
+        return VAR_SLOT_SEQ;
+    }
 
+    @Override
+    public int setBaseVarSlotSeq(int baseVarSlotSeq) {
+        return (VAR_SLOT_SEQ = baseVarSlotSeq);
+    }
 }

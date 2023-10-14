@@ -18,10 +18,16 @@ public class Symbol implements Dumpable {
         this.type = type;
     }
 
+    public boolean isBuiltIn() {
+        return false;
+    }
+
     // Mark which type
     protected Type type;
     // Locate where I am.
     public Scope scope;
+
+    private int baseOffset = 0;
 
     private int slotIdx = -1;
 
@@ -75,5 +81,13 @@ public class Symbol implements Dumpable {
     @Override
     public int hashCode() {
         return Objects.hash(getType(), getName());
+    }
+
+    public int getBaseOffset() {
+        return baseOffset;
+    }
+
+    public void setBaseOffset(int baseOffset) {
+        this.baseOffset = baseOffset;
     }
 }

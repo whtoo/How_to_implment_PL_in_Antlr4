@@ -24,6 +24,7 @@ public class VarDeclNode extends DeclNode {
         this.refSymbol = variableSymbol;
         this.assignExprNode = assignExprNode;
         this.ctx = ctx;
+        this.declName = variableSymbol.getName();
     }
 
     @Override

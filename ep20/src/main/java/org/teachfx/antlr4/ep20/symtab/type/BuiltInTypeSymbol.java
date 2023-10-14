@@ -14,6 +14,11 @@ public class BuiltInTypeSymbol extends Symbol implements Type {
     }
 
     @Override
+    public boolean isBuiltIn() {
+        return true;
+    }
+
+    @Override
     public boolean isFunc() {
         return false;
     }

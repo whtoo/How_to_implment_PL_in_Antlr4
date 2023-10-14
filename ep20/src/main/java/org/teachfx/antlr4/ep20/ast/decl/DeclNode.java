@@ -17,6 +17,7 @@ public abstract class DeclNode extends ASTNode {
     }
 
     public void setRefSymbol(Symbol refSymbol) {
+        this.declName = refSymbol.getName();
         this.refSymbol = refSymbol;
     }
     

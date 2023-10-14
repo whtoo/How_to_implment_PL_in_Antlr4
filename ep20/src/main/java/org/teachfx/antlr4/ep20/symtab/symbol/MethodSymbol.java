@@ -13,7 +13,7 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     private int LABEL_SEQ = 0;
     private int VAR_SLOT_SEQ = 0;
 
-    public boolean builtin = false;
+    private boolean builtIn = false;
     private int args = 0;
 
     Map<String, Symbol> orderedArgs = new LinkedHashMap<String, Symbol>();
@@ -47,7 +47,7 @@ public class MethodSymbol extends ScopedSymbol implements Type {
 
     @Override
     public boolean isPreDefined() {
-        return builtin;
+        return isBuiltIn();
     }
 
     @Override
@@ -79,6 +79,25 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     @Override
     public int getVarSlotSeq() {
         return VAR_SLOT_SEQ++;
+    }
+
+    @Override
+    public int setBaseVarSlotSeq(int baseVarSlotSeq) {
+        return 0;
+    }
+
+    @Override
+    public int getVarSlots() {
+        return getMembers().size();
+    }
+
+    @Override
+    public boolean isBuiltIn() {
+        return builtIn;
+    }
+
+    public void setBuiltIn(boolean builtIn) {
+        this.builtIn = builtIn;
     }
 
     public int getArgs() {

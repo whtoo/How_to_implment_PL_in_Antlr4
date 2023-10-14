@@ -28,4 +28,9 @@ public interface Scope {
     public int getLabelSeq();
 
     public int getVarSlotSeq();
+
+    public int setBaseVarSlotSeq(int baseVarSlotSeq);
+
+    public int getVarSlots();
+
 }

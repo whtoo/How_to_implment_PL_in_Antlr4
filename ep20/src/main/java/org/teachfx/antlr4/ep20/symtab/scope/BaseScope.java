@@ -20,7 +20,7 @@ public abstract class BaseScope implements Scope {
         define(TypeTable.VOID);
         define(TypeTable.BOOLEAN);
         var printFn = new MethodSymbol("print", TypeTable.VOID, this, null);
-        printFn.builtin = true;
+        printFn.setBuiltIn(true);
         define(printFn);
     }
 

@@ -22,4 +22,15 @@ public class GlobalScope extends BaseScope {
     public int getVarSlotSeq() {
         return VAR_SLOT_SEQ++;
     }
+
+    @Override
+    public int setBaseVarSlotSeq(int baseVarSlotSeq) {
+        return 0;
+    }
+
+    @Override
+    public int getVarSlots() {
+        return VAR_SLOT_SEQ;
+    }
+
 }

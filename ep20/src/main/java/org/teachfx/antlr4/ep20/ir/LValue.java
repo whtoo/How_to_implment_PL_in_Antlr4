@@ -1,7 +1,7 @@
 package org.teachfx.antlr4.ep20.ir;
 
 import org.teachfx.antlr4.ep20.ir.expr.Expr;
-import org.teachfx.antlr4.ep20.ir.expr.Var;
+import org.teachfx.antlr4.ep20.ir.expr.values.Var;
 
 public class LValue extends IRNode {
     protected Expr exprVal;

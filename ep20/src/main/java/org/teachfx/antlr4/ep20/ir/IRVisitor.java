@@ -2,6 +2,12 @@ package org.teachfx.antlr4.ep20.ir;
 
 import org.teachfx.antlr4.ep20.ir.def.Func;
 import org.teachfx.antlr4.ep20.ir.expr.*;
+import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
+import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
+import org.teachfx.antlr4.ep20.ir.expr.values.BoolVal;
+import org.teachfx.antlr4.ep20.ir.expr.values.IntVal;
+import org.teachfx.antlr4.ep20.ir.expr.values.StringVal;
+import org.teachfx.antlr4.ep20.ir.expr.values.Var;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 
 public interface IRVisitor<S,E> {

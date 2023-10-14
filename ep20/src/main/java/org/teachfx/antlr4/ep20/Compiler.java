@@ -8,7 +8,7 @@ import org.teachfx.antlr4.ep20.ast.ASTNode;
 import org.teachfx.antlr4.ep20.parser.CymbolLexer;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.pass.ast.CymbolASTBuilder;
-import org.teachfx.antlr4.ep20.pass.cfg.DataFlowAnalysis;
+import org.teachfx.antlr4.ep20.pass.cfg.ControlFlowAnalysis;
 import org.teachfx.antlr4.ep20.pass.codegen.CymbolAssembler;
 import org.teachfx.antlr4.ep20.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep20.pass.symtab.LocalDefine;
@@ -38,7 +38,7 @@ public class Compiler {
 
         astRoot.accept(irBuilder);
 
-        var dataFlowAnalysis = new DataFlowAnalysis();
+        var dataFlowAnalysis = new ControlFlowAnalysis();
 
         var assembler = new CymbolAssembler();
 
@@ -48,6 +48,6 @@ public class Compiler {
         var url = Compiler.class.getClassLoader().getResource("t.vm");
         System.out.println(">>>=" + new File(".").getAbsolutePath());
 
-        assembler.saveToFile("output/t.vm");
+        assembler.saveToFile("../ep18/src/main/resources/t.vm");
     }
 }

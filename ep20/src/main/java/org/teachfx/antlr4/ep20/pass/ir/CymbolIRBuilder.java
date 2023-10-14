@@ -10,6 +10,12 @@ import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.def.Func;
 import org.teachfx.antlr4.ep20.ir.expr.*;
+import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
+import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
+import org.teachfx.antlr4.ep20.ir.expr.values.BoolVal;
+import org.teachfx.antlr4.ep20.ir.expr.values.IntVal;
+import org.teachfx.antlr4.ep20.ir.expr.values.StringVal;
+import org.teachfx.antlr4.ep20.ir.expr.values.Var;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 
@@ -26,7 +32,6 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
     private List<Stmt> stmts;
     private Stack<Label> breakStack;
     private Stack<Label> continueStack;
-    private Stack<Label> returnBlockStack;
 
     @Override
     public Void visit(CompileUnit rootNode) {
@@ -54,7 +59,6 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
         /**/
         breakStack = new Stack<>();
         continueStack = new Stack<>();
-        returnBlockStack = new Stack<>();
 
         currentFunc = new Func(funcDeclNode.getDeclName(), (MethodSymbol) funcDeclNode.getRefSymbol(), stmts);
 

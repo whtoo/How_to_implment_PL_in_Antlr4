@@ -1,25 +1,26 @@
-package org.teachfx.antlr4.ep20.ir.expr;
+package org.teachfx.antlr4.ep20.ir.expr.values;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
+import org.teachfx.antlr4.ep20.ir.expr.Expr;
 
-public class StringVal extends Expr {
-    public String value;
+public class IntVal extends Expr {
 
+    public int value;
 
-    public StringVal(String value) {
+    public IntVal(int value) {
         this.value = value;
     }
 
     @Override
     public String toString() {
-        return "StringVal [value=" + value + "]";
+        return "IntVal [value=" + value + "]";
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((value == null) ? 0 : value.hashCode());
+        result = prime * result + value;
         return result;
     }
 
@@ -31,11 +32,8 @@ public class StringVal extends Expr {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        StringVal other = (StringVal) obj;
-        if (value == null) {
-            if (other.value != null)
-                return false;
-        } else if (!value.equals(other.value))
+        IntVal other = (IntVal) obj;
+        if (value != other.value)
             return false;
         return true;
     }

@@ -1,7 +1,8 @@
-package org.teachfx.antlr4.ep20.ir.expr;
+package org.teachfx.antlr4.ep20.ir.expr.values;
 
 import org.teachfx.antlr4.ep20.ast.stmt.ScopeType;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
+import org.teachfx.antlr4.ep20.ir.expr.Expr;
 import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
 
 public class Var extends Expr {

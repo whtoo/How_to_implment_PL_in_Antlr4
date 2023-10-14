@@ -1,6 +1,7 @@
-package org.teachfx.antlr4.ep20.ir.expr;
+package org.teachfx.antlr4.ep20.ir.expr.values;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
+import org.teachfx.antlr4.ep20.ir.expr.Expr;
 
 public class BoolVal extends Expr {
     public boolean value;

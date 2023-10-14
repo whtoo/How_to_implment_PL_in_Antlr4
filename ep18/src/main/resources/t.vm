@@ -1,42 +1,54 @@
-.def fib: args=1 ,locals=4
+.def fib: args=1 ,locals=3
     iconst 1
     store 1
     iconst 1
     store 2
-    iconst 1
-    store 3
 fib_1 :
-    load 3
     load 0
-    ile
+    iconst 0
+    ige
     brt fib_2
     br fib_3
 fib_2 :
-    load 1
-    store 4
+    load 2
+    store 3
     load 1
     load 2
     iadd
     store 2
-    load 4
-    store 1
     load 3
+    store 1
+    load 0
     iconst 1
-    iadd
-    store 3
-    load 1
-    iconst 20
+    isub
+    store 0
+    load 0
+    iconst 8
     ige
     brt Local_Local_fib_0
     br Local_Local_fib_2
 Local_Local_fib_0 :
+    load 0
+    iconst 18
+    ile
+    brt Local_Local_Local_Local_fib_3
+    br Local_Local_Local_Local_fib_5
+Local_Local_Local_Local_fib_3 :
+    load 1
+    iconst 2
+    imul
+    iconst 1
+    iadd
+    br fib_0
+Local_Local_Local_Local_fib_5 :
     load 1
     br fib_0
 Local_Local_fib_2 :
     br fib_1
 fib_3 :
+    load 0
+    br fib_0
 fib_0 :
-    load 3
     ret
 .def main: args=0 ,locals=0
     iconst 10

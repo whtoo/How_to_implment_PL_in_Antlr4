@@ -47,7 +47,7 @@ public class Compiler {
         System.out.println(assembler.flushCode());
         var url = Compiler.class.getClassLoader().getResource("t.vm");
         System.out.println(">>>=" + new File(".").getAbsolutePath());
-
+        assembler.saveToFile("src/main/resources/t.vm");
         assembler.saveToFile("../ep18/src/main/resources/t.vm");
     }
 }

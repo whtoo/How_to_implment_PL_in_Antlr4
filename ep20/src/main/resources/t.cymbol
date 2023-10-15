@@ -1,25 +1,25 @@
-
+/*
 int fib(int n){
     int p = 1;
     int q = 1;
-    while(n >= 0) {
-        int tmp = q;
-        q = p + q;
-        p = tmp;
-        n = n - 1;
-        if(n >= 3) {
-            if (n <= 18) {
-                return p*2 + 1;
+    while(p <= 100) {
+        if (p >= 1) {
+            p = p*2 + 1;
+            if (q <= p / 2) {
+                return p;
             }
-            return p;
+        } else {
+            return q;
         }
     }
-    return n;
+
+    return p;
 }
+*/
 
 int main() {
 
-   print(fib(10));
+   print(10);
    return 0;
 }
 

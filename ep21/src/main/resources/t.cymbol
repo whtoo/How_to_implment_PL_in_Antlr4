@@ -1,0 +1,25 @@
+/*
+int fib(int n){
+    int p = 1;
+    int q = 1;
+    while(p <= 100) {
+        if (p >= 1) {
+            p = p*2 + 1;
+            if (q <= p / 2) {
+                return p;
+            }
+        } else {
+            return q;
+        }
+    }
+
+    return p;
+}
+*/
+
+int main() {
+
+   print(10);
+   return 0;
+}
+

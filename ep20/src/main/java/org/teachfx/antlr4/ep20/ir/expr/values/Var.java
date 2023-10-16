@@ -34,12 +34,10 @@ public class Var extends Expr {
     public void setScopeType(ScopeType scopeType) {
         this.scopeType = scopeType;
     }
-
     @Override
     public <S, E> E accept(IRVisitor<S, E> visitor) {
         return visitor.visit(this);
     }
-
     public String toSource(boolean isWriting) {
         int varSlotIdx = symbol.getSlotIdx();
         String operator = "";

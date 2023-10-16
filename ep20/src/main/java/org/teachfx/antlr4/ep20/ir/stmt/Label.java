@@ -1,7 +1,6 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
-import org.teachfx.antlr4.ep20.ir.JumpEntryType;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
 import java.util.Objects;

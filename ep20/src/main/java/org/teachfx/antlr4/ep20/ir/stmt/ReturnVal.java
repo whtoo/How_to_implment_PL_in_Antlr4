@@ -11,7 +11,6 @@ public class ReturnVal extends Stmt {
     private boolean isMainEntry = false;
     public ReturnVal(Expr retVal, Scope scope) {
         retFuncLabel = new Label(null,scope);
-        retFuncLabel.setEntryType(JumpEntryType.funcType);
         retFuncLabel.setNextEntry(this);
         this.retVal = retVal;
     }

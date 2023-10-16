@@ -11,8 +11,8 @@ graph LR
     D -->|LocalDefine| E(LocalResolver)
     E -->|TypeChecker| F(TypeChecker)
     D -->|DataFlowAnalysis| G(DataFlowAnalysis)
-    E --> H[IR]
-    F --> H
+    E --> H[TAC]
+    F --> H[LIR]
     G --> H
     H --> I[Optimizer]
     I --> J[TargetCodes]

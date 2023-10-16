@@ -6,8 +6,6 @@ import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import java.util.Objects;
 
 public class Label extends Stmt {
-
-    private JumpEntryType entryType = JumpEntryType.blockType;
     private Stmt nextEntry = null;
 
     private String rawLabel;
@@ -54,14 +52,6 @@ public class Label extends Stmt {
     @Override
     public StmtType getStmtType() {
         return StmtType.LABEL;
-    }
-
-    public JumpEntryType getEntryType() {
-        return entryType;
-    }
-
-    public void setEntryType(JumpEntryType entryType) {
-        this.entryType = entryType;
     }
 
     @Override

@@ -4,14 +4,14 @@ import CommonLexRules;
 /** The start rule; begin parsing here. */
 prog:   stat+ ; 
 
-stat:   expr NEWLINE                
-    |   ID '=' expr NEWLINE        
+stat:   varSlot NEWLINE
+    |   ID '=' varSlot NEWLINE
     |   NEWLINE                   
     ;
 
-expr:   expr ('*'|'/') expr   
-    |   expr ('+'|'-') expr   
+varSlot:   varSlot ('*'|'/') varSlot
+    |   varSlot ('+'|'-') varSlot
     |   INT                    
     |   ID                    
-    |   '(' expr ')'         
+    |   '(' varSlot ')'
     ;

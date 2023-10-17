@@ -42,6 +42,8 @@ public interface IRVisitor<S,E> {
 
     S visit(Prog prog);
 
+    E visit(Temp temp);
+
     /// Stmt
 
 

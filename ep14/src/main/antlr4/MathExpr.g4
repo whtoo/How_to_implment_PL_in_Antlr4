@@ -17,7 +17,7 @@ compileUnit
     @init {this.symtab = symtab;}       // set the parser's field
     :  varDelaration+;
 
-varDelaration : vtype=type name=ID ('=' value=expr)?  ';'
+varDelaration : vtype=type name=ID ('=' value=varSlot)?  ';'
     	{
          BuiltIntTypeSymbol sym = (BuiltIntTypeSymbol)symtab.resolve($vtype.text);
          
@@ -26,13 +26,13 @@ varDelaration : vtype=type name=ID ('=' value=expr)?  ';'
          System.out.println($name.text+" ref to " + symtab.resolve($name.text));
         }        
     ;
-expr :  lhs=expr op='+' rhs=expr  
+varSlot :  lhs=varSlot op='+' rhs=varSlot
     |   INT
     |   FLOAT
     |   name=ID // reference variable in an expression
     	{System.out.println("a2 line "+$name.getLine()+ " " + $name.text +" : ref to "+
     	 symtab.resolve($name.text));}
-    | '(' expr ')'
+    | '(' varSlot ')'
     ;
 type returns [Type tsym]
 @after { // $start is the first tree node matched by this rule

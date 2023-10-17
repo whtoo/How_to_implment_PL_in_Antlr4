@@ -90,7 +90,9 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     public int getVarSlots() {
         return getMembers().size();
     }
-
+    public int getLocals() {
+        return  getVarSlots() - getArgs();
+    }
     @Override
     public boolean isBuiltIn() {
         return builtIn;

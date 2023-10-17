@@ -21,6 +21,9 @@ public class TypeChecker extends ASTBaseVisitor
 
     @Override
     public Void visit(VarDeclNode varDeclNode) {
+        if(varDeclNode.hasInitializer()) {
+            varDeclNode.getIdExprNode().setLValue(true);
+        }
         return super.visit(varDeclNode);
     }
 
@@ -31,6 +34,7 @@ public class TypeChecker extends ASTBaseVisitor
 
     @Override
     public Void visit(VarDeclStmtNode varDeclStmtNode) {
+        varDeclStmtNode.getVarDeclNode().accept(this);
         return super.visit(varDeclStmtNode);
     }
 

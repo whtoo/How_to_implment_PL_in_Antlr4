@@ -39,5 +39,10 @@ abstract public class ASTNode implements Dumpable {
     }
 
     abstract protected void _dump(Dumper d);
+
+    @Override
+    public String toString() {
+        return ctx.getText();
+    }
 }
 

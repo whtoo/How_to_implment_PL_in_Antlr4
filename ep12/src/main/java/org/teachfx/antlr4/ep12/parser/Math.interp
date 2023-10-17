@@ -26,7 +26,7 @@ WS
 
 rule names:
 compileUnit
-expr
+varSlot
 assign
 
 

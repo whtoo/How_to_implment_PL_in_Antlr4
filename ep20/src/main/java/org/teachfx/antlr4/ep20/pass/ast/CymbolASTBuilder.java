@@ -47,7 +47,10 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
         var typeNode = (TypeNode)visit(ctx.primaryType());
         var symbol = new VariableSymbol(ctx.ID().getText(),typeNode.getBaseType());
         var assignNode  = (ExprNode) visit(ctx.expr());
-        return new VarDeclNode(symbol,assignNode,ctx);
+        var idExprNode = new IDExprNode(ctx.ID().getText(),null);
+        idExprNode.setRefSymbol(symbol);
+
+        return new VarDeclNode(symbol,assignNode,idExprNode,ctx);
     }
 
     @Override
@@ -96,7 +99,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
          TypeNode paramTypeNode = (TypeNode)visit(ctx.primaryType());
          String paramName = ctx.ID().getText();
 
-         return new VarDeclNode(new VariableSymbol(paramName, paramTypeNode.getBaseType()),null,ctx);
+         return new VarDeclNode(new VariableSymbol(paramName, paramTypeNode.getBaseType()),null,null,ctx);
     }
 
     @Override
@@ -196,6 +199,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitPrimaryID(CymbolParser.PrimaryIDContext ctx) {
+
         return new IDExprNode(ctx.getText(),ctx);
     }
 

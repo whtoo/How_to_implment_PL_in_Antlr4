@@ -2,30 +2,17 @@ package org.teachfx.antlr4.ep20.pass.cfg;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.Prog;
-import org.teachfx.antlr4.ep20.ir.def.Func;
-import org.teachfx.antlr4.ep20.ir.expr.*;
+import org.teachfx.antlr4.ep20.ir.expr.CallFunc;
+import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;
+import org.teachfx.antlr4.ep20.ir.expr.addr.StackSlot;
 import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
-import org.teachfx.antlr4.ep20.ir.expr.values.BoolVal;
-import org.teachfx.antlr4.ep20.ir.expr.values.IntVal;
-import org.teachfx.antlr4.ep20.ir.expr.values.StringVal;
-import org.teachfx.antlr4.ep20.ir.expr.values.Var;
+import org.teachfx.antlr4.ep20.ir.expr.val.IntVal;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 
 public class ControlFlowAnalysis implements IRVisitor<Void,Void> {
-
     @Override
-    public Void visit(IntVal node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(BoolVal node) {
-        return null;
-    }
-
-    @Override
-    public Void visit(StringVal node) {
+    public <T> Void visit(IntVal<T> tIntVal) {
         return null;
     }
 
@@ -65,26 +52,6 @@ public class ControlFlowAnalysis implements IRVisitor<Void,Void> {
     }
 
     @Override
-    public Void visit(Func func) {
-        return null;
-    }
-
-    @Override
-    public Void visit(Var var) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ClassAccessExpr classAccessExpr) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ArrayAccessExpr arrayAccessExpr) {
-        return null;
-    }
-
-    @Override
     public Void visit(ReturnVal returnVal) {
         return null;
     }
@@ -96,6 +63,16 @@ public class ControlFlowAnalysis implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(Prog prog) {
+        return null;
+    }
+
+    @Override
+    public Void visit(StackSlot stackSlot) {
+        return null;
+    }
+
+    @Override
+    public Void visit(FrameSlot frameSlot) {
         return null;
     }
 }

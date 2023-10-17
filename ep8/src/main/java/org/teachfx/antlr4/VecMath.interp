@@ -32,7 +32,7 @@ rule names:
 statlist
 stat
 assign
-expr
+varSlot
 
 
 atn:

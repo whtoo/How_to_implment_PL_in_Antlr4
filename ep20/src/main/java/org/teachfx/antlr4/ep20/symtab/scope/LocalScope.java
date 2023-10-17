@@ -2,7 +2,6 @@ package org.teachfx.antlr4.ep20.symtab.scope;
 
 import org.teachfx.antlr4.ep20.ast.stmt.ScopeType;
 import org.teachfx.antlr4.ep20.symtab.symbol.Symbol;
-import org.teachfx.antlr4.ep20.symtab.type.BuiltInTypeSymbol;
 
 public class LocalScope extends BaseScope {
     // Generate seq code for local variables follow GlobalScope

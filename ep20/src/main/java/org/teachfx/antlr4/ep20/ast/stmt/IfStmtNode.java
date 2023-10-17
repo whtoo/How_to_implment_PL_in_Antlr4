@@ -21,7 +21,7 @@ public class IfStmtNode extends StmtNode {
         this.ctx = ctx;
     }
 
-    public ExprNode getConditionalNode() {
+    public ExprNode getCondExpr() {
         return conditionalNode;
     }
 

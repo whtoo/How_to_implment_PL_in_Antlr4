@@ -24,7 +24,7 @@ WS
 
 rule names:
 compileUnit
-expr
+varSlot
 
 
 atn:

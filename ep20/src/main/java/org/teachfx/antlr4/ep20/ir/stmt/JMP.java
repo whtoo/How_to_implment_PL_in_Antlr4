@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
+import org.teachfx.antlr4.ep20.pass.cfg.BasicBlock;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 
 public class JMP extends Stmt
@@ -9,14 +10,19 @@ public class JMP extends Stmt
         return visitor.visit(this);
     }
 
-    public JMP(Label label)
+    public JMP(BasicBlock block)
     {
-        this.label = label;
+        this.next = block;
     }
-    public Label label;
+    public BasicBlock next;
 
     @Override
     public StmtType getStmtType() {
         return StmtType.JMP;
+    }
+
+    @Override
+    public String toString() {
+        return "jmp %s".formatted(next);
     }
 }

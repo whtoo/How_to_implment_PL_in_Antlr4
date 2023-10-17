@@ -3,19 +3,19 @@ grammar Math;
 package org.teachfx.antlr4.ep12.parser;
 }
 compileUnit
-    :   expr EOF                            
+    :   varSlot EOF
     |   assign EOF
     ;
 
-expr
-    :   '(' expr ')'                         # parensExpr
-    |   op=('+'|'-') expr                    # unaryExpr
-    |   left=expr op=('*'|'/') right=expr    # infixExpr
-    |   left=expr op=('+'|'-') right=expr    # infixExpr
+varSlot
+    :   '(' varSlot ')'                         # parensExpr
+    |   op=('+'|'-') varSlot                    # unaryExpr
+    |   left=varSlot op=('*'|'/') right=varSlot    # infixExpr
+    |   left=varSlot op=('+'|'-') right=varSlot    # infixExpr
     |   var=ID                               # varExpr
     |   value=NUM                            # numberExpr
     ;
-assign :  name=ID '=' value=expr EOF                     # assignExpr
+assign :  name=ID '=' value=varSlot EOF                     # assignExpr
     ;
 
 OP_ADD: '+';

@@ -29,7 +29,7 @@ WS
 rule names:
 prog
 stat
-expr
+varSlot
 
 
 atn:

@@ -35,7 +35,7 @@ WS
 rule names:
 compileUnit
 varDelaration
-expr
+varSlot
 type
 
 

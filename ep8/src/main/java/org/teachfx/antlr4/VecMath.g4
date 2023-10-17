@@ -3,14 +3,14 @@ grammar VecMath;
 statlist : stat+;
 
 stat  : assign ';'
-    | expr ';';
+    | varSlot ';';
 
-assign : ID op='=' expr;
-expr  : expr op=('*' | '/') expr
-    | expr op=('+' | '-') expr 
+assign : ID op='=' varSlot;
+varSlot  : varSlot op=('*' | '/') varSlot
+    | varSlot op=('+' | '-') varSlot
     | NUMBER
     | ID
-    | '(' expr ')';
+    | '(' varSlot ')';
 
 NUMBER : [0-9] | [1-9][0-9]+;
 NEWLINE : '\n'+ -> skip ;

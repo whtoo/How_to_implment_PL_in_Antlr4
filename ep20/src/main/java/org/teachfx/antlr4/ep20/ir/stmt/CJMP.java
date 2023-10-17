@@ -1,19 +1,20 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
+import org.teachfx.antlr4.ep20.pass.cfg.BasicBlock;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
-import org.teachfx.antlr4.ep20.ir.expr.Expr;
+import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 
 public class CJMP extends Stmt {
-    public Expr cond;
+    public VarSlot cond;
 
-    public Label thenLabel;
-    public Label elseLabel;
+    public BasicBlock thenBlock;
+    public BasicBlock elseBlock;
 
 
-    public CJMP(Expr cond,Label thenLabel,Label elseLabel) {
+    public CJMP(VarSlot cond, BasicBlock thenLabel, BasicBlock elseLabel) {
         this.cond = cond;
-        this.thenLabel = thenLabel;
-        this.elseLabel = elseLabel;
+        this.thenBlock = thenLabel;
+        this.elseBlock = elseLabel;
     }
 
     @Override
@@ -24,5 +25,10 @@ public class CJMP extends Stmt {
     @Override
     public StmtType getStmtType() {
         return StmtType.CJMP;
+    }
+
+    @Override
+    public String toString() {
+        return "jmpIf %s,%s,%s".formatted(cond,thenBlock,elseBlock);
     }
 }

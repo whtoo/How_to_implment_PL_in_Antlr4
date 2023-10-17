@@ -1,16 +1,17 @@
 package org.teachfx.antlr4.ep20.ir;
 
-import org.teachfx.antlr4.ep20.ir.def.Func;
+
+import org.teachfx.antlr4.ep20.pass.cfg.BasicBlock;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+
 
 public class Prog extends IRNode {
-    public List<Func> defuncList;
+    public List<BasicBlock> blockList;
 
-    public Prog(List<Func> stmts) {
-        this.defuncList = Objects.isNull(stmts) ? new ArrayList<>() : stmts;
+    public Prog() {
+        this.blockList = new ArrayList<>() ;
     }
 
     public <S,E> S accept(IRVisitor<S,E> visitor){
@@ -18,10 +19,7 @@ public class Prog extends IRNode {
         return visitor.visit(this);
     }
 
-    public void addFunc(Func func) {
-        if (Objects.isNull(defuncList))
-            defuncList = List.of(func);
-        else if (!defuncList.contains(func) && func != null)
-            defuncList.add(func);
+    public void addBlock(BasicBlock basicBlock) {
+        blockList.add(basicBlock);
     }
 }

@@ -1,27 +1,7 @@
 package org.teachfx.antlr4.ep20.pass.codegen;
 
-import org.teachfx.antlr4.ep20.ir.IRVisitor;
-import org.teachfx.antlr4.ep20.ir.Prog;
-import org.teachfx.antlr4.ep20.ir.def.Func;
-import org.teachfx.antlr4.ep20.ir.expr.*;
-import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
-import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
-import org.teachfx.antlr4.ep20.ir.expr.values.BoolVal;
-import org.teachfx.antlr4.ep20.ir.expr.values.IntVal;
-import org.teachfx.antlr4.ep20.ir.expr.values.StringVal;
-import org.teachfx.antlr4.ep20.ir.expr.values.Var;
-import org.teachfx.antlr4.ep20.ir.stmt.*;
-import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
-import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
-
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-
-
-public class CymbolAssembler implements IRVisitor<Void,Void> {
+public class CymbolAssembler  {
+    /*
     protected PrintWriter printWriter;
     protected StringWriter stringWriter;
 
@@ -199,6 +179,12 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
         return null;
     }
 
+    @Override
+    public Void visit(Temp temp) {
+
+        return null;
+    }
+
     public void saveToFile(String filePath) throws IOException {
         Path path = null;
         try {
@@ -225,4 +211,5 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
             pw.close();
         }
     }
+     */
 }

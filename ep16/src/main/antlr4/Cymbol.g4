@@ -5,7 +5,7 @@ package org.teachfx.antlr4.ep16.parser;
 file :   (functionDecl | varDecl | statetment)+ #compilationUnit ;
 
 varDecl
-    :   type ID ('=' expr)? ';' 
+    :   type ID ('=' varSlot)? ';'
     ;
 type:  primaryType | ID  ; // pre-defined types
 primaryType: 'float' | 'int' | 'void';
@@ -23,21 +23,21 @@ block:  '{' statetment* '}' ;    // possibly empty statement block
 
 statetment:   block               #statBlock
     |   varDecl             #statVarDecl
-    |   'return' expr? ';' #statReturn
-    |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
-    |   'while' '(' cond=expr ')' then=statetment #stateWhile
-    |   expr '=' expr ';' #statAssign // assignment 
-    |   expr ';'       #stat // func call
+    |   'return' varSlot? ';' #statReturn
+    |   'if' '(' cond=varSlot ')' then=statetment ('else' elseDo=statetment)? #stateCondition
+    |   'while' '(' cond=varSlot ')' then=statetment #stateWhile
+    |   varSlot '=' varSlot ';' #statAssign // assignment
+    |   varSlot ';'       #stat // func call
     ;
 
-expr:   expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
-    |   '-' expr         #exprUnary       // unary minus
-    |   '!' expr         #exprUnary       // boolean not
-    |   expr o=('*'|'/') expr    #exprBinary
-    |   expr o=('+'|'-') expr #exprBinary
-    |   expr o=('=='|'!='|'>'|'>='|'<'|'<=') expr #exprBinary
+varSlot:   varSlot '(' ( varSlot (',' varSlot)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
+    |   '-' varSlot         #exprUnary       // unary minus
+    |   '!' varSlot         #exprUnary       // boolean not
+    |   varSlot o=('*'|'/') varSlot    #exprBinary
+    |   varSlot o=('+'|'-') varSlot #exprBinary
+    |   varSlot o=('=='|'!='|'>'|'>='|'<'|'<=') varSlot #exprBinary
     |   primary #exprPrimary
-    |   '(' expr ')'         #exprGroup
+    |   '(' varSlot ')'         #exprGroup
     ;
 primary:    ID                   #primaryID   // variable reference
     |       INT                  #primaryINT

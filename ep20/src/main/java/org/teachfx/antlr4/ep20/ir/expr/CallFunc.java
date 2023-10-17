@@ -2,37 +2,38 @@ package org.teachfx.antlr4.ep20.ir.expr;
 
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
-import org.teachfx.antlr4.ep20.ir.expr.values.Var;
+import org.teachfx.antlr4.ep20.ir.expr.addr.StackSlot;
 
 import java.util.List;
 
-public class CallFunc extends Expr{
-    protected List<Expr> args;
-    protected Var funcExpr;
+public class CallFunc extends Expr {
 
-    public CallFunc(Var funcExpr,List<Expr> args) {
-        this.funcExpr = funcExpr;
+    protected String funcName;
+    protected int args;
+    public CallFunc(String funcName,int args) {
+        this.funcName = funcName;
         this.args = args;
     }
 
-    public Var getFuncExpr() {
-        return funcExpr;
+    public String getFuncName() {
+        return funcName;
     }
 
-    public void setFuncExpr(Var funcExpr) {
-        this.funcExpr = funcExpr;
+    public void setFuncName(String funcName) {
+        this.funcName = funcName;
     }
 
-    public List<Expr> getArgs() {
+    public int getArgs() {
         return args;
-    }
-
-    public void setArgs(List<Expr> args) {
-        this.args = args;
     }
 
     @Override
     public <S, E> E accept(IRVisitor<S, E> visitor) {
         return visitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return "call " + funcName + "(args:" + args + ")";
     }
 }

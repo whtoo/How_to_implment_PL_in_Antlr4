@@ -1,14 +1,14 @@
 grammar Math;
 
 compileUnit
-    :   expr EOF
+    :   varSlot EOF
     ;
 
-expr
-    :   '(' expr ')'                         # parensExpr
-    |   op=('+'|'-') expr                    # unaryExpr
-    |   left=expr op=('*'|'/') right=expr    # infixExpr
-    |   left=expr op=('+'|'-') right=expr    # infixExpr
+varSlot
+    :   '(' varSlot ')'                         # parensExpr
+    |   op=('+'|'-') varSlot                    # unaryExpr
+    |   left=varSlot op=('*'|'/') right=varSlot    # infixExpr
+    |   left=varSlot op=('+'|'-') right=varSlot    # infixExpr
     |   value=NUM                            # numberExpr
     ;
 

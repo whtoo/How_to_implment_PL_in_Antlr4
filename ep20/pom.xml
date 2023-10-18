@@ -21,6 +21,8 @@
     <!-- 运行测试 -->
     <dependencies>
 
+
+
         <dependency>
             <groupId>org.jgrapht</groupId>
             <artifactId>jgrapht-core</artifactId>
@@ -58,7 +60,8 @@
                 <directory>src/main/resources</directory>
                 <targetPath>${project.build.directory}/classes</targetPath>
                 <includes>
-                    <include>**/*.cymbol</include> <!-- 要包含的资源文件的模式 -->
+                    <include>**/*.cymbol</include>
+                    <include>**/*.xml</include><!-- 要包含的资源文件的模式 -->
                 </includes>
             </resource>
         </resources>

@@ -24,7 +24,19 @@
 
     <!-- 添加依赖项 -->
     <dependencies>
+        <!-- Log4j2核心库 -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.17.1</version> <!-- 请使用最新版本 -->
+        </dependency>
 
+        <!-- Log4j2 API -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.17.1</version> <!-- 请使用最新版本 -->
+        </dependency>
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4</artifactId>

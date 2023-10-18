@@ -1,5 +1,8 @@
 package org.teachfx.antlr4.ep21.pass.ir;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.teachfx.antlr4.ep21.ast.ASTVisitor;
 import org.teachfx.antlr4.ep21.ast.CompileUnit;
 import org.teachfx.antlr4.ep21.ast.decl.FuncDeclNode;
@@ -26,6 +29,8 @@ import java.util.Stack;
 
 
 public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
+    private static final Logger logger = LogManager.getLogger(CymbolIRBuilder.class);
+
     private final Stack<MethodSymbol> methodSymbolStack = new Stack<>();
     public Prog root = null;
     private Func currentFunc = null;
@@ -53,6 +58,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
 
     @Override
     public Void visit(FuncDeclNode funcDeclNode) {
+        logger.info("enter %s".formatted(funcDeclNode.toString()));
         methodSymbolStack.push((MethodSymbol) funcDeclNode.getRefSymbol());
         /**/
         stmts = new ArrayList<>();

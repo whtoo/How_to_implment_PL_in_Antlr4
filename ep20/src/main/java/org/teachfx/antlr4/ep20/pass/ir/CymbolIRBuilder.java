@@ -183,11 +183,11 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public VarSlot visit(CallFuncNode callExprNode) {
         curNode = callExprNode;
-
+        var methodSymbol = callExprNode.getCallFuncSymbol();
         var funcName = callExprNode.getFuncName();
         var args = callExprNode.getArgsNode().size();
         callExprNode.getArgsNode().forEach(x -> x.accept(this));
-        addInstr(new CallFunc(funcName,args));
+        addInstr(new CallFunc(funcName,args,methodSymbol));
         return null;
     }
 
@@ -250,6 +250,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public Void visit(IfStmtNode ifStmtNode) {
         curNode = ifStmtNode;
+
         ifStmtNode.getCondExpr().accept(this);
         var cond = peekEvalOperand();
         var thenBlock = new BasicBlock();
@@ -331,12 +332,16 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
             return Optional.of(StackSlot.pushStack());
         } else if(stmt instanceof CJMP) {
             popEvalOperand();
-
         } else if (stmt instanceof CallFunc callFunc) {
             int i = callFunc.getArgs();
+
             while (i > 0){
                 popEvalOperand();
                 i--;
+            }
+            // 如果存在返回值，则要模拟压入返回值以保证栈平衡
+            if(!callFunc.getFuncType().isVoid()) {
+               pushEvalOperand(StackSlot.genTemp());
             }
         }
 

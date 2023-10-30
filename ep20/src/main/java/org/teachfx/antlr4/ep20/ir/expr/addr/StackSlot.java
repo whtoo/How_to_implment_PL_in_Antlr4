@@ -26,7 +26,7 @@ public class StackSlot extends VarSlot {
     }
 
 
-    public static StackSlot pushStack() { return new StackSlot(); }
+    public static StackSlot pushStack() { return StackSlot.genTemp(); }
     public static void popStack() { ordSeq--;}
 
     public static int getOrdSeq() {

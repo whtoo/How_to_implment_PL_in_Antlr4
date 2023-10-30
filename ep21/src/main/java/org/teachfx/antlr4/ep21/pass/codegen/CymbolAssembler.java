@@ -225,4 +225,9 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
             pw.close();
         }
     }
+
+    @Override
+    public Void visit(Temp temp) {
+        return null;
+    }
 }

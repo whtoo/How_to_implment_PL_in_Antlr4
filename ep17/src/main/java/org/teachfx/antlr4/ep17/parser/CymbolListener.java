@@ -177,61 +177,61 @@ public interface CymbolListener extends ParseTreeListener {
 	void exitStat(CymbolParser.StatContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code exprBinary}
-	 * labeled alternative in {@link CymbolParser#expr}.
+	 * labeled alternative in {@link CymbolParser#varSlot}.
 	 * @param ctx the parse tree
 	 */
 	void enterExprBinary(CymbolParser.ExprBinaryContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code exprBinary}
-	 * labeled alternative in {@link CymbolParser#expr}.
+	 * labeled alternative in {@link CymbolParser#varSlot}.
 	 * @param ctx the parse tree
 	 */
 	void exitExprBinary(CymbolParser.ExprBinaryContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code exprGroup}
-	 * labeled alternative in {@link CymbolParser#expr}.
+	 * labeled alternative in {@link CymbolParser#varSlot}.
 	 * @param ctx the parse tree
 	 */
 	void enterExprGroup(CymbolParser.ExprGroupContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code exprGroup}
-	 * labeled alternative in {@link CymbolParser#expr}.
+	 * labeled alternative in {@link CymbolParser#varSlot}.
 	 * @param ctx the parse tree
 	 */
 	void exitExprGroup(CymbolParser.ExprGroupContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code exprUnary}
-	 * labeled alternative in {@link CymbolParser#expr}.
+	 * labeled alternative in {@link CymbolParser#varSlot}.
 	 * @param ctx the parse tree
 	 */
 	void enterExprUnary(CymbolParser.ExprUnaryContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code exprUnary}
-	 * labeled alternative in {@link CymbolParser#expr}.
+	 * labeled alternative in {@link CymbolParser#varSlot}.
 	 * @param ctx the parse tree
 	 */
 	void exitExprUnary(CymbolParser.ExprUnaryContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code exprPrimary}
-	 * labeled alternative in {@link CymbolParser#expr}.
+	 * labeled alternative in {@link CymbolParser#varSlot}.
 	 * @param ctx the parse tree
 	 */
 	void enterExprPrimary(CymbolParser.ExprPrimaryContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code exprPrimary}
-	 * labeled alternative in {@link CymbolParser#expr}.
+	 * labeled alternative in {@link CymbolParser#varSlot}.
 	 * @param ctx the parse tree
 	 */
 	void exitExprPrimary(CymbolParser.ExprPrimaryContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code exprFuncCall}
-	 * labeled alternative in {@link CymbolParser#expr}.
+	 * labeled alternative in {@link CymbolParser#varSlot}.
 	 * @param ctx the parse tree
 	 */
 	void enterExprFuncCall(CymbolParser.ExprFuncCallContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code exprFuncCall}
-	 * labeled alternative in {@link CymbolParser#expr}.
+	 * labeled alternative in {@link CymbolParser#varSlot}.
 	 * @param ctx the parse tree
 	 */
 	void exitExprFuncCall(CymbolParser.ExprFuncCallContext ctx);

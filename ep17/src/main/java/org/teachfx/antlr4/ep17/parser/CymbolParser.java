@@ -27,11 +27,11 @@ public class CymbolParser extends Parser {
 	public static final int
 		RULE_file = 0, RULE_varDecl = 1, RULE_type = 2, RULE_primaryType = 3, 
 		RULE_functionDecl = 4, RULE_formalParameters = 5, RULE_formalParameter = 6, 
-		RULE_block = 7, RULE_statetment = 8, RULE_expr = 9, RULE_primary = 10;
+		RULE_block = 7, RULE_statetment = 8, RULE_varSlot = 9, RULE_primary = 10;
 	private static String[] makeRuleNames() {
 		return new String[] {
 			"file", "varDecl", "type", "primaryType", "functionDecl", "formalParameters", 
-			"formalParameter", "block", "statetment", "expr", "primary"
+			"formalParameter", "block", "statetment", "varSlot", "primary"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -211,8 +211,8 @@ public class CymbolParser extends Parser {
 			return getRuleContext(TypeContext.class,0);
 		}
 		public TerminalNode ID() { return getToken(CymbolParser.ID, 0); }
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
+		public VarSlotContext varSlot() {
+			return getRuleContext(VarSlotContext.class,0);
 		}
 		public VarDeclContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -252,7 +252,7 @@ public class CymbolParser extends Parser {
 				setState(31);
 				match(T__0);
 				setState(32);
-				expr(0);
+				varSlot(0);
 				}
 			}
 
@@ -672,8 +672,8 @@ public class CymbolParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class StatContext extends StatetmentContext {
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
+		public VarSlotContext varSlot() {
+			return getRuleContext(VarSlotContext.class,0);
 		}
 		public StatContext(StatetmentContext ctx) { copyFrom(ctx); }
 		@Override
@@ -712,10 +712,10 @@ public class CymbolParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class StateWhileContext extends StatetmentContext {
-		public ExprContext cond;
+		public VarSlotContext cond;
 		public StatetmentContext then;
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
+		public VarSlotContext varSlot() {
+			return getRuleContext(VarSlotContext.class,0);
 		}
 		public StatetmentContext statetment() {
 			return getRuleContext(StatetmentContext.class,0);
@@ -737,11 +737,11 @@ public class CymbolParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class StatAssignContext extends StatetmentContext {
-		public List<ExprContext> expr() {
-			return getRuleContexts(ExprContext.class);
+		public List<VarSlotContext> varSlot() {
+			return getRuleContexts(VarSlotContext.class);
 		}
-		public ExprContext expr(int i) {
-			return getRuleContext(ExprContext.class,i);
+		public VarSlotContext varSlot(int i) {
+			return getRuleContext(VarSlotContext.class,i);
 		}
 		public StatAssignContext(StatetmentContext ctx) { copyFrom(ctx); }
 		@Override
@@ -760,8 +760,8 @@ public class CymbolParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class StatReturnContext extends StatetmentContext {
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
+		public VarSlotContext varSlot() {
+			return getRuleContext(VarSlotContext.class,0);
 		}
 		public StatReturnContext(StatetmentContext ctx) { copyFrom(ctx); }
 		@Override
@@ -780,11 +780,11 @@ public class CymbolParser extends Parser {
 	}
 	@SuppressWarnings("CheckReturnValue")
 	public static class StateConditionContext extends StatetmentContext {
-		public ExprContext cond;
+		public VarSlotContext cond;
 		public StatetmentContext then;
 		public StatetmentContext elseDo;
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
+		public VarSlotContext varSlot() {
+			return getRuleContext(VarSlotContext.class,0);
 		}
 		public List<StatetmentContext> statetment() {
 			return getRuleContexts(StatetmentContext.class);
@@ -844,7 +844,7 @@ public class CymbolParser extends Parser {
 				if (((_la) & ~0x3f) == 0 && ((1L << _la) & 14696939584L) != 0) {
 					{
 					setState(75);
-					expr(0);
+					varSlot(0);
 					}
 				}
 
@@ -861,7 +861,7 @@ public class CymbolParser extends Parser {
 				setState(80);
 				match(T__5);
 				setState(81);
-				((StateConditionContext)_localctx).cond = expr(0);
+				((StateConditionContext)_localctx).cond = varSlot(0);
 				setState(82);
 				match(T__6);
 				setState(83);
@@ -889,7 +889,7 @@ public class CymbolParser extends Parser {
 				setState(89);
 				match(T__5);
 				setState(90);
-				((StateWhileContext)_localctx).cond = expr(0);
+				((StateWhileContext)_localctx).cond = varSlot(0);
 				setState(91);
 				match(T__6);
 				setState(92);
@@ -901,11 +901,11 @@ public class CymbolParser extends Parser {
 				enterOuterAlt(_localctx, 6);
 				{
 				setState(94);
-				expr(0);
+				varSlot(0);
 				setState(95);
 				match(T__0);
 				setState(96);
-				expr(0);
+				varSlot(0);
 				setState(97);
 				match(T__1);
 				}
@@ -915,7 +915,7 @@ public class CymbolParser extends Parser {
 				enterOuterAlt(_localctx, 7);
 				{
 				setState(99);
-				expr(0);
+				varSlot(0);
 				setState(100);
 				match(T__1);
 				}
@@ -934,27 +934,27 @@ public class CymbolParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class ExprContext extends ParserRuleContext {
-		public ExprContext(ParserRuleContext parent, int invokingState) {
+	public static class VarSlotContext extends ParserRuleContext {
+		public VarSlotContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_expr; }
+		@Override public int getRuleIndex() { return RULE_varSlot; }
 	 
-		public ExprContext() { }
-		public void copyFrom(ExprContext ctx) {
+		public VarSlotContext() { }
+		public void copyFrom(VarSlotContext ctx) {
 			super.copyFrom(ctx);
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class ExprBinaryContext extends ExprContext {
+	public static class ExprBinaryContext extends VarSlotContext {
 		public Token o;
-		public List<ExprContext> expr() {
-			return getRuleContexts(ExprContext.class);
+		public List<VarSlotContext> varSlot() {
+			return getRuleContexts(VarSlotContext.class);
 		}
-		public ExprContext expr(int i) {
-			return getRuleContext(ExprContext.class,i);
+		public VarSlotContext varSlot(int i) {
+			return getRuleContext(VarSlotContext.class,i);
 		}
-		public ExprBinaryContext(ExprContext ctx) { copyFrom(ctx); }
+		public ExprBinaryContext(VarSlotContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterExprBinary(this);
@@ -970,11 +970,11 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class ExprGroupContext extends ExprContext {
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
+	public static class ExprGroupContext extends VarSlotContext {
+		public VarSlotContext varSlot() {
+			return getRuleContext(VarSlotContext.class,0);
 		}
-		public ExprGroupContext(ExprContext ctx) { copyFrom(ctx); }
+		public ExprGroupContext(VarSlotContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterExprGroup(this);
@@ -990,11 +990,11 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class ExprUnaryContext extends ExprContext {
-		public ExprContext expr() {
-			return getRuleContext(ExprContext.class,0);
+	public static class ExprUnaryContext extends VarSlotContext {
+		public VarSlotContext varSlot() {
+			return getRuleContext(VarSlotContext.class,0);
 		}
-		public ExprUnaryContext(ExprContext ctx) { copyFrom(ctx); }
+		public ExprUnaryContext(VarSlotContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterExprUnary(this);
@@ -1010,11 +1010,11 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class ExprPrimaryContext extends ExprContext {
+	public static class ExprPrimaryContext extends VarSlotContext {
 		public PrimaryContext primary() {
 			return getRuleContext(PrimaryContext.class,0);
 		}
-		public ExprPrimaryContext(ExprContext ctx) { copyFrom(ctx); }
+		public ExprPrimaryContext(VarSlotContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterExprPrimary(this);
@@ -1030,15 +1030,15 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class ExprFuncCallContext extends ExprContext {
+	public static class ExprFuncCallContext extends VarSlotContext {
 		public TerminalNode ID() { return getToken(CymbolParser.ID, 0); }
-		public List<ExprContext> expr() {
-			return getRuleContexts(ExprContext.class);
+		public List<VarSlotContext> varSlot() {
+			return getRuleContexts(VarSlotContext.class);
 		}
-		public ExprContext expr(int i) {
-			return getRuleContext(ExprContext.class,i);
+		public VarSlotContext varSlot(int i) {
+			return getRuleContext(VarSlotContext.class,i);
 		}
-		public ExprFuncCallContext(ExprContext ctx) { copyFrom(ctx); }
+		public ExprFuncCallContext(VarSlotContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterExprFuncCall(this);
@@ -1054,17 +1054,17 @@ public class CymbolParser extends Parser {
 		}
 	}
 
-	public final ExprContext expr() throws RecognitionException {
-		return expr(0);
+	public final VarSlotContext varSlot() throws RecognitionException {
+		return varSlot(0);
 	}
 
-	private ExprContext expr(int _p) throws RecognitionException {
+	private VarSlotContext varSlot(int _p) throws RecognitionException {
 		ParserRuleContext _parentctx = _ctx;
 		int _parentState = getState();
-		ExprContext _localctx = new ExprContext(_ctx, _parentState);
-		ExprContext _prevctx = _localctx;
+		VarSlotContext _localctx = new VarSlotContext(_ctx, _parentState);
+		VarSlotContext _prevctx = _localctx;
 		int _startState = 18;
-		enterRecursionRule(_localctx, 18, RULE_expr, _p);
+		enterRecursionRule(_localctx, 18, RULE_varSlot, _p);
 		int _la;
 		try {
 			int _alt;
@@ -1089,7 +1089,7 @@ public class CymbolParser extends Parser {
 				if (((_la) & ~0x3f) == 0 && ((1L << _la) & 14696939584L) != 0) {
 					{
 					setState(107);
-					expr(0);
+					varSlot(0);
 					setState(112);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
@@ -1099,7 +1099,7 @@ public class CymbolParser extends Parser {
 						setState(108);
 						match(T__7);
 						setState(109);
-						expr(0);
+						varSlot(0);
 						}
 						}
 						setState(114);
@@ -1121,7 +1121,7 @@ public class CymbolParser extends Parser {
 				setState(118);
 				match(T__14);
 				setState(119);
-				expr(7);
+				varSlot(7);
 				}
 				break;
 			case 3:
@@ -1132,7 +1132,7 @@ public class CymbolParser extends Parser {
 				setState(120);
 				match(T__15);
 				setState(121);
-				expr(6);
+				varSlot(6);
 				}
 				break;
 			case 4:
@@ -1152,7 +1152,7 @@ public class CymbolParser extends Parser {
 				setState(123);
 				match(T__5);
 				setState(124);
-				expr(0);
+				varSlot(0);
 				setState(125);
 				match(T__6);
 				}
@@ -1172,8 +1172,8 @@ public class CymbolParser extends Parser {
 					switch ( getInterpreter().adaptivePredict(_input,13,_ctx) ) {
 					case 1:
 						{
-						_localctx = new ExprBinaryContext(new ExprContext(_parentctx, _parentState));
-						pushNewRecursionContext(_localctx, _startState, RULE_expr);
+						_localctx = new ExprBinaryContext(new VarSlotContext(_parentctx, _parentState));
+						pushNewRecursionContext(_localctx, _startState, RULE_varSlot);
 						setState(129);
 						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
 						setState(130);
@@ -1188,13 +1188,13 @@ public class CymbolParser extends Parser {
 							consume();
 						}
 						setState(131);
-						expr(6);
+						varSlot(6);
 						}
 						break;
 					case 2:
 						{
-						_localctx = new ExprBinaryContext(new ExprContext(_parentctx, _parentState));
-						pushNewRecursionContext(_localctx, _startState, RULE_expr);
+						_localctx = new ExprBinaryContext(new VarSlotContext(_parentctx, _parentState));
+						pushNewRecursionContext(_localctx, _startState, RULE_varSlot);
 						setState(132);
 						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
 						setState(133);
@@ -1209,13 +1209,13 @@ public class CymbolParser extends Parser {
 							consume();
 						}
 						setState(134);
-						expr(5);
+						varSlot(5);
 						}
 						break;
 					case 3:
 						{
-						_localctx = new ExprBinaryContext(new ExprContext(_parentctx, _parentState));
-						pushNewRecursionContext(_localctx, _startState, RULE_expr);
+						_localctx = new ExprBinaryContext(new VarSlotContext(_parentctx, _parentState));
+						pushNewRecursionContext(_localctx, _startState, RULE_varSlot);
 						setState(135);
 						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
 						setState(136);
@@ -1230,7 +1230,7 @@ public class CymbolParser extends Parser {
 							consume();
 						}
 						setState(137);
-						expr(4);
+						varSlot(4);
 						}
 						break;
 					}
@@ -1447,11 +1447,11 @@ public class CymbolParser extends Parser {
 	public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
 		switch (ruleIndex) {
 		case 9:
-			return expr_sempred((ExprContext)_localctx, predIndex);
+			return varSlot_sempred((VarSlotContext)_localctx, predIndex);
 		}
 		return true;
 	}
-	private boolean expr_sempred(ExprContext _localctx, int predIndex) {
+	private boolean varSlot_sempred(VarSlotContext _localctx, int predIndex) {
 		switch (predIndex) {
 		case 0:
 			return precpred(_ctx, 5);

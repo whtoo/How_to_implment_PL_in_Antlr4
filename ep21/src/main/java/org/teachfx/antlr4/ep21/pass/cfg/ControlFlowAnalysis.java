@@ -98,4 +98,9 @@ public class ControlFlowAnalysis implements IRVisitor<Void,Void> {
     public Void visit(Prog prog) {
         return null;
     }
+
+    @Override
+    public Void visit(Temp temp) {
+        return null;
+    }
 }

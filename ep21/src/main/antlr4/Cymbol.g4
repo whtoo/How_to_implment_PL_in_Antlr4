@@ -7,7 +7,7 @@ package org.teachfx.antlr4.ep21.parser;
 file :   (functionDecl | varDecl)+ #compilationUnit ;
 
 varDecl
-    :   primaryType ID ('=' varSlot)? ';'
+    :   primaryType ID ('=' expr)? ';'
     ;
 
 primaryType: 'float' | 'int' | 'void' | 'bool' | 'string' | 'object';
@@ -25,24 +25,24 @@ formalParameter
 block:  '{' stmts=statetment* '}' ;    // possibly empty statement block
 
 statetment:   varDecl             #statVarDecl
-    |   'return' varSlot? ';' #statReturn
-    |   'if' '(' cond=varSlot ')' then=statetment ('else' elseDo=statetment)? #stateCondition
-    |   'while' '(' cond=varSlot ')' then=statetment #stateWhile
+    |   'return' expr? ';' #statReturn
+    |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
+    |   'while' '(' cond=expr ')' then=statetment #stateWhile
     |   'break' ';' #visitBreak
     |   'continue' ';' #visitContinue
-    |   varSlot '=' varSlot ';' #statAssign // assignment
-    |   varSlot ';'       #exprStat // func call
+    |   expr '=' expr ';' #statAssign // assignment
+    |   expr ';'       #exprStat // func call
     |   block               #statBlock
     ;
 
-varSlot:   callFunc=varSlot '(' ( varSlot (',' varSlot)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
-    |   o='-' varSlot         #exprUnary       // unary minus
-    |   o='!' varSlot         #exprUnary       // boolean not
-    |   varSlot o=('*'|'/') varSlot    #exprBinary
-    |   varSlot o=('+'|'-') varSlot #exprBinary
-    |   varSlot o=('=='|'!='|'>'|'>='|'<'|'<=') varSlot #exprBinary
+expr:   callFunc=expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
+    |   o='-' expr         #exprUnary       // unary minus
+    |   o='!' expr         #exprUnary       // boolean not
+    |   expr o=('*'|'/') expr    #exprBinary
+    |   expr o=('+'|'-') expr #exprBinary
+    |   expr o=('=='|'!='|'>'|'>='|'<'|'<=') expr #exprBinary
     |   primary #exprPrimary
-    |   '(' varSlot ')'         #exprGroup
+    |   '(' expr ')'         #exprGroup
     ;
 
 primary:    ID                   #primaryID   // variable reference

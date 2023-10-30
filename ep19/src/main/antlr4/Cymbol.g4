@@ -14,7 +14,7 @@ structMemeber
      ;
 
 varDecl
-    :   type ID ('=' varSlot)? ';'
+    :   type ID ('=' expr)? ';'
     ;
 type:  primaryType | ID ; // pre-defined types
 primaryType: 'float' | 'int' | 'void' | 'bool' | 'String' | 'Object';
@@ -33,24 +33,24 @@ block:  '{' statetment* '}' ;    // possibly empty statement block
 statetment:   block               #statBlock
     |   structDecl   #statStructDecl
     |   varDecl             #statVarDecl
-    |   'return' varSlot? ';' #statReturn
-    |   'if' '(' cond=varSlot ')' then=statetment ('else' elseDo=statetment)? #stateCondition
-    |   'while' '(' cond=varSlot ')' then=statetment #stateWhile
-    |   varSlot '=' varSlot ';' #statAssign // assignment
-    |   varSlot ';'       #stat // func call
+    |   'return' expr? ';' #statReturn
+    |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
+    |   'while' '(' cond=expr ')' then=statetment #stateWhile
+    |   expr '=' expr ';' #statAssign // assignment
+    |   expr ';'       #stat // func call
     ;
 
-varSlot
-  : varSlot '(' ( varSlot (',' varSlot)* )? ')'                  # exprFuncCall
-  | varSlot o='.' varSlot                                     # exprStructFieldAccess
-  | '-' varSlot                                            # exprUnary
-  | '!' varSlot                                            # exprUnary
-  | varSlot o=('*' | '/') varSlot                             # exprBinary
-  | varSlot o=('+' | '-') varSlot                             # exprBinary
-  | varSlot o=('!=' | '==' | '<' | '>' | '<=' | '>=') varSlot # exprBinary
-  | 'new' varSlot '(' (varSlot (',' varSlot)* )? ')'             # exprNew // new Point()
+expr
+  : expr '(' ( expr (',' expr)* )? ')'                  # exprFuncCall
+  | expr o='.' expr                                     # exprStructFieldAccess
+  | '-' expr                                            # exprUnary
+  | '!' expr                                            # exprUnary
+  | expr o=('*' | '/') expr                             # exprBinary
+  | expr o=('+' | '-') expr                             # exprBinary
+  | expr o=('!=' | '==' | '<' | '>' | '<=' | '>=') expr # exprBinary
+  | 'new' expr '(' (expr (',' expr)* )? ')'             # exprNew // new Point()
   | primary                                             # exprPrimary 
-  | '(' varSlot ')'                                        # exprGroup
+  | '(' expr ')'                                        # exprGroup
   ;
 
 primary:    ID                   #primaryID   // variable reference

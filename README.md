@@ -1,7 +1,7 @@
 # 从解释计算的视角：如何亲手创造一门编程语言Cyson
 
 **每一个watch和star都是这场梦幻之旅的⛽️与干柴**
-
+[![Security Status](https://www.murphysec.com/platform3/v31/badge/1718907022023983104.svg)](https://www.murphysec.com/console/report/1718907021914931200/1718907022023983104)
 **兴❤️如🔥，其势如风.意许如油，汩汩不息。**
 
 ## 1. 全局鸟瞰

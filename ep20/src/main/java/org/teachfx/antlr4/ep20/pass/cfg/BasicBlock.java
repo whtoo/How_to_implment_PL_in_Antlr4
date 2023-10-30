@@ -5,6 +5,7 @@ import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
 import org.teachfx.antlr4.ep20.ir.stmt.FuncEntryLabel;
 import org.teachfx.antlr4.ep20.ir.stmt.JMP;
 import org.teachfx.antlr4.ep20.ir.stmt.Stmt;
+import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,8 @@ public class BasicBlock {
     private List<BasicBlock> successors;
 
     private List<BasicBlock> predecessors;
+
+    protected Scope scope = null;
 
     private int ord = 0;
 
@@ -65,6 +68,14 @@ public class BasicBlock {
 
     public void setLink(BasicBlock next) {
         BasicBlock.setLink(this,next);
+    }
+
+    public Scope getScope() {
+        return scope;
+    }
+
+    public void setScope(Scope scope) {
+        this.scope = scope;
     }
 
     @Override

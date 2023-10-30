@@ -1,14 +1,21 @@
 
+int dec1(int x) {
+    return x - 1;
+}
+
 int main() {
     int i = 10;
     while(i > 0) {
         if (i > 5) {
             print(i);
-        } else{
-            print("break");
-            break;
+            if(i == 7) {
+                return 7;
+            }
         }
-        i = i - 1;
+
+        print("break");
+
+        i = dec1(i);
     }
 
    return 0;

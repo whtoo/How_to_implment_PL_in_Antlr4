@@ -61,6 +61,11 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     }
 
     @Override
+    public boolean isVoid() {
+        return getReturnType().isVoid();
+    }
+
+    @Override
     public Type getPrimitiveType() {
         return null;
     }

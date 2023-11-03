@@ -1,7 +1,38 @@
-.def main: args=0 ,locals=0
+.def dec1: args=1 ,locals=1:
+    iconst 1
+    iload 0
+    br L2
+L2:
+    ret
+.def main: args=0 ,locals=1:
     iconst 10
-    print
+    istore 0
+    br L5
+L5:
     iconst 0
-    br main_0
-main_0 :
-    halt
+    iload 0
+    brf L7
+L6:
+    iconst 5
+    iload 0
+    brf L9
+L8:
+    iload 0
+    call print()
+    iconst 7
+    iload 0
+    brf L11
+L10:
+    iconst 7
+    br L4
+L9:
+    call print()
+    iload 0
+    call dec1()
+    istore 0
+    br L5
+L7:
+    iconst 0
+    br L4
+L4:
+    ret

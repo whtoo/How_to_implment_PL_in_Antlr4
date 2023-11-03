@@ -16,13 +16,11 @@ import org.teachfx.antlr4.ep20.pass.ast.CymbolASTBuilder;
 //import org.teachfx.antlr4.ep20.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep20.pass.cfg.BasicBlock;
 import org.teachfx.antlr4.ep20.pass.cfg.ControlFlowAnalysis;
+import org.teachfx.antlr4.ep20.pass.codegen.CymbolAssembler;
 import org.teachfx.antlr4.ep20.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep20.pass.symtab.LocalDefine;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.List;
 
 public class Compiler {
@@ -54,10 +52,33 @@ public class Compiler {
         var irBuilder = new CymbolIRBuilder();
 
         astRoot.accept(irBuilder);
-        printIRTree(irBuilder.prog.linearInstrs());
+//        printIRTree(irBuilder.prog.linearInstrs());
 
-        var dataFlowAnalysis = new ControlFlowAnalysis();
-        irBuilder.prog.accept(dataFlowAnalysis);
+        var assembler = new CymbolAssembler();
+        irBuilder.prog.accept(assembler);
+        saveToEp18Res(assembler.getAsmInfo());
+    }
 
+    protected static void saveToEp18Res(String buffer) {
+        String modulePath = "../ep18/src/main/resources"; // 替换 "my-module" 为你的模块名称
+        File moduleDirectory = new File(modulePath);
+        logger.info("file path %s".formatted(moduleDirectory.getAbsolutePath()));
+        if (moduleDirectory.exists()) {
+            logger.info("模块路径：" + moduleDirectory.getAbsolutePath());
+            var filePath = modulePath+"/t.vm";
+            File file = new File(filePath);
+            try (var outputStream = new FileOutputStream(file)) {
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                outputStream.write(buffer.getBytes());
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        } else {
+            logger.error("模块路径不存在！");
+        }
     }
 }

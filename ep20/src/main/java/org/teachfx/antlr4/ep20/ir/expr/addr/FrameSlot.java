@@ -15,6 +15,9 @@ public class FrameSlot extends VarSlot {
     public FrameSlot(int idx) {
         this.slotIdx = idx;
     }
+    public int getSlotIdx() {
+        return slotIdx;
+    }
 
     @Override
     public <S, E> E accept(IRVisitor<S, E> visitor) {

@@ -1,10 +1,12 @@
 package org.teachfx.antlr4.ep20.ir;
 
+import org.teachfx.antlr4.ep20.ir.stmt.FuncEntryLabel;
 import org.teachfx.antlr4.ep20.ir.stmt.Label;
 import org.teachfx.antlr4.ep20.pass.cfg.BasicBlock;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 public class Prog extends IRNode {
@@ -45,6 +47,24 @@ public class Prog extends IRNode {
             linearInstrsImpl(block);
         }
 
-        return instrs;
+        var buffer = new ArrayList<IRNode>();
+        IRNode prev = null;
+        IRNode cur = null;
+
+        for (IRNode instr : instrs) {
+            prev = cur;
+            cur = instr;
+            if (Objects.nonNull(prev) && prev instanceof Label) {
+                if (cur instanceof FuncEntryLabel) {
+                    buffer.remove(prev);
+                }
+            }
+
+            buffer.add(cur);
+        }
+
+        return buffer;
     }
+
+
 }

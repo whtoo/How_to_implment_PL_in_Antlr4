@@ -14,6 +14,9 @@ public class StackSlot extends VarSlot {
     private StackSlot() {
         this.ord = StackSlot.ordSeq++;
     }
+    public int getOrd() {
+        return ord;
+    }
 
     @Override
     public String toString() {

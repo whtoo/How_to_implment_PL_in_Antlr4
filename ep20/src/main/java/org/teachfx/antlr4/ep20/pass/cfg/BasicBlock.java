@@ -84,6 +84,6 @@ public class BasicBlock {
 //        if (firstInstr instanceof FuncEntryLabel) {
 //            return firstInstr.toString();
 //        }
-        return ".L"+ord;
+        return "L"+ord;
     }
 }

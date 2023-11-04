@@ -52,11 +52,12 @@ public class Compiler {
         var irBuilder = new CymbolIRBuilder();
 
         astRoot.accept(irBuilder);
-//        printIRTree(irBuilder.prog.linearInstrs());
+        printIRTree(irBuilder.prog.linearInstrs());
 
         var assembler = new CymbolAssembler();
         irBuilder.prog.accept(assembler);
         saveToEp18Res(assembler.getAsmInfo());
+        logger.info("\n%s".formatted(assembler.getAsmInfo()));
     }
 
     protected static void saveToEp18Res(String buffer) {

@@ -43,7 +43,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public Void visit(CompileUnit compileUnit) {
         prog = new Prog();
-        logger.error("visit root");
+        logger.info("visit root");
         compileUnit.getFuncDeclarations().forEach(x -> x.accept(this));
 
         return null;
@@ -79,6 +79,9 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
 
         var exitBlock = new BasicBlock();
         var exitEntry = new ReturnVal(null,methodSymbol);
+
+        setExitHook(exitEntry,methodSymbol);
+
         exitBlock.addStmt(exitEntry);
         this.exitBlock = exitBlock;
 
@@ -110,11 +113,12 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public VarSlot visit(BinaryExprNode binaryExprNode) {
         curNode = binaryExprNode;
-        binaryExprNode.getRhs().accept(this);
-        var rhs = peekEvalOperand();
 
         binaryExprNode.getLhs().accept(this);
         var lhs = peekEvalOperand();
+
+        binaryExprNode.getRhs().accept(this);
+        var rhs = peekEvalOperand();
 
         var res = addInstr(BinExpr.with(binaryExprNode.getOpType(),lhs,rhs));
 
@@ -310,7 +314,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         currentBlock = null;
     }
 
-    public BasicBlock getCurrentBlock() {
+    protected BasicBlock getCurrentBlock() {
         return currentBlock;
     }
 
@@ -348,6 +352,12 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         return Optional.empty();
     }
 
+    protected void setExitHook(ReturnVal returnVal,MethodSymbol methodSymbol) {
+        if (methodSymbol.getName().equalsIgnoreCase("main")) {
+            returnVal.setMainEntry(true);
+        }
+    }
+
     public void jump(BasicBlock block) {
         addInstr(new JMP(block));
     }
@@ -375,7 +385,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     protected VarSlot pushEvalOperand(Operand operand) {
 
         if (curNode != null) {
-            System.out.println(curNode.toString());
+            logger.info(curNode.toString());
         }
 
         if (!(operand instanceof StackSlot)){
@@ -397,7 +407,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     protected VarSlot popEvalOperand() {
         var res = evalExprStack.pop();
         logger.info("pop eval operand %s",res);
-        logger.error("pop stack");
+        logger.info("pop stack");
         StackSlot.popStack();
         if (StackSlot.getOrdSeq() < 0) {
             throw new RuntimeException("un matched pop");

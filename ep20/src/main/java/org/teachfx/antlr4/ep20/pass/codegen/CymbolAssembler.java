@@ -26,14 +26,13 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     }
 
     public String getAsmInfo() {
-        return String.join("\n", assembleCmdBuffer);
+        return String.join("\n", assembleCmdBuffer).concat("\n");
     }
     private int indents = 0;
 
     @Override
     public Void visit(Prog prog) {
-        var instrs = prog.linearInstrs();
-        for (var instr: instrs) {
+        for (var instr: prog.linearInstrs()) {
             if (instr instanceof Expr) {
                 ((Expr) instr).accept(this);
             } else  {
@@ -47,26 +46,35 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     public Void visit(BinExpr node) {
         node.getLhs().accept(this);
         node.getRhs().accept(this);
-        operatorEmitter.emitBinaryOp(node.getOpType());
+        emit(operatorEmitter.emitBinaryOp(node.getOpType()));
         return null;
     }
 
     @Override
     public Void visit(UnaryExpr node) {
         node.expr.accept(this);
-        operatorEmitter.emitUnaryOp(node.op);
+        emit(operatorEmitter.emitUnaryOp(node.op));
         return null;
     }
 
     @Override
     public Void visit(CallFunc callFunc) {
-        emit("call %s()".formatted(callFunc.getFuncName()));
+        if (!callFunc.getFuncType().isBuiltIn()){
+            emit("call %s()".formatted(callFunc.getFuncName()));
+        } else {
+            emit("%s".formatted(callFunc.getFuncName()));
+        }
+
         return null;
     }
 
     @Override
     public Void visit(Label label) {
-        emit("%s:".formatted(label.toSource()));
+        if (label instanceof FuncEntryLabel){
+            emit("%s".formatted(label.toSource()));
+        } else {
+            emit("%s:".formatted(label.toSource()));
+        }
         indents++;
         return null;
     }
@@ -80,7 +88,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(CJMP cjmp) {
-        emit("brf %s".formatted(cjmp.elseBlock.toString()));
+        emit("brf %s".formatted(cjmp.getElseBlock().toString()));
         indents--;
         return null;
     }
@@ -90,7 +98,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
         assign.getRhs().accept(this);
 
         if (assign.getLhs() instanceof FrameSlot frameSlot) {
-            emit("istore %d".formatted(frameSlot.getSlotIdx()));
+            emit("store %d".formatted(frameSlot.getSlotIdx()));
         }
 
         return null;
@@ -117,7 +125,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(FrameSlot frameSlot) {
-        emit("iload %d".formatted(frameSlot.getSlotIdx()));
+        emit("load %d".formatted(frameSlot.getSlotIdx()));
         return null;
     }
 
@@ -125,6 +133,10 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     public <T> Void visit(IntVal<T> tIntVal) {
         if (tIntVal.getVal() instanceof Integer integer) {
             emit("iconst %d".formatted(integer));
+        } else if (tIntVal.getVal() instanceof String str) {
+            emit("sconst %s".formatted(str));
+        } else if (tIntVal.getVal() instanceof Boolean bool) {
+            emit("bconst %d".formatted(bool?1:0));
         }
 
         return null;

@@ -4,6 +4,6 @@ import org.teachfx.antlr4.ep20.symtab.type.OperatorType;
 
 public interface IOperatorEmitter {
 
-    public String emitBinaryOp(OperatorType.BinaryOpType binaryOpType);
-    public String emitUnaryOp(OperatorType.UnaryOpType unaryOpType);
+    String emitBinaryOp(OperatorType.BinaryOpType binaryOpType);
+    String emitUnaryOp(OperatorType.UnaryOpType unaryOpType);
 }

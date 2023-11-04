@@ -7,14 +7,16 @@ import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 public class CJMP extends Stmt {
     public VarSlot cond;
 
-    public BasicBlock thenBlock;
-    public BasicBlock elseBlock;
+    private BasicBlock thenBlock;
+    private BasicBlock elseBlock;
 
 
     public CJMP(VarSlot cond, BasicBlock thenLabel, BasicBlock elseLabel) {
         this.cond = cond;
         this.thenBlock = thenLabel;
         this.elseBlock = elseLabel;
+        thenLabel.refJMP(this);
+        elseBlock.refJMP(this);
     }
 
     @Override
@@ -30,5 +32,23 @@ public class CJMP extends Stmt {
     @Override
     public String toString() {
         return "jmpIf %s,%s,%s".formatted(cond,thenBlock,elseBlock);
+    }
+
+    public void setElseBlock(BasicBlock elseBlock) {
+        this.elseBlock = elseBlock;
+        elseBlock.refJMP(this);
+    }
+
+    public void setThenBlock(BasicBlock thenBlock) {
+        this.thenBlock = thenBlock;
+        thenBlock.refJMP(this);
+    }
+
+    public BasicBlock getElseBlock() {
+        return elseBlock;
+    }
+
+    public BasicBlock getThenBlock() {
+        return thenBlock;
     }
 }

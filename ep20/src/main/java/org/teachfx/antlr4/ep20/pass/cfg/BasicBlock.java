@@ -20,6 +20,8 @@ public class BasicBlock {
 
     protected Scope scope = null;
 
+    private List<IRNode> jmpRefMap = new ArrayList<>();
+
     private int ord = 0;
 
     public BasicBlock() {
@@ -80,10 +82,23 @@ public class BasicBlock {
 
     @Override
     public String toString() {
-//        var firstInstr = stmts.get(0);
-//        if (firstInstr instanceof FuncEntryLabel) {
-//            return firstInstr.toString();
-//        }
         return "L"+ord;
+    }
+
+    public List<IRNode> getJmpRefMap() {
+        return jmpRefMap;
+    }
+
+    public void setJmpRefMap(List<IRNode> jmpRefMap) {
+        this.jmpRefMap = jmpRefMap;
+    }
+
+    public void refJMP(IRNode node) {
+        jmpRefMap.add(node);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return toString().equalsIgnoreCase(obj.toString());
     }
 }

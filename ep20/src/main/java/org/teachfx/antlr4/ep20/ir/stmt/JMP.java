@@ -13,6 +13,7 @@ public class JMP extends Stmt
     public JMP(BasicBlock block)
     {
         this.next = block;
+        block.refJMP(this);
     }
     public BasicBlock next;
 

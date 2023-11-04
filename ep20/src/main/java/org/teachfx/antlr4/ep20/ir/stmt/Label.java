@@ -1,14 +1,19 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
+import lombok.Getter;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
 import java.util.Objects;
 
 public class Label extends Stmt {
+
     private Stmt nextEntry = null;
 
+
     private String rawLabel;
+
+
     private Scope scope;
     protected int seq;
 
@@ -20,16 +25,8 @@ public class Label extends Stmt {
         }
     }
 
-    public String getRawLabel() {
-        return rawLabel;
-    }
-
     public void setRawLabel(String rawLabel) {
         this.rawLabel = rawLabel;
-    }
-
-    public Scope getScope() {
-        return scope;
     }
 
     public void setScope(Scope scope) {
@@ -59,10 +56,6 @@ public class Label extends Stmt {
         return toSource();
     }
 
-    public Stmt getNextEntry() {
-        return nextEntry;
-    }
-
     public void setNextEntry(Stmt nextEntry) {
         this.nextEntry = nextEntry;
     }
@@ -79,5 +72,21 @@ public class Label extends Stmt {
         }
 
         return item;
+    }
+
+    public Stmt getNextEntry() {
+        return nextEntry;
+    }
+
+    public String getRawLabel() {
+        return rawLabel;
+    }
+
+    public Scope getScope() {
+        return scope;
+    }
+
+    public int getSeq() {
+        return seq;
     }
 }

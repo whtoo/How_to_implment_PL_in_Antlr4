@@ -13,7 +13,7 @@ public class CymbolVMIOperatorEmitter implements IOperatorEmitter {
                 return "isub";
             }
             case MUL -> {
-                return "imul";
+                return "imult";
             }
             case DIV -> {
                 return "idiv";

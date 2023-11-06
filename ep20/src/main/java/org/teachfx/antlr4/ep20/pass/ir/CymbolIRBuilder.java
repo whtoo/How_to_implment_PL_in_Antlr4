@@ -10,7 +10,7 @@ import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
-import org.teachfx.antlr4.ep20.ir.expr.Operand;
+import org.teachfx.antlr4.ep20.ir.expr.Temp;
 import org.teachfx.antlr4.ep20.pass.cfg.BasicBlock;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.Prog;
@@ -382,24 +382,24 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         continueStack.pop();
     }
     static int cnt = 0;
-    protected VarSlot pushEvalOperand(Operand operand) {
+    protected VarSlot pushEvalOperand(Temp temp) {
 
         if (curNode != null) {
             logger.info(curNode.toString());
         }
 
-        if (!(operand instanceof StackSlot)){
+        if (!(temp instanceof StackSlot)){
             cnt++;
             var assignee = StackSlot.pushStack();
             evalExprStack.push(assignee);
-            addInstr(Assign.with(assignee, operand));
+            addInstr(Assign.with(assignee, temp));
             logger.info("-> eval stack %s%n", evalExprStack.toString());
 
             return assignee;
         } else {
             logger.info("-> eval stack %s%n", evalExprStack.toString());
-            evalExprStack.push((VarSlot) operand);
-            return (VarSlot) operand;
+            evalExprStack.push((VarSlot) temp);
+            return (VarSlot) temp;
         }
 
     }

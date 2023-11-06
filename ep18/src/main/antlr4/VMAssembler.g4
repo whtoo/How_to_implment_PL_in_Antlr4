@@ -23,19 +23,19 @@ functionDeclaration
 // START: instr
 instr
     :   op=ID NEWLINE                         
-    |   op=ID a=operand NEWLINE                 
-    |   op=ID a=operand ',' b=operand NEWLINE 
-    |   op=ID a=operand ',' b=operand ',' c=operand NEWLINE
+    |   op=ID a=temp NEWLINE
+    |   op=ID a=temp ',' b=temp NEWLINE
+    |   op=ID a=temp ',' b=temp ',' c=temp NEWLINE
         
     ;
 // END: instr
 
-// START: operand
-operand
+// START: temp
+temp
     :   ID   // basic code label; E.g., "loop"
     |   REG  // register name; E.g., "r0"
     |   FUNC // function label; E.g., "f()"
-// END: operand
+// END: temp
     |   INT
     |   BOOL
     |   CHAR

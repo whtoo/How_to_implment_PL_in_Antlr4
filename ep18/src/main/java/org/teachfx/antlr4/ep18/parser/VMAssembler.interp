@@ -43,7 +43,7 @@ program
 globals
 functionDeclaration
 instr
-operand
+temp
 label
 
 

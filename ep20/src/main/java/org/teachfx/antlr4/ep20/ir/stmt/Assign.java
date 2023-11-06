@@ -1,12 +1,12 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
-import org.teachfx.antlr4.ep20.ir.expr.Operand;
+import org.teachfx.antlr4.ep20.ir.expr.Temp;
 import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 
 public class Assign extends Stmt {
     protected VarSlot lhs;
-    protected Operand rhs;
+    protected Temp rhs;
 
     /**
      * Assign a value to a variable
@@ -24,10 +24,10 @@ public class Assign extends Stmt {
      * @param rhs Value to assign
      * @return Assign object
      */
-    public static Assign with(VarSlot lhs,Operand rhs) {
+    public static Assign with(VarSlot lhs, Temp rhs) {
         return new Assign(lhs,rhs);
     }
-    public Assign(VarSlot lhs, Operand rhs) {
+    public Assign(VarSlot lhs, Temp rhs) {
         this.lhs = lhs;
         this.rhs = rhs;
     }
@@ -36,7 +36,7 @@ public class Assign extends Stmt {
     public VarSlot getLhs() {
         return lhs;
     }
-    public Operand getRhs() {
+    public Temp getRhs() {
         return rhs;
     }
 

@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.teachfx.antlr4.ep20.ast.ASTNode;
+import org.teachfx.antlr4.ep20.driver.Phase;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.stmt.Label;
@@ -52,7 +53,7 @@ public class Compiler {
         var irBuilder = new CymbolIRBuilder();
 
         astRoot.accept(irBuilder);
-        printIRTree(irBuilder.prog.linearInstrs());
+        // printIRTree(irBuilder.prog.linearInstrs());
 
         var assembler = new CymbolAssembler();
         irBuilder.prog.accept(assembler);

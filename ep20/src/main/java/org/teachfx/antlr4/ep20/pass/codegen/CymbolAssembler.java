@@ -8,7 +8,7 @@ import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep20.ir.expr.addr.StackSlot;
 import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
-import org.teachfx.antlr4.ep20.ir.expr.val.IntVal;
+import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 
 import java.util.LinkedList;
@@ -130,12 +130,12 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     }
 
     @Override
-    public <T> Void visit(IntVal<T> tIntVal) {
-        if (tIntVal.getVal() instanceof Integer integer) {
+    public <T> Void visit(ConstVal<T> tConstVal) {
+        if (tConstVal.getVal() instanceof Integer integer) {
             emit("iconst %d".formatted(integer));
-        } else if (tIntVal.getVal() instanceof String str) {
+        } else if (tConstVal.getVal() instanceof String str) {
             emit("sconst %s".formatted(str));
-        } else if (tIntVal.getVal() instanceof Boolean bool) {
+        } else if (tConstVal.getVal() instanceof Boolean bool) {
             emit("bconst %d".formatted(bool?1:0));
         }
 

@@ -5,7 +5,7 @@ import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep20.ir.expr.addr.StackSlot;
 import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
-import org.teachfx.antlr4.ep20.ir.expr.val.IntVal;
+import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 
 public interface IRVisitor<S,E> {
@@ -32,7 +32,7 @@ public interface IRVisitor<S,E> {
 
     E visit(FrameSlot frameSlot);
 
-    <T> E visit(IntVal<T> tIntVal);
+    <T> E visit(ConstVal<T> tConstVal);
 
     /// Stmt
 

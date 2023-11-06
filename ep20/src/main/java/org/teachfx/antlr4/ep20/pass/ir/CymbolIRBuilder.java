@@ -20,7 +20,7 @@ import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep20.ir.expr.addr.StackSlot;
 import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
-import org.teachfx.antlr4.ep20.ir.expr.val.IntVal;
+import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
@@ -156,31 +156,31 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public VarSlot visit(BoolExprNode boolExprNode) {
 
-        pushEvalOperand( IntVal.valueOf(boolExprNode.getRawValue()));
+        pushEvalOperand( ConstVal.valueOf(boolExprNode.getRawValue()));
 
         return null;
     }
     @Override
     public VarSlot visit(IntExprNode intExprNode) {
-        pushEvalOperand(IntVal.valueOf(intExprNode.getRawValue()));
+        pushEvalOperand(ConstVal.valueOf(intExprNode.getRawValue()));
         return null;
     }
 
     @Override
     public VarSlot visit(FloatExprNode floatExprNode) {
-        pushEvalOperand(IntVal.valueOf(floatExprNode.getRawValue()));
+        pushEvalOperand(ConstVal.valueOf(floatExprNode.getRawValue()));
         return null;
     }
 
     @Override
     public VarSlot visit(NullExprNode nullExprNode) {
-        pushEvalOperand(IntVal.valueOf(nullExprNode.getRawValue()));
+        pushEvalOperand(ConstVal.valueOf(nullExprNode.getRawValue()));
         return null;
     }
 
     @Override
     public VarSlot visit(StringExprNode stringExprNode) {
-        pushEvalOperand(IntVal.valueOf(stringExprNode.getRawValue()));
+        pushEvalOperand(ConstVal.valueOf(stringExprNode.getRawValue()));
         return null;
     }
 

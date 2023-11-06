@@ -3,15 +3,15 @@ package org.teachfx.antlr4.ep20.ir.expr.val;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.expr.ImmValue;
 
-public class IntVal<T> extends ImmValue {
+public class ConstVal<T> extends ImmValue {
     private T val;
 
-    public IntVal(T val) {
+    public ConstVal(T val) {
         this.val = val;
     }
 
-    public static <T> IntVal<T> valueOf(T val) {
-        return new IntVal<>(val);
+    public static <T> ConstVal<T> valueOf(T val) {
+        return new ConstVal<>(val);
     }
 
     @Override

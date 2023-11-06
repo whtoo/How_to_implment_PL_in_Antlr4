@@ -36,7 +36,9 @@ public class Prog extends IRNode {
 
     private void linearInstrsImpl(BasicBlock basicBlock) {
         if (!basicBlock.getStmts().isEmpty()) {
-            instrs.add(new Label(basicBlock.toString(),null));
+            if (!basicBlock.getJmpRefMap().isEmpty()){
+                instrs.add(new Label(basicBlock.toString(),null));
+            }
             instrs.addAll(basicBlock.getStmts());
         } else {
             if (basicBlock.getSuccessors().isEmpty()) {

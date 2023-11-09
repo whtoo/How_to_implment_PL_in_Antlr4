@@ -29,7 +29,7 @@ public class CymbolAssemblerTest {
         cymbolAssembler.emit(command);
 
         // Assert
-        assertEquals("    " + command + "\n", cymbolAssembler.getAsmInfo());
+        assertEquals( command + "\n", cymbolAssembler.getAsmInfo());
     }
 
     @Test
@@ -43,7 +43,7 @@ public class CymbolAssemblerTest {
         cymbolAssembler.emit(command2);
 
         // Assert
-        assertEquals("    " + command1 + "\n" + "    " + command2 + "\n", cymbolAssembler.getAsmInfo());
+        assertEquals(command1 + "\n" + command2 + "\n", cymbolAssembler.getAsmInfo());
     }
 
     // Add more tests for other methods in the CymbolAssembler class

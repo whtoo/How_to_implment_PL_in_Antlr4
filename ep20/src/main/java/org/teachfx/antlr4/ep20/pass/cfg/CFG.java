@@ -1,2 +1,4 @@
-package org.teachfx.antlr4.ep20.pass.cfg;public class CFG {
+package org.teachfx.antlr4.ep20.pass.cfg;
+public class CFG {
+
 }

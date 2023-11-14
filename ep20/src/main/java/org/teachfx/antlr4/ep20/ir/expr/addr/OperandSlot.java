@@ -3,16 +3,16 @@ package org.teachfx.antlr4.ep20.ir.expr.addr;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 
-public class StackSlot extends VarSlot {
+public class OperandSlot extends VarSlot {
     private static int ordSeq = 0;
 
-    public static StackSlot genTemp() {
-        return new StackSlot();
+    public static OperandSlot genTemp() {
+        return new OperandSlot();
     }
 
     private int ord = 0;
-    private StackSlot() {
-        this.ord = StackSlot.ordSeq++;
+    private OperandSlot() {
+        this.ord = OperandSlot.ordSeq++;
     }
     public int getOrd() {
         return ord;
@@ -29,7 +29,7 @@ public class StackSlot extends VarSlot {
     }
 
 
-    public static StackSlot pushStack() { return StackSlot.genTemp(); }
+    public static OperandSlot pushStack() { return OperandSlot.genTemp(); }
     public static void popStack() { ordSeq--;}
 
     public static int getOrdSeq() {

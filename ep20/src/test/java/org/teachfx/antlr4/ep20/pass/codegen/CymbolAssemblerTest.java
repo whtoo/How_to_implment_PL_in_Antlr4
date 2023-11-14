@@ -2,13 +2,7 @@ package org.teachfx.antlr4.ep20.pass.codegen;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
-import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
-import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
-import org.teachfx.antlr4.ep20.ir.stmt.Assign;
-import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
-import org.teachfx.antlr4.ep20.ir.stmt.JMP;
-import org.teachfx.antlr4.ep20.ir.stmt.ReturnVal;
+
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

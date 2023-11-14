@@ -17,7 +17,7 @@ import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.expr.CallFunc;
 import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;
-import org.teachfx.antlr4.ep20.ir.expr.addr.StackSlot;
+import org.teachfx.antlr4.ep20.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
@@ -330,10 +330,10 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         if (stmt instanceof BinExpr) {
             popEvalOperand();
             popEvalOperand();
-            return Optional.of(StackSlot.pushStack());
+            return Optional.of(OperandSlot.pushStack());
         } else if (stmt instanceof UnaryExpr) {
             popEvalOperand();
-            return Optional.of(StackSlot.pushStack());
+            return Optional.of(OperandSlot.pushStack());
         } else if(stmt instanceof CJMP) {
             popEvalOperand();
         } else if (stmt instanceof CallFunc callFunc) {
@@ -345,7 +345,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
             }
             // 如果存在返回值，则要模拟压入返回值以保证栈平衡
             if(!callFunc.getFuncType().isVoid()) {
-               pushEvalOperand(StackSlot.genTemp());
+               pushEvalOperand(OperandSlot.genTemp());
             }
         }
 
@@ -388,9 +388,9 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
             logger.info(curNode.toString());
         }
 
-        if (!(temp instanceof StackSlot)){
+        if (!(temp instanceof OperandSlot)){
             cnt++;
-            var assignee = StackSlot.pushStack();
+            var assignee = OperandSlot.pushStack();
             evalExprStack.push(assignee);
             addInstr(Assign.with(assignee, temp));
             logger.info("-> eval stack %s%n", evalExprStack.toString());
@@ -408,8 +408,8 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         var res = evalExprStack.pop();
         logger.info("pop eval operand %s",res);
         logger.info("pop stack");
-        StackSlot.popStack();
-        if (StackSlot.getOrdSeq() < 0) {
+        OperandSlot.popStack();
+        if (OperandSlot.getOrdSeq() < 0) {
             throw new RuntimeException("un matched pop");
         }
         return res;

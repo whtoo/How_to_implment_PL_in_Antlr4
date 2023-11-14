@@ -2,7 +2,7 @@ package org.teachfx.antlr4.ep20.ir;
 
 import org.teachfx.antlr4.ep20.ir.expr.CallFunc;
 import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;
-import org.teachfx.antlr4.ep20.ir.expr.addr.StackSlot;
+import org.teachfx.antlr4.ep20.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
@@ -28,7 +28,7 @@ public interface IRVisitor<S,E> {
 
     S visit(Prog prog);
 
-    E visit(StackSlot stackSlot);
+    E visit(OperandSlot operandSlot);
 
     E visit(FrameSlot frameSlot);
 

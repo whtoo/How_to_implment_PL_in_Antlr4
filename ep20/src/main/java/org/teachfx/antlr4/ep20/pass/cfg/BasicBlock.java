@@ -2,7 +2,6 @@ package org.teachfx.antlr4.ep20.pass.cfg;
 
 import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
-import org.teachfx.antlr4.ep20.ir.stmt.FuncEntryLabel;
 import org.teachfx.antlr4.ep20.ir.stmt.JMP;
 import org.teachfx.antlr4.ep20.ir.stmt.Stmt;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
@@ -92,6 +91,11 @@ public class BasicBlock {
     public void setJmpRefMap(List<IRNode> jmpRefMap) {
         this.jmpRefMap = jmpRefMap;
     }
+
+    public int getOrd() {
+        return ord;
+    }
+
 
     public void refJMP(IRNode node) {
         jmpRefMap.add(node);

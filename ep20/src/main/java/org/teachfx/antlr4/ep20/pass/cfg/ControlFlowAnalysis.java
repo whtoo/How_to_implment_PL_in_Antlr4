@@ -4,7 +4,7 @@ import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.expr.CallFunc;
 import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;
-import org.teachfx.antlr4.ep20.ir.expr.addr.StackSlot;
+import org.teachfx.antlr4.ep20.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
@@ -68,7 +68,7 @@ public class ControlFlowAnalysis implements IRVisitor<Void,Void> {
     }
 
     @Override
-    public Void visit(StackSlot stackSlot) {
+    public Void visit(OperandSlot operandSlot) {
         return null;
     }
 

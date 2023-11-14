@@ -19,3 +19,4 @@ out/
 **/target/*
 **/output/*
 **/logs/*
+machinet.conf

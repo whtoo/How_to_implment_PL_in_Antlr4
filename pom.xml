@@ -17,8 +17,8 @@
         <parser.g4.file></parser.g4.file>
         <antlr4.version>4.11.0</antlr4.version>
         <run.main.entry>org.teachfx.antlr4.ep20.Compiler</run.main.entry>
-        <maven.compiler.source>18</maven.compiler.source>
-        <maven.compiler.target>18</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <JUnit.version>5.8.2</JUnit.version>
     </properties>
 

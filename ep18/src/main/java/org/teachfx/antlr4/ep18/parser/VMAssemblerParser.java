@@ -23,10 +23,10 @@ public class VMAssemblerParser extends Parser {
 		INT=11, CHAR=12, BOOL=13, STRING=14, FLOAT=15, WS=16, NEWLINE=17;
 	public static final int
 		RULE_program = 0, RULE_globals = 1, RULE_functionDeclaration = 2, RULE_instr = 3, 
-		RULE_operand = 4, RULE_label = 5;
+		RULE_temp = 4, RULE_label = 5;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"program", "globals", "functionDeclaration", "instr", "operand", "label"
+			"program", "globals", "functionDeclaration", "instr", "temp", "label"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -349,16 +349,16 @@ public class VMAssemblerParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class InstrContext extends ParserRuleContext {
 		public Token op;
-		public OperandContext a;
-		public OperandContext b;
-		public OperandContext c;
+		public TempContext a;
+		public TempContext b;
+		public TempContext c;
 		public TerminalNode NEWLINE() { return getToken(VMAssemblerParser.NEWLINE, 0); }
 		public TerminalNode ID() { return getToken(VMAssemblerParser.ID, 0); }
-		public List<OperandContext> operand() {
-			return getRuleContexts(OperandContext.class);
+		public List<TempContext> temp() {
+			return getRuleContexts(TempContext.class);
 		}
-		public OperandContext operand(int i) {
-			return getRuleContext(OperandContext.class,i);
+		public TempContext temp(int i) {
+			return getRuleContext(TempContext.class,i);
 		}
 		public InstrContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -401,7 +401,7 @@ public class VMAssemblerParser extends Parser {
 				setState(47);
 				((InstrContext)_localctx).op = match(ID);
 				setState(48);
-				((InstrContext)_localctx).a = operand();
+				((InstrContext)_localctx).a = temp();
 				setState(49);
 				match(NEWLINE);
 				}
@@ -412,11 +412,11 @@ public class VMAssemblerParser extends Parser {
 				setState(51);
 				((InstrContext)_localctx).op = match(ID);
 				setState(52);
-				((InstrContext)_localctx).a = operand();
+				((InstrContext)_localctx).a = temp();
 				setState(53);
 				match(T__5);
 				setState(54);
-				((InstrContext)_localctx).b = operand();
+				((InstrContext)_localctx).b = temp();
 				setState(55);
 				match(NEWLINE);
 				}
@@ -427,15 +427,15 @@ public class VMAssemblerParser extends Parser {
 				setState(57);
 				((InstrContext)_localctx).op = match(ID);
 				setState(58);
-				((InstrContext)_localctx).a = operand();
+				((InstrContext)_localctx).a = temp();
 				setState(59);
 				match(T__5);
 				setState(60);
-				((InstrContext)_localctx).b = operand();
+				((InstrContext)_localctx).b = temp();
 				setState(61);
 				match(T__5);
 				setState(62);
-				((InstrContext)_localctx).c = operand();
+				((InstrContext)_localctx).c = temp();
 				setState(63);
 				match(NEWLINE);
 				}
@@ -454,7 +454,7 @@ public class VMAssemblerParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class OperandContext extends ParserRuleContext {
+	public static class TempContext extends ParserRuleContext {
 		public TerminalNode ID() { return getToken(VMAssemblerParser.ID, 0); }
 		public TerminalNode REG() { return getToken(VMAssemblerParser.REG, 0); }
 		public TerminalNode FUNC() { return getToken(VMAssemblerParser.FUNC, 0); }
@@ -463,28 +463,28 @@ public class VMAssemblerParser extends Parser {
 		public TerminalNode CHAR() { return getToken(VMAssemblerParser.CHAR, 0); }
 		public TerminalNode STRING() { return getToken(VMAssemblerParser.STRING, 0); }
 		public TerminalNode FLOAT() { return getToken(VMAssemblerParser.FLOAT, 0); }
-		public OperandContext(ParserRuleContext parent, int invokingState) {
+		public TempContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_operand; }
+		@Override public int getRuleIndex() { return RULE_temp; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof VMAssemblerListener ) ((VMAssemblerListener)listener).enterOperand(this);
+			if ( listener instanceof VMAssemblerListener ) ((VMAssemblerListener)listener).enterTemp(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof VMAssemblerListener ) ((VMAssemblerListener)listener).exitOperand(this);
+			if ( listener instanceof VMAssemblerListener ) ((VMAssemblerListener)listener).exitTemp(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof VMAssemblerVisitor ) return ((VMAssemblerVisitor<? extends T>)visitor).visitOperand(this);
+			if ( visitor instanceof VMAssemblerVisitor ) return ((VMAssemblerVisitor<? extends T>)visitor).visitTemp(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
-	public final OperandContext operand() throws RecognitionException {
-		OperandContext _localctx = new OperandContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_operand);
+	public final TempContext temp() throws RecognitionException {
+		TempContext _localctx = new TempContext(_ctx, getState());
+		enterRule(_localctx, 8, RULE_temp);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);

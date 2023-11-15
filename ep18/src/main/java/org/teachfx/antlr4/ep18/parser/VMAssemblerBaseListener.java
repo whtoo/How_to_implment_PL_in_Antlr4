@@ -67,13 +67,13 @@ public class VMAssemblerBaseListener implements VMAssemblerListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterOperand(VMAssemblerParser.OperandContext ctx) { }
+	@Override public void enterTemp(VMAssemblerParser.TempContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitOperand(VMAssemblerParser.OperandContext ctx) { }
+	@Override public void exitTemp(VMAssemblerParser.TempContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

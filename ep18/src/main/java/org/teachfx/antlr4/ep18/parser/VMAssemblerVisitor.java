@@ -37,11 +37,11 @@ public interface VMAssemblerVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitInstr(VMAssemblerParser.InstrContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link VMAssemblerParser#operand}.
+	 * Visit a parse tree produced by {@link VMAssemblerParser#temp}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitOperand(VMAssemblerParser.OperandContext ctx);
+	T visitTemp(VMAssemblerParser.TempContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link VMAssemblerParser#label}.
 	 * @param ctx the parse tree

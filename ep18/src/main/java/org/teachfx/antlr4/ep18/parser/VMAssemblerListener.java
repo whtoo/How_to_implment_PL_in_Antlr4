@@ -50,15 +50,15 @@ public interface VMAssemblerListener extends ParseTreeListener {
 	 */
 	void exitInstr(VMAssemblerParser.InstrContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link VMAssemblerParser#operand}.
+	 * Enter a parse tree produced by {@link VMAssemblerParser#temp}.
 	 * @param ctx the parse tree
 	 */
-	void enterOperand(VMAssemblerParser.OperandContext ctx);
+	void enterTemp(VMAssemblerParser.TempContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link VMAssemblerParser#operand}.
+	 * Exit a parse tree produced by {@link VMAssemblerParser#temp}.
 	 * @param ctx the parse tree
 	 */
-	void exitOperand(VMAssemblerParser.OperandContext ctx);
+	void exitTemp(VMAssemblerParser.TempContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link VMAssemblerParser#label}.
 	 * @param ctx the parse tree

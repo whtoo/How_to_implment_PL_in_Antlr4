@@ -14,16 +14,16 @@ public class BasicBlock {
 
     public enum Kind {
         /// No jump instruction
-        CONTINUE,
+        CONTINUOUS,
         /// Conditional instruction
-        CJMP,
+        END_BY_CJMP,
         /// Unconditional jump instruction
-        JMP,
+        END_BY_JMP,
         /// Return instruction
-        RETURN
+        END_BY_RETURN
     }
 
-    public Kind kind = Kind.CONTINUE;
+    public Kind kind = Kind.CONTINUOUS;
     private static int LABEL_SEQ = 1;
     private ArrayList<IRNode> stmts;
 
@@ -51,13 +51,13 @@ public class BasicBlock {
 
     private void updateKindByLastInstr(IRNode stmt) {
         if (stmt instanceof CJMP) {
-            kind = Kind.CJMP;
+            kind = Kind.END_BY_CJMP;
         } else if (stmt instanceof JMP) {
-            kind = Kind.JMP;
+            kind = Kind.END_BY_JMP;
         } else if (stmt instanceof ReturnVal) {
-            kind = Kind.RETURN;
+            kind = Kind.END_BY_RETURN;
         } else {
-            kind = Kind.CONTINUE;
+            kind = Kind.CONTINUOUS;
         }
     }
     public static boolean isBasicBlock(Stmt stmt) {

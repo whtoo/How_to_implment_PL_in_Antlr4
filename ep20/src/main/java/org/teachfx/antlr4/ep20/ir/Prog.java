@@ -20,7 +20,7 @@ public class Prog extends IRNode {
     protected static Logger logger = LogManager.getLogger(Prog.class);
     public List<IRNode> instrs = new ArrayList<>();
 
-    private List<IRNode> truncateInstrList = new LinkedList<>();
+    private final List<IRNode> truncateInstrList = new LinkedList<>();
     public Prog() {
         this.blockList = new ArrayList<>() ;
     }
@@ -71,7 +71,7 @@ public class Prog extends IRNode {
             linearInstrsImpl(block);
         }
 
-        IRNode prev = null;
+        IRNode prev;
         IRNode cur = null;
 
         for (IRNode instr : instrs) {

@@ -1,17 +1,17 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
-import org.teachfx.antlr4.ep20.pass.cfg.BasicBlock;
+import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 
 public class CJMP extends Stmt {
     public VarSlot cond;
 
-    private BasicBlock thenBlock;
-    private BasicBlock elseBlock;
+    private LinearIRBlock thenBlock;
+    private LinearIRBlock elseBlock;
 
 
-    public CJMP(VarSlot cond, BasicBlock thenLabel, BasicBlock elseLabel) {
+    public CJMP(VarSlot cond, LinearIRBlock thenLabel, LinearIRBlock elseLabel) {
         this.cond = cond;
         this.thenBlock = thenLabel;
         this.elseBlock = elseLabel;
@@ -34,21 +34,21 @@ public class CJMP extends Stmt {
         return "jmpIf %s,%s,%s".formatted(cond,thenBlock,elseBlock);
     }
 
-    public void setElseBlock(BasicBlock elseBlock) {
+    public void setElseBlock(LinearIRBlock elseBlock) {
         this.elseBlock = elseBlock;
         elseBlock.refJMP(this);
     }
 
-    public void setThenBlock(BasicBlock thenBlock) {
+    public void setThenBlock(LinearIRBlock thenBlock) {
         this.thenBlock = thenBlock;
         thenBlock.refJMP(this);
     }
 
-    public BasicBlock getElseBlock() {
+    public LinearIRBlock getElseBlock() {
         return elseBlock;
     }
 
-    public BasicBlock getThenBlock() {
+    public LinearIRBlock getThenBlock() {
         return thenBlock;
     }
 }

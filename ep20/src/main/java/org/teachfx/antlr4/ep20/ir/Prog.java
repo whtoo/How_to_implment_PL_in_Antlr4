@@ -1,13 +1,12 @@
 package org.teachfx.antlr4.ep20.ir;
 
-import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
 import org.teachfx.antlr4.ep20.ir.stmt.FuncEntryLabel;
 import org.teachfx.antlr4.ep20.ir.stmt.JMP;
 import org.teachfx.antlr4.ep20.ir.stmt.Label;
-import org.teachfx.antlr4.ep20.pass.cfg.BasicBlock;
+import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -16,7 +15,7 @@ import java.util.Objects;
 
 
 public class Prog extends IRNode {
-    public List<BasicBlock> blockList;
+    public List<LinearIRBlock> blockList;
     protected static Logger logger = LogManager.getLogger(Prog.class);
     public List<IRNode> instrs = new ArrayList<>();
 
@@ -30,23 +29,23 @@ public class Prog extends IRNode {
         return visitor.visit(this);
     }
 
-    public void addBlock(BasicBlock basicBlock) {
-        blockList.add(basicBlock);
+    public void addBlock(LinearIRBlock linearIRBlock) {
+        blockList.add(linearIRBlock);
     }
 
-    private void linearInstrsImpl(BasicBlock basicBlock) {
-        if (!basicBlock.getStmts().isEmpty()) {
-            if (!basicBlock.getJmpRefMap().isEmpty()){
-                instrs.add(new Label(basicBlock.toString(),null));
+    private void linearInstrsImpl(LinearIRBlock linearIRBlock) {
+        if (!linearIRBlock.getStmts().isEmpty()) {
+            if (!linearIRBlock.getJmpRefMap().isEmpty()){
+                instrs.add(new Label(linearIRBlock.toString(),null));
             }
-            instrs.addAll(basicBlock.getStmts());
+            instrs.addAll(linearIRBlock.getStmts());
         } else {
-            if (basicBlock.getSuccessors().isEmpty()) {
+            if (linearIRBlock.getSuccessors().isEmpty()) {
                 return;
             }
 
-            var nextBlock = basicBlock.getSuccessors().get(0);
-            for (var ref : basicBlock.getJmpRefMap()){
+            var nextBlock = linearIRBlock.getSuccessors().get(0);
+            for (var ref : linearIRBlock.getJmpRefMap()){
                 if (ref instanceof JMP jmp) {
                     jmp.next = nextBlock;
                 } else if (ref instanceof CJMP cjmp) {
@@ -56,7 +55,7 @@ public class Prog extends IRNode {
 
         }
 
-        for(var successor : basicBlock.getSuccessors()){
+        for(var successor : linearIRBlock.getSuccessors()){
             linearInstrsImpl(successor);
         }
     }

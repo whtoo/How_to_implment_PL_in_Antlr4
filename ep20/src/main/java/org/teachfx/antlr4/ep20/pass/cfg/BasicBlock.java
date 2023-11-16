@@ -1,140 +1,62 @@
 package org.teachfx.antlr4.ep20.pass.cfg;
 
+import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRNode;
-import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
-import org.teachfx.antlr4.ep20.ir.stmt.JMP;
-import org.teachfx.antlr4.ep20.ir.stmt.ReturnVal;
-import org.teachfx.antlr4.ep20.ir.stmt.Stmt;
-import org.teachfx.antlr4.ep20.symtab.scope.Scope;
+import org.teachfx.antlr4.ep20.ir.stmt.Label;
+import org.teachfx.antlr4.ep20.utils.Kind;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
-public class BasicBlock {
+public class BasicBlock<I extends IRNode> implements Iterable<Loc<I>> {
 
-    public enum Kind {
-        /// No jump instruction
-        CONTINUOUS,
-        /// Conditional instruction
-        END_BY_CJMP,
-        /// Unconditional jump instruction
-        END_BY_JMP,
-        /// Return instruction
-        END_BY_RETURN
-    }
+    // Generate codes
+    public List<Loc<I>> codes;
 
-    public Kind kind = Kind.CONTINUOUS;
-    private static int LABEL_SEQ = 1;
-    private ArrayList<IRNode> stmts;
+    public int id;
 
-    private List<BasicBlock> successors;
+    protected Optional<Label> label;
 
-    private List<BasicBlock> predecessors;
+    public Kind kind;
 
-    protected Scope scope = null;
-
-    private List<IRNode> jmpRefMap = new ArrayList<>();
-
-    private int ord = 0;
-
-    public BasicBlock() {
-        stmts = new ArrayList<>();
-        successors = new ArrayList<>();
-        predecessors = new ArrayList<>();
-        ord = LABEL_SEQ++;
-    }
-
-    public void addStmt(IRNode stmt) {
-        stmts.add(stmt);
-        updateKindByLastInstr(stmt);
-    }
-
-    private void updateKindByLastInstr(IRNode stmt) {
-        if (stmt instanceof CJMP) {
-            kind = Kind.END_BY_CJMP;
-        } else if (stmt instanceof JMP) {
-            kind = Kind.END_BY_JMP;
-        } else if (stmt instanceof ReturnVal) {
-            kind = Kind.END_BY_RETURN;
-        } else {
-            kind = Kind.CONTINUOUS;
-        }
-    }
-    public static boolean isBasicBlock(Stmt stmt) {
-        return !(stmt instanceof CJMP) && !(stmt instanceof JMP);
-    }
-
-    public List<IRNode> getStmts() {
-        return stmts;
-    }
-
-    public void setStmts(ArrayList<IRNode> stmts) {
-        this.stmts = stmts;
-        var lastInstr = stmts.get(stmts.size() - 1);
-        updateKindByLastInstr(lastInstr);
-    }
-
-    public List<BasicBlock> getSuccessors() {
-        return successors;
-    }
-
-    public void setSuccessors(List<BasicBlock> successors) {
-        this.successors = successors;
-    }
-
-    public List<BasicBlock> getPredecessors() {
-        return predecessors;
-    }
-
-    public void setPredecessors(List<BasicBlock> predecessors) {
-        this.predecessors = predecessors;
-    }
-
-    public static void setLink(BasicBlock current,BasicBlock next) {
-        current.successors.add(next);
-        next.predecessors.add(current);
-    }
-
-    public void setLink(BasicBlock next) {
-        BasicBlock.setLink(this,next);
-    }
-
-    public Scope getScope() {
-        return scope;
-    }
-
-    public void setScope(Scope scope) {
-        this.scope = scope;
-    }
-
+    @NotNull
     @Override
-    public String toString() {
-        return "L"+ord;
+    public Iterator<Loc<I>> iterator() {
+        return codes.iterator();
+    }
+    public Iterator<Loc<I>> backwardIterator() {
+        return new Iterator<Loc<I>>() {
+            private int index = codes.size() - 1;
+            @Override
+            public boolean hasNext() {
+                return index != -1;
+            }
+
+            @Override
+            public Loc<I> next() {
+                var loc = codes.get(index);
+                index--;
+                return loc;
+            }
+        };
     }
 
-    public List<IRNode> getJmpRefMap() {
-        return jmpRefMap;
+    public BasicBlock(Kind kind, int id, List<Loc<I>> codes, Optional<Label> label) {
+        this.codes = codes;
+        this.label = label;
+        this.id = id;
+        this.kind = kind;
     }
 
-    public void setJmpRefMap(List<IRNode> jmpRefMap) {
-        this.jmpRefMap = jmpRefMap;
+    public int getId() {
+        return id;
     }
 
-    public int getOrd() {
-        return ord;
+    // Generate isEmpty
+    public boolean isEmpty() {
+        return codes.isEmpty();
     }
 
 
-    public void refJMP(IRNode node) {
-        jmpRefMap.add(node);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return toString().equalsIgnoreCase(obj.toString());
-    }
-
-    public IRNode getLastInstr() {
-        return stmts.get(stmts.size() - 1);
-    }
 }

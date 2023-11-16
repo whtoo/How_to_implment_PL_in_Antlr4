@@ -11,7 +11,7 @@ import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.ir.expr.Operand;
-import org.teachfx.antlr4.ep20.pass.cfg.BasicBlock;
+import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.expr.CallFunc;
@@ -33,10 +33,10 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     private static final Logger logger = LogManager.getLogger(CymbolIRBuilder.class);
     public Prog prog = null;
 
-    private BasicBlock currentBlock = null;
-    private BasicBlock exitBlock = null;
-    private Stack<BasicBlock> breakStack;
-    private Stack<BasicBlock> continueStack;
+    private LinearIRBlock currentBlock = null;
+    private LinearIRBlock exitBlock = null;
+    private Stack<LinearIRBlock> breakStack;
+    private Stack<LinearIRBlock> continueStack;
     private Stack<VarSlot> evalExprStack;
 
     private ASTNode curNode = null;
@@ -77,7 +77,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         evalExprStack = new Stack<>();
         getCurrentBlock().addStmt(entryLabel);
 
-        var exitBlock = new BasicBlock();
+        var exitBlock = new LinearIRBlock();
         var exitEntry = new ReturnVal(null,methodSymbol);
 
         setExitHook(exitEntry,methodSymbol);
@@ -224,9 +224,9 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public Void visit(WhileStmtNode whileStmtNode) {
         curNode = whileStmtNode;
-        var condBlock = new BasicBlock();
-        var doBlock = new BasicBlock();
-        var endBlock = new BasicBlock();
+        var condBlock = new LinearIRBlock();
+        var doBlock = new LinearIRBlock();
+        var endBlock = new LinearIRBlock();
 
         jump(condBlock);
 
@@ -257,15 +257,15 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
 
         ifStmtNode.getCondExpr().accept(this);
         var cond = peekEvalOperand();
-        var thenBlock = new BasicBlock();
-        var endBlock = new BasicBlock();
+        var thenBlock = new LinearIRBlock();
+        var endBlock = new LinearIRBlock();
 
         if (ifStmtNode.getElseBlock().isEmpty()) {
             jumpIf(cond,thenBlock,endBlock);
             setCurrentBlock(thenBlock);
             ifStmtNode.getThenBlock().accept(this);
         }else {
-            var elseBlock = new BasicBlock();
+            var elseBlock = new LinearIRBlock();
             jumpIf(cond,thenBlock,elseBlock);
             setCurrentBlock(thenBlock);
             ifStmtNode.getThenBlock().accept(this);
@@ -306,7 +306,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     }
 
     public void forkNewBlock() {
-        currentBlock = new BasicBlock();
+        currentBlock = new LinearIRBlock();
         breakStack = new Stack<>();
         continueStack = new Stack<>();
     }
@@ -314,11 +314,11 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         currentBlock = null;
     }
 
-    protected BasicBlock getCurrentBlock() {
+    protected LinearIRBlock getCurrentBlock() {
         return currentBlock;
     }
 
-    public void setCurrentBlock(BasicBlock nextBlock) {
+    public void setCurrentBlock(LinearIRBlock nextBlock) {
         currentBlock.setLink(nextBlock);
         currentBlock = nextBlock;
     }
@@ -358,14 +358,14 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         }
     }
 
-    public void jump(BasicBlock block) {
+    public void jump(LinearIRBlock block) {
         addInstr(new JMP(block));
     }
-    public void jumpIf(VarSlot cond,BasicBlock thenBlock,BasicBlock elseBlock) {
+    public void jumpIf(VarSlot cond, LinearIRBlock thenBlock, LinearIRBlock elseBlock) {
         addInstr(new CJMP(cond,thenBlock,elseBlock));
     }
-    public void pushBreakStack(BasicBlock basicBlock) {
-        breakStack.push(basicBlock);
+    public void pushBreakStack(LinearIRBlock linearIRBlock) {
+        breakStack.push(linearIRBlock);
     }
 
     public void popBreakStack() {
@@ -373,8 +373,8 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     }
 
 
-    public void pushContinueStack(BasicBlock basicBlock) {
-        continueStack.push(basicBlock);
+    public void pushContinueStack(LinearIRBlock linearIRBlock) {
+        continueStack.push(linearIRBlock);
     }
 
 

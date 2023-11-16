@@ -1,13 +1,16 @@
 package org.teachfx.antlr4.ep20.pass.cfg;
 
 import org.jetbrains.annotations.NotNull;
+
 import org.teachfx.antlr4.ep20.ir.IRNode;
+import org.teachfx.antlr4.ep20.ir.expr.Operand;
 import org.teachfx.antlr4.ep20.ir.stmt.Label;
 import org.teachfx.antlr4.ep20.utils.Kind;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class BasicBlock<I extends IRNode> implements Iterable<Loc<I>> {
 
@@ -57,6 +60,23 @@ public class BasicBlock<I extends IRNode> implements Iterable<Loc<I>> {
     public boolean isEmpty() {
         return codes.isEmpty();
     }
+    public List<Loc<I>> allSeq() {
+        if (kind.equals(Kind.CONTINUOUS)){
+            return codes;
+        }
+        return codes.subList(0, codes.size() - 1);
+    }
 
+    public I getLastInstr() {
+        return codes.get(codes.size() - 1).instr;
+    }
 
+    // For data flow analysis
+    public Set<Operand> def;
+
+    public Set<Operand> liveUse;
+
+    public Set<Operand> liveIn;
+
+    public Set<Operand> liveOut;
 }

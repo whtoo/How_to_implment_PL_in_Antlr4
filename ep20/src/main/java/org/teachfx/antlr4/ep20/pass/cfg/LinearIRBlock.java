@@ -1,10 +1,7 @@
 package org.teachfx.antlr4.ep20.pass.cfg;
 
 import org.teachfx.antlr4.ep20.ir.IRNode;
-import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
-import org.teachfx.antlr4.ep20.ir.stmt.JMP;
-import org.teachfx.antlr4.ep20.ir.stmt.ReturnVal;
-import org.teachfx.antlr4.ep20.ir.stmt.Stmt;
+import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.utils.Kind;
 
@@ -99,6 +96,12 @@ public class LinearIRBlock {
 
     @Override
     public String toString() {
+        var firstInstr = stmts.get(0);
+
+        if (firstInstr instanceof Label){
+            return firstInstr.toString();
+        }
+
         return "L"+ord;
     }
 

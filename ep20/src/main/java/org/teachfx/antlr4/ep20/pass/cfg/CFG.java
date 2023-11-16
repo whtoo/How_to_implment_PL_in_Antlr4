@@ -1,21 +1,19 @@
 package org.teachfx.antlr4.ep20.pass.cfg;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
-public class CFG {
-    public final List<IRNode> nodes;
+public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
+    public final List<BasicBlock<I>> nodes;
 
     public final List<Pair<Integer,Integer>> edges;
 
     private List<Pair<Set<Integer>, Set<Integer>>> links;
 
-    public CFG(List<IRNode> nodes, List<Pair<Integer, Integer>> edges) {
+    public CFG(List<BasicBlock<I>> nodes, List<Pair<Integer, Integer>> edges) {
         // Generate init
         this.nodes = nodes;
         this.edges = edges;
@@ -32,5 +30,31 @@ public class CFG {
              links.get(v).getLeft().add(u);
 
         }
+    }
+
+    public BasicBlock<I> getBlock(int id) {
+        return nodes.get(id);
+    }
+
+    public Set<Integer> getPrev(int id) {
+        return links.get(id).getLeft();
+    }
+
+    public Set<Integer> getSucceed(int id) {
+        return links.get(id).getRight();
+    }
+
+    public int getInDegree(int id) {
+        return links.get(id).getLeft().size();
+    }
+
+    public int getOutDegree(int id) {
+        return links.get(id).getRight().size();
+    }
+
+    @NotNull
+    @Override
+    public Iterator<BasicBlock<I>> iterator() {
+        return nodes.iterator();
     }
 }

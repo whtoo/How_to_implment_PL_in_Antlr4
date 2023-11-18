@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep20.pass.cfg;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import org.teachfx.antlr4.ep20.ir.IRNode;
@@ -17,7 +18,7 @@ public class BasicBlock<I extends IRNode> implements Iterable<Loc<I>> {
     // Generate codes
     public List<Loc<I>> codes;
 
-    public int id;
+    public final int id;
 
     protected Optional<Label> label;
 
@@ -45,6 +46,12 @@ public class BasicBlock<I extends IRNode> implements Iterable<Loc<I>> {
         };
     }
 
+    @NotNull
+    @Contract("_ -> new")
+    public static BasicBlock<IRNode> buildFromLinearBlock(@NotNull LinearIRBlock block) {
+        return new BasicBlock<IRNode>(block.getKind(), block.getOrd(), block.getStmts().stream().map(Loc::new).toList(), Optional.of(block.getLabel()));
+    }
+
     public BasicBlock(Kind kind, int id, List<Loc<I>> codes, Optional<Label> label) {
         this.codes = codes;
         this.label = label;
@@ -54,6 +61,10 @@ public class BasicBlock<I extends IRNode> implements Iterable<Loc<I>> {
 
     public int getId() {
         return id;
+    }
+
+    public Optional<Label> getLabel() {
+        return label;
     }
 
     // Generate isEmpty

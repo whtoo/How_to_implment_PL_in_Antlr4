@@ -2,6 +2,7 @@ package org.teachfx.antlr4.ep20.ir;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
 import org.teachfx.antlr4.ep20.ir.stmt.FuncEntryLabel;
 import org.teachfx.antlr4.ep20.ir.stmt.JMP;
@@ -33,17 +34,19 @@ public class Prog extends IRNode {
         blockList.add(linearIRBlock);
     }
 
-    private void linearInstrsImpl(LinearIRBlock linearIRBlock) {
+    private void linearInstrsImpl(@NotNull LinearIRBlock linearIRBlock) {
+        // Add all instr from non-empty block
         if (!linearIRBlock.getStmts().isEmpty()) {
             if (!linearIRBlock.getJmpRefMap().isEmpty()){
-                instrs.add(new Label(linearIRBlock.toString(),null));
+                instrs.add(linearIRBlock.getLabel());
             }
             instrs.addAll(linearIRBlock.getStmts());
         } else {
+            // Drop empty block
             if (linearIRBlock.getSuccessors().isEmpty()) {
                 return;
             }
-
+            // Auto-fill next block for jmp/cjmp
             var nextBlock = linearIRBlock.getSuccessors().get(0);
             for (var ref : linearIRBlock.getJmpRefMap()){
                 if (ref instanceof JMP jmp) {
@@ -55,6 +58,7 @@ public class Prog extends IRNode {
 
         }
 
+        // recursive call
         for(var successor : linearIRBlock.getSuccessors()){
             linearInstrsImpl(successor);
         }

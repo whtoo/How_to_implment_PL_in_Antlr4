@@ -10,20 +10,17 @@ import java.util.List;
 
 public class LinearIRBlock {
 
-    public Kind kind = Kind.CONTINUOUS;
+    // Fields
     private static int LABEL_SEQ = 1;
+    private Kind kind = Kind.CONTINUOUS;
+    private int ord = 1;
     private ArrayList<IRNode> stmts;
-
     private List<LinearIRBlock> successors;
-
     private List<LinearIRBlock> predecessors;
-
-    protected Scope scope = null;
-
+    private Scope scope = null;
     private List<IRNode> jmpRefMap = new ArrayList<>();
 
-    private int ord = 0;
-
+    // Constructor
     public LinearIRBlock() {
         stmts = new ArrayList<>();
         successors = new ArrayList<>();
@@ -31,6 +28,8 @@ public class LinearIRBlock {
         ord = LABEL_SEQ++;
     }
 
+    // Methods
+    // Statement Operations
     public void addStmt(IRNode stmt) {
         stmts.add(stmt);
         updateKindByLastInstr(stmt);
@@ -47,10 +46,12 @@ public class LinearIRBlock {
             kind = Kind.CONTINUOUS;
         }
     }
+
     public static boolean isBasicBlock(Stmt stmt) {
         return !(stmt instanceof CJMP) && !(stmt instanceof JMP);
     }
 
+    // Getters and Setters
     public List<IRNode> getStmts() {
         return stmts;
     }
@@ -77,32 +78,12 @@ public class LinearIRBlock {
         this.predecessors = predecessors;
     }
 
-    public static void setLink(LinearIRBlock current, LinearIRBlock next) {
-        current.successors.add(next);
-        next.predecessors.add(current);
-    }
-
-    public void setLink(LinearIRBlock next) {
-        LinearIRBlock.setLink(this,next);
-    }
-
     public Scope getScope() {
         return scope;
     }
 
     public void setScope(Scope scope) {
         this.scope = scope;
-    }
-
-    @Override
-    public String toString() {
-        var firstInstr = stmts.get(0);
-
-        if (firstInstr instanceof Label){
-            return firstInstr.toString();
-        }
-
-        return "L"+ord;
     }
 
     public List<IRNode> getJmpRefMap() {
@@ -117,17 +98,53 @@ public class LinearIRBlock {
         return ord;
     }
 
+    // Link Operations
+    public static void setLink(LinearIRBlock current, LinearIRBlock next) {
+        current.successors.add(next);
+        next.predecessors.add(current);
+    }
 
+    public void setLink(LinearIRBlock next) {
+        LinearIRBlock.setLink(this, next);
+    }
+
+    public Kind getKind() {
+        return kind;
+    }
+
+    // Jump Operations
     public void refJMP(IRNode node) {
         jmpRefMap.add(node);
     }
 
+    // Utility Methods
     @Override
-    public boolean equals(Object obj) {
-        return toString().equalsIgnoreCase(obj.toString());
+    public String toString() {
+        var firstInstr = stmts.get(0);
+
+        if (firstInstr instanceof FuncEntryLabel) {
+            return firstInstr.toString();
+        }
+        return "L" + ord;
     }
 
-    public IRNode getLastInstr() {
-        return stmts.get(stmts.size() - 1);
+    public String toSource(){
+        var firstInstr = stmts.get(0);
+
+        if (firstInstr instanceof FuncEntryLabel) {
+            return ((FuncEntryLabel) firstInstr).toSource();
+        }
+
+        return "L" + ord;
+    }
+
+    public Label getLabel() {
+        var firstInstr = stmts.get(0);
+
+        if (firstInstr instanceof FuncEntryLabel funcEntryLabel) {
+            return funcEntryLabel;
+        }
+
+        return new Label(toString(),scope);
     }
 }

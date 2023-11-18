@@ -1,6 +1,5 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
-import lombok.Getter;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
@@ -9,7 +8,6 @@ import java.util.Objects;
 public class Label extends Stmt {
 
     private Stmt nextEntry = null;
-
 
     private String rawLabel;
 
@@ -23,6 +21,12 @@ public class Label extends Stmt {
         if (Objects.isNull(rawLabel)) {
             this.seq = scope.getLabelSeq();
         }
+    }
+
+    public Label(Scope scope) {
+        this.scope = scope;
+        this.seq = scope.getLabelSeq();
+        this.rawLabel = null;
     }
 
     public void setRawLabel(String rawLabel) {

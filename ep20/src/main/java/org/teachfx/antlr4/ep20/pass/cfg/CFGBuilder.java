@@ -5,7 +5,7 @@ import org.teachfx.antlr4.ep20.ir.IRNode;
 import java.util.List;
 
 public class CFGBuilder<I extends IRNode> {
-    public CFGBuilder(List<I> instrs){
+    public CFGBuilder(BasicBlock<IRNode> startNode){
 
     }
 }

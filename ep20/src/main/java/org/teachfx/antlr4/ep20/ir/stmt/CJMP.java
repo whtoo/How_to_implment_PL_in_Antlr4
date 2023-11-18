@@ -6,7 +6,6 @@ import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 
 public class CJMP extends Stmt {
     public VarSlot cond;
-
     private LinearIRBlock thenBlock;
     private LinearIRBlock elseBlock;
 

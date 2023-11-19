@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 
 import java.util.*;
+import java.util.LinkedList;
 
 public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
     public final List<BasicBlock<I>> nodes;
@@ -15,7 +16,7 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
 
     public CFG(List<BasicBlock<I>> nodes, List<Pair<Integer, Integer>> edges) {
         // Generate init
-        this.nodes = nodes;
+        this.nodes = new LinkedList<>(nodes); ///.stream().sorted(Comparator.comparingInt(BasicBlock::getId)).toList();
         this.edges = edges;
 
         links = new ArrayList<>();
@@ -56,5 +57,13 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
     @Override
     public Iterator<BasicBlock<I>> iterator() {
         return nodes.iterator();
+    }
+
+
+    @Override
+    public String toString() {
+        var graphRenderBuffer = new StringBuffer();
+
+        return graphRenderBuffer.toString();
     }
 }

@@ -20,4 +20,23 @@ graph LR
 
 ## DONE
 
-
+```mermaid
+graph TD;
+    A[基本块1] --> B[基本块2]  
+    B --> C[基本块3]  
+    C -->|条件跳转| D[基本块6]  
+    C -->|否则| E[基本块4]  
+    E -->|条件跳转| F[基本块7]  
+    F --> B  
+    E -->|否则| G[基本块5]  
+    G -->|条件跳转| F  
+    G -->|否则| H[基本块8]  
+    H --> I[基本块9]  
+    D --> I  
+    subgraph dec1  
+    A  
+    end  
+    subgraph main  
+        B --> C --> D --> E --> F --> G --> H --> I  
+    end
+```

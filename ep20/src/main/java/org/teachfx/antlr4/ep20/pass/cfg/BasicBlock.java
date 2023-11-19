@@ -13,7 +13,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class BasicBlock<I extends IRNode> implements Iterable<Loc<I>> {
+public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, Iterable<Loc<I>> {
+
+    @Override
+    public int compareTo(@NotNull BasicBlock<I> o) {
+        return this.id - o.id;
+    }
+
 
     // Generate codes
     public List<Loc<I>> codes;

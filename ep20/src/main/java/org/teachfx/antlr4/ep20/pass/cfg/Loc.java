@@ -15,4 +15,11 @@ public class Loc <I extends IRNode> {
     public Set<Operand> liveIn;
 
     public Set<Operand> liveOut;
+
+    @Override
+    public String toString() {
+        return "Loc{" +
+                "instr=" + instr +
+                '}';
+    }
 }

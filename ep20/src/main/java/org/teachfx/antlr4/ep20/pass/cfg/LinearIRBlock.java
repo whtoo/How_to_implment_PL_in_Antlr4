@@ -11,9 +11,9 @@ import java.util.List;
 public class LinearIRBlock {
 
     // Fields
-    private static int LABEL_SEQ = 1;
+    private static int LABEL_SEQ = 0;
     private Kind kind = Kind.CONTINUOUS;
-    private int ord = 1;
+    private int ord = 0;
     private ArrayList<IRNode> stmts;
     private List<LinearIRBlock> successors;
     private List<LinearIRBlock> predecessors;
@@ -120,10 +120,11 @@ public class LinearIRBlock {
     // Utility Methods
     @Override
     public String toString() {
-        var firstInstr = stmts.get(0);
-
-        if (firstInstr instanceof FuncEntryLabel) {
-            return firstInstr.toString();
+        if (stmts.isEmpty()) {
+            return "L" + ord;
+        }
+        if (stmts.get(0) instanceof FuncEntryLabel funcEntryLabel) {
+            return funcEntryLabel.toSource();
         }
         return "L" + ord;
     }
@@ -139,12 +140,18 @@ public class LinearIRBlock {
     }
 
     public Label getLabel() {
-        var firstInstr = stmts.get(0);
+        if (stmts.isEmpty()) {
+            return new Label(toString(),scope);
+        }
 
+
+        var firstInstr = stmts.get(0);
         if (firstInstr instanceof FuncEntryLabel funcEntryLabel) {
             return funcEntryLabel;
         }
 
         return new Label(toString(),scope);
     }
+
+
 }

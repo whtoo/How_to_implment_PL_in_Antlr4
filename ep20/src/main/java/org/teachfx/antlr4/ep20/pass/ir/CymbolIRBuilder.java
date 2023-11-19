@@ -11,6 +11,8 @@ import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
 import org.teachfx.antlr4.ep20.ir.expr.Operand;
+import org.teachfx.antlr4.ep20.pass.cfg.CFG;
+import org.teachfx.antlr4.ep20.pass.cfg.CFGBuilder;
 import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.Prog;
@@ -25,6 +27,7 @@ import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 
@@ -417,5 +420,24 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
 
     protected VarSlot peekEvalOperand() {
         return evalExprStack.peek();
+    }
+
+    public CFG<IRNode> getCFG() {
+        for (var func : prog.blockList){
+            insertBlockLabel(func);
+        }
+
+        var cfgBuilder = new CFGBuilder(prog.blockList);
+        return cfgBuilder.getCFG();
+    }
+
+    public void insertBlockLabel(LinearIRBlock startBlock) {
+        var firstInstr = startBlock.getLabel();
+        if (!(firstInstr instanceof FuncEntryLabel)) {
+            startBlock.getStmts().add(0,firstInstr);
+        }
+        for (var successor : startBlock.getSuccessors()) {
+            insertBlockLabel(successor);
+        }
     }
 }

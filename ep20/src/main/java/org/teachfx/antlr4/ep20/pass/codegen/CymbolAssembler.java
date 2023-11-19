@@ -70,6 +70,9 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(Label label) {
+        // label不存在嵌套可能，下面这种情况必定是空块导致的label悬空。
+        if (indents > 0) { indents--; }
+
         if (label instanceof FuncEntryLabel){
             emit("%s".formatted(label.toSource()));
         } else {
@@ -88,7 +91,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(CJMP cjmp) {
-        emit("brf %s".formatted(cjmp.getElseBlock().toString()));
+        emit("brf %s".formatted(cjmp.getElseBlock().getLabel().toString()));
         indents--;
         return null;
     }

@@ -3,11 +3,15 @@ package org.teachfx.antlr4.ep19.pass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.teachfx.antlr4.ep19.misc.Util;
-import org.teachfx.antlr4.ep19.symtab.TypeTable;
-import org.teachfx.antlr4.ep19.symtab.scope.*;
-import org.teachfx.antlr4.ep19.symtab.symbol.*;
-import org.teachfx.antlr4.ep19.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep19.symtab.TypeTable;
+import org.teachfx.antlr4.ep19.symtab.scope.BaseScope;
+import org.teachfx.antlr4.ep19.symtab.scope.GlobalScope;
+import org.teachfx.antlr4.ep19.symtab.scope.LocalScope;
+import org.teachfx.antlr4.ep19.symtab.scope.Scope;
+import org.teachfx.antlr4.ep19.symtab.symbol.MethodSymbol;
+import org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol;
+import org.teachfx.antlr4.ep19.symtab.symbol.VariableSymbol;
 
 /**
  *

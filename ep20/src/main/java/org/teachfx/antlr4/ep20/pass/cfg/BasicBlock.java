@@ -2,7 +2,6 @@ package org.teachfx.antlr4.ep20.pass.cfg;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-
 import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.expr.Operand;
 import org.teachfx.antlr4.ep20.ir.stmt.Label;
@@ -73,6 +72,10 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
         return label;
     }
 
+    public String getOrdLabel() {
+        return "L%d".formatted(id);
+    }
+
     // Generate isEmpty
     public boolean isEmpty() {
         return codes.isEmpty();
@@ -82,6 +85,10 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
             return codes;
         }
         return codes.subList(0, codes.size() - 1);
+    }
+
+    public List<Loc<I>> dropLabelSeq() {
+        return codes.subList(1, codes.size());
     }
 
     public I getLastInstr() {
@@ -96,4 +103,5 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
     public Set<Operand> liveIn;
 
     public Set<Operand> liveOut;
+
 }

@@ -1,7 +1,7 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
-import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
+import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 
 public class JMP extends Stmt
 {

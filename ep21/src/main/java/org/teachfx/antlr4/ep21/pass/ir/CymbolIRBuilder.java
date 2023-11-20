@@ -2,7 +2,6 @@ package org.teachfx.antlr4.ep21.pass.ir;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import org.teachfx.antlr4.ep21.ast.ASTVisitor;
 import org.teachfx.antlr4.ep21.ast.CompileUnit;
 import org.teachfx.antlr4.ep21.ast.decl.FuncDeclNode;
@@ -12,7 +11,8 @@ import org.teachfx.antlr4.ep21.ast.stmt.*;
 import org.teachfx.antlr4.ep21.ast.type.TypeNode;
 import org.teachfx.antlr4.ep21.ir.Prog;
 import org.teachfx.antlr4.ep21.ir.def.Func;
-import org.teachfx.antlr4.ep21.ir.expr.*;
+import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
+import org.teachfx.antlr4.ep21.ir.expr.Expr;
 import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep21.ir.expr.values.BoolVal;

@@ -1,19 +1,25 @@
 package org.teachfx.antlr4.ep20.pass.cfg;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 
 import java.util.*;
-import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 // TODO: visualize cfg
+/*
+    One graph bind to a function.
+ */
 public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
+    private final static Logger logger = LogManager.getLogger(CFG.class);
     public final List<BasicBlock<I>> nodes;
 
     public final List<Pair<Integer,Integer>> edges;
 
-    private List<Pair<Set<Integer>, Set<Integer>>> links;
+    private final List<Pair<Set<Integer>, Set<Integer>>> links;
 
     public CFG(List<BasicBlock<I>> nodes, List<Pair<Integer, Integer>> edges) {
         // Generate init
@@ -30,7 +36,6 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
              var v = edge.getRight();
              links.get(u).getRight().add(v);
              links.get(v).getLeft().add(u);
-
         }
     }
 
@@ -63,8 +68,24 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
 
     @Override
     public String toString() {
-        var graphRenderBuffer = new StringBuffer();
+        var graphRenderBuffer = new StringBuilder("graph LR\n");
+        AtomicInteger i = new AtomicInteger();
+
+        for(var node : nodes){
+
+            graphRenderBuffer.append("subgraph ").append(node.getOrdLabel()).append("\n");
+            node.dropLabelSeq().stream().map(x -> x.instr.toString()).map(x ->  "Q"+ (i.getAndIncrement()) + "[\"" + x + ";\"]\n").forEach(graphRenderBuffer::append);
+            graphRenderBuffer.append("end").append("\n");
+
+        }
+
+        for (var edge : edges){
+
+            graphRenderBuffer.append("L").append(edge.getLeft()).append(" --> ").append("L").append(edge.getRight()).append("\n");
+        }
 
         return graphRenderBuffer.toString();
     }
+
+
 }

@@ -11,7 +11,9 @@ import org.teachfx.antlr4.ep16.visitor.Interpreter;
 import org.teachfx.antlr4.ep16.visitor.LocalDefine;
 import org.teachfx.antlr4.ep16.visitor.LocalResolver;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class Compiler {
 

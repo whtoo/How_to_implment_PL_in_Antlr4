@@ -10,13 +10,10 @@ import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
-import org.teachfx.antlr4.ep20.ir.expr.Operand;
-import org.teachfx.antlr4.ep20.pass.cfg.CFG;
-import org.teachfx.antlr4.ep20.pass.cfg.CFGBuilder;
-import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.expr.CallFunc;
+import org.teachfx.antlr4.ep20.ir.expr.Operand;
 import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep20.ir.expr.addr.OperandSlot;
@@ -24,10 +21,12 @@ import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
+import org.teachfx.antlr4.ep20.pass.cfg.CFG;
+import org.teachfx.antlr4.ep20.pass.cfg.CFGBuilder;
+import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Stack;
 

@@ -5,7 +5,6 @@ import org.teachfx.antlr4.ep20.ir.IRNode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class CFGBuilder {
     private CFG<IRNode> cfg;

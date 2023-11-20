@@ -2,7 +2,8 @@ package org.teachfx.antlr4.ep17.visitor;
 
 import org.teachfx.antlr4.ep17.misc.Graph;
 import org.teachfx.antlr4.ep17.parser.CymbolBaseVisitor;
-import org.teachfx.antlr4.ep17.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep17.parser.CymbolParser.ExprFuncCallContext;
+import org.teachfx.antlr4.ep17.parser.CymbolParser.FunctionDeclContext;
 public class CallGraphVisitor extends CymbolBaseVisitor<Object> {
     public Graph callGraph;
     private String currentFunctionName = null;

@@ -137,7 +137,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
         if (tConstVal.getVal() instanceof Integer integer) {
             emit("iconst %d".formatted(integer));
         } else if (tConstVal.getVal() instanceof String str) {
-            emit("sconst %s".formatted(str));
+            emit("sconst \"%s\"".formatted(str));
         } else if (tConstVal.getVal() instanceof Boolean bool) {
             emit("bconst %d".formatted(bool?1:0));
         }

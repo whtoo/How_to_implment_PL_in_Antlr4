@@ -30,7 +30,7 @@ public class ConstVal<T> extends ImmValue {
     @Override
     public String toString() {
         if(val instanceof String) {
-            return " %s ".formatted(val);
+            return " '%s' ".formatted(val);
         } else if (val instanceof Integer) {
             return " %d ".formatted(val);
         } else if (val instanceof Boolean) {

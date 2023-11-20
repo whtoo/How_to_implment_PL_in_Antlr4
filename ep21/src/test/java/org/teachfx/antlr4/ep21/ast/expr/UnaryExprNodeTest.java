@@ -1,8 +1,9 @@
 package org.teachfx.antlr4.ep21.ast.expr;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class UnaryExprNodeTest {
     @Test

@@ -215,7 +215,9 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitPrimarySTRING(CymbolParser.PrimarySTRINGContext ctx) {
-        return new StringExprNode(ctx.getText(),ctx);
+        var size = ctx.getText().length();
+
+        return new StringExprNode(ctx.getText().substring(1, size - 1),ctx);
     }
 
     @Override

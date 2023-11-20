@@ -12,7 +12,6 @@ import org.teachfx.antlr4.ep20.ir.stmt.Label;
 import org.teachfx.antlr4.ep20.parser.CymbolLexer;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.pass.ast.CymbolASTBuilder;
-
 import org.teachfx.antlr4.ep20.pass.codegen.CymbolAssembler;
 import org.teachfx.antlr4.ep20.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep20.pass.symtab.LocalDefine;
@@ -51,7 +50,7 @@ public class Compiler {
         astRoot.accept(irBuilder);
 
         var cfg = irBuilder.getCFG();
-        logger.info("CFG:\n" + cfg);
+        logger.info("CFG:\n" + cfg.toString());
 
         var assembler = new CymbolAssembler();
         irBuilder.prog.accept(assembler);

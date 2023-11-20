@@ -35,6 +35,61 @@ graph LR
 ### CFG
 
 ```mermaid
-graph TD;
-    L0["iconst 0;istore 0;;iconst 7;igt"]
+graph LR;
+    .def dec1: args=1 ,locals=1[t0 = @0;
+t1 =  1 ;
+t0 SUB t1;
+jmp L1;
+]
+L1[ret;
+]
+.def main: args=0 ,locals=1[t0 =  10 ;
+@0 = t0;
+jmp L4;
+]
+L4[t0 = @0;
+t1 =  0 ;
+t0 GT t1;
+jmpIf t0,L5,L6;
+]
+L5[t0 = @0;
+t1 =  5 ;
+t0 GT t1;
+jmpIf t0,L7,L8;
+]
+L7[t0 = @0;
+call print(args:1);
+t0 = @0;
+t1 =  7 ;
+t0 EQ t1;
+jmpIf t0,L9,L10;
+]
+L9[t0 =  7 ;
+jmp L3;
+]
+L10[]
+L8[t0 =  "break" ;
+call print(args:1);
+t0 = @0;
+call dec1(args:1);
+@0 = t0;
+jmp L4;
+]
+L6[t0 =  0 ;
+jmp L3;
+]
+L3[halt;
+]
+L0 --> L1
+L2 --> L4
+L4 --> L5
+L5 --> L7
+L7 --> L9
+L9 --> L10
+L10 --> L8
+L8 --> L6
+L6 --> L3
+
+
 ```
+

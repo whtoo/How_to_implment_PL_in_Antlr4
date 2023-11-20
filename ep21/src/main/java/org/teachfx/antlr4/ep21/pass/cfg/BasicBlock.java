@@ -1,7 +1,6 @@
 package org.teachfx.antlr4.ep21.pass.cfg;
 
 import org.teachfx.antlr4.ep21.ir.IRNode;
-import org.teachfx.antlr4.ep21.ir.stmt.Label;
 
 import java.util.List;
 

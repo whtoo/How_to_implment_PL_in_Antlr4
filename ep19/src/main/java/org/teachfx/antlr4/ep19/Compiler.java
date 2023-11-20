@@ -11,7 +11,10 @@ import org.teachfx.antlr4.ep19.pass.Interpreter;
 import org.teachfx.antlr4.ep19.pass.LocalDefine;
 import org.teachfx.antlr4.ep19.pass.LocalResolver;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class Compiler {
 

@@ -1,7 +1,10 @@
 package org.teachfx.antlr4.ep21.ir;
 
 import org.teachfx.antlr4.ep21.ir.def.Func;
-import org.teachfx.antlr4.ep21.ir.expr.*;
+import org.teachfx.antlr4.ep21.ir.expr.ArrayAccessExpr;
+import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
+import org.teachfx.antlr4.ep21.ir.expr.ClassAccessExpr;
+import org.teachfx.antlr4.ep21.ir.expr.Temp;
 import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep21.ir.expr.values.BoolVal;

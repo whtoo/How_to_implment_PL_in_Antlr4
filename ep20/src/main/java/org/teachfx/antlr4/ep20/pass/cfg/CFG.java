@@ -7,6 +7,7 @@ import org.teachfx.antlr4.ep20.ir.IRNode;
 import java.util.*;
 import java.util.LinkedList;
 
+// TODO: visualize cfg
 public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
     public final List<BasicBlock<I>> nodes;
 

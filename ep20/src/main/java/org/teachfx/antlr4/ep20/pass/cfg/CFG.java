@@ -16,7 +16,7 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
 
     public CFG(List<BasicBlock<I>> nodes, List<Pair<Integer, Integer>> edges) {
         // Generate init
-        this.nodes = new LinkedList<>(nodes); ///.stream().sorted(Comparator.comparingInt(BasicBlock::getId)).toList();
+        this.nodes = new LinkedList<>(nodes);
         this.edges = edges;
 
         links = new ArrayList<>();

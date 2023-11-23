@@ -5,8 +5,7 @@ import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.utils.Kind;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class LinearIRBlock {
 
@@ -153,5 +152,27 @@ public class LinearIRBlock {
         return new Label(toString(),scope);
     }
 
+    public Optional<TreeSet<Integer>> getJumpEntries() {
+        var entries = new TreeSet<Integer>();
+        switch (kind) {
+            case END_BY_CJMP -> {
+                CJMP cjmp = (CJMP) getStmts().getLast();
+                var tid = cjmp.getThenBlock().getOrd();
+                var eid = cjmp.getElseBlock().getOrd();
+                entries.add(tid);
+                entries.add(eid);
+                return Optional.of(entries);
+            }
+            case END_BY_JMP -> {
+                JMP cjmp = (JMP) getStmts().getLast();
+                var tid = cjmp.next.getOrd();
+                entries.add(tid);
+                return Optional.of(entries);
+            }
+            default -> {
+                return Optional.empty();
+            }
+        }
+    }
 
 }

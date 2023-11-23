@@ -27,6 +27,7 @@ import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 
@@ -421,12 +422,12 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         return evalExprStack.peek();
     }
 
-    public CFG<IRNode> getCFG() {
-        for (var func : prog.blockList){
+    public CFG<IRNode> getCFG(List<LinearIRBlock> blocks) {
+        for (var func : blocks){
             insertBlockLabel(func);
         }
 
-        var cfgBuilder = new CFGBuilder(prog.blockList);
+        var cfgBuilder = new CFGBuilder(blocks);
         return cfgBuilder.getCFG();
     }
 

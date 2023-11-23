@@ -3,8 +3,7 @@ package org.teachfx.antlr4.ep20.pass.cfg;
 import org.apache.commons.lang3.tuple.Pair;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class CFGBuilder {
     private CFG<IRNode> cfg;
@@ -19,10 +18,26 @@ public class CFGBuilder {
         cfg = new CFG<>(basicBlocks, edges);
     }
 
+    private static final Set<String> cachedEdgeLinks = new HashSet<>();
+
     private void build(LinearIRBlock block){
+
         basicBlocks.add(BasicBlock.buildFromLinearBlock(block));
+        block.getJumpEntries().ifPresent(entries -> {
+            for(var dest : entries){
+                var key = "%d-%d".formatted(block.getOrd(), dest);
+                if (!cachedEdgeLinks.contains(key)) {
+                    edges.add(Pair.of(block.getOrd(), dest));
+                    cachedEdgeLinks.add("%d-%d".formatted(block.getOrd(), dest));
+                }
+            }
+        });
         for(var successor : block.getSuccessors()){
-            edges.add(Pair.of(block.getOrd(), successor.getOrd()));
+            var key = "%d-%d".formatted(block.getOrd(), successor.getOrd());
+            if (!cachedEdgeLinks.contains(key)) {
+                cachedEdgeLinks.add(key);
+                edges.add(Pair.of(block.getOrd(), successor.getOrd()));
+            }
             build(successor);
         }
     }

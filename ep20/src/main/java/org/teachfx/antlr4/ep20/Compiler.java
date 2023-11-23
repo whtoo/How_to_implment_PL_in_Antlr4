@@ -49,12 +49,12 @@ public class Compiler {
 
         astRoot.accept(irBuilder);
 
-        var cfg = irBuilder.getCFG();
+        var cfg = irBuilder.getCFG(irBuilder.prog.blockList);
         logger.info("CFG:\n" + cfg.toString());
 
         var assembler = new CymbolAssembler();
         irBuilder.prog.accept(assembler);
-//        saveToEp18Res(assembler.getAsmInfo());
+        saveToEp18Res(assembler.getAsmInfo());
         logger.info("\n%s".formatted(assembler.getAsmInfo()));
     }
 

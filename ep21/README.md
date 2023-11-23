@@ -21,22 +21,75 @@ graph LR
 ## DONE
 
 ```mermaid
-graph TD;
-    A[基本块1] --> B[基本块2]  
-    B --> C[基本块3]  
-    C -->|条件跳转| D[基本块6]  
-    C -->|否则| E[基本块4]  
-    E -->|条件跳转| F[基本块7]  
-    F --> B  
-    E -->|否则| G[基本块5]  
-    G -->|条件跳转| F  
-    G -->|否则| H[基本块8]  
-    H --> I[基本块9]  
-    D --> I  
-    subgraph dec1  
-    A  
-    end  
-    subgraph main  
-        B --> C --> D --> E --> F --> G --> H --> I  
-    end
+graph TD
+subgraph L0
+Q0["t0 = @0;"]
+Q1["t1 =  1 ;"]
+Q2["t0 SUB t1;"]
+Q3["jmp L1;"]
+end
+subgraph L1
+Q4["ret;"]
+end
+subgraph L2
+Q5["t0 =  10 ;"]
+Q6["@0 = t0;"]
+Q7["jmp L4;"]
+end
+subgraph L4
+Q8["t0 = @0;"]
+Q9["t1 =  0 ;"]
+Q10["t0 GT t1;"]
+Q11["jmpIf t0,L5,L6;"]
+end
+subgraph L5
+Q12["t0 = @0;"]
+Q13["t1 =  5 ;"]
+Q14["t0 GT t1;"]
+Q15["jmpIf t0,L7,L8;"]
+end
+subgraph L7
+Q16["t0 = @0;"]
+Q17["call print(args:1);"]
+Q18["t0 = @0;"]
+Q19["t1 =  7 ;"]
+Q20["t0 EQ t1;"]
+Q21["jmpIf t0,L9,L10;"]
+end
+subgraph L9
+Q22["t0 =  7 ;"]
+Q23["jmp L3;"]
+end
+subgraph L10
+end
+subgraph L8
+Q24["t0 =  'break' ;"]
+Q25["call print(args:1);"]
+Q26["t0 = @0;"]
+Q27["call dec1(args:1);"]
+Q28["@0 = t0;"]
+Q29["jmp L4;"]
+end
+subgraph L6
+Q30["t0 =  0 ;"]
+Q31["jmp L3;"]
+end
+subgraph L3
+Q32["halt;"]
+end
+
+L0 --> L1
+L2 --> L4
+L4 --> L5
+L4 --> L6
+L5 --> L7
+L5 --> L8
+L7 --> L9
+L7 --> L10
+L9 --> L3
+L9 --> L10
+L10 --> L8
+L8 --> L4
+L8 --> L6
+L6 --> L3
 ```

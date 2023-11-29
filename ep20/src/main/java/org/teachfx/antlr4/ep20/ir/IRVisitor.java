@@ -26,7 +26,7 @@ public interface IRVisitor<S,E> {
     S visit(ReturnVal returnVal);
     default S visit(ExprStmt exprStmt) { return exprStmt.accept(this); }
 
-    S visit(Prog prog);
+    default S visit(Prog prog) { return null; }
 
     E visit(OperandSlot operandSlot);
 

@@ -25,11 +25,10 @@ L7:
     load 0
     iconst 7
     ieq
-    brf L10
+    brf L8
 L9:
     iconst 7
     br L3
-L10:
 L8:
     sconst "break"
     print

@@ -48,12 +48,13 @@ public class Compiler {
         var irBuilder = new CymbolIRBuilder();
 
         astRoot.accept(irBuilder);
-
-        var cfg = irBuilder.getCFG(irBuilder.prog.blockList);
-        logger.info("CFG:\n" + cfg.toString());
+        for(var block : irBuilder.prog.blockList) {
+            var cfg = irBuilder.getCFG(List.of(block));
+            logger.info("CFG:\n" + cfg.toString());
+        }
 
         var assembler = new CymbolAssembler();
-        irBuilder.prog.accept(assembler);
+        assembler.visit(irBuilder.prog.linearInstrs());
         saveToEp18Res(assembler.getAsmInfo());
         logger.info("\n%s".formatted(assembler.getAsmInfo()));
     }

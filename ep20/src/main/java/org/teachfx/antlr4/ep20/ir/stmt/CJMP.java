@@ -1,10 +1,11 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
+import org.teachfx.antlr4.ep20.ir.JMPInstr;
 import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 
-public class CJMP extends Stmt {
+public class CJMP extends Stmt implements JMPInstr {
     public VarSlot cond;
     private LinearIRBlock thenBlock;
     private LinearIRBlock elseBlock;
@@ -16,6 +17,11 @@ public class CJMP extends Stmt {
         this.elseBlock = elseLabel;
         thenLabel.refJMP(this);
         elseBlock.refJMP(this);
+    }
+
+    @Override
+    public Label getTarget() {
+        return elseBlock.getLabel();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep20.pass.codegen;
 
+import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.expr.CallFunc;
@@ -12,6 +13,7 @@ import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 
 public class CymbolAssembler implements IRVisitor<Void,Void> {
@@ -30,9 +32,8 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     }
     private int indents = 0;
 
-    @Override
-    public Void visit(Prog prog) {
-        for (var instr: prog.linearInstrs()) {
+    public Void visit(List<IRNode> linearInstrs) {
+        for (var instr: linearInstrs) {
             if (instr instanceof Expr) {
                 ((Expr) instr).accept(this);
             } else  {

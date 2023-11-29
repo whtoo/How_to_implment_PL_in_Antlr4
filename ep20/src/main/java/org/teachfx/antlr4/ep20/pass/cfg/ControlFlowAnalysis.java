@@ -10,7 +10,7 @@ import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 
-public class ControlFlowAnalysis implements IRVisitor<Void,Void> {
+public class ControlFlowAnalysis implements IRVisitor<Void, Void> {
 
     @Override
     public <T> Void visit(ConstVal<T> tConstVal) {

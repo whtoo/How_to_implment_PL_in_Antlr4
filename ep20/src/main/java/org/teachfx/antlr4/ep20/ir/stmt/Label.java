@@ -1,11 +1,12 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
+import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 
 import java.util.Objects;
 
-public class Label extends Stmt {
+public class Label extends Stmt implements Comparable<Label> {
 
     private Stmt nextEntry = null;
 
@@ -21,6 +22,12 @@ public class Label extends Stmt {
         if (Objects.isNull(rawLabel)) {
             this.seq = scope.getLabelSeq();
         }
+    }
+
+    public Label(Scope scope,Integer ord) {
+        this.seq = ord;
+        this.rawLabel = "L%d".formatted(seq);
+        this.scope = scope;
     }
 
     public Label(Scope scope) {
@@ -92,5 +99,17 @@ public class Label extends Stmt {
 
     public int getSeq() {
         return seq;
+    }
+
+    @Override
+    public int hashCode() {
+        return getSeq();
+    }
+
+    @Override
+    public int compareTo(@NotNull Label o) {
+        var e = Integer.valueOf(getSeq());
+        var t = Integer.valueOf(o.getSeq());
+        return e.compareTo(t);
     }
 }

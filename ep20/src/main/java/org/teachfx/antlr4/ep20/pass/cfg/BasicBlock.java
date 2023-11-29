@@ -14,29 +14,45 @@ import java.util.Set;
 
 public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, Iterable<Loc<I>> {
 
+    public final int id;
+    // Generate codes
+    public List<Loc<I>> codes;
+    public Kind kind;
+    // For data flow analysis
+    public Set<Operand> def;
+    public Set<Operand> liveUse;
+    public Set<Operand> liveIn;
+    public Set<Operand> liveOut;
+    protected Label label;
+
+    public BasicBlock(Kind kind, List<Loc<I>> codes, Label label) {
+        this.codes = codes;
+        this.label = label;
+        this.id = label.getSeq();
+        this.kind = kind;
+    }
+
+    @NotNull
+    @Contract("_ -> new")
+    public static BasicBlock<IRNode> buildFromLinearBlock(@NotNull LinearIRBlock block) {
+        return new BasicBlock<IRNode>(block.getKind(), block.getStmts().stream().map(Loc::new).toList(), block.getLabel());
+    }
+
     @Override
     public int compareTo(@NotNull BasicBlock<I> o) {
         return this.id - o.id;
     }
-
-
-    // Generate codes
-    public List<Loc<I>> codes;
-
-    public final int id;
-
-    protected Optional<Label> label;
-
-    public Kind kind;
 
     @NotNull
     @Override
     public Iterator<Loc<I>> iterator() {
         return codes.iterator();
     }
+
     public Iterator<Loc<I>> backwardIterator() {
         return new Iterator<Loc<I>>() {
             private int index = codes.size() - 1;
+
             @Override
             public boolean hasNext() {
                 return index != -1;
@@ -51,24 +67,11 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
         };
     }
 
-    @NotNull
-    @Contract("_ -> new")
-    public static BasicBlock<IRNode> buildFromLinearBlock(@NotNull LinearIRBlock block) {
-        return new BasicBlock<IRNode>(block.getKind(), block.getOrd(), block.getStmts().stream().map(Loc::new).toList(), Optional.of(block.getLabel()));
-    }
-
-    public BasicBlock(Kind kind, int id, List<Loc<I>> codes, Optional<Label> label) {
-        this.codes = codes;
-        this.label = label;
-        this.id = id;
-        this.kind = kind;
-    }
-
     public int getId() {
         return id;
     }
 
-    public Optional<Label> getLabel() {
+    public Label getLabel() {
         return label;
     }
 
@@ -80,14 +83,16 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
     public boolean isEmpty() {
         return codes.isEmpty();
     }
+
     public List<Loc<I>> allSeq() {
-        if (kind.equals(Kind.CONTINUOUS)){
+        if (kind.equals(Kind.CONTINUOUS)) {
             return codes;
         }
         return codes.subList(0, codes.size() - 1);
     }
 
     public List<Loc<I>> dropLabelSeq() {
+        if (codes.size() <= 1) return codes;
         return codes.subList(1, codes.size());
     }
 
@@ -95,13 +100,11 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
         return codes.get(codes.size() - 1).instr;
     }
 
-    // For data flow analysis
-    public Set<Operand> def;
-
-    public Set<Operand> liveUse;
-
-    public Set<Operand> liveIn;
-
-    public Set<Operand> liveOut;
+    public void mergeNearBlock(BasicBlock<I> nextBlock) {
+        /// remove last jump instr
+        codes.remove(codes.size() - 1);
+        /// merge instr
+        codes.addAll(nextBlock.codes);
+    }
 
 }

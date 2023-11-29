@@ -24,6 +24,7 @@ import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.pass.cfg.CFG;
 import org.teachfx.antlr4.ep20.pass.cfg.CFGBuilder;
 import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
+import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
@@ -75,12 +76,14 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         var methodSymbol = (MethodSymbol) funcDeclNode.getRefSymbol();
         var entryLabel = new FuncEntryLabel(methodSymbol.getName(),methodSymbol.getArgs(),methodSymbol.getLocals(),methodSymbol);
         // Expand
-        forkNewBlock();
+        forkNewBlock(methodSymbol);
         var startBlock = currentBlock;
+
         evalExprStack = new Stack<>();
         getCurrentBlock().addStmt(entryLabel);
 
         var exitBlock = new LinearIRBlock();
+        exitBlock.setScope(methodSymbol);
         var exitEntry = new ReturnVal(null,methodSymbol);
 
         setExitHook(exitEntry,methodSymbol);
@@ -308,8 +311,9 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         return null;
     }
 
-    public void forkNewBlock() {
+    public void forkNewBlock(Scope scope) {
         currentBlock = new LinearIRBlock();
+        currentBlock.setScope(scope);
         breakStack = new Stack<>();
         continueStack = new Stack<>();
     }
@@ -432,10 +436,8 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     }
 
     public void insertBlockLabel(LinearIRBlock startBlock) {
-        var firstInstr = startBlock.getLabel();
-        if (!(firstInstr instanceof FuncEntryLabel)) {
-            startBlock.getStmts().add(0,firstInstr);
-        }
+        startBlock.getLabel();
+
         for (var successor : startBlock.getSuccessors()) {
             insertBlockLabel(successor);
         }

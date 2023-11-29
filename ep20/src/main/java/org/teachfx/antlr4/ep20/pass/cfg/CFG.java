@@ -17,25 +17,27 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
     private final static Logger logger = LogManager.getLogger(CFG.class);
     public final List<BasicBlock<I>> nodes;
 
-    public final List<Pair<Integer,Integer>> edges;
+    public final List<Pair<Integer, Integer>> edges;
 
     private final List<Pair<Set<Integer>, Set<Integer>>> links;
 
-    public CFG(List<BasicBlock<I>> nodes, List<Pair<Integer, Integer>> edges) {
+    public CFG(Map<Integer, BasicBlock<I>> nodes, List<Pair<Integer, Integer>> edges) {
         // Generate init
-        this.nodes = new LinkedList<>(nodes);
+        var lastOrd = Integer.max(nodes.keySet().stream().max(Integer::compareTo).get(), nodes.size()) + 1;
+
+        this.nodes = new LinkedList<>(nodes.values());
         this.edges = edges;
 
         links = new ArrayList<>();
-        for (var i = 0;i < nodes.size();i++) {
+        for (var i = 0; i < lastOrd; i++) {
             links.add(Pair.of(new TreeSet<>(), new TreeSet<>()));
         }
 
         for (var edge : edges) {
-             var u = edge.getLeft();
-             var v = edge.getRight();
-             links.get(u).getRight().add(v);
-             links.get(v).getLeft().add(u);
+            var u = edge.getLeft();
+            var v = edge.getRight();
+            links.get(u).getRight().add(v);
+            links.get(v).getLeft().add(u);
         }
     }
 
@@ -65,21 +67,25 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
         return nodes.iterator();
     }
 
+    public List<I> simplifyIRInstrs() {
+
+        return null;
+    }
 
     @Override
     public String toString() {
-        var graphRenderBuffer = new StringBuilder("graph LR\n");
+        var graphRenderBuffer = new StringBuilder("graph TD\n");
         AtomicInteger i = new AtomicInteger();
 
-        for(var node : nodes){
+        for (var node : nodes.stream().sorted((b1,b2)-> b2.id - b1.id).toList()) {
 
             graphRenderBuffer.append("subgraph ").append(node.getOrdLabel()).append("\n");
-            node.dropLabelSeq().stream().map(x -> x.instr.toString()).map(x ->  "Q"+ (i.getAndIncrement()) + "[\"" + x + ";\"]\n").forEach(graphRenderBuffer::append);
+            node.dropLabelSeq().stream().map(x -> x.instr.toString()).map(x -> "Q" + (i.getAndIncrement()) + "[\"" + x + ";\"]\n").forEach(graphRenderBuffer::append);
             graphRenderBuffer.append("end").append("\n");
 
         }
 
-        for (var edge : edges){
+        for (var edge : edges) {
 
             graphRenderBuffer.append("L").append(edge.getLeft()).append(" --> ").append("L").append(edge.getRight()).append("\n");
         }

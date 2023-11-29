@@ -35,61 +35,70 @@ graph LR
 ### CFG
 
 ```mermaid
-graph LR;
-    .def dec1: args=1 ,locals=1[t0 = @0;
-t1 =  1 ;
-t0 SUB t1;
-jmp L1;
-]
-L1[ret;
-]
-.def main: args=0 ,locals=1[t0 =  10 ;
-@0 = t0;
-jmp L4;
-]
-L4[t0 = @0;
-t1 =  0 ;
-t0 GT t1;
-jmpIf t0,L5,L6;
-]
-L5[t0 = @0;
-t1 =  5 ;
-t0 GT t1;
-jmpIf t0,L7,L8;
-]
-L7[t0 = @0;
-call print(args:1);
-t0 = @0;
-t1 =  7 ;
-t0 EQ t1;
-jmpIf t0,L9,L10;
-]
-L9[t0 =  7 ;
-jmp L3;
-]
-L10[]
-L8[t0 =  "break" ;
-call print(args:1);
-t0 = @0;
-call dec1(args:1);
-@0 = t0;
-jmp L4;
-]
-L6[t0 =  0 ;
-jmp L3;
-]
-L3[halt;
-]
-L0 --> L1
-L2 --> L4
-L4 --> L5
-L5 --> L7
-L7 --> L9
-L9 --> L10
-L10 --> L8
-L8 --> L6
-L6 --> L3
-
-
+graph TD
+    subgraph L0
+        Q112
+    end
+    subgraph L2
+        Q0["t0 =  10 ;"]
+        Q1["@0 = t0;"]
+        Q2["jmp L4;"]
+    end
+    subgraph L3
+        Q3["t0 = @0;"]
+        Q4["t1 =  0 ;"]
+        Q5["t0 GT t1;"]
+        Q6["jmpIf t0,L5,L6;"]
+    end
+    subgraph L4
+        Q7["t0 = @0;"]
+        Q8["t1 =  5 ;"]
+        Q9["t0 GT t1;"]
+        Q10["jmpIf t0,L7,L8;"]
+    end
+    subgraph L5
+        Q11["t0 = @0;"]
+        Q12["call print(args:1);"]
+        Q13["t0 = @0;"]
+        Q14["t1 =  7 ;"]
+        Q15["t0 EQ t1;"]
+        Q16["jmpIf t0,L9,L10;"]
+    end
+    subgraph L6
+        Q17["t0 =  7 ;"]
+        Q18["jmp L3;"]
+    end
+    subgraph L7
+        Q000
+    end
+    subgraph L8
+        Q19["t0 =  'break' ;"]
+        Q20["call print(args:1);"]
+        Q21["t0 = @0;"]
+        Q22["call dec1(args:1);"]
+        Q23["@0 = t0;"]
+        Q24["jmp L4;"]
+    end
+    subgraph L9
+        Q25["t0 =  0 ;"]
+        Q26["jmp L3;"]
+    end
+    subgraph L10
+        Q27["halt;"]
+    end
+    
+    L0 --> L4
+    L4 --> L5
+    L4 --> L6
+    L5 --> L7
+    L5 --> L8
+    L7 --> L0
+    L7 --> L9
+    L9 --> L3
+    L9 --> L10
+    L10 --> L8
+    L8 --> L4
+    L8 --> L6
+    L6 --> L3
 ```
 

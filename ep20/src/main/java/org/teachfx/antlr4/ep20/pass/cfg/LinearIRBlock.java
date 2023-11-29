@@ -1,23 +1,30 @@
 package org.teachfx.antlr4.ep20.pass.cfg;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRNode;
+import org.teachfx.antlr4.ep20.ir.JMPInstr;
+import org.teachfx.antlr4.ep20.ir.expr.Operand;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.utils.Kind;
 
 import java.util.*;
 
-public class LinearIRBlock {
+public class LinearIRBlock implements Comparable<LinearIRBlock> {
 
     // Fields
     private static int LABEL_SEQ = 0;
+    private static final Logger logger = LogManager.getLogger(LinearIRBlock.class);
     private Kind kind = Kind.CONTINUOUS;
     private int ord = 0;
     private ArrayList<IRNode> stmts;
     private List<LinearIRBlock> successors;
     private List<LinearIRBlock> predecessors;
+
     private Scope scope = null;
-    private List<IRNode> jmpRefMap = new ArrayList<>();
+    private List<JMPInstr> jmpRefMap = new ArrayList<>();
 
     // Constructor
     public LinearIRBlock() {
@@ -25,6 +32,17 @@ public class LinearIRBlock {
         successors = new ArrayList<>();
         predecessors = new ArrayList<>();
         ord = LABEL_SEQ++;
+        logger.info(ord);
+    }
+
+    public static boolean isBasicBlock(Stmt stmt) {
+        return !(stmt instanceof CJMP) && !(stmt instanceof JMP);
+    }
+
+    // Link Operations
+    public static void setLink(LinearIRBlock current, LinearIRBlock next) {
+        current.successors.add(next);
+        next.predecessors.add(current);
     }
 
     // Methods
@@ -44,10 +62,6 @@ public class LinearIRBlock {
         } else {
             kind = Kind.CONTINUOUS;
         }
-    }
-
-    public static boolean isBasicBlock(Stmt stmt) {
-        return !(stmt instanceof CJMP) && !(stmt instanceof JMP);
     }
 
     // Getters and Setters
@@ -85,22 +99,16 @@ public class LinearIRBlock {
         this.scope = scope;
     }
 
-    public List<IRNode> getJmpRefMap() {
+    public List<JMPInstr> getJmpRefMap() {
         return jmpRefMap;
     }
 
-    public void setJmpRefMap(List<IRNode> jmpRefMap) {
+    public void setJmpRefMap(List<JMPInstr> jmpRefMap) {
         this.jmpRefMap = jmpRefMap;
     }
 
     public int getOrd() {
         return ord;
-    }
-
-    // Link Operations
-    public static void setLink(LinearIRBlock current, LinearIRBlock next) {
-        current.successors.add(next);
-        next.predecessors.add(current);
     }
 
     public void setLink(LinearIRBlock next) {
@@ -112,7 +120,7 @@ public class LinearIRBlock {
     }
 
     // Jump Operations
-    public void refJMP(IRNode node) {
+    public void refJMP(JMPInstr node) {
         jmpRefMap.add(node);
     }
 
@@ -128,7 +136,7 @@ public class LinearIRBlock {
         return "L" + ord;
     }
 
-    public String toSource(){
+    public String toSource() {
         var firstInstr = stmts.get(0);
 
         if (firstInstr instanceof FuncEntryLabel) {
@@ -140,32 +148,35 @@ public class LinearIRBlock {
 
     public Label getLabel() {
         if (stmts.isEmpty()) {
-            return new Label(toString(),scope);
+            return new Label(toString(), scope);
         }
-
 
         var firstInstr = stmts.get(0);
-        if (firstInstr instanceof FuncEntryLabel funcEntryLabel) {
-            return funcEntryLabel;
+        if (firstInstr instanceof Label label) {
+
+            return label;
+        } else {
+            stmts.add(0, new Label(scope, getOrd()));
+            firstInstr = stmts.get(0);
         }
 
-        return new Label(toString(),scope);
+        return (Label) firstInstr;
     }
 
-    public Optional<TreeSet<Integer>> getJumpEntries() {
-        var entries = new TreeSet<Integer>();
+    public Optional<TreeSet<LinearIRBlock>> getJumpEntries() {
+        var entries = new TreeSet<LinearIRBlock>();
         switch (kind) {
             case END_BY_CJMP -> {
-                CJMP cjmp = (CJMP) getStmts().getLast();
-                var tid = cjmp.getThenBlock().getOrd();
-                var eid = cjmp.getElseBlock().getOrd();
-                entries.add(tid);
-                entries.add(eid);
+                CJMP cjmp = (CJMP) stmts.get(stmts.size() - 1);
+                var targetLb = cjmp.getThenBlock();
+                var elseLb = cjmp.getElseBlock();
+                entries.add(targetLb);
+                entries.add(elseLb);
                 return Optional.of(entries);
             }
             case END_BY_JMP -> {
-                JMP cjmp = (JMP) getStmts().getLast();
-                var tid = cjmp.next.getOrd();
+                JMP cjmp = (JMP) stmts.get(stmts.size() - 1);
+                var tid = cjmp.next;
                 entries.add(tid);
                 return Optional.of(entries);
             }
@@ -173,6 +184,16 @@ public class LinearIRBlock {
                 return Optional.empty();
             }
         }
+    }
+
+    @Override
+    public int compareTo(@NotNull LinearIRBlock o) {
+        return  ord - o.getOrd();
+    }
+
+    @Override
+    public int hashCode() {
+        return (ord * 177) % 71;
     }
 
 }

@@ -85,7 +85,7 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
 
     @Override
     public Void visit(JMP jmp) {
-        emit("br %s".formatted(jmp.next.toString()));
+        emit("br %s".formatted(jmp.getNext().toString()));
         indents--;
         return null;
     }

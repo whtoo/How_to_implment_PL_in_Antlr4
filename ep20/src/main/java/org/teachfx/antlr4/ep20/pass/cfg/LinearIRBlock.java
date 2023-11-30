@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.JMPInstr;
-import org.teachfx.antlr4.ep20.ir.expr.Operand;
 import org.teachfx.antlr4.ep20.ir.stmt.*;
 import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.utils.Kind;
@@ -176,7 +175,7 @@ public class LinearIRBlock implements Comparable<LinearIRBlock> {
             }
             case END_BY_JMP -> {
                 JMP cjmp = (JMP) stmts.get(stmts.size() - 1);
-                var tid = cjmp.next;
+                var tid = cjmp.getNext();
                 entries.add(tid);
                 return Optional.of(entries);
             }
@@ -196,4 +195,26 @@ public class LinearIRBlock implements Comparable<LinearIRBlock> {
         return (ord * 177) % 71;
     }
 
+    /**
+     *
+     * @param otherBlock 必须是相邻的基本块才能进行合并
+     */
+    public void mergeBlock(LinearIRBlock otherBlock) {
+        stmts.addAll(otherBlock.getStmts());
+        updateKindByLastInstr(stmts.get(stmts.size() - 1));
+        setSuccessors(otherBlock.getSuccessors());
+        for(var s : otherBlock.getSuccessors()) {
+            s.predecessors.remove(otherBlock);
+            s.predecessors.add(this);
+        }
+        for (var jmp : otherBlock.getJmpRefMap()) {
+            if (jmp instanceof JMP jmpInstr) {
+                jmpInstr.setNext(this);
+            } else {
+                var jmpInstr = (CJMP) jmp;
+                jmpInstr.setElseBlock(this);
+                jmpInstr.setThenBlock(this);
+            }
+        }
+    }
 }

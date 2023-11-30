@@ -47,7 +47,7 @@ public class Prog extends IRNode {
             var nextBlock = linearIRBlock.getSuccessors().get(0);
             for (var ref : linearIRBlock.getJmpRefMap()){
                 if (ref instanceof JMP jmp) {
-                    jmp.next = nextBlock;
+                    jmp.setNext(nextBlock);
                 } else if (ref instanceof CJMP cjmp) {
                     cjmp.setElseBlock(nextBlock);
                 }

@@ -16,7 +16,7 @@ public class JMP extends Stmt implements JMPInstr
         this.next = block;
         block.refJMP(this);
     }
-    public LinearIRBlock next;
+    private LinearIRBlock next;
 
     @Override
     public Label getTarget() {
@@ -31,5 +31,14 @@ public class JMP extends Stmt implements JMPInstr
     @Override
     public String toString() {
         return "jmp %s".formatted(next);
+    }
+
+    public void setNext(LinearIRBlock next) {
+        this.next = next;
+        next.refJMP(this);
+    }
+
+    public LinearIRBlock getNext() {
+        return this.next;
     }
 }

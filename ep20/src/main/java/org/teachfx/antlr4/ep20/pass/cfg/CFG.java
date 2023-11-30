@@ -15,10 +15,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
     private final static Logger logger = LogManager.getLogger(CFG.class);
+    // index: 第几号节点 -> BasicBlock<I> : 第几号节点对应的BasicBlock<I>节点
     public final List<BasicBlock<I>> nodes;
-
+    // <from,to> : <起始节点，终止节点>
     public final List<Pair<Integer, Integer>> edges;
-
+    // index: 第几号节点 ->   <prev,successors> : <前驱节点的集合，后继节点的集合>
     private final List<Pair<Set<Integer>, Set<Integer>>> links;
 
     public CFG(Map<Integer, BasicBlock<I>> nodes, List<Pair<Integer, Integer>> edges) {

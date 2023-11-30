@@ -31,9 +31,7 @@ public class Label extends Stmt implements Comparable<Label> {
     }
 
     public Label(Scope scope) {
-        this.scope = scope;
-        this.seq = scope.getLabelSeq();
-        this.rawLabel = null;
+        this(scope, scope.getLabelSeq());
     }
 
     public void setRawLabel(String rawLabel) {

@@ -4,6 +4,9 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.expr.Operand;
+import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
+import org.teachfx.antlr4.ep20.ir.stmt.FuncEntryLabel;
+import org.teachfx.antlr4.ep20.ir.stmt.JMP;
 import org.teachfx.antlr4.ep20.ir.stmt.Label;
 import org.teachfx.antlr4.ep20.utils.Kind;
 
@@ -25,17 +28,17 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
     public Set<Operand> liveOut;
     protected Label label;
 
-    public BasicBlock(Kind kind, List<Loc<I>> codes, Label label) {
+    public BasicBlock(Kind kind, List<Loc<I>> codes,Label label,int ord) {
         this.codes = codes;
         this.label = label;
-        this.id = label.getSeq();
+        this.id = ord;
         this.kind = kind;
     }
 
     @NotNull
     @Contract("_ -> new")
-    public static BasicBlock<IRNode> buildFromLinearBlock(@NotNull LinearIRBlock block) {
-        return new BasicBlock<IRNode>(block.getKind(), block.getStmts().stream().map(Loc::new).toList(), block.getLabel());
+    public static BasicBlock<IRNode> buildFromLinearBlock(@NotNull LinearIRBlock block,List<BasicBlock<IRNode>> cachedNodes) {
+        return new BasicBlock<IRNode>(block.getKind(), block.getStmts().stream().map(Loc::new).toList(),block.getLabel(),block.getOrd());
     }
 
     @Override
@@ -93,6 +96,11 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
 
     public List<Loc<I>> dropLabelSeq() {
         if (codes.size() <= 1) return codes;
+
+        if (codes.get(0).instr instanceof FuncEntryLabel) {
+            return codes.subList(0, codes.size());
+        }
+
         return codes.subList(1, codes.size());
     }
 

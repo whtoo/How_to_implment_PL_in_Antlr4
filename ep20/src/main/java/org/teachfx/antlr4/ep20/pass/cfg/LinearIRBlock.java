@@ -26,14 +26,23 @@ public class LinearIRBlock implements Comparable<LinearIRBlock> {
     private List<JMPInstr> jmpRefMap = new ArrayList<>();
 
     // Constructor
+    public LinearIRBlock(Scope scope) {
+        stmts = new ArrayList<>();
+        successors = new ArrayList<>();
+        predecessors = new ArrayList<>();
+        ord = LABEL_SEQ++;
+        this.scope = scope;
+        logger.info(ord);
+    }
+
     public LinearIRBlock() {
         stmts = new ArrayList<>();
         successors = new ArrayList<>();
         predecessors = new ArrayList<>();
         ord = LABEL_SEQ++;
+        this.scope = null;
         logger.info(ord);
     }
-
     public static boolean isBasicBlock(Stmt stmt) {
         return !(stmt instanceof CJMP) && !(stmt instanceof JMP);
     }
@@ -49,6 +58,10 @@ public class LinearIRBlock implements Comparable<LinearIRBlock> {
     public void addStmt(IRNode stmt) {
         stmts.add(stmt);
         updateKindByLastInstr(stmt);
+    }
+
+    public void insertStmt(IRNode stmt,int idx) {
+        stmts.add(idx, stmt);
     }
 
     private void updateKindByLastInstr(IRNode stmt) {
@@ -152,14 +165,10 @@ public class LinearIRBlock implements Comparable<LinearIRBlock> {
 
         var firstInstr = stmts.get(0);
         if (firstInstr instanceof Label label) {
-
             return label;
-        } else {
-            stmts.add(0, new Label(scope, getOrd()));
-            firstInstr = stmts.get(0);
         }
 
-        return (Label) firstInstr;
+        return null;
     }
 
     public Optional<TreeSet<LinearIRBlock>> getJumpEntries() {
@@ -201,12 +210,16 @@ public class LinearIRBlock implements Comparable<LinearIRBlock> {
      */
     public void mergeBlock(LinearIRBlock otherBlock) {
         stmts.addAll(otherBlock.getStmts());
+
         updateKindByLastInstr(stmts.get(stmts.size() - 1));
+
         setSuccessors(otherBlock.getSuccessors());
+
         for(var s : otherBlock.getSuccessors()) {
             s.predecessors.remove(otherBlock);
             s.predecessors.add(this);
         }
+
         for (var jmp : otherBlock.getJmpRefMap()) {
             if (jmp instanceof JMP jmpInstr) {
                 jmpInstr.setNext(this);
@@ -216,5 +229,9 @@ public class LinearIRBlock implements Comparable<LinearIRBlock> {
                 jmpInstr.setThenBlock(this);
             }
         }
+    }
+
+    public void removeSuccessor(LinearIRBlock block) {
+        successors.remove(block);
     }
 }

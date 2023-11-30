@@ -48,8 +48,11 @@ public class Compiler {
         var irBuilder = new CymbolIRBuilder();
 
         astRoot.accept(irBuilder);
-        for(var block : irBuilder.prog.blockList) {
-            var cfg = irBuilder.getCFG(List.of(block));
+
+        irBuilder.prog.optimizeBasicBlock();
+
+        for(var funBlock : irBuilder.prog.blockList) {
+            var cfg = irBuilder.getCFG(funBlock);
             logger.info("CFG:\n" + cfg.toString());
         }
 

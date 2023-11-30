@@ -75,6 +75,8 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
         if (indents > 0) { indents--; }
 
         if (label instanceof FuncEntryLabel){
+            // reset indent
+            indents = 0;
             emit("%s".formatted(label.toSource()));
         } else {
             emit("%s:".formatted(label.toSource()));

@@ -230,9 +230,9 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public Void visit(WhileStmtNode whileStmtNode) {
         curNode = whileStmtNode;
-        var condBlock = new LinearIRBlock();
-        var doBlock = new LinearIRBlock();
-        var endBlock = new LinearIRBlock();
+        var condBlock = new LinearIRBlock(currentBlock.getScope());
+        var doBlock = new LinearIRBlock(currentBlock.getScope());
+        var endBlock = new LinearIRBlock(currentBlock.getScope());
 
         jump(condBlock);
 
@@ -263,15 +263,15 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
 
         ifStmtNode.getCondExpr().accept(this);
         var cond = peekEvalOperand();
-        var thenBlock = new LinearIRBlock();
-        var endBlock = new LinearIRBlock();
+        var thenBlock = new LinearIRBlock(currentBlock.getScope());
+        var endBlock = new LinearIRBlock(currentBlock.getScope());
 
         if (ifStmtNode.getElseBlock().isEmpty()) {
             jumpIf(cond,thenBlock,endBlock);
             setCurrentBlock(thenBlock);
             ifStmtNode.getThenBlock().accept(this);
         }else {
-            var elseBlock = new LinearIRBlock();
+            var elseBlock = new LinearIRBlock(currentBlock.getScope());
             jumpIf(cond,thenBlock,elseBlock);
             setCurrentBlock(thenBlock);
             ifStmtNode.getThenBlock().accept(this);
@@ -426,20 +426,8 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         return evalExprStack.peek();
     }
 
-    public CFG<IRNode> getCFG(List<LinearIRBlock> blocks) {
-        for (var func : blocks){
-            insertBlockLabel(func);
-        }
-
-        var cfgBuilder = new CFGBuilder(blocks);
+    public CFG<IRNode> getCFG(LinearIRBlock startBlocks) {
+        var cfgBuilder = new CFGBuilder(startBlocks);
         return cfgBuilder.getCFG();
-    }
-
-    public void insertBlockLabel(LinearIRBlock startBlock) {
-        startBlock.getLabel();
-
-        for (var successor : startBlock.getSuccessors()) {
-            insertBlockLabel(successor);
-        }
     }
 }

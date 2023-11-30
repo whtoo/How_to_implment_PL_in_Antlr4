@@ -9,10 +9,7 @@ import org.teachfx.antlr4.ep20.ir.stmt.JMP;
 import org.teachfx.antlr4.ep20.ir.stmt.Label;
 import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 
 public class Prog extends IRNode {
@@ -33,14 +30,14 @@ public class Prog extends IRNode {
     public void addBlock(LinearIRBlock linearIRBlock) {
         blockList.add(linearIRBlock);
     }
+    protected TreeSet<LinearIRBlock> needRemovedBlocks = new TreeSet<>();
 
-    private void linearInstrsImpl(@NotNull LinearIRBlock linearIRBlock) {
-        // Add all instr from non-empty block
-        if (!linearIRBlock.getStmts().isEmpty()) {
-            instrs.addAll(linearIRBlock.getStmts());
-        } else {
+    private void optimizeEmptyBlock(@NotNull LinearIRBlock linearIRBlock) {
+        // replace empty block within non-empty first successor
+        if (linearIRBlock.getStmts().isEmpty()){
             // Drop empty block
             if (linearIRBlock.getSuccessors().isEmpty()) {
+                needRemovedBlocks.add(linearIRBlock);
                 return;
             }
             // Auto-fill next block for jmp/cjmp
@@ -48,16 +45,60 @@ public class Prog extends IRNode {
             for (var ref : linearIRBlock.getJmpRefMap()){
                 if (ref instanceof JMP jmp) {
                     jmp.setNext(nextBlock);
+
                 } else if (ref instanceof CJMP cjmp) {
                     cjmp.setElseBlock(nextBlock);
                 }
             }
 
+            linearIRBlock.getPredecessors().forEach(prev -> {
+                prev.removeSuccessor(linearIRBlock);
+                prev.getSuccessors().add(nextBlock);
+            });
+
+            needRemovedBlocks.add(linearIRBlock);
         }
 
         // recursive call
         for(var successor : linearIRBlock.getSuccessors()){
-            linearInstrsImpl(successor);
+            optimizeEmptyBlock(successor);
+        }
+    }
+
+    private void insertLabelForBlock(LinearIRBlock startBlock) {
+        for (var stmt : startBlock.getStmts()) {
+            if (stmt instanceof Label) {
+                break;
+            }
+
+            startBlock.insertStmt(new Label(startBlock.getScope(), startBlock.getOrd()),0);
+            break; // only insert one label for each block which is not func-entry block.
+        }
+
+        for (var successor : startBlock.getSuccessors()) {
+            insertLabelForBlock(successor);
+        }
+    }
+    protected void buildInstrs(LinearIRBlock block) {
+        instrs.addAll(block.getStmts());
+
+        for (var successor : block.getSuccessors()) {
+            buildInstrs(successor);
+        }
+
+    }
+
+    public void optimizeBasicBlock() {
+        for(var func : blockList) {
+            optimizeEmptyBlock(func);
+        }
+
+        for( var emptyBlock : needRemovedBlocks) {
+            emptyBlock.getPredecessors().forEach(p -> p.removeSuccessor(emptyBlock));
+        }
+
+        for(var func : blockList) {
+            insertLabelForBlock(func);
         }
     }
 
@@ -67,8 +108,8 @@ public class Prog extends IRNode {
             return truncateInstrList;
         }
 
-        for(var block : blockList) {
-            linearInstrsImpl(block);
+        for(var func : blockList) {
+            buildInstrs(func);
         }
 
         IRNode prev;

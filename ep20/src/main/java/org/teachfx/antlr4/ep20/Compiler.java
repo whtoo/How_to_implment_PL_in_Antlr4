@@ -12,11 +12,13 @@ import org.teachfx.antlr4.ep20.ir.stmt.Label;
 import org.teachfx.antlr4.ep20.parser.CymbolLexer;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.pass.ast.CymbolASTBuilder;
+import org.teachfx.antlr4.ep20.pass.cfg.ControlFlowAnalysis;
 import org.teachfx.antlr4.ep20.pass.codegen.CymbolAssembler;
 import org.teachfx.antlr4.ep20.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep20.pass.symtab.LocalDefine;
 
 import java.io.*;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Compiler {
@@ -50,14 +52,23 @@ public class Compiler {
         astRoot.accept(irBuilder);
 
         irBuilder.prog.optimizeBasicBlock();
+        var cfgOptimizer = new ControlFlowAnalysis<IRNode>();
+        var cnt = 0;
+        var codeBuffer = new LinkedList<IRNode>();
 
         for(var funBlock : irBuilder.prog.blockList) {
             var cfg = irBuilder.getCFG(funBlock);
+            saveToEp20Res(cfg.toString(),"origin"+cnt);
+            cfg.addOptimizer(cfgOptimizer);
+            cfg.applyOptimizers();
+            saveToEp20Res(cfg.toString(),"optimized"+cnt);
+            cnt++;
             logger.info("CFG:\n" + cfg.toString());
+            codeBuffer.addAll(cfg.getIRNodes());
         }
 
         var assembler = new CymbolAssembler();
-        assembler.visit(irBuilder.prog.linearInstrs());
+        assembler.visit(codeBuffer);
         saveToEp18Res(assembler.getAsmInfo());
         logger.info("\n%s".formatted(assembler.getAsmInfo()));
     }
@@ -75,6 +86,34 @@ public class Compiler {
                     file.createNewFile();
                 }
                 outputStream.write(buffer.getBytes());
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        } else {
+            logger.error("模块路径不存在！");
+        }
+    }
+
+    protected static void saveToEp20Res(String buffer,String suffix) {
+        String modulePath = "./src/main/resources"; // 替换 "my-module" 为你的模块名称
+        File moduleDirectory = new File(modulePath);
+        logger.info("file path %s".formatted(moduleDirectory.getAbsolutePath()));
+        if (moduleDirectory.exists()) {
+            logger.info("模块路径：" + moduleDirectory.getAbsolutePath());
+            var filePath = modulePath+"/graph_%s.md".formatted(suffix);
+            File file = new File(filePath);
+            try (var outputStream = new FileOutputStream(file)) {
+                if (!file.exists()) {
+                    file.createNewFile();
+                }
+                var mdTmeplate = """
+                        ```mermaid
+                        %s
+                        ```
+                        """.formatted(buffer);
+                outputStream.write(mdTmeplate.getBytes());
 
             } catch (IOException e) {
                 throw new RuntimeException(e);

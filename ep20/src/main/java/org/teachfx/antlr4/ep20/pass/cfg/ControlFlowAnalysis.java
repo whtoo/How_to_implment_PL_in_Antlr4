@@ -1,79 +1,69 @@
 package org.teachfx.antlr4.ep20.pass.cfg;
 
-import org.teachfx.antlr4.ep20.ir.IRVisitor;
-import org.teachfx.antlr4.ep20.ir.Prog;
-import org.teachfx.antlr4.ep20.ir.expr.CallFunc;
-import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;
-import org.teachfx.antlr4.ep20.ir.expr.addr.OperandSlot;
-import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
-import org.teachfx.antlr4.ep20.ir.expr.arith.UnaryExpr;
-import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
-import org.teachfx.antlr4.ep20.ir.stmt.*;
+import org.apache.commons.lang3.tuple.Triple;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.teachfx.antlr4.ep20.ir.IRNode;
+import org.teachfx.antlr4.ep20.ir.JMPInstr;
 
-public class ControlFlowAnalysis implements IRVisitor<Void, Void> {
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-    @Override
-    public <T> Void visit(ConstVal<T> tConstVal) {
-        return null;
-    }
-
-    @Override
-    public Void visit(BinExpr node) {
-        return null;
-    }
+public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> {
+    public static Boolean DEBUG = false;
+    protected static final Logger logger = LogManager.getLogger(ControlFlowAnalysis.class);
 
     @Override
-    public Void visit(UnaryExpr node) {
-        return null;
-    }
+    public void onHandle(CFG<I> cfg) {
+        List<Triple<Integer,Integer,Integer>> needRemovedLink = new ArrayList<>();
 
-    @Override
-    public Void visit(CallFunc callFunc) {
-        return null;
-    }
+        // 1. 遍历所有的控制图的节点
+        // 2. 如果一个节点的入度为1，则该节点的前一个节点合并到该节点上
+        // 3. 如果一个节点的出度为1，并且是JMP指令同时满足JMP的next和此节点的后续相同，则该节点最后一句跳转语句应该删除。
+        // 根据上面三个条件，可以得到下面的代码
 
-    @Override
-    public Void visit(Label label) {
-        return null;
-    }
+        for(var block : cfg.nodes) {
+            var key = block.getId();
+            var outDeg = cfg.getOutDegree(key);
 
-    @Override
-    public Void visit(JMP jmp) {
-        return null;
-    }
+            if (outDeg == 1 && block.getLastInstr() instanceof JMPInstr jmpInstr) {
+                var targetBlockId = jmpInstr.getTarget().getSeq();
+                AtomicBoolean needRemoveLastInstr = new AtomicBoolean(false);
+                cfg.getSucceed(key).stream().filter(x -> x == targetBlockId).findFirst().ifPresent(next -> {
+                    needRemoveLastInstr.set(true);
+                });
 
-    @Override
-    public Void visit(CJMP cjmp) {
-        return null;
-    }
+                if (needRemoveLastInstr.get()) {
+                    block.removeLastInstr();
+                    cfg.removeEdge(Triple.of(key,targetBlockId, 5));
+                }
+            }
+        }
+        var removeQueue = new LinkedList<BasicBlock<I>>();
 
-    @Override
-    public Void visit(Assign assign) {
-        return null;
-    }
+        for(var block : cfg.nodes) {
+            var key = block.getId();
 
-    @Override
-    public Void visit(ReturnVal returnVal) {
-        return null;
-    }
+            var inDeg = cfg.getInEdges(key).toList();
+            var isSrcSoloLink = (long) cfg.getFrontier(key).size() == 1;
+            var isDestSoloLink = isSrcSoloLink && cfg.getOutDegree(inDeg.get(0).getLeft()) == 1;
+            if (inDeg.size() == 1 && isDestSoloLink) {
 
-    @Override
-    public Void visit(ExprStmt exprStmt) {
-        return null;
-    }
+                cfg.getFrontier(key).stream().findFirst().ifPresent(frontier -> {
+                    var prevBlock = cfg.getBlock(frontier);
+                    prevBlock.mergeNearBlock(block);
+                    cfg.removeEdge(inDeg.get(0));
+                    removeQueue.add(block);
+                });
 
-    @Override
-    public Void visit(Prog prog) {
-        return null;
-    }
+            }
+        }
 
-    @Override
-    public Void visit(OperandSlot operandSlot) {
-        return null;
-    }
-
-    @Override
-    public Void visit(FrameSlot frameSlot) {
-        return null;
+        for (var block : removeQueue) {
+            cfg.removeNode(block);
+        }
     }
 }

@@ -3,17 +3,17 @@ package org.teachfx.antlr4.ep20.pass.cfg;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRNode;
+import org.teachfx.antlr4.ep20.ir.JMPInstr;
 import org.teachfx.antlr4.ep20.ir.expr.Operand;
 import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
 import org.teachfx.antlr4.ep20.ir.stmt.FuncEntryLabel;
 import org.teachfx.antlr4.ep20.ir.stmt.JMP;
 import org.teachfx.antlr4.ep20.ir.stmt.Label;
 import org.teachfx.antlr4.ep20.utils.Kind;
+import org.teachfx.antlr4.ep20.utils.StreamUtils;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, Iterable<Loc<I>> {
 
@@ -29,7 +29,7 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
     protected Label label;
 
     public BasicBlock(Kind kind, List<Loc<I>> codes,Label label,int ord) {
-        this.codes = codes;
+        this.codes = new ArrayList<>(codes);
         this.label = label;
         this.id = ord;
         this.kind = kind;
@@ -110,9 +110,22 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
 
     public void mergeNearBlock(BasicBlock<I> nextBlock) {
         /// remove last jump instr
-        codes.remove(codes.size() - 1);
-        /// merge instr
-        codes.addAll(nextBlock.codes);
+        if (getLastInstr() instanceof JMPInstr) {
+            codes.remove(codes.size() - 1);
+        }
+
+        /// merge instr and update kind to use merge nextblock's kind
+        codes.addAll(nextBlock.dropLabelSeq());
+        kind = nextBlock.kind;
     }
 
+    public void removeLastInstr() {
+        codes.remove(codes.size() - 1);
+        kind = Kind.CONTINUOUS;
+    }
+
+
+    public Stream<I> getIRNodes() {
+        return StreamUtils.flatMap(codes.stream(), Loc::getInstr);
+    }
 }

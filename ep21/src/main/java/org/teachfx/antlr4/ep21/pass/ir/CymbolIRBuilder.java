@@ -58,7 +58,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
 
     @Override
     public Void visit(FuncDeclNode funcDeclNode) {
-        logger.info("enter %s".formatted(funcDeclNode.toString()));
+        logger.debug("enter %s".formatted(funcDeclNode.toString()));
         methodSymbolStack.push((MethodSymbol) funcDeclNode.getRefSymbol());
         /**/
         stmts = new ArrayList<>();

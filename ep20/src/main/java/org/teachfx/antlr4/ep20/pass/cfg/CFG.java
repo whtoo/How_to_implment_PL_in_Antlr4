@@ -115,14 +115,6 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
         return graphRenderBuffer.toString();
     }
 
-    /// 1. receive two params : srcBlockId and destBlockId
-    /// 2. remove edge from edges and links
-    public void removeEdge(int srcBlockId, int destBlockId,int weight) {
-        edges.remove(Triple.of(srcBlockId, destBlockId,weight));
-        links.get(srcBlockId).getRight().remove(destBlockId);
-        links.get(destBlockId).getLeft().remove(srcBlockId);
-    }
-
 
     /**
      * remove edge from edges and links
@@ -141,11 +133,6 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
         }
     }
 
-    /// 1. receive one param : id
-    public void removeNodeById(int id) {
-        /// 2. remove node from nodes by its id
-        nodes.removeIf(bb -> bb.getId() == id);
-    }
     public void removeNode(BasicBlock<I> node) {
         /// 2. remove node from nodes by its id
         nodes.removeIf(bb -> bb.equals(node));

@@ -76,9 +76,9 @@ public class Compiler {
     protected static void saveToEp18Res(String buffer) {
         String modulePath = "../ep18/src/main/resources"; // 替换 "my-module" 为你的模块名称
         File moduleDirectory = new File(modulePath);
-        logger.info("file path %s".formatted(moduleDirectory.getAbsolutePath()));
+        logger.trace("file path %s".formatted(moduleDirectory.getAbsolutePath()));
         if (moduleDirectory.exists()) {
-            logger.info("模块路径：" + moduleDirectory.getAbsolutePath());
+            logger.trace("模块路径：" + moduleDirectory.getAbsolutePath());
             var filePath = modulePath+"/t.vm";
             File file = new File(filePath);
             try (var outputStream = new FileOutputStream(file)) {

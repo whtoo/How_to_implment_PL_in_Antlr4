@@ -32,7 +32,7 @@ public class LinearIRBlock implements Comparable<LinearIRBlock> {
         predecessors = new ArrayList<>();
         ord = LABEL_SEQ++;
         this.scope = scope;
-        logger.trace(ord);
+        logger.debug(ord);
     }
 
     public LinearIRBlock() {
@@ -41,7 +41,7 @@ public class LinearIRBlock implements Comparable<LinearIRBlock> {
         predecessors = new ArrayList<>();
         ord = LABEL_SEQ++;
         this.scope = null;
-        logger.trace(ord);
+        logger.debug(ord);
     }
     public static boolean isBasicBlock(Stmt stmt) {
         return !(stmt instanceof CJMP) && !(stmt instanceof JMP);

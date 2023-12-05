@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
+import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.JMPInstr;
 import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
@@ -11,7 +12,7 @@ public class CJMP extends Stmt implements JMPInstr {
     private LinearIRBlock elseBlock;
 
 
-    public CJMP(VarSlot cond, LinearIRBlock thenLabel, LinearIRBlock elseLabel) {
+    public CJMP(@NotNull VarSlot cond, @NotNull LinearIRBlock thenLabel,@NotNull LinearIRBlock elseLabel) {
         this.cond = cond;
         this.thenBlock = thenLabel;
         this.elseBlock = elseLabel;

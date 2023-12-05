@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep20.ir.stmt;
 
+import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.JMPInstr;
 import org.teachfx.antlr4.ep20.pass.cfg.LinearIRBlock;
@@ -11,7 +12,7 @@ public class JMP extends Stmt implements JMPInstr
         return visitor.visit(this);
     }
 
-    public JMP(LinearIRBlock block)
+    public JMP(@NotNull LinearIRBlock block)
     {
         this.next = block;
         block.refJMP(this);

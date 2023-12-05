@@ -31,7 +31,7 @@ public class Compiler {
             }
             return "    "+irNode.toString();
         }).reduce((a, b) -> a + "\n" + b);
-        logger.info("IR Tree:" + "\n"+prettyFormatText.get());
+        prettyFormatText.ifPresent(logger::debug);
     }
 
     public static void main(String[] args) throws IOException {
@@ -70,7 +70,7 @@ public class Compiler {
         var assembler = new CymbolAssembler();
         assembler.visit(codeBuffer);
         saveToEp18Res(assembler.getAsmInfo());
-        logger.info("\n%s".formatted(assembler.getAsmInfo()));
+        logger.debug("\n%s".formatted(assembler.getAsmInfo()));
     }
 
     protected static void saveToEp18Res(String buffer) {

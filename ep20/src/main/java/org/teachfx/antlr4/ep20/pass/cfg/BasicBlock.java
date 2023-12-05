@@ -21,11 +21,13 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
     // Generate codes
     public List<Loc<I>> codes;
     public Kind kind;
+
     // For data flow analysis
     public Set<Operand> def;
     public Set<Operand> liveUse;
     public Set<Operand> liveIn;
     public Set<Operand> liveOut;
+
     protected Label label;
 
     public BasicBlock(Kind kind, List<Loc<I>> codes,Label label,int ord) {

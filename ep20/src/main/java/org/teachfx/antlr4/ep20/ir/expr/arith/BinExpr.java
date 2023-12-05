@@ -2,6 +2,7 @@ package org.teachfx.antlr4.ep20.ir.expr.arith;
 
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
 import org.teachfx.antlr4.ep20.ir.expr.Expr;
+import org.teachfx.antlr4.ep20.ir.expr.Operand;
 import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep20.symtab.type.OperatorType;
 

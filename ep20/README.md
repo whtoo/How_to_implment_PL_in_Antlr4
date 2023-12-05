@@ -1,3 +1,35 @@
+# 以`CFG`和`地址化`为中心的编译构造实作
+
+## 测试样例源码
+
+``` CPP
+
+int dec1(int x) {
+    return x - 1;
+}
+
+int main() {
+    int i = 10;
+    while(i > 0) {
+        if (i > 5) {
+            print(i);
+            if(i == 7) {
+                return 7;
+            }
+        }
+
+        print("break");
+
+        i = dec1(i);
+    }
+
+   return 0;
+}
+
+
+
+```
+
 ## 编译步骤流程图
 
 ```mermaid
@@ -26,6 +58,7 @@ graph LR
 - [x] 编译到[ep18](..%2Fep18)的VM
 - [x] 扩展[ep18](..%2Fep18)的VM支持更丰富的[指令实现](../ep18/VM_Design.md)
 - [x] 线性化IR和CFG
+- [x] 跳转优化（空标签和重复跳转)
 
 ### 线性化IR
 我们的IR本质上是tree模式的，这样一来我们的线性化实际上延迟到了指令生成时。
@@ -33,7 +66,6 @@ graph LR
 直接对栈代码做分析的例子）。因此，我要对ep20的输出code过程进行线性改造。
 
 ### CFG
-
 
 - Original CFG
 ```mermaid

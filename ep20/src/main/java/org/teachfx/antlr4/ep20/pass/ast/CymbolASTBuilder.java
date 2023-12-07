@@ -23,7 +23,16 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     public CymbolASTBuilder() {
         super();
+
     }
+
+    public static CymbolASTBuilder build(CymbolParser.CompilationUnitContext ctx) {
+        var astBuilder = new CymbolASTBuilder();
+
+        astBuilder.visit(ctx);
+        return astBuilder;
+    }
+
 
     @Override
     public ASTNode visitCompilationUnit(CymbolParser.CompilationUnitContext ctx) {

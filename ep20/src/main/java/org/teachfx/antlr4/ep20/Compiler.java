@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.teachfx.antlr4.ep20.ast.ASTNode;
@@ -20,8 +21,10 @@ import org.teachfx.antlr4.ep20.pass.symtab.LocalDefine;
 import org.teachfx.antlr4.ep20.utils.StreamUtils;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -50,30 +53,44 @@ public class Compiler {
         ParseTree parseTree = parser.file();
 
         CymbolASTBuilder astBuilder = new CymbolASTBuilder();
+
         ASTNode astRoot = parseTree.accept(astBuilder);
+
         astRoot.accept(new LocalDefine());
+
         var irBuilder = new CymbolIRBuilder();
 
         astRoot.accept(irBuilder);
 
         irBuilder.prog.optimizeBasicBlock();
 
-        var codeBuffer = StreamUtils.indexStream(irBuilder.prog.blockList.stream()
-                        .map(irBuilder::getCFG))
-                .peek(cfgPair -> {
-                    var cfg = cfgPair.getRight();
-                    var idx = cfgPair.getLeft();
-                    saveToEp20Res(cfg.toString(), "%d_origin".formatted(idx));
-                    cfg.addOptimizer(new ControlFlowAnalysis<>());
-                    cfg.applyOptimizers();
-                    saveToEp20Res(cfg.toString(), "%d_optimized".formatted(idx));
+        Stream.of(
+                StreamUtils.indexStream(irBuilder.prog.blockList.stream()
+                                .map(irBuilder::getCFG))
+                        .peek(cfgPair -> {
+                            var cfg = cfgPair.getRight();
+                            var idx = cfgPair.getLeft();
+                            saveToEp20Res(cfg.toString(), "%d_origin".formatted(idx));
+                            cfg.addOptimizer(new ControlFlowAnalysis<>());
+                            cfg.applyOptimizers();
+                            saveToEp20Res(cfg.toString(), "%d_optimized".formatted(idx));
+                        })
+                        .map(Pair::getRight)
+                        .map(CFG::getIRNodes)
+                        .reduce(new ArrayList<IRNode>(), (a, b) -> {
+                            a.addAll(b);
+                            return a;
+                        })
+                )
+                .map(irNodeList -> {
+                    var assembler = new CymbolAssembler();
+                    assembler.visit(irNodeList);
+                    return assembler;
                 })
-                .flatMap(s -> s.getRight().getIRNodes().stream()).toList();
-
-        var assembler = new CymbolAssembler();
-        assembler.visit(codeBuffer);
-        saveToEp18Res(assembler.getAsmInfo());
-        logger.debug("\n%s".formatted(assembler.getAsmInfo()));
+                .forEach(assembler -> {
+                    saveToEp18Res(assembler.getAsmInfo());
+                    logger.debug("\n%s".formatted(assembler.getAsmInfo()));
+                });
     }
 
     protected static void saveToEp18Res(String buffer) {

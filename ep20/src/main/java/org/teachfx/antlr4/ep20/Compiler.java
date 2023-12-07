@@ -12,14 +12,18 @@ import org.teachfx.antlr4.ep20.ir.stmt.Label;
 import org.teachfx.antlr4.ep20.parser.CymbolLexer;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.pass.ast.CymbolASTBuilder;
+import org.teachfx.antlr4.ep20.pass.cfg.CFG;
 import org.teachfx.antlr4.ep20.pass.cfg.ControlFlowAnalysis;
 import org.teachfx.antlr4.ep20.pass.codegen.CymbolAssembler;
 import org.teachfx.antlr4.ep20.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep20.pass.symtab.LocalDefine;
+import org.teachfx.antlr4.ep20.utils.StreamUtils;
 
 import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Compiler {
 
@@ -44,7 +48,8 @@ public class Compiler {
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         CymbolParser parser = new CymbolParser(tokenStream);
         ParseTree parseTree = parser.file();
-        CymbolASTBuilder astBuilder = new CymbolASTBuilder("t.cymbol");
+
+        CymbolASTBuilder astBuilder = new CymbolASTBuilder();
         ASTNode astRoot = parseTree.accept(astBuilder);
         astRoot.accept(new LocalDefine());
         var irBuilder = new CymbolIRBuilder();
@@ -52,20 +57,18 @@ public class Compiler {
         astRoot.accept(irBuilder);
 
         irBuilder.prog.optimizeBasicBlock();
-        var cfgOptimizer = new ControlFlowAnalysis<IRNode>();
-        var cnt = 0;
-        var codeBuffer = new LinkedList<IRNode>();
 
-        for(var funBlock : irBuilder.prog.blockList) {
-            var cfg = irBuilder.getCFG(funBlock);
-            saveToEp20Res(cfg.toString(),"origin"+cnt);
-            cfg.addOptimizer(cfgOptimizer);
-            cfg.applyOptimizers();
-            saveToEp20Res(cfg.toString(),"optimized"+cnt);
-            cnt++;
-            logger.info("CFG:\n" + cfg.toString());
-            codeBuffer.addAll(cfg.getIRNodes());
-        }
+        var codeBuffer = StreamUtils.indexStream(irBuilder.prog.blockList.stream()
+                        .map(irBuilder::getCFG))
+                .peek(cfgPair -> {
+                    var cfg = cfgPair.getRight();
+                    var idx = cfgPair.getLeft();
+                    saveToEp20Res(cfg.toString(), "%d_origin".formatted(idx));
+                    cfg.addOptimizer(new ControlFlowAnalysis<>());
+                    cfg.applyOptimizers();
+                    saveToEp20Res(cfg.toString(), "%d_optimized".formatted(idx));
+                })
+                .flatMap(s -> s.getRight().getIRNodes().stream()).toList();
 
         var assembler = new CymbolAssembler();
         assembler.visit(codeBuffer);

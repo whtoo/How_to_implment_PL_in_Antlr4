@@ -21,15 +21,13 @@ import java.util.Objects;
 
 public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements CymbolVisitor<ASTNode> {
 
-    protected String srcName;
-    public CymbolASTBuilder(String srcName) {
+    public CymbolASTBuilder() {
         super();
-        this.srcName = srcName;
     }
 
     @Override
     public ASTNode visitCompilationUnit(CymbolParser.CompilationUnitContext ctx) {
-        var compilationUnit = new CompileUnit(srcName);
+        var compilationUnit = new CompileUnit();
         for(var childNode : ctx.children) {
             var node = visit(childNode);
             if(node instanceof VarDeclNode varDeclNode) {

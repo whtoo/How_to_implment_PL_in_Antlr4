@@ -8,11 +8,20 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class StreamUtils {
-    public static <T> int indexOf(Stream<T> stream, Predicate<T> predicate) {
+    public static <T> Stream<? super Pair<Integer, T>> mapWithIndex(Stream<T> stream,Function<? super Pair<Integer, T>,? super Pair<Integer, T>> mapper) {
         AtomicInteger cnt = new AtomicInteger();
-        return stream.map(s -> Pair.of(s, cnt.getAndIncrement())).filter(tIntegerPair ->
-            predicate.test(tIntegerPair.getLeft())
-        ).findFirst().map(Pair::getRight).orElse(-1);
+        return stream.map(s -> Pair.of( cnt.getAndIncrement(),s)).map(mapper);
+    }
+
+    public static <T> Stream<Pair<Integer,T>> indexStream(Stream<T> stream) {
+        AtomicInteger cnt = new AtomicInteger();
+        return stream.map(s -> Pair.of(cnt.getAndIncrement(),s));
+    }
+
+    public static <T> int indexOf(Stream<T> stream, Predicate<T> predicate) {
+       return (int) StreamUtils.indexStream(stream).filter(tIntegerPair ->
+            predicate.test(tIntegerPair.getRight())
+        ).findFirst().map(Pair::getLeft).orElse(-1);
     }
     // find matched object
     public static <T> T find(Stream<T> stream, Predicate<T> predicate) {

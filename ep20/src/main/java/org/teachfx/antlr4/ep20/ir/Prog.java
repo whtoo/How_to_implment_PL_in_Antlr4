@@ -37,6 +37,7 @@ public class Prog extends IRNode {
         if (linearIRBlock.getStmts().isEmpty()){
             // Drop empty block
             if (linearIRBlock.getSuccessors().isEmpty()) {
+                logger.debug("Block %s will be removed".formatted(linearIRBlock));
                 needRemovedBlocks.add(linearIRBlock);
                 return;
             }
@@ -44,9 +45,11 @@ public class Prog extends IRNode {
             var nextBlock = linearIRBlock.getSuccessors().get(0);
             for (var ref : linearIRBlock.getJmpRefMap()){
                 if (ref instanceof JMP jmp) {
+                    logger.debug(" %s is next for %s".formatted(nextBlock,linearIRBlock));
                     jmp.setNext(nextBlock);
 
                 } else if (ref instanceof CJMP cjmp) {
+                    logger.debug(" %s is else-case for %s".formatted(nextBlock,linearIRBlock));
                     cjmp.setElseBlock(nextBlock);
                 }
             }

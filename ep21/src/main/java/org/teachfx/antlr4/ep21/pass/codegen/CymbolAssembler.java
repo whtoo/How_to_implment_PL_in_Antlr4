@@ -1,80 +1,45 @@
 package org.teachfx.antlr4.ep21.pass.codegen;
 
+import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.IRVisitor;
 import org.teachfx.antlr4.ep21.ir.Prog;
-import org.teachfx.antlr4.ep21.ir.def.Func;
-import org.teachfx.antlr4.ep21.ir.expr.ArrayAccessExpr;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
-import org.teachfx.antlr4.ep21.ir.expr.ClassAccessExpr;
-import org.teachfx.antlr4.ep21.ir.expr.Temp;
+import org.teachfx.antlr4.ep21.ir.expr.Expr;
+import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
+import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
-import org.teachfx.antlr4.ep21.ir.expr.values.BoolVal;
-import org.teachfx.antlr4.ep21.ir.expr.values.IntVal;
-import org.teachfx.antlr4.ep21.ir.expr.values.StringVal;
-import org.teachfx.antlr4.ep21.ir.expr.values.Var;
+import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
-import org.teachfx.antlr4.ep21.symtab.symbol.MethodSymbol;
-import org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
-
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 
 public class CymbolAssembler implements IRVisitor<Void,Void> {
-    protected PrintWriter printWriter;
-    protected StringWriter stringWriter;
-
-    protected boolean emitted = false;
-
-    public CymbolAssembler() {
-        this.stringWriter = new StringWriter();
-        this.printWriter = new PrintWriter(stringWriter);
+    private LinkedList<String> assembleCmdBuffer = new LinkedList<>();
+    protected IOperatorEmitter operatorEmitter = new CymbolVMIOperatorEmitter();
+    protected void setAssembleCmdBuffer(LinkedList<String> assembleCmdBuffer) {
+        this.assembleCmdBuffer = assembleCmdBuffer;
     }
 
-    protected void emit(String str) {
-        this.printWriter.write("    %s\n".formatted(str));
+    protected LinkedList<String> getAssembleCmdBuffer() {
+        return assembleCmdBuffer;
     }
 
-    protected void emitNoPadding(String str) {
-        this.printWriter.write("%s\n".formatted(str));
+    public String getAsmInfo() {
+        return String.join("\n", assembleCmdBuffer).concat("\n");
     }
+    private int indents = 0;
 
-    public String flushCode() {
-        if(!emitted) {
-            this.printWriter.flush();
-            this.printWriter.close();
-            emitted = true;
-            return this.stringWriter.toString();
+    public Void visit(List<IRNode> linearInstrs) {
+        for (var instr: linearInstrs) {
+            if (instr instanceof Expr) {
+                ((Expr) instr).accept(this);
+            } else  {
+                ((Stmt) instr).accept(this);
+            }
         }
-
-        return this.stringWriter.toString();
-    }
-
-    @Override
-    public Void visit(Prog prog) {
-        prog.defuncList.forEach(this::visit);
-        return null;
-    }
-
-    @Override
-    public Void visit(IntVal node) {
-        emit("iconst %d".formatted(node.value));
-        return null;
-    }
-
-    @Override
-    public Void visit(BoolVal node) {
-        emit("iconst %b".formatted(node.value));
-        return null;
-    }
-
-    @Override
-    public Void visit(StringVal node) {
-        emit("sconst %s".formatted(node.value));
         return null;
     }
 
@@ -82,155 +47,109 @@ public class CymbolAssembler implements IRVisitor<Void,Void> {
     public Void visit(BinExpr node) {
         node.getLhs().accept(this);
         node.getRhs().accept(this);
-        switch (node.getOpType()) {
-            case ADD -> emit("iadd");
-            case SUB -> emit("isub");
-            case MUL -> emit("imul");
-            case DIV -> emit("idiv");
-            case MOD -> emit("irem");
-            case EQ -> emit("ieq");
-            case NE -> emit("ine");
-            case LT -> emit("ilt");
-            case GT -> emit("igt");
-            case LE -> emit("ile");
-            case GE -> emit("ige");
-            case AND -> emit("iand");
-            case OR -> emit("ior");
-        }
+        emit(operatorEmitter.emitBinaryOp(node.getOpType()));
         return null;
     }
 
     @Override
     public Void visit(UnaryExpr node) {
         node.expr.accept(this);
-
-        switch (node.op) {
-            case NEG -> emit("ineg");
-            case NOT -> emit("inot");
-        }
-
+        emit(operatorEmitter.emitUnaryOp(node.op));
         return null;
     }
 
     @Override
     public Void visit(CallFunc callFunc) {
-
-        callFunc.getArgs().forEach(expr -> expr.accept(this));
-        var varDef =  callFunc.getFuncExpr();
-        var methodSymbol = (MethodSymbol) varDef.getSymbol();
-        if(!methodSymbol.isPreDefined()) {
-            emit("call %s()".formatted(varDef.getDeclName()));
+        if (!callFunc.getFuncType().isBuiltIn()){
+            emit("call %s()".formatted(callFunc.getFuncName()));
         } else {
-            emit("%s".formatted(varDef.getDeclName()));
+            emit("%s".formatted(callFunc.getFuncName()));
         }
+
         return null;
     }
 
     @Override
     public Void visit(Label label) {
-        emitNoPadding("%s :".formatted(label.toSource()));
+        // label不存在嵌套可能，下面这种情况必定是空块导致的label悬空。
+        if (indents > 0) { indents--; }
+
+        if (label instanceof FuncEntryLabel){
+            // reset indent
+            indents = 0;
+            emit("%s".formatted(label.toSource()));
+        } else {
+            emit("%s:".formatted(label.toSource()));
+        }
+        indents++;
         return null;
     }
 
     @Override
     public Void visit(JMP jmp) {
-        emit("br %s".formatted(jmp.label.toSource()));
+        emit("br %s".formatted(jmp.getNext().toString()));
+        indents--;
         return null;
     }
 
     @Override
     public Void visit(CJMP cjmp) {
-        cjmp.cond.accept(this);
-        emit("brt %s".formatted(cjmp.thenLabel.toSource()));
-        emit("br %s".formatted(cjmp.elseLabel.toSource()));
+        emit("brf %s".formatted(cjmp.getElseBlock().getLabel().toString()));
+        indents--;
         return null;
     }
 
     @Override
     public Void visit(Assign assign) {
-        var var = assign.getLhs();
-        var expr = assign.getRhs();
-        expr.accept(this);
-        emit(var.toSource(false));
-        return null;
-    }
+        assign.getRhs().accept(this);
 
-    @Override
-    public Void visit(Func func) {
-        emitNoPadding(func.toSource());
-        func.getBody().forEach(this::visit);
-        func.retHook.accept(this);
-        return null;
-    }
-
-    @Override
-    public Void visit(Stmt stmt) {
-        stmt.accept(this);
-        return null;
-    }
-
-    @Override
-    public Void visit(Var var) {
-        if(var.getSymbol() instanceof VariableSymbol) {
-            emit(var.toSource(true));
+        if (assign.getLhs() instanceof FrameSlot frameSlot) {
+            emit("store %d".formatted(frameSlot.getSlotIdx()));
         }
-        return null;
-    }
 
-    @Override
-    public Void visit(ArrayAccessExpr arrayAccessExpr) {
-        return null;
-    }
-
-    @Override
-    public Void visit(ClassAccessExpr classAccessExpr) {
         return null;
     }
 
     @Override
     public Void visit(ReturnVal returnVal) {
-        returnVal.retFuncLabel.accept(this);
-        Optional.ofNullable(returnVal.getRetVal()).ifPresent(x -> x.accept(this));
-        if (returnVal.isMainEntry()) { emit("halt"); }
-        else { emit("ret"); }
+        if(Objects.nonNull(returnVal.getRetVal())) {
+            returnVal.getRetVal().accept(this);
+        }
+        if (returnVal.isMainEntry()){
+            emit("halt");
+        } else {
+            emit("ret");
+        }
+        indents--;
         return null;
     }
 
     @Override
-    public Void visit(ExprStmt exprStmt) {
-        exprStmt.getExpr().accept(this);
+    public Void visit(OperandSlot operandSlot) {
         return null;
-    }
-
-    public void saveToFile(String filePath) throws IOException {
-        Path path = null;
-        try {
-            // 创建多级文件夹
-            path = Paths.get(filePath);
-            Files.createDirectories(path.getParent());
-            System.out.println("文件夹创建成功!");
-        } catch (IOException e) {
-            System.out.println("文件夹创建失败: " + e.getMessage());
-        }
-
-        if (!Files.exists(path)) {
-            Files.createFile(path);
-        }
-
-        var savedFile = new File(filePath);
-
-        if (savedFile.exists()) {
-            var os = new FileOutputStream(savedFile);
-            var osw = new OutputStreamWriter(os);
-            var pw = new PrintWriter(osw);
-            pw.write(flushCode());
-            pw.flush();
-            pw.close();
-        }
     }
 
     @Override
-    public Void visit(Temp temp) {
+    public Void visit(FrameSlot frameSlot) {
+        emit("load %d".formatted(frameSlot.getSlotIdx()));
         return null;
+    }
+
+    @Override
+    public <T> Void visit(ConstVal<T> tConstVal) {
+        if (tConstVal.getVal() instanceof Integer integer) {
+            emit("iconst %d".formatted(integer));
+        } else if (tConstVal.getVal() instanceof String str) {
+            emit("sconst \"%s\"".formatted(str));
+        } else if (tConstVal.getVal() instanceof Boolean bool) {
+            emit("bconst %d".formatted(bool?1:0));
+        }
+
+        return null;
+    }
+
+    protected void emit(String cmd) {
+        var indentCmdBuf = "    ".repeat(indents)+cmd;
+        assembleCmdBuffer.add(indentCmdBuf);
     }
 }

@@ -1,7 +1,0 @@
-.def main: args=0 ,locals=0
-    iconst 10
-    print
-    iconst 0
-    br main_0
-main_0 :
-    halt

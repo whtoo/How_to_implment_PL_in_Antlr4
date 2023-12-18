@@ -113,7 +113,7 @@ public class ASTBaseVisitor implements ASTVisitor<Void,Void> {
 
     @Override
     public Void visit(IfStmtNode ifStmtNode) {
-        ifStmtNode.getConditionalNode().accept(this);
+        ifStmtNode.getCondExpr().accept(this);
         ifStmtNode.getThenBlock().accept(this);
 
         ifStmtNode.getElseBlock().ifPresent(block -> block.accept(this));

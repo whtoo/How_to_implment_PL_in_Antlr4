@@ -33,4 +33,8 @@ public class BuiltInTypeSymbol extends Symbol implements Type {
         return this;
     }
 
+    @Override
+    public boolean isVoid() {
+        return name.equalsIgnoreCase("void");
+    }
 }

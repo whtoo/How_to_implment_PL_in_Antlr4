@@ -2,6 +2,7 @@ package org.teachfx.antlr4.ep21.pass.ir;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.teachfx.antlr4.ep21.ast.ASTNode;
 import org.teachfx.antlr4.ep21.ast.ASTVisitor;
 import org.teachfx.antlr4.ep21.ast.CompileUnit;
 import org.teachfx.antlr4.ep21.ast.decl.FuncDeclNode;
@@ -9,292 +10,424 @@ import org.teachfx.antlr4.ep21.ast.decl.VarDeclNode;
 import org.teachfx.antlr4.ep21.ast.expr.*;
 import org.teachfx.antlr4.ep21.ast.stmt.*;
 import org.teachfx.antlr4.ep21.ast.type.TypeNode;
+import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.Prog;
-import org.teachfx.antlr4.ep21.ir.def.Func;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
-import org.teachfx.antlr4.ep21.ir.expr.Expr;
+import org.teachfx.antlr4.ep21.ir.expr.Operand;
+import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
+import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
+import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
-import org.teachfx.antlr4.ep21.ir.expr.values.BoolVal;
-import org.teachfx.antlr4.ep21.ir.expr.values.IntVal;
-import org.teachfx.antlr4.ep21.ir.expr.values.StringVal;
-import org.teachfx.antlr4.ep21.ir.expr.values.Var;
+import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
+import org.teachfx.antlr4.ep21.pass.cfg.CFG;
+import org.teachfx.antlr4.ep21.pass.cfg.CFGBuilder;
+import org.teachfx.antlr4.ep21.pass.cfg.LinearIRBlock;
+import org.teachfx.antlr4.ep21.symtab.scope.Scope;
 import org.teachfx.antlr4.ep21.symtab.symbol.MethodSymbol;
+import org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 
 
-public class CymbolIRBuilder implements ASTVisitor<Void, Expr> {
+public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     private static final Logger logger = LogManager.getLogger(CymbolIRBuilder.class);
+    public Prog prog = null;
 
-    private final Stack<MethodSymbol> methodSymbolStack = new Stack<>();
-    public Prog root = null;
-    private Func currentFunc = null;
-    private List<Stmt> stmts;
-    private Stack<Label> breakStack;
-    private Stack<Label> continueStack;
+    private LinearIRBlock currentBlock = null;
+    private LinearIRBlock exitBlock = null;
+    private Stack<LinearIRBlock> breakStack;
+    private Stack<LinearIRBlock> continueStack;
+    private Stack<VarSlot> evalExprStack;
 
+    private ASTNode curNode = null;
     @Override
-    public Void visit(CompileUnit rootNode) {
-        root = new Prog(null);
-
-        var funcLst = rootNode.getFuncDeclarations().stream().map(this::visit);
-        funcLst.map(Func.class::cast).forEach(root::addFunc);
+    public Void visit(CompileUnit compileUnit) {
+        prog = new Prog();
+        logger.debug("visit root");
+        compileUnit.getFuncDeclarations().forEach(x -> x.accept(this));
 
         return null;
     }
 
     @Override
     public Void visit(VarDeclNode varDeclNode) {
-        if (varDeclNode.hasInitializer()) {
-            addStmt(new Assign(new Var(varDeclNode.getRefSymbol()), visit(varDeclNode.getAssignExprNode())));
+        logger.debug("visit %s".formatted(varDeclNode.toString()));
+
+        if(varDeclNode.hasInitializer()){
+            var lhsNode = (IDExprNode)varDeclNode.getIdExprNode();
+            var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
+            varDeclNode.getAssignExprNode().accept(this);
+            var rhs = peekEvalOperand();
+            addInstr(Assign.with(lhs,rhs));
+            popEvalOperand();
         }
         return null;
     }
 
     @Override
     public Void visit(FuncDeclNode funcDeclNode) {
-        logger.debug("enter %s".formatted(funcDeclNode.toString()));
-        methodSymbolStack.push((MethodSymbol) funcDeclNode.getRefSymbol());
-        /**/
-        stmts = new ArrayList<>();
-        /**/
-        breakStack = new Stack<>();
-        continueStack = new Stack<>();
+        logger.debug("visit %s".formatted(funcDeclNode.toString()));
 
-        currentFunc = new Func(funcDeclNode.getDeclName(), (MethodSymbol) funcDeclNode.getRefSymbol(), stmts);
+        curNode = funcDeclNode;
+        var methodSymbol = (MethodSymbol) funcDeclNode.getRefSymbol();
+        var entryLabel = new FuncEntryLabel(methodSymbol.getName(),methodSymbol.getArgs(),methodSymbol.getLocals(),methodSymbol);
+        // Expand
+        forkNewBlock(methodSymbol);
+        var startBlock = currentBlock;
 
-        setRetHook(methodSymbolStack.peek());
+        evalExprStack = new Stack<>();
+        getCurrentBlock().addStmt(entryLabel);
 
-        transformBlockStmt(funcDeclNode.getBody());
+        var exitBlock = new LinearIRBlock();
+        exitBlock.setScope(methodSymbol);
+        var exitEntry = new ReturnVal(null,methodSymbol);
 
-        currentFunc.setBody(stmts);
+        setExitHook(exitEntry,methodSymbol);
 
-        root.addFunc(currentFunc);
+        exitBlock.addStmt(exitEntry);
+        this.exitBlock = exitBlock;
 
-        methodSymbolStack.pop();
+        funcDeclNode.getBody().accept(this);
 
-        currentFunc = null;
+        prog.addBlock(startBlock);
 
+        setCurrentBlock(exitBlock);
+
+        clearBlock();
         return null;
-    }
-
-    private void setRetHook(MethodSymbol methodSymbol) {
-        if (methodSymbol.getName().equalsIgnoreCase("main")) {
-            var mainRet = new ReturnVal(null, methodSymbol);
-            mainRet.setMainEntry(true);
-            currentFunc.retHook = (mainRet);
-        } else {
-            var comRet = new ReturnVal(null, methodSymbol);
-            comRet.setMainEntry(false);
-            currentFunc.retHook = (comRet);
-        }
     }
 
     @Override
     public Void visit(VarDeclStmtNode varDeclStmtNode) {
-        if (varDeclStmtNode.getVarDeclNode().getAssignExprNode() != null) {
+        logger.debug("visit %s".formatted(varDeclStmtNode.toString()));
+        if (varDeclStmtNode.getVarDeclNode().hasInitializer()) {
             varDeclStmtNode.getVarDeclNode().accept(this);
         }
+
         return null;
     }
 
     @Override
-    public Expr visit(TypeNode typeNode) {
+    public VarSlot visit(TypeNode typeNode) {
         return null;
     }
 
     @Override
-    public Expr visit(BinaryExprNode binaryExprNode) {
-        var lhs = (Expr) visit(binaryExprNode.getLhs());
-        var rhs = (Expr) visit(binaryExprNode.getRhs());
-        return new BinExpr(binaryExprNode.getOpType(), lhs, rhs);
-    }
+    public VarSlot visit(BinaryExprNode binaryExprNode) {
+        curNode = binaryExprNode;
 
-    @Override
-    public Expr visit(IDExprNode idExprNode) {
-        return new Var(idExprNode.getRefSymbol());
-    }
+        binaryExprNode.getLhs().accept(this);
+        var lhs = peekEvalOperand();
 
-    @Override
-    public Expr visit(BoolExprNode boolExprNode) {
-        return new BoolVal(boolExprNode.getRawValue());
-    }
+        binaryExprNode.getRhs().accept(this);
+        var rhs = peekEvalOperand();
 
-    @Override
-    public Expr visit(IntExprNode intExprNode) {
-        // generate IntVal from intExprNode
-        return new IntVal(intExprNode.getRawValue());
-    }
+        var res = addInstr(BinExpr.with(binaryExprNode.getOpType(),lhs,rhs));
 
-    @Override
-    public Expr visit(FloatExprNode floatExprNode) {
-        return new IntVal(floatExprNode.getRawValue().intValue());
-    }
+        res.ifPresent(this::pushEvalOperand);
 
-    @Override
-    public Expr visit(NullExprNode nullExprNode) {
         return null;
     }
 
     @Override
-    public Expr visit(StringExprNode stringExprNode) {
-        return new StringVal(stringExprNode.getRawValue());
+    public VarSlot visit(UnaryExprNode unaryExprNode) {
+        curNode = unaryExprNode;
+        unaryExprNode.getValExpr().accept(this);
+        var expr = peekEvalOperand();
+        var res = addInstr(UnaryExpr.with(unaryExprNode.getOpType(),expr));
+        res.ifPresent(this::pushEvalOperand);
+
+        return null;
     }
 
     @Override
-    public Expr visit(UnaryExprNode unaryExprNode) {
-        var expr = (Expr) visit(unaryExprNode.getValExpr());
-        return new UnaryExpr(unaryExprNode.getOpType(), expr);
-    }
+    public VarSlot visit(IDExprNode idExprNode) {
+        curNode = idExprNode;
 
-    @Override
-    public Expr visit(CallFuncNode callExprNode) {
-        var args = callExprNode.getArgsNode().stream().map(this::visit).map(Expr.class::cast).toList();
-        return new CallFunc(new Var(callExprNode.getCallFuncSymbol()), args);
-    }
+        if (idExprNode.getRefSymbol() instanceof VariableSymbol) {
+            var varSlot = FrameSlot.get((VariableSymbol) idExprNode.getRefSymbol());
 
-    @Override
-    public Void visit(IfStmtNode ifStmtNode) {
-        var thenLabel = new Label(null, ifStmtNode.getScope());
-        var elseLabel = new Label(null, ifStmtNode.getScope());
-        var endLabel = new Label(null, ifStmtNode.getScope());
-
-        var condExpr = (Expr) visit(ifStmtNode.getConditionalNode());
-        var hasElseBranch = ifStmtNode.getElseBlock().isPresent();
-        var thenSuccLabel = hasElseBranch ? elseLabel : endLabel;
-
-        cjump(condExpr, thenLabel, thenSuccLabel);
-        label(thenLabel);
-
-        ifStmtNode.getThenBlock().accept(this);
-
-        if (hasElseBranch) jump(endLabel);
-
-        if (hasElseBranch) {
-            label(elseLabel);
-            ifStmtNode.getElseBlock().ifPresent(this::transformBlockStmt);
+            if(!idExprNode.isLValue()) {
+                // RVal
+                pushEvalOperand(varSlot);
+            }
         }
-
-        /// Label local
-        label(endLabel);
-
         return null;
     }
 
-    protected void transformBlockStmt(StmtNode blockStmt) {
-        blockStmt.accept(this);
+    @Override
+    public VarSlot visit(BoolExprNode boolExprNode) {
+
+        pushEvalOperand( ConstVal.valueOf(boolExprNode.getRawValue()));
+
+        return null;
+    }
+    @Override
+    public VarSlot visit(IntExprNode intExprNode) {
+        pushEvalOperand(ConstVal.valueOf(intExprNode.getRawValue()));
+        return null;
+    }
+
+    @Override
+    public VarSlot visit(FloatExprNode floatExprNode) {
+        pushEvalOperand(ConstVal.valueOf(floatExprNode.getRawValue()));
+        return null;
+    }
+
+    @Override
+    public VarSlot visit(NullExprNode nullExprNode) {
+        pushEvalOperand(ConstVal.valueOf(nullExprNode.getRawValue()));
+        return null;
+    }
+
+    @Override
+    public VarSlot visit(StringExprNode stringExprNode) {
+        pushEvalOperand(ConstVal.valueOf(stringExprNode.getRawValue()));
+        return null;
+    }
+
+    @Override
+    public VarSlot visit(CallFuncNode callExprNode) {
+        curNode = callExprNode;
+        var methodSymbol = callExprNode.getCallFuncSymbol();
+        var funcName = callExprNode.getFuncName();
+        var args = callExprNode.getArgsNode().size();
+        callExprNode.getArgsNode().forEach(x -> x.accept(this));
+        addInstr(new CallFunc(funcName,args,methodSymbol));
+        return null;
     }
 
     @Override
     public Void visit(ExprStmtNode exprStmtNode) {
-        addStmt(new ExprStmt(visit(exprStmtNode.getExprNode())));
-        return null;
-    }
-
-
-    @Override
-    public Void visit(ReturnStmtNode returnStmtNode) {
-        var retVal = (Expr) visit(returnStmtNode.getRetNode());
-        addStmt(new ExprStmt(retVal));
-        jump(currentFuncExitEntry());
-        return null;
-    }
-
-    @Override
-    public Void visit(WhileStmtNode whileStmtNode) {
-        var beginLabel = new Label(null, whileStmtNode.getScope());
-        var thenLabel = new Label(null, whileStmtNode.getScope());
-        var endLabel = new Label(null, whileStmtNode.getScope());
-
-        pushBreakTarget(endLabel);
-        pushContinueTarget(beginLabel);
-
-        var condExpr = (Expr) visit(whileStmtNode.getConditionNode());
-        label(beginLabel);
-        cjump(condExpr, thenLabel, endLabel);
-        label(thenLabel);
-        transformBlockStmt(whileStmtNode.getBlockNode());
-        jump(beginLabel);
-
-        label(endLabel);
-
-        popBreakTarget();
-        popContinueTarget();
-
-        return null;
-    }
-
-    @Override
-    public Void visit(AssignStmtNode assignStmtNode) {
-        addStmt(new Assign((Var) visit(assignStmtNode.getLhs()), visit(assignStmtNode.getRhs())));
-        return null;
-    }
-
-    @Override
-    public Void visit(BreakStmtNode breakStmtNode) {
-        addStmt(new JMP(currentBreakTarget()));
-        return null;
-    }
-
-    @Override
-    public Void visit(ContinueStmtNode continueStmtNode) {
-        addStmt(new JMP(currentContinueTarget()));
+        curNode = exprStmtNode;
+        exprStmtNode.getExprNode().accept(this);
         return null;
     }
 
     @Override
     public Void visit(BlockStmtNode blockStmtNode) {
-        Optional.ofNullable(blockStmtNode.getStmtNodes()).ifPresent(stmtNodes -> stmtNodes.forEach(this::transformBlockStmt));
+        curNode = blockStmtNode;
+        blockStmtNode.getStmtNodes().forEach(x -> x.accept(this));
+        return null;
+    }
+
+    @Override
+    public Void visit(ReturnStmtNode returnStmtNode) {
+        curNode = returnStmtNode;
+        if (returnStmtNode.getRetNode() != null) {
+            returnStmtNode.getRetNode().accept(this);
+            popEvalOperand();
+        }
+
+        jump(exitBlock);
+        return null;
+    }
+
+    @Override
+    public Void visit(WhileStmtNode whileStmtNode) {
+        curNode = whileStmtNode;
+        var condBlock = new LinearIRBlock(currentBlock.getScope());
+        var doBlock = new LinearIRBlock(currentBlock.getScope());
+        var endBlock = new LinearIRBlock(currentBlock.getScope());
+
+        jump(condBlock);
+
+        pushBreakStack(endBlock);
+        pushContinueStack(condBlock);
+
+        setCurrentBlock(condBlock);
+        whileStmtNode.getConditionNode().accept(this);
+
+        var cond = peekEvalOperand();
+
+        jumpIf(cond,doBlock,endBlock);
+
+        setCurrentBlock(doBlock);
+        whileStmtNode.getBlockNode().accept(this);
+        jump(condBlock);
+
+        popBreakStack();
+        popContinueStack();
+
+        setCurrentBlock(endBlock);
+        return null;
+    }
+
+    @Override
+    public Void visit(IfStmtNode ifStmtNode) {
+        curNode = ifStmtNode;
+
+        ifStmtNode.getCondExpr().accept(this);
+        var cond = peekEvalOperand();
+        var thenBlock = new LinearIRBlock(currentBlock.getScope());
+        var endBlock = new LinearIRBlock(currentBlock.getScope());
+
+        if (ifStmtNode.getElseBlock().isEmpty()) {
+            jumpIf(cond,thenBlock,endBlock);
+            setCurrentBlock(thenBlock);
+            ifStmtNode.getThenBlock().accept(this);
+        }else {
+            var elseBlock = new LinearIRBlock(currentBlock.getScope());
+            jumpIf(cond,thenBlock,elseBlock);
+            setCurrentBlock(thenBlock);
+            ifStmtNode.getThenBlock().accept(this);
+            setCurrentBlock(elseBlock);
+            ifStmtNode.getElseBlock().ifPresent(x -> x.accept(this));
+        }
+
+        setCurrentBlock(endBlock);
+        return null;
+    }
+
+    @Override
+    public Void visit(AssignStmtNode assignStmtNode) {
+        curNode = assignStmtNode;
+        assignStmtNode.getRhs().accept(this);
+        var rhs = peekEvalOperand();
+        var lhsNode = (IDExprNode) assignStmtNode.getLhs();
+        var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
+        addInstr(Assign.with(lhs,rhs));
+        popEvalOperand();
+        return null;
+    }
+
+    @Override
+    public Void visit(BreakStmtNode breakStmtNode) {
+        curNode = breakStmtNode;
+        jump(breakStack.peek());
 
         return null;
     }
 
-    protected void addStmt(Stmt stmt) {
-        stmts.add(stmt);
+    @Override
+    public Void visit(ContinueStmtNode continueStmtNode) {
+        curNode = continueStmtNode;
+        jump(continueStack.peek());
+
+        return null;
     }
 
-    protected void jump(Label thenLabel) {
-        addStmt(new JMP(thenLabel));
+    public void forkNewBlock(Scope scope) {
+        currentBlock = new LinearIRBlock();
+        currentBlock.setScope(scope);
+        breakStack = new Stack<>();
+        continueStack = new Stack<>();
+    }
+    public void clearBlock() {
+        currentBlock = null;
     }
 
-    protected void label(Label label) {
-        addStmt(label);
+    protected LinearIRBlock getCurrentBlock() {
+        return currentBlock;
     }
 
-    protected void cjump(Expr cond, Label thenLabel, Label elseLabel) {
-        addStmt(new CJMP(cond, thenLabel, elseLabel));
+    public void setCurrentBlock(LinearIRBlock nextBlock) {
+        currentBlock.setLink(nextBlock);
+        currentBlock = nextBlock;
     }
 
-    protected Label currentBreakTarget() {
-        return breakStack.peek();
+
+    public Optional<VarSlot> addInstr(IRNode stmt) {
+
+        getCurrentBlock().addStmt(stmt);
+        if (stmt instanceof BinExpr) {
+            popEvalOperand();
+            popEvalOperand();
+            return Optional.of(OperandSlot.pushStack());
+        } else if (stmt instanceof UnaryExpr) {
+            popEvalOperand();
+            return Optional.of(OperandSlot.pushStack());
+        } else if(stmt instanceof CJMP) {
+            popEvalOperand();
+        } else if (stmt instanceof CallFunc callFunc) {
+            int i = callFunc.getArgs();
+
+            while (i > 0){
+                popEvalOperand();
+                i--;
+            }
+            // 如果存在返回值，则要模拟压入返回值以保证栈平衡
+            if(!callFunc.getFuncType().isVoid()) {
+               pushEvalOperand(OperandSlot.genTemp());
+            }
+        }
+
+        return Optional.empty();
     }
 
-    private Label currentContinueTarget() {
-        return continueStack.peek();
+    protected void setExitHook(ReturnVal returnVal,MethodSymbol methodSymbol) {
+        if (methodSymbol.getName().equalsIgnoreCase("main")) {
+            returnVal.setMainEntry(true);
+        }
     }
 
-    protected void pushBreakTarget(Label label) {
-        breakStack.push(label);
+    public void jump(LinearIRBlock block) {
+        addInstr(new JMP(block));
+    }
+    public void jumpIf(VarSlot cond, LinearIRBlock thenBlock, LinearIRBlock elseBlock) {
+        addInstr(new CJMP(cond,thenBlock,elseBlock));
+    }
+    public void pushBreakStack(LinearIRBlock linearIRBlock) {
+        breakStack.push(linearIRBlock);
     }
 
-    protected void pushContinueTarget(Label label) {
-        continueStack.push(label);
-    }
-
-    protected void popBreakTarget() {
+    public void popBreakStack() {
         breakStack.pop();
     }
 
-    protected void popContinueTarget() {
-        continueStack.pop();
+
+    public void pushContinueStack(LinearIRBlock linearIRBlock) {
+        continueStack.push(linearIRBlock);
     }
 
-    protected Label currentFuncExitEntry() {
-        return currentFunc.retHook.retFuncLabel;
+
+    public void popContinueStack() {
+        continueStack.pop();
+    }
+    static int cnt = 0;
+    protected VarSlot pushEvalOperand(Operand operand) {
+
+        if (curNode != null) {
+            logger.debug(curNode.toString());
+        }
+
+        if (!(operand instanceof OperandSlot)){
+            cnt++;
+            var assignee = OperandSlot.pushStack();
+            evalExprStack.push(assignee);
+            addInstr(Assign.with(assignee, operand));
+            logger.debug("-> eval stack %s%n", evalExprStack.toString());
+
+            return assignee;
+        } else {
+            logger.debug("-> eval stack %s%n", evalExprStack.toString());
+            evalExprStack.push((VarSlot) operand);
+            return (VarSlot) operand;
+        }
+
+    }
+
+    protected VarSlot popEvalOperand() {
+        var res = evalExprStack.pop();
+        logger.debug("pop eval operand %s",res);
+        logger.debug("pop stack");
+        OperandSlot.popStack();
+        if (OperandSlot.getOrdSeq() < 0) {
+            throw new RuntimeException("un matched pop");
+        }
+        return res;
+    }
+
+    protected VarSlot peekEvalOperand() {
+        return evalExprStack.peek();
+    }
+
+    public CFG<IRNode> getCFG(LinearIRBlock startBlocks) {
+        var cfgBuilder = new CFGBuilder(startBlocks);
+        return cfgBuilder.getCFG();
     }
 }

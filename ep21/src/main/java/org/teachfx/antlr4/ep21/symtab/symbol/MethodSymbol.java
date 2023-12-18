@@ -61,6 +61,11 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     }
 
     @Override
+    public boolean isVoid() {
+        return getReturnType().isVoid();
+    }
+
+    @Override
     public Type getPrimitiveType() {
         return null;
     }
@@ -90,7 +95,9 @@ public class MethodSymbol extends ScopedSymbol implements Type {
     public int getVarSlots() {
         return getMembers().size();
     }
-
+    public int getLocals() {
+        return  getVarSlots() - getArgs();
+    }
     @Override
     public boolean isBuiltIn() {
         return builtIn;

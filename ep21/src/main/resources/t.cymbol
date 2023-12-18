@@ -1,25 +1,23 @@
-/*
-int fib(int n){
-    int p = 1;
-    int q = 1;
-    while(p <= 100) {
-        if (p >= 1) {
-            p = p*2 + 1;
-            if (q <= p / 2) {
-                return p;
-            }
-        } else {
-            return q;
-        }
-    }
 
-    return p;
+int dec1(int x) {
+    return x - 1;
 }
-*/
 
 int main() {
+    int i = 10;
+    while(i > 0) {
+        if (i > 5) {
+            print(i);
+            if(i == 7) {
+                return 7;
+            }
+        }
 
-   print(10);
+        print("break");
+
+        i = dec1(i);
+    }
+
    return 0;
 }
 

@@ -13,12 +13,21 @@ public class IDExprNode extends ExprNode {
 
     protected Symbol refSymbol;
 
+    protected boolean isVal = false;
+
     public IDExprNode(String image,ParserRuleContext ctx) {
         this.image = image;
         this.ctx = ctx;
 
     }
 
+    public boolean isLValue() {
+        return isVal;
+    }
+
+    public void setLValue(boolean isVal) {
+        this.isVal = isVal;
+    }
 
     public Symbol getRefSymbol() {
         return refSymbol;

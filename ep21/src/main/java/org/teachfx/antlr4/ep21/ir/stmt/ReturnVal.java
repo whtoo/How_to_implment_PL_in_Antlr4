@@ -2,14 +2,16 @@ package org.teachfx.antlr4.ep21.ir.stmt;
 
 
 import org.teachfx.antlr4.ep21.ir.IRVisitor;
-import org.teachfx.antlr4.ep21.ir.expr.Expr;
+import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep21.symtab.scope.Scope;
+
+import java.util.Objects;
 
 public class ReturnVal extends Stmt {
     public Label retFuncLabel;
-    private Expr retVal;
+    private VarSlot retVal;
     private boolean isMainEntry = false;
-    public ReturnVal(Expr retVal, Scope scope) {
+    public ReturnVal(VarSlot retVal, Scope scope) {
         retFuncLabel = new Label(null,scope);
         retFuncLabel.setNextEntry(this);
         this.retVal = retVal;
@@ -26,11 +28,11 @@ public class ReturnVal extends Stmt {
         return StmtType.RETURN;
     }
 
-    public Expr getRetVal() {
+    public VarSlot getRetVal() {
         return retVal;
     }
 
-    public void setRetVal(Expr retVal) {
+    public void setRetVal(VarSlot retVal) {
         this.retVal = retVal;
     }
 
@@ -40,5 +42,15 @@ public class ReturnVal extends Stmt {
 
     public void setMainEntry(boolean mainEntry) {
         isMainEntry = mainEntry;
+    }
+
+    @Override
+    public String toString() {
+        var retText = isMainEntry()?"halt":"ret";
+        var retValText = "";
+        if (Objects.nonNull(retVal)){
+            retValText = "load" + retVal.toString() + "\n";
+        }
+        return  retValText + retText;
     }
 }

@@ -1,27 +1,27 @@
 package org.teachfx.antlr4.ep21.ir.stmt;
 
 import org.teachfx.antlr4.ep21.ir.IRVisitor;
-import org.teachfx.antlr4.ep21.ir.expr.Expr;
+import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
 
 public class ExprStmt extends Stmt {
-    private Expr expr;
-    public ExprStmt(Expr expr)
+    private VarSlot varSlot;
+    public ExprStmt(VarSlot varSlot)
     {
-        this.expr = expr;
+        this.varSlot = varSlot;
     }
 
     @Override
     public String toString()
     {
-        return expr.toString();
+        return varSlot.toString();
     }
 
-    public Expr getExpr() {
-        return expr;
+    public VarSlot getExpr() {
+        return varSlot;
     }
 
-    public void setExpr(Expr expr) {
-        this.expr = expr;
+    public void setExpr(VarSlot varSlot) {
+        this.varSlot = varSlot;
     }
 
     @Override

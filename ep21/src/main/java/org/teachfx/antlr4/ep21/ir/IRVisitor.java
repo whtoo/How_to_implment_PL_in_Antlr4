@@ -1,23 +1,14 @@
 package org.teachfx.antlr4.ep21.ir;
 
-import org.teachfx.antlr4.ep21.ir.def.Func;
-import org.teachfx.antlr4.ep21.ir.expr.ArrayAccessExpr;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
-import org.teachfx.antlr4.ep21.ir.expr.ClassAccessExpr;
-import org.teachfx.antlr4.ep21.ir.expr.Temp;
+import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
+import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
-import org.teachfx.antlr4.ep21.ir.expr.values.BoolVal;
-import org.teachfx.antlr4.ep21.ir.expr.values.IntVal;
-import org.teachfx.antlr4.ep21.ir.expr.values.StringVal;
-import org.teachfx.antlr4.ep21.ir.expr.values.Var;
+import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
 
 public interface IRVisitor<S,E> {
-    /// Expr
-    E visit(IntVal node);
-    E visit(BoolVal node);
-    E visit(StringVal node);
 
     E visit(BinExpr node);
 
@@ -30,22 +21,18 @@ public interface IRVisitor<S,E> {
     S visit(CJMP cjmp);
     S visit(Assign assign);
 
-    S visit(Func func);
-
-    E visit(Var var);
-
-    E visit(ClassAccessExpr classAccessExpr);
-
-    E visit(ArrayAccessExpr arrayAccessExpr);
-
     default S visit(Stmt stmt) { return stmt.accept(this);}
 
     S visit(ReturnVal returnVal);
-    S visit(ExprStmt exprStmt);
+    default S visit(ExprStmt exprStmt) { return exprStmt.accept(this); }
 
-    S visit(Prog prog);
+    default S visit(Prog prog) { return null; }
 
-    E visit(Temp temp);
+    E visit(OperandSlot operandSlot);
+
+    E visit(FrameSlot frameSlot);
+
+    <T> E visit(ConstVal<T> tConstVal);
 
     /// Stmt
 

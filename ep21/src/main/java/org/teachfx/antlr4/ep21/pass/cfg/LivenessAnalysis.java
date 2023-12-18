@@ -1,0 +1,74 @@
+package org.teachfx.antlr4.ep21.pass.cfg;
+
+import org.teachfx.antlr4.ep21.ir.IRVisitor;
+import org.teachfx.antlr4.ep21.ir.Prog;
+import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
+import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
+import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
+import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
+import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
+import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
+import org.teachfx.antlr4.ep21.ir.stmt.*;
+
+public class LivenessAnalysis implements IRVisitor<Void, Void> {
+
+    @Override
+    public Void visit(BinExpr node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(UnaryExpr node) {
+        return null;
+    }
+
+    @Override
+    public Void visit(CallFunc callFunc) {
+        return null;
+    }
+
+    @Override
+    public Void visit(Label label) {
+        return null;
+    }
+
+    @Override
+    public Void visit(JMP jmp) {
+        return null;
+    }
+
+    @Override
+    public Void visit(CJMP cjmp) {
+        return null;
+    }
+
+    @Override
+    public Void visit(Assign assign) {
+        return null;
+    }
+
+    @Override
+    public Void visit(ReturnVal returnVal) {
+        return null;
+    }
+
+    @Override
+    public Void visit(Prog prog) {
+        return null;
+    }
+
+    @Override
+    public Void visit(OperandSlot operandSlot) {
+        return null;
+    }
+
+    @Override
+    public Void visit(FrameSlot frameSlot) {
+        return null;
+    }
+
+    @Override
+    public <T> Void visit(ConstVal<T> tConstVal) {
+        return null;
+    }
+}

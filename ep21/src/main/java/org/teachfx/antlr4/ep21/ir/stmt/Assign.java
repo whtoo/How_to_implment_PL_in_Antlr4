@@ -1,31 +1,50 @@
 package org.teachfx.antlr4.ep21.ir.stmt;
 
 import org.teachfx.antlr4.ep21.ir.IRVisitor;
-import org.teachfx.antlr4.ep21.ir.expr.Expr;
-import org.teachfx.antlr4.ep21.ir.expr.values.Var;
+import org.teachfx.antlr4.ep21.ir.expr.Operand;
+import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
 
 public class Assign extends Stmt {
-    protected Var lhs;
-    protected Expr rhs;
+    protected VarSlot lhs;
+    protected Operand rhs;
 
-    public Assign(Var lhs, Expr rhs) {
+    /**
+     * Assign a value to a variable
+     * @param lhs Variable to assign
+     * @param rhs Value to assign
+     * @return Assign object
+     */
+    @SuppressWarnings("unused") // Used in generated code.
+    public static Assign with(VarSlot lhs,VarSlot rhs) {
+        return new Assign(lhs,rhs);
+    }
+    /**
+     * Assign a value to a variable
+     * @param lhs Variable to assign
+     * @param rhs Value to assign
+     * @return Assign object
+     */
+    public static Assign with(VarSlot lhs, Operand rhs) {
+        return new Assign(lhs,rhs);
+    }
+    public Assign(VarSlot lhs, Operand rhs) {
         this.lhs = lhs;
         this.rhs = rhs;
     }
 
     // Generate getter and setter for lhs and rhs
-    public Var getLhs() {
+    public VarSlot getLhs() {
         return lhs;
     }
-    public Expr getRhs() {
+    public Operand getRhs() {
         return rhs;
     }
 
-    public void setLhs(Var lhs) {
+    public void setLhs(VarSlot lhs) {
         this.lhs = lhs;
     }
 
-    public void setRhs(Expr rhs) {
+    public void setRhs(VarSlot rhs) {
         this.rhs = rhs;
     }
 
@@ -37,5 +56,10 @@ public class Assign extends Stmt {
     @Override
     public StmtType getStmtType() {
         return StmtType.ASSIGN;
+    }
+
+    @Override
+    public String toString() {
+        return "%s = %s".formatted(getLhs(),getRhs());
     }
 }

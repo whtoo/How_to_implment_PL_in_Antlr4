@@ -15,4 +15,5 @@ public abstract class Stmt extends IRNode {
     public abstract <S,E> S accept(IRVisitor<S,E> visitor);
 
     public abstract StmtType getStmtType();
+
 }

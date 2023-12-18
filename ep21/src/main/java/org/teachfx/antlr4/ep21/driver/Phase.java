@@ -3,7 +3,6 @@ package org.teachfx.antlr4.ep21.driver;
 import java.util.Optional;
 
 public abstract class Phase<Input,Output> implements Task<Input,Output>,ErrorIssuer {
-
     public final String name;
 
     public Phase(String name) {

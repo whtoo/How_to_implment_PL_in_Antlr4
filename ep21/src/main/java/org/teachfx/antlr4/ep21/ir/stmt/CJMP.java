@@ -1,19 +1,28 @@
 package org.teachfx.antlr4.ep21.ir.stmt;
 
+import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep21.ir.IRVisitor;
-import org.teachfx.antlr4.ep21.ir.expr.Expr;
+import org.teachfx.antlr4.ep21.ir.JMPInstr;
+import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
+import org.teachfx.antlr4.ep21.pass.cfg.LinearIRBlock;
 
-public class CJMP extends Stmt {
-    public Expr cond;
+public class CJMP extends Stmt implements JMPInstr {
+    public VarSlot cond;
+    private LinearIRBlock thenBlock;
+    private LinearIRBlock elseBlock;
 
-    public Label thenLabel;
-    public Label elseLabel;
 
-
-    public CJMP(Expr cond,Label thenLabel,Label elseLabel) {
+    public CJMP(@NotNull VarSlot cond, @NotNull LinearIRBlock thenLabel,@NotNull LinearIRBlock elseLabel) {
         this.cond = cond;
-        this.thenLabel = thenLabel;
-        this.elseLabel = elseLabel;
+        this.thenBlock = thenLabel;
+        this.elseBlock = elseLabel;
+        thenLabel.refJMP(this);
+        elseBlock.refJMP(this);
+    }
+
+    @Override
+    public Label getTarget() {
+        return elseBlock.getLabel();
     }
 
     @Override
@@ -24,5 +33,28 @@ public class CJMP extends Stmt {
     @Override
     public StmtType getStmtType() {
         return StmtType.CJMP;
+    }
+
+    @Override
+    public String toString() {
+        return "jmpIf %s,%s,%s".formatted(cond,thenBlock,elseBlock);
+    }
+
+    public void setElseBlock(LinearIRBlock elseBlock) {
+        this.elseBlock = elseBlock;
+        elseBlock.refJMP(this);
+    }
+
+    public void setThenBlock(LinearIRBlock thenBlock) {
+        this.thenBlock = thenBlock;
+        thenBlock.refJMP(this);
+    }
+
+    public LinearIRBlock getElseBlock() {
+        return elseBlock;
+    }
+
+    public LinearIRBlock getThenBlock() {
+        return thenBlock;
     }
 }

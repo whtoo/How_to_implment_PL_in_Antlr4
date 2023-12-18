@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CompileUnit extends ASTNode {
-    private String srcName;
 
     public void addFuncDecl(FuncDeclNode funcDecl) {
         this.funcDeclarations.add(funcDecl);
@@ -29,9 +28,7 @@ public class CompileUnit extends ASTNode {
         this.ctx = ctx;
     }
 
-    public CompileUnit(String srcName) {
-        this.srcName = srcName;
-    }
+    public CompileUnit() {}
 
     public List<VarDeclNode> getVarDeclarations() {
         return varDeclarations;
@@ -54,14 +51,6 @@ public class CompileUnit extends ASTNode {
         d.printClass(this,getLocation());
         d.printNodeList("varDecl",varDeclarations);
         d.printNodeList("funcDecl",funcDeclarations);
-    }
-
-    public String getSrcName() {
-        return srcName;
-    }
-
-    public void setSrcName(String srcName) {
-        this.srcName = srcName;
     }
 
     @Override

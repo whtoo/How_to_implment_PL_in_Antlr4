@@ -1,14 +1,18 @@
 package org.teachfx.antlr4.ep21.ir.stmt;
 
+import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep21.ir.IRVisitor;
 import org.teachfx.antlr4.ep21.symtab.scope.Scope;
 
 import java.util.Objects;
 
-public class Label extends Stmt {
+public class Label extends Stmt implements Comparable<Label> {
+
     private Stmt nextEntry = null;
 
     private String rawLabel;
+
+
     private Scope scope;
     protected int seq;
 
@@ -20,16 +24,18 @@ public class Label extends Stmt {
         }
     }
 
-    public String getRawLabel() {
-        return rawLabel;
+    public Label(Scope scope,Integer ord) {
+        this.seq = ord;
+        this.rawLabel = "L%d".formatted(seq);
+        this.scope = scope;
+    }
+
+    public Label(Scope scope) {
+        this(scope, scope.getLabelSeq());
     }
 
     public void setRawLabel(String rawLabel) {
         this.rawLabel = rawLabel;
-    }
-
-    public Scope getScope() {
-        return scope;
     }
 
     public void setScope(Scope scope) {
@@ -43,7 +49,7 @@ public class Label extends Stmt {
 
     public String toSource() {
         if (Objects.nonNull(rawLabel)) {
-            return scope.getScopeName() + "_" + rawLabel ;
+            return rawLabel ;
         }
 
         return scope.getScopeName() + "_" + seq ;
@@ -57,10 +63,6 @@ public class Label extends Stmt {
     @Override
     public String toString() {
         return toSource();
-    }
-
-    public Stmt getNextEntry() {
-        return nextEntry;
     }
 
     public void setNextEntry(Stmt nextEntry) {
@@ -79,5 +81,33 @@ public class Label extends Stmt {
         }
 
         return item;
+    }
+
+    public Stmt getNextEntry() {
+        return nextEntry;
+    }
+
+    public String getRawLabel() {
+        return rawLabel;
+    }
+
+    public Scope getScope() {
+        return scope;
+    }
+
+    public int getSeq() {
+        return seq;
+    }
+
+    @Override
+    public int hashCode() {
+        return getSeq();
+    }
+
+    @Override
+    public int compareTo(@NotNull Label o) {
+        var e = Integer.valueOf(getSeq());
+        var t = Integer.valueOf(o.getSeq());
+        return e.compareTo(t);
     }
 }

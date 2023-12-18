@@ -1,16 +1,13 @@
 package org.teachfx.antlr4.ep21.parser;
 
-import org.jetbrains.annotations.NotNull;
-
-
-public class Location implements Comparable<Location> {
+public class Location implements Comparable<Location>{
     protected int startLine;
     protected int startColumn;
     protected int endLine;
     protected int endColumn;
 
     public boolean hasPos() {
-        return startLine >= 0;
+        return startLine > 0;
     }
 
     public Location(int startLine,int startColumn,int endLine,int endColumn){
@@ -27,13 +24,7 @@ public class Location implements Comparable<Location> {
     }
 
     @Override
-    public int compareTo(@NotNull Location o) {
-        if(startLine == o.startLine) {
-            return 0;
-        } else if (startLine > o.startLine) {
-            return 1;
-        }
-
-        return -1;
+    public int compareTo(Location o) {
+        return startLine = o.startLine;
     }
 }

@@ -65,22 +65,22 @@ public class Compiler {
         irBuilder.prog.optimizeBasicBlock();
 
         Stream.of(
-                StreamUtils.indexStream(irBuilder.prog.blockList.stream()
-                                .map(irBuilder::getCFG))
-                        .peek(cfgPair -> {
-                            var cfg = cfgPair.getRight();
-                            var idx = cfgPair.getLeft();
-                            saveToEp20Res(cfg.toString(), "%d_origin".formatted(idx));
-                            cfg.addOptimizer(new ControlFlowAnalysis<>());
-                            cfg.applyOptimizers();
-                            saveToEp20Res(cfg.toString(), "%d_optimized".formatted(idx));
-                        })
-                        .map(Pair::getRight)
-                        .map(CFG::getIRNodes)
-                        .reduce(new ArrayList<IRNode>(), (a, b) -> {
-                            a.addAll(b);
-                            return a;
-                        })
+                        StreamUtils.indexStream(irBuilder.prog.blockList.stream()
+                                        .map(irBuilder::getCFG))
+                                .peek(cfgPair -> {
+                                    var cfg = cfgPair.getRight();
+                                    var idx = cfgPair.getLeft();
+                                    saveToEp20Res(cfg.toString(), "%d_origin".formatted(idx));
+                                    cfg.addOptimizer(new ControlFlowAnalysis<>());
+                                    cfg.applyOptimizers();
+                                    saveToEp20Res(cfg.toString(), "%d_optimized".formatted(idx));
+                                })
+                                .map(Pair::getRight)
+                                .map(CFG::getIRNodes)
+                                .reduce(new ArrayList<IRNode>(), (a, b) -> {
+                                    a.addAll(b);
+                                    return a;
+                                })
                 )
                 .map(irNodeList -> {
                     var assembler = new CymbolAssembler();
@@ -103,7 +103,8 @@ public class Compiler {
             File file = new File(filePath);
             try (var outputStream = new FileOutputStream(file)) {
                 if (!file.exists()) {
-                    file.createNewFile();
+                    var res = file.createNewFile();
+                    logger.debug("create file %s is %b".formatted(filePath,res));
                 }
                 outputStream.write(buffer.getBytes());
 
@@ -119,21 +120,22 @@ public class Compiler {
     protected static void saveToEp20Res(String buffer,String suffix) {
         String modulePath = "./src/main/resources"; // 替换 "my-module" 为你的模块名称
         File moduleDirectory = new File(modulePath);
-        logger.info("file path %s".formatted(moduleDirectory.getAbsolutePath()));
+        logger.debug("file path %s".formatted(moduleDirectory.getAbsolutePath()));
         if (moduleDirectory.exists()) {
-            logger.info("模块路径：" + moduleDirectory.getAbsolutePath());
+            logger.debug("模块路径：" + moduleDirectory.getAbsolutePath());
             var filePath = modulePath+"/graph_%s.md".formatted(suffix);
             File file = new File(filePath);
             try (var outputStream = new FileOutputStream(file)) {
                 if (!file.exists()) {
-                    file.createNewFile();
+                   var res = file.createNewFile();
+                   logger.debug("create file %s is %b".formatted(filePath,res));
                 }
-                var mdTmeplate = """
+                String template = """
                         ```mermaid
                         %s
                         ```
                         """.formatted(buffer);
-                outputStream.write(mdTmeplate.getBytes());
+                outputStream.write(template.getBytes());
 
             } catch (IOException e) {
                 throw new RuntimeException(e);

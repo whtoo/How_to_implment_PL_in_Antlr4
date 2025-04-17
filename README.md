@@ -55,10 +55,33 @@
 所以，这就是我的起点，希望你能和我一样享受这个过程。
 
 ## 3. 工程体系介绍
-整个工程需要3种外部环境支持。
-- a. `JDK18+` is required. (JDK环境需要>= 18,我本地是openJDK 18)
-- b. `Antlr4` runtime support.(lib已经有了，并且我在ant构建文件中已经写好了。)
-- c. `Ant` support. (Mac:brew install ant,其他平台：[Baidu一下Ant安装](https://www.baidu.com/s?wd=ant%E5%AE%89%E8%A3%85&rsv_spt=1&rsv_iqid=0x92a5c3ca00098ab3&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=1&rsv_dl=tb&oq=ant&rsv_btype=t&inputT=1837&rsv_t=ec4cvoU9XIugnSk4yfAeGzHEthu95IAGc%2BcxFt188XBik9tpLDQyKTb2S3Y4301WBs3T&rsv_pq=ea06018e001299b9&rsv_sug3=50&rsv_sug1=21&rsv_sug7=100&rsv_sug2=0&rsv_sug4=2109))。
+整个工程基于Maven构建，需要以下环境支持：
+- a. `JDK18+` 要求 (推荐使用OpenJDK 18或更高版本)
+- b. `Maven 3.8+` 构建工具
+- c. `Antlr4` 运行时支持 (已通过Maven依赖管理)
+
+### 3.1 构建流程
+1. 克隆项目后，在根目录执行:
+```bash
+mvn clean install
+```
+2. 构建特定模块(以ep20为例):
+```bash
+cd ep20
+mvn clean package
+```
+
+### 3.2 模块化配置
+项目采用Maven多模块结构，每个ep*目录都是一个独立模块，包含:
+- `src/main/java` - 主代码
+- `src/test/java` - 测试代码
+- `pom.xml` - 模块配置
+
+### 3.3 依赖管理
+所有依赖通过Maven管理，主要依赖包括:
+- Antlr4运行时
+- Log4j日志
+- Apache Commons工具库
 ### 3.1. 目录如下所述:
 
 - `src`: the folder to maintain sources

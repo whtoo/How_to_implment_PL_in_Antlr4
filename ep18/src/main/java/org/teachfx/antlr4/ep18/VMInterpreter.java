@@ -8,6 +8,7 @@ import org.teachfx.antlr4.ep18.parser.VMAssemblerLexer;
 import org.teachfx.antlr4.ep18.parser.VMAssemblerParser;
 import org.teachfx.antlr4.ep18.stackvm.*;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
@@ -33,7 +34,7 @@ public class VMInterpreter {
         boolean trace = false;
         boolean disassemble = false;
         boolean dump = false;
-        String fileName = "src/main/resources/t.vm";
+        String fileName = "t.vm";
         int i = 0;
         while (i < args.length) {
             switch (args[i]) {
@@ -57,10 +58,22 @@ public class VMInterpreter {
         }
 
         InputStream input = null;
-        if (fileName != null)
-            input = new FileInputStream(fileName);
-        else
+        if (fileName != null) {
+            // 优先从classpath加载资源
+            input = VMInterpreter.class.getClassLoader().getResourceAsStream(fileName);
+            if (input == null) {
+                // 如果classpath找不到，再尝试从文件系统加载
+                String resourcePath = "src/main/resources/" + fileName;
+                File file = new File(resourcePath);
+                
+                if (file.exists()) {
+                    input = new FileInputStream(file);
+                }
+            }
+        }
+        if (input == null) {
             input = System.in;
+        }
 
         VMInterpreter interpreter = new VMInterpreter();
         load(interpreter, input);

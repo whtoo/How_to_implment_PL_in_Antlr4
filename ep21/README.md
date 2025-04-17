@@ -18,6 +18,24 @@ graph LR
     D --> E[LIR]
 ```
 
+## 控制流程图
+
+```mermaid
+graph TD
+    subgraph 基本块1
+    L1[标签 L1]
+    JMP[跳转指令]
+    end
+    subgraph 基本块2
+    CJMP[条件跳转]
+    end
+    L1 --> JMP
+    JMP --> thenBlock
+    CJMP -->|条件真| then
+    CJMP -->|条件假| other
+ ```
+
+
 ## DONE
 
 ```mermaid

@@ -42,10 +42,17 @@ public class Compiler {
     }
 
     public static void main(String[] args) throws IOException {
-        String fileName = args.length > 0 ? args[0] : (new File("src/main/resources/t.cymbol")).getAbsolutePath();
-
+        String fileName = args.length > 0 ? args[0] : null;
         InputStream is = System.in;
-        if (fileName != null) is = new FileInputStream(fileName);
+        if (fileName != null) {
+            is = new FileInputStream(fileName);
+        } else {
+            is = Compiler.class.getClassLoader().getResourceAsStream("t.cymbol");
+            if (is == null) {
+                fileName = "src/main/resources/t.cymbol";
+                is = new FileInputStream(fileName);
+            }
+        }
         CharStream charStream = CharStreams.fromStream(is);
         CymbolLexer lexer = new CymbolLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
@@ -94,11 +101,14 @@ public class Compiler {
     }
 
     protected static void saveToEp18Res(String buffer) {
-        String modulePath = "../ep18/src/main/resources"; // 替换 "my-module" 为你的模块名称
+        String modulePath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
+        if (modulePath == null) {
+            modulePath = "../ep18/target/classes";
+        }
         File moduleDirectory = new File(modulePath);
         logger.debug("file path %s".formatted(moduleDirectory.getAbsolutePath()));
         if (moduleDirectory.exists()) {
-            logger.debug("模块路径：" + moduleDirectory.getAbsolutePath());
+            logger.debug("Module path: " + moduleDirectory.getAbsolutePath());
             var filePath = modulePath+"/t.vm";
             File file = new File(filePath);
             try (var outputStream = new FileOutputStream(file)) {
@@ -118,11 +128,14 @@ public class Compiler {
     }
 
     protected static void saveToEp20Res(String buffer,String suffix) {
-        String modulePath = "./src/main/resources"; // 替换 "my-module" 为你的模块名称
+        String modulePath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
+        if (modulePath == null) {
+            modulePath = "./target/classes";
+        }
         File moduleDirectory = new File(modulePath);
         logger.debug("file path %s".formatted(moduleDirectory.getAbsolutePath()));
         if (moduleDirectory.exists()) {
-            logger.debug("模块路径：" + moduleDirectory.getAbsolutePath());
+            logger.debug("Module path: " + moduleDirectory.getAbsolutePath());
             var filePath = modulePath+"/graph_%s.md".formatted(suffix);
             File file = new File(filePath);
             try (var outputStream = new FileOutputStream(file)) {

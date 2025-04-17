@@ -72,11 +72,18 @@
 ```Bash
 cd your_project_dir
 
-cd ep20
+# 使用run.sh脚本
+./scripts/run.sh <命令> <模块名> [额外参数]
 
-ant gen
+# 示例:
+./scripts/run.sh compile ep1    # 编译ep1模块
+./scripts/run.sh run ep2       # 运行ep2模块
+./scripts/run.sh test ep3      # 运行ep3模块的测试
+./scripts/run.sh clean ep4     # 清理ep4模块
+./scripts/run.sh run ep5 "参数1 参数2" # 运行ep5模块并传递参数
 
-ant run
+# 查看帮助
+./scripts/run.sh help
 ```
 
 ### 3.3. 如何从Ant构建并运行工程

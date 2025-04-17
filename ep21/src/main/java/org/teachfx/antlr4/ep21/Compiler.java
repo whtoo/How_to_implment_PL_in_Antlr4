@@ -22,10 +22,7 @@ import org.teachfx.antlr4.ep21.utils.StreamUtils;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Compiler {
@@ -42,10 +39,18 @@ public class Compiler {
     }
 
     public static void main(String[] args) throws IOException {
-        String fileName = args.length > 0 ? args[0] : (new File("src/main/resources/t.cymbol")).getAbsolutePath();
-
+        String fileName = args.length > 0 ? args[0] : null;
         InputStream is = System.in;
-        if (fileName != null) is = new FileInputStream(fileName);
+        if (fileName != null) {
+            is = new FileInputStream(fileName);
+        } else {
+
+            is = Compiler.class.getClassLoader().getResourceAsStream("t.cymbol");
+            if (is == null) {
+                fileName = "src/main/resources/t.cymbol";
+                is = new FileInputStream(fileName);
+            }
+        }
         CharStream charStream = CharStreams.fromStream(is);
         CymbolLexer lexer = new CymbolLexer(charStream);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
@@ -94,9 +99,13 @@ public class Compiler {
     }
 
     protected static void saveToEp18Res(String buffer) {
-        String modulePath = "../ep18/src/main/resources"; // 替换 "my-module" 为你的模块名称
+        String modulePath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
+        if (modulePath == null) {
+            modulePath = "../ep21/target/classes";
+        }
+        System.out.println("working path");
+        System.out.println("file path %s".formatted(modulePath));
         File moduleDirectory = new File(modulePath);
-        logger.debug("file path %s".formatted(moduleDirectory.getAbsolutePath()));
         if (moduleDirectory.exists()) {
             logger.debug("模块路径：" + moduleDirectory.getAbsolutePath());
             var filePath = modulePath+"/t.vm";
@@ -118,7 +127,10 @@ public class Compiler {
     }
 
     protected static void saveToEp20Res(String buffer,String suffix) {
-        String modulePath = "./src/main/resources"; // 替换 "my-module" 为你的模块名称
+        String modulePath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
+        if (modulePath == null) {
+            modulePath = "../ep21/target/classes";
+        }
         File moduleDirectory = new File(modulePath);
         logger.debug("file path %s".formatted(moduleDirectory.getAbsolutePath()));
         if (moduleDirectory.exists()) {

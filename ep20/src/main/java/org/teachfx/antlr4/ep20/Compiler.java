@@ -103,7 +103,7 @@ public class Compiler {
     protected static void saveToEp18Res(String buffer) {
         String modulePath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
         if (modulePath == null) {
-            modulePath = "../ep18/target/classes";
+            modulePath = "../ep20/target/classes";
         }
         File moduleDirectory = new File(modulePath);
         logger.debug("file path %s".formatted(moduleDirectory.getAbsolutePath()));

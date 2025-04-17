@@ -48,6 +48,35 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
         return nodes.get(id);
     }
 
+    public String toDOT() {
+        StringBuilder buf = new StringBuilder();
+        buf.append("digraph G {\n");
+        buf.append("  ranksep=.25;\n");
+        buf.append("  edge [arrowsize=.5]\n");
+        buf.append("  node [shape=circle, fontname=\"ArialNarrow\",\n");
+        buf.append("        fontsize=12, fixedsize=true, height=.45];\n");
+        
+        // 添加所有节点
+        buf.append("  ");
+        for (BasicBlock<I> node : nodes) {
+            buf.append(node.id);
+            buf.append("; ");
+        }
+        buf.append("\n");
+        
+        // 添加所有边
+        for (Triple<Integer, Integer, Integer> edge : edges) {
+            buf.append("  ");
+            buf.append(edge.getLeft());
+            buf.append(" -> ");
+            buf.append(edge.getMiddle());
+            buf.append(";\n");
+        }
+        
+        buf.append("}\n");
+        return buf.toString();
+    }
+
     /**
      * 获取前驱节点集合，也就是该节点的前驱节点集合。
      * @param id 节点的id

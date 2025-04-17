@@ -1,96 +1,115 @@
 # How to implement your own first ~~simple~~ programming language with antlr (Cyson:dog:)
 
-**🙏 Thank you to everyone who gave me a little bit of attention, you guys are my motivation for updating **
-## 1. global bird's eye view
-- [x] [ep1](src/org/teachfx/antlr4/ep1) - Example of antlr supported EBNF syntax describing hello world.
-- [x] [ep2](src/org/teachfx/antlr4/ep2) - How to use g4 to describe examples of syntax like `{1,2,{3,4...} ...} ` array and print it in the listener.
-- [x] [ep3] (src/org/teachfx/antlr4/ep3) - Implements a mini-calculator containing only addition, subtraction, multiplication and division.
-- [x] [ep4] (src/org/teachfx/antlr4/ep4) - implements an arithmetic calculator that allows simple interaction.
-- [x] [ep5] (src/org/teachfx/antlr4/ep5) - Implementation of a Java interface extraction tool.
-- [x] [ep6] (src/org/teachfx/antlr4/ep6) - implements a CVS extractor.
-- [x] [ep7] (src/org/teachfx/antlr4/ep7) - Implementing a JSON parsing tool.
-- [x] [ep8] (src/org/teachfx/antlr4/ep8) - abstract grammar book extractor
-- [x] [ep9](src/org/teachfx/antlr4/ep9) - ep4 enhancements
-- [x] [ep10](src/org/teachfx/antlr4/ep10) - an alternative implementation of ep6
-- [x] [ep11](src/org/teachfx/antlr4/ep11) - arithmetic interpreter based on ep8 (AST Tree walking)
-- [x] [ep12](src/org/teachfx/antlr4/ep12) - ep11 add assignment statements and variable declarations.
-- [x] [ep13](src/org/teachfx/antlr4/ep13) - Another simplified implementation of ep11.
-- [x] [ep14](src/org/teachfx/antlr4/ep14) - Implementation of symbol table recording.
-- [x] [ep15](src/org/teachfx/antlr4/ep15)-Implementation of scope determination for variables.
-- [x] [ep16] (src/org/teachfx/antlr4/ep16) - implements variable disambiguation and type-checking, and implements function scoping with script evaluation with function calls.
-- [x] [ep17] (src/org/teachfx/antlr4/ep17) - implement static declaration dependencies for functions (not exactly what I had in mind for call-graph generation, but let's add it anyway so others can avoid the pitfalls.)
-- [x] [ep18](src/org/teachfx/antlr4/ep18) - (~~ should synthesize the design of the VM from "Two Weeks to Implement a Scripting Language" and "Implementation Patterns for Programming Languages" ~~) ** already uses a stack interpreter, mostly because of the simplicity of the implementation **😆)
+**Every watch and star is the fuel and firewood for this dream journey**
+[![Security Status](https://www.murphysec.com/platform3/v31/badge/1718907022023983104.svg)](https://www.murphysec.com/console/report/1718907021914931200/1718907022023983104)
+**Passion like fire, momentum like wind. Will like oil, flowing endlessly.**
 
-- [x] [ep19](src/org/teachfx/antlr4/ep19)-implementation of simple struct (~~implementation of closures~~), currently implements the simplest record type and the main function and the file scope, next chapter adds class methods and protocol support.
-- [ ] [ep20](src/org/teachfx/antlr4/ep20) - java's native import, class methods, protocol support, and bytecode generation will be added here (it may be that one's own implementation of the VM is not a JVM).
-- [ ] [ep21](src/org/teachfx/antlr4/ep21) - Hopefully it will end in this chapter.
-- [ ] [ep22](src/org/teachfx/antlr4/ep22) - If, and when, I stick around to write this, add assembly output as well as compilation optimizations. There should be only SSA as well as peep holes, and register staining may also appear.
+## 1. Global Overview
+- [x] [ep1](ep1)--Example of antlr supported EBNF syntax describing hello world.
+- [x] [ep2](ep2)--How to use g4 to describe syntax like `{1,2,{3,4..}...}` array and print it in the listener.
+- [x] [ep3](ep3)--Implements a mini-calculator containing only addition, subtraction, multiplication and division.
+- [x] [ep4](ep4)--Implements an arithmetic calculator that allows simple interaction.
+- [x] [ep5](ep5)--Implementation of a Java interface extraction tool.
+- [x] [ep6](ep6)--Implements a CVS extractor.
+- [x] [ep7](ep7)--Implementing a JSON parsing tool.
+- [x] [ep8](ep8)--Abstract syntax tree extractor
+- [x] [ep9](ep9)--ep4 enhancements
+- [x] [ep10](ep10)--An alternative implementation of ep6
+- [x] [ep11](ep11)--Arithmetic interpreter based on ep8 (AST Tree walking)
+- [x] [ep12](ep12)--ep11 with assignment statements and variable declarations.
+- [x] [ep13](ep13)--Alternative simplified implementation of ep11.
+- [x] [ep14](ep14)--Implements symbol table recording.
+- [x] [ep15](ep15)--Implements variable scope determination.
+- [x] [ep16](ep16)--Implements variable resolution and type checking, and implements function scope and script evaluation with function calls.
+- [x] [ep17](ep17)--Implements static declaration dependencies for functions (not exactly call graph generation, but included for others to avoid pitfalls).
+- [x] [ep18](ep18)--Uses stack interpreter, currently very simple. Added VM instructions, updated [VM Design Document](src%2Forg%2Fteachfx%2Fantlr4%2Fep18%2FVM_Design.md)
+- [x] [ep19](ep19)--Implements simple struct (~~closure~~), currently implemented simplest record type and main function with file scope~~next chapter will add class methods and protocol support~~.
+- [x] [ep20](ep20)--Focuses on IR and bytecode generation, the target machine for generated bytecode is the VM we implemented in [ep18](ep18). The reason for this is that this process is simple and precise enough to demonstrate how the most important step in the compilation backend is executed.
+- [x] [ep21](ep21)--Implements TAC generation, SSA and CFG analysis.
 
-PS: I'm finally done writing, and I feel so apprehensive. However, I have a couple other compilation principle related holes to fill in as well.
+--------------------
+### Extra
+❤️👀: Finally finished writing, feeling so apprehensive. However, I still have a few other compilation principle related holes to fill.
 
-First of all, I have to thank my parents, who gave me great support.
+First, I must thank my parents for their tremendous support.
 
-Second, I have to thank github, otherwise it would have been very difficult for me to construct a CPS converter and understand the nature of CPS conversion by hand.
+Second, I thank myself and my wife, without our meeting I would never have been able to finish.
 
-Once again, I have to say that I'm finally out of the knot, and hopefully I can do what I like to do in the future.
+Finally, I thank this era, everything I needed arrived just at the right time.
 
-Lastly, to advertise, I'm an iOS architect with 9 years of experience (albeit a network-only lib 😳) as well as a js developer with the same amount of hours, and a technical manager with a year and a half of experience in technical management (it really does add up to that long 😭).
-I'm now looking to work on big front-end (entire ecosystem including iOS, front-end) toolchain development - including but not limited to static analysis tools, packaging tools, code generation.
-
-I'm very familiar with and love compiler front-end apps, and consider myself a little bit of a tool developer 😄. I hope to be able to contribute a bit in my favorite field 🎉.
+--------------------
 
 ## 2. Why this tutorial series?
 
-I started out reading the Dragon book as well as Two Weeks to Implement a Scripting Language, Make Your Own Compiler, Implementation Patterns for Programming Languages, Modern Compilation Principles - A Description of C
-, Fundamentals of Compiler Design, Homebrew Programming Languages - C Based, and so on.
+From the beginning of programming, I've always thought, if only I were an intent planner,
+rather than a human code generator.
 
-As a result, it consumed 1 year of my time to move hard from the front end AST to IR.
+Therefore, I plunged into the vast ocean of programming language construction and analysis to fish
+for that anchoring needle in my heart.
 
-It was hard to finally get to the static analysis section I wanted, and one look at the Dragon book broke my heart.
+Now, having truly entered the realm of compilation backend processing and program analysis, I feel
+I have too much knowledge, skills, ideas to record, as well as creating useful new tools and processes.
 
-So I put together this tutorial (bench set). In the hope that it will provide an easy and smooth entry process for those who come after me, especially if they don't consume so much time on the front-end.
+So, this is my starting point, hoping you can enjoy this process as much as I do.
 
-Although I learned all parsing techniques except progressive parsing (`TDOP` is really a bit of a brain burner), I honestly feel that if you can get started faster with this record.
+## 3. Engineering System Introduction
+The entire project is built based on Maven and requires the following environment support:
+- a. `JDK18+` required (recommended OpenJDK 18 or higher)
+- b. `Maven 3.8+` build tool
+- c. `Antlr4` runtime support (managed via Maven dependencies)
 
-into the static analysis and optimization phases of program implementation, that makes the best sense.
-
-## 3. Introduction to the engineering system
-The whole project requires 3 types of external environment support.
-- a. `JDK18+` is required. (JDK environment >= 18, my local is openJDK 18)
-- b. `Antlr4` runtime support. (The libs are already there and I have written them in the ant build file.)
-- c. `Ant` support. (Mac:brew install ant, other platforms: [Baidu for Ant install](https://www.baidu.com/s?wd=ant%E5%AE%89%E8%A3%85&rsv_spt=1&rsv_iqid=0x92a5c3ca00098ab3&issp=1&f=8&rsv_bp=1&rsv_idx=2&ie=utf-8&rqlang=cn&tn=baiduhome_pg&rsv_enter=1&rsv_dl=tb&oq=ant&rsv_btype=t&inputT=1837&rsv_t=ec4cvoU9XIugnSk4yfAeGzHEthu95IAGc%2BcxFt188XBik9tpLDQyKTb2S3Y4301WBs3T&rsv_pq=ea06018e001299b9&rsv_sug3=50&rsv_sug1=21&rsv_sug7=100&rsv_sug2=0&rsv_sug4=2109)).
-### 3.1. the catalog is described as follows.
-
-- `src`: the folder to maintain sources
-    * `org/teachfx/antlr4` -- top package name.
-        * `ep${num}` -- `num` in `{1,2,3,... ,25}`
-        * current `num` is `20`.
-- `lib`: the folder to maintain dependencies
-### 3.2. Where to start?
-Once all the dependencies are installed, take ep16 as an example
-
-``Bash
-cd your_project_dir
-
-cd src/org/teachfx/antlr4/ep16
-
-ant gen
-
-ant run
+### 3.1 Build Process
+1. After cloning the project, execute in the root directory:
+```bash
+mvn clean install
+```
+2. Build specific module (take ep20 as example):
+```bash
+cd ep20
+mvn clean package
 ```
 
-### 3.3. How to build and run a project from Ant
-This is the general use of Ant, I was referring to the "Ant User's Guide" - a very old book.
-There are a lot of tutorials out there, so I won't waste any more space.
-## 4. Sources of reference or parody material
-## 4.1 How to interpret a program
-- [Construction and Interpretation of Computer Programs (SICP)](https://www.zhihu.com/topic/19620884/hot)
-- [Hands-On Interpreter](http://www.craftinginterpreters.com/)
+### 3.2 Modular Configuration
+The project adopts a Maven multi-module structure, each ep* directory is an independent module containing:
+- `src/main/java` - main code
+- `src/test/java` - test code
+- `pom.xml` - module configuration
+
+### 3.3 Dependency Management
+All dependencies are managed via Maven, main dependencies include:
+- Antlr4 runtime
+- Log4j logging
+- Apache Commons utility library
+
+### 3.4 How to start?
+After all dependencies are installed, take ep20 as example
+
+```Bash
+cd your_project_dir
+
+# Use run.sh script
+./scripts/run.sh <command> <module> [extra args]
+
+# Examples:
+./scripts/run.sh compile ep1    # Compile ep1 module
+./scripts/run.sh run ep2       # Run ep2 module
+./scripts/run.sh test ep3      # Run ep3 module tests
+./scripts/run.sh clean ep4     # Clean ep4 module
+./scripts/run.sh run ep5 "arg1 arg2" # Run ep5 module with args
+./scripts/run.sh run ep20 "src/main/resources/t.cymbol" # Run ep20 with input file
+./scripts/run.sh run ep21 "src/main/resources/t.cymbol" # Run ep21 with input file
+
+# View help
+./scripts/run.sh help
+```
+
+## 4. Reference Materials
+### 4.1 How to interpret a program
+- [Structure and Interpretation of Computer Programs (SICP)](https://www.zhihu.com/topic/19620884/hot)
+- [Crafting Interpreters](http://www.craftinginterpreters.com/)
 ### 4.2 How to implement a calculator
 - [How to implement a programming language](http://lisperator.net/pltut/)
 - [Programming Language Implementation Patterns](https://www.zhihu.com/topic/20116185/hot)
-- [The Definitive Guide to Antlr4](https://www.antlr.org/)
-- [Top-Down Operator Precedence Analysis (TDOP)](https://github.com/douglascrockford/TDOP)
-- [Compilation Principles (Dragon Book:smile:)](https://www.zhihu.com/question/21549783/answer/22749476)
-
-Translated with www.DeepL.com/Translator (free version)
+- [The Definitive ANTLR 4 Reference](https://www.antlr.org/)
+- [Top Down Operator Precedence (TDOP)](https://github.com/douglascrockford/TDOP)
+- [Compilers: Principles, Techniques, and Tools (Dragon Book:smile:)](https://www.zhihu.com/question/21549783/answer/22749476)

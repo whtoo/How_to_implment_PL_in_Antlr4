@@ -25,7 +25,7 @@
 - [x] [ep18](ep18)--采用栈解释器，目前很简陋。增加VM指令，更新[VM设计文档](src%2Forg%2Fteachfx%2Fantlr4%2Fep18%2FVM_Design.md)
 - [x] [ep19](ep19)--实现简单的struct(~~实现闭包~~)，目前实现了最简单的record类型和main函数以及file作用域~~下一章增加类方法和协议支持~~。
 - [x] [ep20](ep20)--重点放在IR和字节码生成，生成的字节码目标机就是我们[ep18](ep18)实现的VM。这么做的原因是这个过程足够简单、精确地表现编译后端中最重要的一步是如何执行的。
-- [ ] [ep21](ep21)--TAC生成、SSA与CFG。[__WIP__]
+- [x] [ep21](ep21)--实现了TAC生成、SSA与CFG分析。
 
 --------------------
 ### 番外
@@ -81,6 +81,8 @@ cd your_project_dir
 ./scripts/run.sh test ep3      # 运行ep3模块的测试
 ./scripts/run.sh clean ep4     # 清理ep4模块
 ./scripts/run.sh run ep5 "参数1 参数2" # 运行ep5模块并传递参数
+./scripts/run.sh run ep20 "src/main/resources/t.cymbol" # 运行ep20模块并指定输入文件
+./scripts/run.sh run ep21 "src/main/resources/t.cymbol" # 运行ep21模块并指定输入文件
 
 # 查看帮助
 ./scripts/run.sh help

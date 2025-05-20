@@ -4,8 +4,6 @@ import org.teachfx.antlr4.ep19.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
 
-import java.util.Set;
-
 public class StructInstance extends MemorySpace {
     StructSymbol symbol;
 

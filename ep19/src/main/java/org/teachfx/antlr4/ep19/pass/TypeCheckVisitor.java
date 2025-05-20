@@ -1,6 +1,5 @@
 package org.teachfx.antlr4.ep19.pass;
 
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.teachfx.antlr4.ep19.misc.CompilerLogger;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;

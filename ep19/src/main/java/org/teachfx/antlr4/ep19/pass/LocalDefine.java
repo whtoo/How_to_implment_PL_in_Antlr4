@@ -51,7 +51,8 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         // 注册内置函数
         MethodSymbol printFuncSymbol = new MethodSymbol("print", globalScope, null);
         printFuncSymbol.builtin = true;
-        printFuncSymbol.getMembers().put("value", new Symbol("value", TypeTable.OBJECT));
+        // print函数可以接受任何类型的参数，所以不需要定义具体的参数
+        // 这样在TypeCheckVisitor中会特殊处理print函数
         globalScope.define(printFuncSymbol);
 
         /// Define main entry

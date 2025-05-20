@@ -1,7 +1,4 @@
 grammar Cymbol;
-@header {
-package org.teachfx.antlr4.ep19.parser;
-}
 
 file :   (structDecl | typedefDecl | functionDecl | varDecl | statement)+ ;
 

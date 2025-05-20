@@ -103,6 +103,15 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         super.visitExprFuncCall(ctx);
+
+        // 特殊处理内置函数print
+        if (ctx.expr(FUNC_EXPR).getText().equals("print")) {
+            // 为print函数设置void返回类型
+            stashType(ctx, TypeTable.VOID);
+            logger.debug("处理print函数调用，设置返回类型为void");
+            return null;
+        }
+
         // 这里有一个func name ctx和symbol没有建立匹配的问题
         copyType(ctx.expr(FUNC_EXPR), ctx);
 

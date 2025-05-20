@@ -127,25 +127,20 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
     @Override
     public Type visitExprFuncCall(ExprFuncCallContext ctx) {
-        // 检查函数表达式是否存在
-        if (ctx.expr() == null || ctx.expr().size() == 0) {
-            CompilerLogger.error(ctx, "函数调用缺少函数表达式");
+        // 检查函数名是否存在
+        if (ctx.ID() == null) {
+            CompilerLogger.error(ctx, "函数调用缺少函数名");
             return TypeTable.VOID;
         }
 
-        // 获取函数/方法表达式
-        ExprContext firstExpr = ctx.expr(0);
+        // 获取函数名
+        String funcName = ctx.ID().getText();
+        CompilerLogger.debug(String.format("访问函数 -> : %s", ctx.getText()));
 
-        // 处理字符串字面量，避免将它们视为函数调用
-        if (firstExpr.getText().startsWith("\"") && firstExpr.getText().endsWith("\"")) {
-            // 字符串字面量当作函数调用是错误的，但返回它的值以允许程序继续
-            return TypeTable.STRING;
-        }
-
-        // 特殊处理内置函数，如print
-        if (firstExpr.getText().equals("print")) {
+        // 特殊处理内置函数print - 这是最优先的处理
+        if ("print".equals(funcName)) {
             // 收集参数类型，但不进行严格检查，print可以接受任何类型
-            for (int i = 1; i < ctx.expr().size(); i++) {
+            for (int i = 0; i < ctx.expr().size(); i++) {
                 visit(ctx.expr(i)); // 只是为了类型检查，不使用返回值
             }
             return TypeTable.VOID; // print返回void
@@ -153,36 +148,23 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
         // 对于非内置函数，尝试从符号表中解析
         Type funcType;
-        if (firstExpr.getText().matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
-            // 如果是简单标识符，尝试从符号表中解析
-            Scope scope = scopeUtil.get(ctx);
-            Symbol symbol = scope.resolve(firstExpr.getText());
-            if (symbol instanceof MethodSymbol) {
-                funcType = (MethodSymbol) symbol;
-            } else {
-                // 特殊处理内置函数print
-                if (firstExpr.getText().equals("print")) {
-                    // print是内置函数，不需要从符号表中解析
-                    return TypeTable.VOID;
-                }
-                funcType = visit(firstExpr);
-            }
+        // 如果是简单标识符，尝试从符号表中解析
+        Scope scope = scopeUtil.get(ctx);
+        Symbol symbol = scope.resolve(funcName);
+
+        if (symbol instanceof MethodSymbol) {
+            funcType = (MethodSymbol) symbol;
         } else {
-            // 对于复杂表达式，递归访问
-            funcType = visit(firstExpr);
+            CompilerLogger.error(ctx, "未定义的函数: " + funcName);
+            return TypeTable.VOID;
         }
+
+        CompilerLogger.debug(String.format("访问函数 --> : %s", ctx.getText()));
+        CompilerLogger.debug(String.format("访问函数: ---> %s,%s", funcName, funcType.getName()));
 
         // 如果不是方法类型，报错
         if (!(funcType instanceof MethodSymbol)) {
-            // 可能是结构体方法访问，由visitExprStructFieldAccess处理
-            if (firstExpr != null && !(firstExpr instanceof ExprStructFieldAccessContext)) {
-                // 特殊处理内置函数print
-                if (firstExpr.getText().equals("print")) {
-                    // print是内置函数，不需要从符号表中解析
-                    return TypeTable.VOID;
-                }
-                CompilerLogger.error(ctx, "表达式不是一个函数: " + firstExpr.getText());
-            }
+            CompilerLogger.error(ctx, "表达式不是一个函数: " + funcName);
             return TypeTable.VOID;
         }
 
@@ -190,7 +172,7 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
         // 收集参数类型
         List<Type> argTypes = new ArrayList<>();
-        for (int i = 1; i < ctx.expr().size(); i++) {
+        for (int i = 0; i < ctx.expr().size(); i++) {
             Type argType = visit(ctx.expr(i));
             if (argType != null) { // 可能为null表示参数表达式有错误
                 argTypes.add(argType);

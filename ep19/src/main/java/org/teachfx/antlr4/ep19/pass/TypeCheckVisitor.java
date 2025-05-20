@@ -22,20 +22,41 @@ import java.util.List;
  * 负责检查所有表达式、语句和操作的类型兼容性
  */
 public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
-    
+
     private final ScopeUtil scopeUtil;
     private final ParseTreeProperty<Type> types;
-    
+
     public TypeCheckVisitor(ScopeUtil scopeUtil, ParseTreeProperty<Type> types) {
         this.scopeUtil = scopeUtil;
         this.types = types;
     }
-    
+
     @Override
     public Type visitVarDecl(VarDeclContext ctx) {
         // 获取变量声明的类型
         Type declType = types.get(ctx.type());
-        
+
+        // 如果类型为null，尝试从符号表中获取
+        if (declType == null) {
+            // 尝试从TypeTable获取基本类型
+            String typeName = ctx.type().getText();
+            declType = TypeTable.getTypeByName(typeName);
+
+            if (declType == null) {
+                // 尝试从符号表中获取变量符号
+                Symbol varSymbol = scopeUtil.get(ctx).resolve(ctx.ID().getText());
+                if (varSymbol != null && varSymbol.type != null) {
+                    declType = varSymbol.type;
+                }
+            }
+
+            // 如果仍然为null，记录错误
+            if (declType == null) {
+                CompilerLogger.error(ctx, "无法确定变量 " + ctx.ID().getText() + " 的类型");
+                return TypeTable.VOID;
+            }
+        }
+
         // 检查初始值表达式的类型兼容性
         if (ctx.expr() != null) {
             Type initType = visit(ctx.expr());
@@ -43,67 +64,67 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
                 TypeChecker.checkAssignmentCompatibility(declType, initType, ctx);
             }
         }
-        
+
         return declType;
     }
-    
+
     @Override
     public Type visitStatAssign(StatAssignContext ctx) {
         if (ctx.expr() == null || ctx.expr().size() < 2) {
             CompilerLogger.error(ctx, "赋值语句不完整");
             return TypeTable.VOID;
         }
-        
+
         Type leftType = visit(ctx.expr(0));
         Type rightType = visit(ctx.expr(1));
-        
+
         if (leftType != null && rightType != null) {
             TypeChecker.checkAssignmentCompatibility(leftType, rightType, ctx);
         }
-        
+
         return leftType;
     }
-    
+
     @Override
     public Type visitExprBinary(ExprBinaryContext ctx) {
         if (ctx.expr() == null || ctx.expr().size() < 2 || ctx.o == null) {
             CompilerLogger.error(ctx, "二元表达式不完整");
             return TypeTable.VOID;
         }
-        
+
         Type leftType = visit(ctx.expr(0));
         Type rightType = visit(ctx.expr(1));
         String operator = ctx.o.getText();
-        
+
         if (leftType == null || rightType == null) {
             return TypeTable.VOID; // 已经报告过错误
         }
-        
+
         Type resultType = TypeChecker.checkBinaryOperationCompatibility(leftType, rightType, operator, ctx);
         if (resultType == null) {
             return TypeTable.VOID; // 错误情况，返回void类型
         }
-        
+
         return resultType;
     }
-    
+
     @Override
     public Type visitExprUnary(ExprUnaryContext ctx) {
         Type operandType = visit(ctx.expr());
         String operator = ctx.getChild(0).getText();
-        
+
         if (operandType == null) {
             return TypeTable.VOID; // 已经报告过错误
         }
-        
+
         Type resultType = TypeChecker.checkUnaryOperationCompatibility(operandType, operator, ctx);
         if (resultType == null) {
             return TypeTable.VOID; // 错误情况，返回void类型
         }
-        
+
         return resultType;
     }
-    
+
     @Override
     public Type visitExprFuncCall(ExprFuncCallContext ctx) {
         // 检查函数表达式是否存在
@@ -111,23 +132,23 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
             CompilerLogger.error(ctx, "函数调用缺少函数表达式");
             return TypeTable.VOID;
         }
-        
+
         // 获取函数/方法表达式
         ExprContext firstExpr = ctx.expr(0);
-        
+
         // 处理字符串字面量，避免将它们视为函数调用
         if (firstExpr.getText().startsWith("\"") && firstExpr.getText().endsWith("\"")) {
             // 字符串字面量当作函数调用是错误的，但返回它的值以允许程序继续
             return TypeTable.STRING;
         }
-        
+
         // 特殊处理print函数
         if (firstExpr.getText().equals("print")) {
             return TypeTable.VOID; // print返回void
         }
-        
+
         Type funcType = visit(firstExpr);
-        
+
         // 如果不是方法类型，报错
         if (!(funcType instanceof MethodSymbol)) {
             // 可能是结构体方法访问，由visitExprStructFieldAccess处理
@@ -136,9 +157,9 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
             }
             return TypeTable.VOID;
         }
-        
+
         MethodSymbol methodSymbol = (MethodSymbol) funcType;
-        
+
         // 收集参数类型
         List<Type> argTypes = new ArrayList<>();
         for (int i = 1; i < ctx.expr().size(); i++) {
@@ -147,29 +168,29 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
                 argTypes.add(argType);
             }
         }
-        
+
         // 获取函数形参类型
         List<Symbol> parameters = new ArrayList<>(methodSymbol.getMembers().values());
         Type[] paramTypes = parameters.stream()
                 .map(param -> param.type)
                 .toArray(Type[]::new);
-        
+
         // 检查参数类型兼容性
         TypeChecker.checkFunctionCallCompatibility(
-                paramTypes, 
-                argTypes.toArray(new Type[0]), 
+                paramTypes,
+                argTypes.toArray(new Type[0]),
                 ctx
         );
-        
+
         // 返回函数返回值类型
         return methodSymbol.type;
     }
-    
+
     @Override
     public Type visitExprStructFieldAccess(ExprStructFieldAccessContext ctx) {
         // 确保我们先访问子节点，获取类型信息
         super.visitExprStructFieldAccess(ctx);
-        
+
         // 1. 检查左侧是否为结构体类型
         ExprContext exprCtx = null;
         if (ctx.getChildCount() > 0 && ctx.getChild(0) instanceof ExprContext) {
@@ -178,13 +199,13 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
             CompilerLogger.error(ctx, "无效的结构体字段访问表达式");
             return TypeTable.VOID;
         }
-        
+
         Type structType = types.get(exprCtx);
         if (structType == null) {
             CompilerLogger.error(ctx, "无法确定结构体表达式的类型");
             return TypeTable.VOID;
         }
-        
+
         // 处理typedef可能指向的结构体
         if (structType instanceof TypedefSymbol) {
             Type targetType = ((TypedefSymbol) structType).getTargetType();
@@ -195,12 +216,12 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
                 return TypeTable.VOID;
             }
         }
-        
+
         if (!(structType instanceof StructSymbol)) {
             CompilerLogger.error(ctx, exprCtx.getText() + " 不是一个结构体实例");
             return TypeTable.VOID;
         }
-        
+
         // 2. 检查右侧字段是否存在于结构体中
         StructSymbol structSymbol = (StructSymbol) structType;
         String fieldName = "";
@@ -210,66 +231,66 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
             CompilerLogger.error(ctx, "无效的结构体字段访问表达式");
             return TypeTable.VOID;
         }
-        
+
         Symbol fieldSymbol = structSymbol.resolveMember(fieldName);
-        
+
         if (fieldSymbol == null) {
             CompilerLogger.error(ctx, "结构体 " + structSymbol.getName() + " 没有名为 " + fieldName + " 的字段");
             return TypeTable.VOID;
         }
-        
+
         // 3. 将字段的类型赋给整个表达式
         Type fieldType = fieldSymbol.type;
         types.put(ctx, fieldType);
         return fieldType;
     }
-    
+
     @Override
     public Type visitStateCondition(StateConditionContext ctx) {
         if (ctx.cond == null) {
             CompilerLogger.error(ctx, "if语句缺少条件表达式");
             return null;
         }
-        
+
         Type condType = visit(ctx.cond);
-        
+
         if (condType != null && condType != TypeTable.BOOLEAN) {
             CompilerLogger.error(ctx.cond, "if条件表达式必须是布尔类型，实际为: " + condType);
         }
-        
+
         // 访问then和else分支
         if (ctx.then != null) {
             visit(ctx.then);
         }
-        
+
         if (ctx.elseDo != null) {
             visit(ctx.elseDo);
         }
-        
+
         return null;
     }
-    
+
     @Override
     public Type visitStateWhile(StateWhileContext ctx) {
         if (ctx.cond == null) {
             CompilerLogger.error(ctx, "while语句缺少条件表达式");
             return null;
         }
-        
+
         Type condType = visit(ctx.cond);
-        
+
         if (condType != null && condType != TypeTable.BOOLEAN) {
             CompilerLogger.error(ctx.cond, "while条件表达式必须是布尔类型，实际为: " + condType);
         }
-        
+
         // 访问循环体
         if (ctx.then != null) {
             visit(ctx.then);
         }
-        
+
         return null;
     }
-    
+
     @Override
     public Type visitStatReturn(StatReturnContext ctx) {
         // 获取当前函数
@@ -278,13 +299,13 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
             CompilerLogger.error(ctx, "return语句必须在函数内部");
             return null;
         }
-        
+
         Type returnType = currentFunction.type;
-        
+
         // 检查return表达式与函数返回类型的兼容性
         if (ctx.expr() != null) {
             Type exprType = visit(ctx.expr());
-            
+
             if (exprType != null) { // 表达式类型可能为null表示出错
                 if (returnType == TypeTable.VOID) {
                     CompilerLogger.error(ctx, "void函数不应返回值");
@@ -295,10 +316,10 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         } else if (returnType != TypeTable.VOID) {
             CompilerLogger.error(ctx, "函数应返回 " + returnType + " 类型的值");
         }
-        
+
         return null;
     }
-    
+
     @Override
     public Type visitPrimaryID(PrimaryIDContext ctx) {
         Type type = types.get(ctx);
@@ -308,32 +329,32 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         }
         return type;
     }
-    
+
     @Override
     public Type visitPrimaryINT(PrimaryINTContext ctx) {
         return TypeTable.INT;
     }
-    
+
     @Override
     public Type visitPrimaryFLOAT(PrimaryFLOATContext ctx) {
         return TypeTable.FLOAT;
     }
-    
+
     @Override
     public Type visitPrimarySTRING(PrimarySTRINGContext ctx) {
         return TypeTable.STRING;
     }
-    
+
     @Override
     public Type visitPrimaryCHAR(PrimaryCHARContext ctx) {
         return TypeTable.CHAR;
     }
-    
+
     @Override
     public Type visitPrimaryBOOL(PrimaryBOOLContext ctx) {
         return TypeTable.BOOLEAN;
     }
-    
+
     private MethodSymbol findEnclosingFunction(StatReturnContext ctx) {
         // 从当前作用域向上查找，直到找到函数作用域
         Scope scope = scopeUtil.get(ctx);
@@ -345,4 +366,4 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         }
         return null;
     }
-} 
+}

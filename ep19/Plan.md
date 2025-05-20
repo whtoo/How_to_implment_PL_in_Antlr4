@@ -21,10 +21,18 @@
   - [ ] 结构体字段访问优化
   - [ ] 结构体实例化与初始化
 
+
 3. TODO
 
 - [ ] 结构体嵌套支持
 - [ ] 整合文件作用域管理
 - [ ] 类型系统文档编写
 
+4. Bugs
+- [x] 修复TypedefSymbol在LocalDefine阶段初始化时目标类型为null的问题
+  - 在LocalDefine.visitTypedefDecl中尝试提前解析目标类型
+  - 即使无法立即解析，也确保LocalResolver阶段能正确处理
+- [x] 修复变量声明类型解析问题（lhs null *= rhs int）
+  - 在LocalResolver中添加visitType方法，确保类型节点正确关联到类型对象
+  - 解决了变量声明时类型为null的问题
 

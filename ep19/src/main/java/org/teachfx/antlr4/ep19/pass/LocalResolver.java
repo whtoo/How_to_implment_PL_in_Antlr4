@@ -46,15 +46,37 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
 
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
+        // 先访问子节点，确保类型节点已经被处理
         super.visitVarDecl(ctx);
+
+        // 获取变量类型
         Type type = scopes.lookup(ctx.type());
-        VariableSymbol var = new VariableSymbol(Util.name(ctx), type);
+        String varName = Util.name(ctx);
+
+        // 创建变量符号
+        VariableSymbol var = new VariableSymbol(varName, type);
 
         if (type == null) {
             CompilerLogger.error(ctx, "Unknown type when declaring variable: " + var);
+        } else {
+            logger.debug("变量 {} 的类型为 {}", varName, type);
+
+            // 将变量ID节点与其类型关联起来
+            if (ctx.ID() != null) {
+                stashType(ctx.ID(), type);
+                logger.debug("将变量ID节点 {} 与类型 {} 关联", ctx.ID().getText(), type);
+            }
         }
+
+        // 将变量添加到当前作用域
         Scope scope = scopes.get(ctx);
         scope.define(var);
+
+        // 如果有初始化表达式，确保它被处理
+        if (ctx.expr() != null) {
+            visit(ctx.expr());
+        }
+
         return null;
     }
 
@@ -128,10 +150,10 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
                 CompilerLogger.error((ParserRuleContext)parent.getChild(STRUCT), "无法确定结构体类型");
                 return null;
             }
-            
+
             ParserRuleContext member = (ParserRuleContext) parent.getChild(MEMBER_PARENT).getChild(MEMBER);
             String name = member.start.getText();
-            
+
             // 处理结构体类型可能是TypedefSymbol的情况
             StructSymbol struct = null;
             if (structType instanceof TypedefSymbol) {
@@ -148,7 +170,7 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
                 CompilerLogger.error(member, "类型 " + structType + " 不是结构体类型");
                 return null;
             }
-            
+
             Symbol memberSymbol = struct.resolveMember(name);
             if (memberSymbol != null) {
                 Type memberType = memberSymbol.type;
@@ -222,16 +244,51 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     }
 
     @Override
+    public Object visitType(TypeContext ctx) {
+        // 处理类型节点，确保它们被正确关联到类型对象
+        String typeName = ctx.getText();
+        logger.debug("处理类型节点: {}", typeName);
+
+        // 首先尝试从TypeTable获取基本类型
+        Type type = TypeTable.getTypeByName(typeName);
+
+        if (type != null) {
+            // 如果是基本类型，直接关联
+            stashType(ctx, type);
+            logger.debug("类型节点 {} 关联到基本类型 {}", typeName, type);
+        } else {
+            // 如果不是基本类型，尝试从作用域中解析
+            Scope scope = scopes.get(ctx);
+            if (scope != null) {
+                Symbol symbol = scope.resolve(typeName);
+                if (symbol instanceof Type) {
+                    stashType(ctx, (Type) symbol);
+                    logger.debug("类型节点 {} 关联到类型符号 {}", typeName, symbol);
+                } else if (symbol != null && symbol.type != null) {
+                    stashType(ctx, symbol.type);
+                    logger.debug("类型节点 {} 关联到符号类型 {}", typeName, symbol.type);
+                } else {
+                    logger.error("无法解析类型: {}", typeName);
+                }
+            } else {
+                logger.error("找不到类型节点的作用域: {}", typeName);
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     public Object visitTypedefDecl(TypedefDeclContext ctx) {
         // 获取typedef声明的名称和目标类型
         String typeName = ctx.ID().getText();
         String targetTypeName = ctx.type().getText();
-        
+
         // 首先尝试从作用域中获取目标类型
         Scope scope = scopes.get(ctx);
         Symbol targetTypeSymbol = scope.resolve(targetTypeName);
         Type targetType = null;
-        
+
         if (targetTypeSymbol != null) {
             // 如果在作用域中找到了类型符号
             if (targetTypeSymbol instanceof Type) {
@@ -243,18 +300,18 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
             // 尝试从TypeTable中获取基本类型
             targetType = TypeTable.getTypeByName(targetTypeName);
         }
-        
+
         if (targetType == null) {
             CompilerLogger.error(ctx, "未知的类型: " + targetTypeName);
             return null;
         }
-        
+
         // 更新TypedefSymbol中的目标类型
         if (scope == null) {
             CompilerLogger.error(ctx, "找不到作用域");
             return null;
         }
-        
+
         Symbol typedefSymbol = scope.resolve(typeName);
         if (typedefSymbol instanceof TypedefSymbol) {
             ((TypedefSymbol) typedefSymbol).setTargetType(targetType);
@@ -262,7 +319,7 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         } else {
             CompilerLogger.error(ctx, "内部错误: 无法找到类型定义符号 " + typeName);
         }
-        
+
         return null;
     }
 
@@ -290,7 +347,7 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
                 stashType(ctx, type);
                 return;
             }
-            
+
             // 如果不是已知类型名称，按照token类型判断
             if (tokenValue == CymbolParser.INT || tokenName.equals("int")) {
                 stashType(ctx, TypeTable.INT);
@@ -313,6 +370,17 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     /// bind (ctx,type)
     private void stashType(ParserRuleContext ctx, Type type) {
         types.put(ctx, type);
+    }
+
+    /// bind (terminalNode,type) - 用于处理终结符节点，如变量ID
+    private void stashType(org.antlr.v4.runtime.tree.TerminalNode node, Type type) {
+        // 将终结符节点转换为ParserRuleContext的父节点
+        if (node != null && node.getParent() instanceof ParserRuleContext) {
+            ParserRuleContext parent = (ParserRuleContext) node.getParent();
+            // 在types中存储节点文本到类型的映射
+            logger.debug("将终结符节点 {} 与类型 {} 关联", node.getText(), type);
+            types.put(parent, type);
+        }
     }
 
     // pass `from` type to `to` type

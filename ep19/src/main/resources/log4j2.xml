@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
+<Configuration status="INFO">
     <Properties>
         <Property name="logPath">logs</Property>
-        <Property name="logPattern">%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Property>
+        <Property name="logPattern">%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Property>
     </Properties>
     
     <Appenders>
@@ -24,20 +24,20 @@
     </Appenders>
     
     <Loggers>
-        <!-- 根日志记录器设置为WARN级别 -->
-        <Root level="WARN">
+        <!-- 根日志记录器设置为INFO级别 -->
+        <Root level="INFO">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="FileAppender"/>
         </Root>
         
         <!-- 编译器包的日志级别设置 -->
-        <Logger name="org.teachfx.antlr4.ep19" level="WARN" additivity="false">
+        <Logger name="org.teachfx.antlr4.ep19" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="FileAppender"/>
         </Logger>
         
         <!-- 解析器包的日志级别设置 -->
-        <Logger name="org.teachfx.antlr4.ep19.parser" level="WARN" additivity="false">
+        <Logger name="org.teachfx.antlr4.ep19.parser" level="INFO" additivity="false">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="FileAppender"/>
         </Logger>

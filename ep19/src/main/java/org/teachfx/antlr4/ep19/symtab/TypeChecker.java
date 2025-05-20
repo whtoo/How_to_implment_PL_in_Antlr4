@@ -20,7 +20,7 @@ public class TypeChecker {
     public static boolean checkAssignmentCompatibility(Type lhsType, Type rhsType, ParserRuleContext ctx) {
         String lhsTypeName = lhsType != null ? lhsType.toString() : "null";
         String rhsTypeName = rhsType != null ? rhsType.toString() : "null";
-        CompilerLogger.warning(ctx, String.format("lhs %s *= rhs %s", lhsTypeName, rhsTypeName));
+        CompilerLogger.info(String.format("lhs %s *= rhs %s", lhsTypeName, rhsTypeName));
         
         if (lhsType == null || rhsType == null) {
             CompilerLogger.error(ctx, "类型未定义");

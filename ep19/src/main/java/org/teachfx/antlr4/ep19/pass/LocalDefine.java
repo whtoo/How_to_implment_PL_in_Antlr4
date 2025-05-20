@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.teachfx.antlr4.ep19.misc.Util;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
+import org.teachfx.antlr4.ep19.symtab.Type;
 import org.teachfx.antlr4.ep19.symtab.TypeTable;
 import org.teachfx.antlr4.ep19.symtab.scope.BaseScope;
 import org.teachfx.antlr4.ep19.symtab.scope.GlobalScope;
@@ -37,7 +38,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     public LocalDefine() {
         BaseScope globalScope = new GlobalScope();
         currentScope = globalScope;
-        
+
         // 在全局作用域中注册所有基本类型
         globalScope.define(new Symbol("int", TypeTable.INT));
         globalScope.define(new Symbol("float", TypeTable.FLOAT));
@@ -46,7 +47,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         globalScope.define(new Symbol("void", TypeTable.VOID));
         globalScope.define(new Symbol("String", TypeTable.STRING));
         globalScope.define(new Symbol("Object", TypeTable.OBJECT));
-        
+
         // 注册内置函数
         MethodSymbol printFuncSymbol = new MethodSymbol("print", globalScope, null);
         printFuncSymbol.builtin = true;
@@ -82,19 +83,19 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     public Object visitStructDecl(StructDeclContext ctx) {
         String structName = ctx.ID().getText();
         logger.debug("定义结构体: {}", structName);
-        
+
         StructSymbol struct = new StructSymbol(structName, currentScope, ctx);
         currentScope.define(struct);
-        
+
         scopes.put(ctx, struct);
-        
+
         Scope savedScope = currentScope;
         currentScope = struct;
-        
+
         super.visitStructDecl(ctx);
-        
+
         currentScope = savedScope;
-        
+
         return null;
     }
 
@@ -143,7 +144,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         if (ctx.ID() != null) {
             stashScope(ctx);
             VariableSymbol member = new VariableSymbol(Util.name(ctx));
-            
+
             if (currentScope instanceof StructSymbol) {
                 StructSymbol structScope = (StructSymbol) currentScope;
                 structScope.addField(member);
@@ -236,10 +237,28 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         String typeName = ctx.ID().getText();
         String targetTypeName = ctx.type().getText();
         logger.debug("定义类型别名: {} -> {}", typeName, targetTypeName);
-        
-        TypedefSymbol typedef = new TypedefSymbol(typeName, null);
+
+        // 尝试先从当前作用域解析目标类型
+        Symbol targetTypeSymbol = currentScope.resolve(targetTypeName);
+        Type targetType = null;
+
+        if (targetTypeSymbol != null) {
+            // 如果在作用域中找到了类型符号
+            if (targetTypeSymbol instanceof Type) {
+                targetType = (Type) targetTypeSymbol;
+            } else if (targetTypeSymbol.type != null) {
+                targetType = targetTypeSymbol.type;
+            }
+        } else {
+            // 尝试从TypeTable中获取基本类型
+            targetType = TypeTable.getTypeByName(targetTypeName);
+        }
+
+        // 即使此时无法解析目标类型，也创建TypedefSymbol
+        // LocalResolver会在后续阶段完成类型解析
+        TypedefSymbol typedef = new TypedefSymbol(typeName, targetType);
         currentScope.define(typedef);
-        
+
         stashScope(ctx);
         return null;
     }

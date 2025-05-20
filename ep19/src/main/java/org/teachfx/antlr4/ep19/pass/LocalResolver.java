@@ -133,6 +133,41 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
                 Type fieldType = scopes.lookup(ctx.type());
                 if (fieldType != null) {
                     s.type = fieldType;
+
+                    // 如果是结构体方法，处理方法参数
+                    if (ctx.block() != null && ctx.formalParameters() != null) {
+                        logger.debug("处理结构体方法参数: {}", Util.name(ctx));
+
+                        // 确保方法参数被正确解析
+                        if (ctx.formalParameters().formalParameter() != null) {
+                            for (FormalParameterContext paramCtx : ctx.formalParameters().formalParameter()) {
+                                // 获取参数类型
+                                Type paramType = scopes.lookup(paramCtx.type());
+                                if (paramType != null) {
+                                    // 获取参数名
+                                    String paramName = paramCtx.ID().getText();
+                                    logger.debug("结构体方法参数: {} 类型: {}", paramName, paramType);
+
+                                    // 在方法作用域中查找参数符号
+                                    Scope methodScope = scopes.get(paramCtx);
+                                    if (methodScope != null) {
+                                        Symbol paramSymbol = methodScope.resolve(paramName);
+                                        if (paramSymbol != null) {
+                                            paramSymbol.type = paramType;
+                                            // 将参数ID节点与类型关联
+                                            stashType(paramCtx.ID(), paramType);
+                                        } else {
+                                            CompilerLogger.error(paramCtx, "无法解析方法参数: " + paramName);
+                                        }
+                                    } else {
+                                        CompilerLogger.error(paramCtx, "无法找到方法参数的作用域: " + paramName);
+                                    }
+                                } else {
+                                    CompilerLogger.error(paramCtx, "未知的参数类型: " + paramCtx.type().getText());
+                                }
+                            }
+                        }
+                    }
                 } else {
                     CompilerLogger.error(ctx, "未知类型: " + ctx.type().getText());
                 }
@@ -156,12 +191,38 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
             ParserRuleContext parent = (ParserRuleContext) node.getParent();
             Type structType = types.get(parent.getChild(STRUCT));
             if (structType == null) {
-                CompilerLogger.error((ParserRuleContext)parent.getChild(STRUCT), "无法确定结构体类型");
+                if (parent.getChild(STRUCT) instanceof ParserRuleContext) {
+                    CompilerLogger.error((ParserRuleContext)parent.getChild(STRUCT), "无法确定结构体类型");
+                } else {
+                    logger.error("无法确定结构体类型: {}", parent.getChild(STRUCT).getText());
+                }
                 return null;
             }
 
-            ParserRuleContext member = (ParserRuleContext) parent.getChild(MEMBER_PARENT).getChild(MEMBER);
-            String name = member.start.getText();
+            // 获取成员名称
+            String name = "";
+            if (parent.getChildCount() > MEMBER_PARENT && parent.getChild(MEMBER_PARENT) != null) {
+                if (parent.getChild(MEMBER_PARENT).getChildCount() > MEMBER &&
+                    parent.getChild(MEMBER_PARENT).getChild(MEMBER) != null) {
+
+                    // 获取成员名称
+                    if (parent.getChild(MEMBER_PARENT).getChild(MEMBER) instanceof ParserRuleContext) {
+                        ParserRuleContext member = (ParserRuleContext) parent.getChild(MEMBER_PARENT).getChild(MEMBER);
+                        name = member.start.getText();
+                    } else if (parent.getChild(MEMBER_PARENT).getChild(MEMBER) instanceof TerminalNode) {
+                        name = parent.getChild(MEMBER_PARENT).getChild(MEMBER).getText();
+                    } else {
+                        logger.error("无法获取结构体成员名称");
+                        return null;
+                    }
+                } else {
+                    logger.error("无法获取结构体成员");
+                    return null;
+                }
+            } else {
+                logger.error("无法获取结构体成员父节点");
+                return null;
+            }
 
             // 处理结构体类型可能是TypedefSymbol的情况
             StructSymbol struct = null;
@@ -170,23 +231,31 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
                 if (targetType instanceof StructSymbol) {
                     struct = (StructSymbol) targetType;
                 } else {
-                    CompilerLogger.error(member, "类型 " + ((TypedefSymbol) structType).getName() + " 不是结构体类型");
+                    logger.error("类型 {} 不是结构体类型", ((TypedefSymbol) structType).getName());
                     return null;
                 }
             } else if (structType instanceof StructSymbol) {
                 struct = (StructSymbol) structType;
             } else {
-                CompilerLogger.error(member, "类型 " + structType + " 不是结构体类型");
+                logger.error("类型 {} 不是结构体类型", structType);
                 return null;
             }
 
             Symbol memberSymbol = struct.resolveMember(name);
             if (memberSymbol != null) {
                 Type memberType = memberSymbol.type;
-                logger.debug("结构体 {} 访问字段 {} 的类型为 {}", struct.getName(), name, memberType);
-                stashType(member, memberType);
+                logger.debug("结构体 {} 访问成员 {} 的类型为 {}", struct.getName(), name, memberType);
+
+                // 将成员类型与父节点关联
+                if (parent.getChild(MEMBER_PARENT).getChild(MEMBER) instanceof ParserRuleContext) {
+                    ParserRuleContext member = (ParserRuleContext) parent.getChild(MEMBER_PARENT).getChild(MEMBER);
+                    stashType(member, memberType);
+                }
+
+                // 将成员类型与整个表达式关联
+                stashType(parent, memberType);
             } else {
-                CompilerLogger.error(member, "结构体 " + struct.getName() + " 没有名为 " + name + " 的成员");
+                logger.error("结构体 {} 没有名为 {} 的成员", struct.getName(), name);
             }
         }
 
@@ -277,7 +346,22 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
                     stashType(ctx, symbol.type);
                     logger.debug("类型节点 {} 关联到符号类型 {}", typeName, symbol.type);
                 } else {
-                    logger.error("无法解析类型: {}", typeName);
+                    // 再次尝试从全局作用域中查找基本类型
+                    Scope globalScope = findGlobalScope(scope);
+                    if (globalScope != null) {
+                        Symbol globalSymbol = globalScope.resolve(typeName);
+                        if (globalSymbol instanceof Type) {
+                            stashType(ctx, (Type) globalSymbol);
+                            logger.debug("类型节点 {} 从全局作用域关联到类型符号 {}", typeName, globalSymbol);
+                        } else if (globalSymbol != null && globalSymbol.type != null) {
+                            stashType(ctx, globalSymbol.type);
+                            logger.debug("类型节点 {} 从全局作用域关联到符号类型 {}", typeName, globalSymbol.type);
+                        } else {
+                            logger.error("无法解析类型: {}", typeName);
+                        }
+                    } else {
+                        logger.error("无法解析类型: {}", typeName);
+                    }
                 }
             } else {
                 logger.error("找不到类型节点的作用域: {}", typeName);
@@ -285,6 +369,19 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         }
 
         return null;
+    }
+
+    /**
+     * 查找全局作用域
+     * @param scope 当前作用域
+     * @return 全局作用域
+     */
+    private Scope findGlobalScope(Scope scope) {
+        Scope current = scope;
+        while (current != null && current.getEnclosingScope() != null) {
+            current = current.getEnclosingScope();
+        }
+        return current;
     }
 
     @Override
@@ -295,6 +392,11 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
 
         // 首先尝试从作用域中获取目标类型
         Scope scope = scopes.get(ctx);
+        if (scope == null) {
+            CompilerLogger.error(ctx, "找不到作用域");
+            return null;
+        }
+
         Symbol targetTypeSymbol = scope.resolve(targetTypeName);
         Type targetType = null;
 
@@ -308,16 +410,23 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         } else {
             // 尝试从TypeTable中获取基本类型
             targetType = TypeTable.getTypeByName(targetTypeName);
+
+            // 如果仍然找不到，尝试从全局作用域查找
+            if (targetType == null) {
+                Scope globalScope = findGlobalScope(scope);
+                if (globalScope != null) {
+                    Symbol globalSymbol = globalScope.resolve(targetTypeName);
+                    if (globalSymbol instanceof Type) {
+                        targetType = (Type) globalSymbol;
+                    } else if (globalSymbol != null && globalSymbol.type != null) {
+                        targetType = globalSymbol.type;
+                    }
+                }
+            }
         }
 
         if (targetType == null) {
             CompilerLogger.error(ctx, "未知的类型: " + targetTypeName);
-            return null;
-        }
-
-        // 更新TypedefSymbol中的目标类型
-        if (scope == null) {
-            CompilerLogger.error(ctx, "找不到作用域");
             return null;
         }
 

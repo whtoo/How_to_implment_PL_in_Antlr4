@@ -142,17 +142,50 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     @Override
     public Object visitStructMemeber(StructMemeberContext ctx) {
         logger.debug("处理结构体成员: {}", Util.name(ctx));
-        if (ctx.ID() != null) {
-            stashScope(ctx);
-            VariableSymbol member = new VariableSymbol(Util.name(ctx));
+        stashScope(ctx);
 
-            if (currentScope instanceof StructSymbol) {
-                StructSymbol structScope = (StructSymbol) currentScope;
+        if (currentScope instanceof StructSymbol) {
+            StructSymbol structScope = (StructSymbol) currentScope;
+
+            // 处理结构体字段
+            if (ctx.ID() != null && ctx.block() == null) {
+                VariableSymbol member = new VariableSymbol(Util.name(ctx));
                 structScope.addField(member);
-            } else {
-                logger.error("错误：当前作用域不是结构体作用域");
             }
+            // 处理结构体方法
+            else if (ctx.ID() != null && ctx.block() != null) {
+                String methodName = ctx.ID().getText();
+                logger.debug("定义结构体方法: {}", methodName);
+
+                MethodSymbol methodSymbol = new MethodSymbol(methodName, currentScope, ctx);
+                methodSymbol.blockStmt = ctx.block();
+                methodSymbol.callee = ctx;
+
+                structScope.addMethod(methodSymbol);
+
+                // 为方法创建新的作用域
+                stashScope(ctx);
+                pushScope(methodSymbol);
+
+                // 访问方法参数和方法体
+                if (ctx.formalParameters() != null) {
+                    visit(ctx.formalParameters());
+                }
+
+                if (ctx.block() != null) {
+                    visit(ctx.block());
+                }
+
+                // 恢复作用域
+                popScope();
+
+                // 已经手动访问了子节点，所以返回null
+                return null;
+            }
+        } else {
+            logger.error("错误：当前作用域不是结构体作用域");
         }
+
         return super.visitStructMemeber(ctx);
     }
 

@@ -1,5 +1,22 @@
+struct Point {
+    int x;
+    int y;
+
+    void init(int x_val, int y_val) {
+        x = x_val;
+        y = y_val;
+    }
+}
+
 void main() {
     print("Hello, World!");
-    int x = 42;
-    print(x);
+
+    Point p;
+
+    // 调用结构体方法初始化
+    p.init(10, 20);
+
+    print("Point coordinates:");
+    print(p.x);
+    print(p.y);
 }

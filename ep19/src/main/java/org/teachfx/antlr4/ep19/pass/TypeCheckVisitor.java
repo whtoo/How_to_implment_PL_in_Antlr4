@@ -136,42 +136,111 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         String funcName = ctx.ID().getText();
         CompilerLogger.debug(String.format("访问函数 -> : %s", ctx.getText()));
 
-        // 特殊处理内置函数print - 这是最优先的处理
-        if ("print".equals(funcName)) {
+        // 特殊处理内置函数print
+        if (funcName.equals("print")) {
             // 收集参数类型，但不进行严格检查，print可以接受任何类型
-            for (int i = 0; i < ctx.expr().size(); i++) {
+            for (int i = 1; i < ctx.expr().size(); i++) {
                 visit(ctx.expr(i)); // 只是为了类型检查，不使用返回值
             }
             return TypeTable.VOID; // print返回void
         }
 
+        ExprContext firstExpr = ctx.expr(0);
+        // 处理结构体方法调用
+        if (firstExpr instanceof ExprStructFieldAccessContext) {
+            ExprStructFieldAccessContext fieldAccessCtx = (ExprStructFieldAccessContext) firstExpr;
+
+            // 获取结构体类型和方法名
+            Type structType = visit(fieldAccessCtx.expr(0));
+            if (structType == null) {
+                CompilerLogger.error(ctx, "无法确定结构体类型");
+                return TypeTable.VOID;
+            }
+
+            // 处理typedef可能指向的结构体
+            if (structType instanceof TypedefSymbol) {
+                Type targetType = ((TypedefSymbol) structType).getTargetType();
+                if (targetType instanceof StructSymbol) {
+                    structType = targetType;
+                } else {
+                    CompilerLogger.error(ctx, "类型 " + structType + " 不是结构体类型");
+                    return TypeTable.VOID;
+                }
+            }
+
+            if (!(structType instanceof StructSymbol)) {
+                CompilerLogger.error(ctx, "类型 " + structType + " 不是结构体类型");
+                return TypeTable.VOID;
+            }
+
+            StructSymbol structSymbol = (StructSymbol) structType;
+            String methodName = fieldAccessCtx.expr(1).getText();
+
+            // 查找方法
+            Symbol methodSymbol = structSymbol.resolveMember(methodName);
+            if (methodSymbol == null) {
+                CompilerLogger.error(ctx, "结构体 " + structSymbol.getName() + " 没有名为 " + methodName + " 的成员");
+                return TypeTable.VOID;
+            }
+
+            if (!(methodSymbol instanceof MethodSymbol)) {
+                CompilerLogger.error(ctx, methodName + " 不是一个方法");
+                return TypeTable.VOID;
+            }
+
+            MethodSymbol method = (MethodSymbol) methodSymbol;
+
+            // 收集参数类型
+            List<Type> argTypes = new ArrayList<>();
+            for (int i = 1; i < ctx.expr().size(); i++) {
+                Type argType = visit(ctx.expr(i));
+                if (argType != null) { // 可能为null表示参数表达式有错误
+                    argTypes.add(argType);
+                }
+            }
+
+            // 获取方法形参类型
+            List<Symbol> parameters = new ArrayList<>(method.getMembers().values());
+            Type[] paramTypes = parameters.stream()
+                    .map(param -> param.type)
+                    .toArray(Type[]::new);
+
+            // 检查参数类型兼容性
+            TypeChecker.checkFunctionCallCompatibility(
+                    paramTypes,
+                    argTypes.toArray(new Type[0]),
+                    ctx
+            );
+
+            // 返回方法返回值类型
+            return method.type;
+        }
+
+        // 处理普通函数调用
+        if (firstExpr.getText().contains(".")) {
+            // 如果是点号表达式但不是ExprStructFieldAccessContext，可能是语法错误
+            CompilerLogger.error(ctx, "无效的方法调用表达式: " + firstExpr.getText());
+            return TypeTable.VOID;
+        }
+
+        // 获取函数名
+        String methodName = firstExpr.getText();
+        CompilerLogger.debug(String.format("访问函数 -> : %s", ctx.getText()));
+
         // 对于非内置函数，尝试从符号表中解析
-        Type funcType;
-        // 如果是简单标识符，尝试从符号表中解析
         Scope scope = scopeUtil.get(ctx);
-        Symbol symbol = scope.resolve(funcName);
+        Symbol symbol = scope.resolve(methodName);
 
-        if (symbol instanceof MethodSymbol) {
-            funcType = (MethodSymbol) symbol;
-        } else {
-            CompilerLogger.error(ctx, "未定义的函数: " + funcName);
+        if (!(symbol instanceof MethodSymbol)) {
+            CompilerLogger.error(ctx, "未定义的函数: " + methodName);
             return TypeTable.VOID;
         }
 
-        CompilerLogger.debug(String.format("访问函数 --> : %s", ctx.getText()));
-        CompilerLogger.debug(String.format("访问函数: ---> %s,%s", funcName, funcType.getName()));
-
-        // 如果不是方法类型，报错
-        if (!(funcType instanceof MethodSymbol)) {
-            CompilerLogger.error(ctx, "表达式不是一个函数: " + funcName);
-            return TypeTable.VOID;
-        }
-
-        MethodSymbol methodSymbol = (MethodSymbol) funcType;
+        MethodSymbol methodSymbol = (MethodSymbol) symbol;
 
         // 收集参数类型
         List<Type> argTypes = new ArrayList<>();
-        for (int i = 0; i < ctx.expr().size(); i++) {
+        for (int i = 1; i < ctx.expr().size(); i++) {
             Type argType = visit(ctx.expr(i));
             if (argType != null) { // 可能为null表示参数表达式有错误
                 argTypes.add(argType);
@@ -233,25 +302,32 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
         // 2. 检查右侧字段是否存在于结构体中
         StructSymbol structSymbol = (StructSymbol) structType;
-        String fieldName = "";
+        String memberName = "";
         if (ctx.getChildCount() >= 3) { // struct.field 格式的结构
-            fieldName = ctx.getChild(2).getText();
+            memberName = ctx.getChild(2).getText();
         } else {
             CompilerLogger.error(ctx, "无效的结构体字段访问表达式");
             return TypeTable.VOID;
         }
 
-        Symbol fieldSymbol = structSymbol.resolveMember(fieldName);
+        Symbol memberSymbol = structSymbol.resolveMember(memberName);
 
-        if (fieldSymbol == null) {
-            CompilerLogger.error(ctx, "结构体 " + structSymbol.getName() + " 没有名为 " + fieldName + " 的字段");
+        if (memberSymbol == null) {
+            CompilerLogger.error(ctx, "结构体 " + structSymbol.getName() + " 没有名为 " + memberName + " 的成员");
             return TypeTable.VOID;
         }
 
-        // 3. 将字段的类型赋给整个表达式
-        Type fieldType = fieldSymbol.type;
-        types.put(ctx, fieldType);
-        return fieldType;
+        // 3. 将成员的类型赋给整个表达式
+        Type memberType = memberSymbol.type;
+        types.put(ctx, memberType);
+
+        // 4. 如果是方法成员，确保类型正确
+        if (memberSymbol instanceof MethodSymbol) {
+            // MethodSymbol已经实现了Type接口，所以可以直接使用
+            types.put(ctx, (Type)memberSymbol);
+        }
+
+        return memberType;
     }
 
     @Override

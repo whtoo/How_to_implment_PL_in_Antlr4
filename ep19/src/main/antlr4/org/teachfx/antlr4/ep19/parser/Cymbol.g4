@@ -8,8 +8,9 @@ structDecl : 'struct' ID '{' structMemeber+ '}'
 typedefDecl : 'typedef' type ID ';' ;
 
 structMemeber
-     :   type ID ';'
-     |   structDecl
+     :   type ID ';'                  // 变量成员
+     |   structDecl                   // 嵌套结构体
+     |   type ID '(' formalParameters? ')' block  // 方法成员
      ;
 
 varDecl

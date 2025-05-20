@@ -55,17 +55,17 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
         Scope scope = scopes.get(ctx);
-        
+
         // 获取变量名和类型名
         String varName = ctx.ID().getText();
         String typeName = ctx.type().getText();
         Object varValue = null;
-        
+
         logger.debug("定义变量: {}，类型: {}", varName, typeName);
-        
+
         // 尝试通过类型名获取类型符号
         Symbol typeSymbol = scope.resolve(typeName);
-        
+
         // 创建变量，为结构体和类型别名特殊处理
         if (typeSymbol != null) {
             if (typeSymbol instanceof StructSymbol) {
@@ -83,12 +83,12 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
                 }
             }
         }
-        
+
         // 如果有初始值表达式，用表达式的值初始化
         if (ctx.expr() != null) {
             varValue = visit(ctx.expr());
         }
-        
+
         // 定义变量
         this.currentSpace.define(varName, varValue);
         return 0;
@@ -101,10 +101,10 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             logger.error("错误: 二元表达式不完整");
             return null;
         }
-        
+
         Object left = visit(ctx.getChild(0));
         Object right = visit(ctx.getChild(2));
-        
+
         if (left == null || right == null) {
             logger.error("错误: 二元表达式的操作数为null");
             return null;
@@ -118,7 +118,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         if (right instanceof Number) {
             rhs = (Number) right;
         }
-        
+
         String op = ctx.getChild(1).getText();
         switch (op) {
             case "+" -> {
@@ -172,14 +172,14 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             CompilerLogger.error(ctx, "函数调用缺少函数表达式");
             return null;
         }
-        
-        // 获取第一个表达式（函数名）
+
+        // 获取第一个表达式（函数名或结构体方法访问）
         ExprContext firstExpr = ctx.expr(0);
         if (firstExpr == null) {
             CompilerLogger.error(ctx, "函数调用缺少函数表达式");
             return null;
         }
-        
+
         // 处理字符串字面量，避免将它们视为函数调用
         String firstExprText = firstExpr.getText();
         if (firstExprText.startsWith("\"") && firstExprText.endsWith("\"")) {
@@ -188,7 +188,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             logger.debug("字符串字面量: {}", value);
             return value;
         }
-        
+
         // 特殊处理print函数（内置函数）
         if (firstExpr.getText().equals("print")) {
             // 处理print函数：直接输出参数
@@ -206,21 +206,85 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             }
             return null;
         }
-        
-        // 处理函数名
+
+        // 处理结构体方法调用
+        if (firstExpr instanceof ExprStructFieldAccessContext) {
+            ExprStructFieldAccessContext fieldAccessCtx = (ExprStructFieldAccessContext) firstExpr;
+
+            // 获取结构体实例和方法名
+            if (fieldAccessCtx.expr().size() >= 2) {
+                Object structObj = visit(fieldAccessCtx.expr(0));
+                String methodName = fieldAccessCtx.expr(1).getText();
+
+                if (structObj instanceof StructInstance) {
+                    StructInstance instance = (StructInstance) structObj;
+                    MethodSymbol methodSymbol = instance.getMethod(methodName);
+
+                    if (methodSymbol != null) {
+                        // 创建方法调用空间
+                        FunctionSpace methodSpace = new FunctionSpace(methodSymbol.getName(), methodSymbol, instance);
+
+                        // 收集参数
+                        int paramCount = methodSymbol.getMembers().size();
+                        String[] paramNames = methodSymbol.getMembers().keySet().toArray(new String[0]);
+
+                        // 确保参数数量匹配
+                        if (ctx.expr().size() - 1 != paramCount) {
+                            CompilerLogger.error(ctx, "方法 " + methodName + " 需要 " + paramCount +
+                                               " 个参数，但提供了 " + (ctx.expr().size() - 1) + " 个");
+                            return null;
+                        }
+
+                        // 处理参数
+                        for (int i = 0; i < paramCount; i++) {
+                            if (i + 1 >= ctx.expr().size()) {
+                                CompilerLogger.error(ctx, "参数索引越界: " + (i + 1));
+                                return null;
+                            }
+
+                            Object paramValue = visit(ctx.expr(i + 1));
+                            methodSpace.define(paramNames[i], paramValue);
+                        }
+
+                        // 保存当前空间并切换到方法空间
+                        stashSpace(methodSpace);
+
+                        // 执行方法体
+                        Object result = null;
+                        try {
+                            if (methodSymbol.blockStmt != null) {
+                                visit(methodSymbol.blockStmt);
+                            } else {
+                                CompilerLogger.error(ctx, "方法 " + methodName + " 没有方法体");
+                            }
+                        } catch (ReturnValue returnValue) {
+                            result = returnValue.value;
+                        } catch (Exception e) {
+                            CompilerLogger.error(ctx, "执行方法 " + methodName + " 时发生错误: " + e.getMessage());
+                        }
+
+                        // 恢复原空间
+                        restoreSpace();
+
+                        return result;
+                    } else {
+                        CompilerLogger.error(ctx, "结构体 " + instance.getStructSymbol().getName() +
+                                           " 没有名为 " + methodName + " 的方法");
+                        return null;
+                    }
+                }
+            }
+        }
+
+        // 处理普通函数调用
         Object exprValue = visit(firstExpr);
         if (exprValue == null) {
-            // 检查是否为字段访问
-            if (firstExpr instanceof ExprStructFieldAccessContext) {
-                // 结构体字段访问处理
-                return visit(firstExpr);
-            }
             CompilerLogger.error(ctx, "无法解析函数: " + firstExpr.getText());
             return null;
         }
-        
+
         String funcName = null;
-        
+
         // 如果是方法调用，函数名称可能是表达式的结果
         if (exprValue instanceof String) {
             funcName = (String) exprValue;
@@ -231,22 +295,22 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             // 如果不是字符串也不是方法符号，直接返回表达式的值
             return exprValue;
         }
-        
+
         logger.debug("访问函数: {}", funcName);
-        
+
         // 查找函数符号
         Scope scope = scopes.get(ctx);
         if (scope == null) {
             CompilerLogger.error(ctx, "找不到作用域，无法解析函数 " + funcName);
             return null;
         }
-        
+
         Symbol symFunc = scope.resolve(funcName);
         if (symFunc == null || !(symFunc instanceof MethodSymbol)) {
             CompilerLogger.error(ctx, funcName + " 不是一个有效的函数");
             return null;
         }
-        
+
         // 处理普通函数调用
         Object result = callFunction((MethodSymbol) symFunc, ctx);
         logger.info("函数调用结果: {}", result);
@@ -281,28 +345,45 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             CompilerLogger.error(ctx, "结构体字段访问语法不正确");
             return null;
         }
-        
+
         // 获取结构体对象和字段名
         Object struct = visit(ctx.expr(0));
         String fieldName = ctx.expr(1).getText();
-        
+
         if (struct == null) {
             CompilerLogger.error(ctx, "无法访问空结构体");
             return null;
         }
-        
+
         if (!(struct instanceof StructInstance)) {
             // 如果不是结构体实例，返回表达式的值
             return struct;
         }
-        
+
         // 从结构体实例中获取字段值
         StructInstance instance = (StructInstance) struct;
+
+        // 检查是否为方法访问
+        if (ctx.getParent() instanceof ExprFuncCallContext) {
+            // 如果父节点是函数调用，则这是一个方法访问
+            // 获取结构体类型
+            StructSymbol structSymbol = instance.getStructSymbol();
+            if (structSymbol != null) {
+                // 查找方法
+                Symbol methodSymbol = structSymbol.resolveMember(fieldName);
+                if (methodSymbol instanceof MethodSymbol) {
+                    // 返回方法符号，让函数调用处理
+                    return methodSymbol;
+                }
+            }
+        }
+
+        // 普通字段访问
         if (!instance.hasField(fieldName)) {
             CompilerLogger.error(ctx, "结构体实例没有名为 " + fieldName + " 的字段");
             return null;
         }
-        
+
         return instance.getField(fieldName);
     }
 
@@ -322,15 +403,15 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
                 logger.error("错误: 结构体字段访问不完整");
                 return 0;
             }
-            
+
             String structName = swaps.children.get(0).getText();
             Object instanceObj = this.currentSpace.get(structName);
-            
+
             if (!(instanceObj instanceof StructInstance)) {
                 logger.error("错误: {} 不是一个结构体实例", structName);
                 return 0;
             }
-            
+
             StructInstance instance = (StructInstance) instanceObj;
             Object assignValue = visit(rhs);
             logger.debug("赋值 {} 为 {}", lhs.getText(), assignValue);
@@ -372,7 +453,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             logger.error("错误: if语句缺少条件表达式");
             return ret;
         }
-        
+
         Object condValue = visit(ctx.cond);
         if (condValue == TypeTable.TRUE) {
             if (ctx.then != null) {
@@ -393,13 +474,13 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             logger.error("错误: while语句缺少条件表达式");
             return null;
         }
-        
+
         while (visit(ctx.cond) == TypeTable.TRUE) {
             if (ctx.then != null) {
                 visit(ctx.then);
             }
         }
-        
+
         return null;
     }
 
@@ -448,15 +529,15 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             logger.error("错误: 找不到 {} 的作用域", ctx.getText());
             return null;
         }
-        
+
         String tokenName = ctx.start.getText();
         Symbol symbol = scope.resolve(tokenName);
-        
+
         if (symbol == null) {
             logger.error("错误: 找不到符号 {}", tokenName);
             return null;
         }
-        
+
         if (ScopedSymbol.class.isAssignableFrom(symbol.getClass())) {
             // 作用域符号统统直接返回，它们都是一个自封闭的作用域和求值环境。
             // 针对它们的求值只能发生在其内部某个方法或者表达式的调用上。
@@ -508,35 +589,35 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             CompilerLogger.error(ctx, "方法或调用上下文为空");
             return null;
         }
-            
+
         // 实现结构体方法调用
         FunctionSpace methodSpace = new FunctionSpace(method.getName(), method, this.currentSpace);
-        
+
         // 收集参数值
         int paramCount = method.getMembers().size();
         String[] paramNames = method.getMembers().keySet().toArray(new String[0]);
-        
+
         // 确保参数数量匹配
         if (ctx.expr().size() - 1 != paramCount) {
-            CompilerLogger.error(ctx, "方法 " + method.getName() + " 需要 " + paramCount + 
+            CompilerLogger.error(ctx, "方法 " + method.getName() + " 需要 " + paramCount +
                                " 个参数，但提供了 " + (ctx.expr().size() - 1) + " 个");
             return null;
         }
-        
+
         // 处理参数
         for (int i = 0; i < paramCount; i++) {
             if (i + 1 >= ctx.expr().size()) {
                 CompilerLogger.error(ctx, "参数索引越界: " + (i + 1));
                 return null;
             }
-            
+
             Object paramValue = visit(ctx.expr(i + 1));
             methodSpace.define(paramNames[i], paramValue);
         }
-        
+
         // 保存当前空间并切换到方法空间
         stashSpace(methodSpace);
-        
+
         // 执行方法体
         Object result = null;
         try {
@@ -550,13 +631,13 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         } catch (Exception e) {
             CompilerLogger.error(ctx, "执行方法 " + method.getName() + " 时发生错误: " + e.getMessage());
         }
-        
+
         // 恢复原空间
         restoreSpace();
-        
+
         return result;
     }
-    
+
     /**
      * 调用普通函数
      * @param function 函数符号
@@ -569,7 +650,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             CompilerLogger.error(ctx, "函数或调用上下文为空");
             return null;
         }
-            
+
         // 处理内置函数
         if (function.builtin) {
             if ("print".equals(function.getName())) {
@@ -581,35 +662,35 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             }
             // 可以添加其他内置函数的处理
         }
-        
+
         // 创建函数调用空间
         FunctionSpace functionSpace = new FunctionSpace(function.getName(), function, this.currentSpace);
-        
+
         // 收集参数名和值
         int paramCount = function.getMembers().size();
         String[] paramNames = function.getMembers().keySet().toArray(new String[0]);
-        
+
         // 确保参数数量匹配
         if (ctx.expr().size() - 1 != paramCount) {
-            CompilerLogger.error(ctx, "函数 " + function.getName() + " 需要 " + paramCount + 
+            CompilerLogger.error(ctx, "函数 " + function.getName() + " 需要 " + paramCount +
                                " 个参数，但提供了 " + (ctx.expr().size() - 1) + " 个");
             return null;
         }
-        
+
         // 处理参数
         for (int i = 0; i < paramCount; i++) {
             if (i + 1 >= ctx.expr().size()) {
                 CompilerLogger.error(ctx, "参数索引越界: " + (i + 1));
                 return null;
             }
-            
+
             Object paramValue = visit(ctx.expr(i + 1));
             functionSpace.define(paramNames[i], paramValue);
         }
-        
+
         // 保存当前空间并切换到函数空间
         stashSpace(functionSpace);
-        
+
         // 执行函数体
         Object result = null;
         try {
@@ -623,10 +704,10 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         } catch (Exception e) {
             CompilerLogger.error(ctx, "执行函数 " + function.getName() + " 时发生错误: " + e.getMessage());
         }
-        
+
         // 恢复原空间
         restoreSpace();
-        
+
         return result;
     }
 }

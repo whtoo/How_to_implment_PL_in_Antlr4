@@ -1,0 +1,22 @@
+// 简单测试文件
+struct Point {
+    int x;
+    int y;
+    
+    void init(int x_val, int y_val) {
+        x = x_val;
+        y = y_val;
+    }
+}
+
+void main() {
+    print("Hello, World!");
+    
+    Point p;
+    p.x = 10;
+    p.y = 20;
+    
+    print("Point coordinates:");
+    print(p.x);
+    print(p.y);
+}

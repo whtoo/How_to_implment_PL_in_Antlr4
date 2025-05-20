@@ -1,0 +1,102 @@
+// 测试结构体方法解析和调用
+struct Point {
+    int x;
+    int y;
+
+    // 结构体方法
+    void init(int x_val, int y_val) {
+        x = x_val;
+        y = y_val;
+    }
+
+    // 计算到原点的距离
+    float distance() {
+        return (x * x + y * y) * 1.0;
+    }
+
+    // 打印点的坐标
+    void printPoint() {
+        print("Point(");
+        print(x);
+        print(", ");
+        print(y);
+        print(")");
+    }
+}
+
+// 测试typedef类型
+typedef Point MyPoint;
+
+void main() {
+    // 创建结构体实例
+    Point p1;
+    p1.init(3, 4);
+    p1.printPoint();
+
+    float dist = p1.distance();
+    print("Distance from origin: ");
+    print(dist);
+
+    // 测试typedef类型
+    MyPoint p2;
+    p2.init(5, 12);
+    p2.printPoint();
+
+    // 测试print函数增强
+    print("Testing print function with different types:");
+    print("Integer: ");
+    print(42);
+    print("Float: ");
+    print(3.14159);
+    print("Boolean: ");
+    print(true);
+    print("String: ");
+    print("Hello, World!");
+    print("Struct: ");
+    print(p1);
+
+    // 测试return语句
+    testReturn();
+
+    // 测试类型兼容性
+    testTypeCompatibility();
+}
+
+// 测试return语句
+int testReturn() {
+    print("Testing return statements");
+
+    if (true) {
+        return 42; // 正确的return
+    }
+
+    return 0; // 这行不会执行
+}
+
+// 测试类型兼容性
+void testTypeCompatibility() {
+    print("Testing type compatibility");
+
+    // 基本类型兼容性
+    int i = 10;
+    float f = i; // int -> float 隐式转换
+    print("int to float: ");
+    print(f);
+
+    // 字符串连接
+    String s1 = "Hello";
+    String s2 = s1 + ", World!";
+    print("String concatenation: ");
+    print(s2);
+
+    // 布尔值操作
+    bool b1 = true;
+    bool b2 = false;
+    bool b3 = b1 + b2; // 布尔值加法 (OR)
+    print("Boolean OR: ");
+    print(b3);
+
+    bool b4 = b1 * b2; // 布尔值乘法 (AND)
+    print("Boolean AND: ");
+    print(b4);
+}

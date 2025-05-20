@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 项目背景
+这是一个教学目的的编译器构造课程，所有知识都围绕在本科阶段到研究生初级的编译器构造实操。
+
+# 项目使用Maven构建，语法使用java17+

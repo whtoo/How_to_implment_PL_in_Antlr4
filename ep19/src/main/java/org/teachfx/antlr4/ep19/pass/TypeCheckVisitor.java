@@ -142,17 +142,45 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
             return TypeTable.STRING;
         }
 
-        // 特殊处理print函数
+        // 特殊处理内置函数，如print
         if (firstExpr.getText().equals("print")) {
+            // 收集参数类型，但不进行严格检查，print可以接受任何类型
+            for (int i = 1; i < ctx.expr().size(); i++) {
+                visit(ctx.expr(i)); // 只是为了类型检查，不使用返回值
+            }
             return TypeTable.VOID; // print返回void
         }
 
-        Type funcType = visit(firstExpr);
+        // 对于非内置函数，尝试从符号表中解析
+        Type funcType;
+        if (firstExpr.getText().matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+            // 如果是简单标识符，尝试从符号表中解析
+            Scope scope = scopeUtil.get(ctx);
+            Symbol symbol = scope.resolve(firstExpr.getText());
+            if (symbol instanceof MethodSymbol) {
+                funcType = (MethodSymbol) symbol;
+            } else {
+                // 特殊处理内置函数print
+                if (firstExpr.getText().equals("print")) {
+                    // print是内置函数，不需要从符号表中解析
+                    return TypeTable.VOID;
+                }
+                funcType = visit(firstExpr);
+            }
+        } else {
+            // 对于复杂表达式，递归访问
+            funcType = visit(firstExpr);
+        }
 
         // 如果不是方法类型，报错
         if (!(funcType instanceof MethodSymbol)) {
             // 可能是结构体方法访问，由visitExprStructFieldAccess处理
             if (firstExpr != null && !(firstExpr instanceof ExprStructFieldAccessContext)) {
+                // 特殊处理内置函数print
+                if (firstExpr.getText().equals("print")) {
+                    // print是内置函数，不需要从符号表中解析
+                    return TypeTable.VOID;
+                }
                 CompilerLogger.error(ctx, "表达式不是一个函数: " + firstExpr.getText());
             }
             return TypeTable.VOID;

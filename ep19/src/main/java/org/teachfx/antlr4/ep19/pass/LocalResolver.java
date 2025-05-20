@@ -3,6 +3,8 @@ package org.teachfx.antlr4.ep19.pass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.teachfx.antlr4.ep19.misc.CompilerLogger;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;
 import org.teachfx.antlr4.ep19.misc.Util;
@@ -14,12 +16,14 @@ import org.teachfx.antlr4.ep19.symtab.scope.Scope;
 import org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.VariableSymbol;
+import org.teachfx.antlr4.ep19.symtab.symbol.TypedefSymbol;
 
 /**
  * @description 给变量分配类型
  * @purpose 给变量确定具体类型
  */
 public class LocalResolver extends CymbolASTVisitor<Object> {
+    private static final Logger logger = LoggerFactory.getLogger(LocalResolver.class);
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
 
@@ -94,7 +98,16 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
 
         if (ctx.type() != null) {
             Symbol s = scopes.resolve(ctx);
-            s.type = scopes.lookup(ctx.type());
+            if (s != null) {
+                Type fieldType = scopes.lookup(ctx.type());
+                if (fieldType != null) {
+                    s.type = fieldType;
+                } else {
+                    CompilerLogger.error(ctx, "未知类型: " + ctx.type().getText());
+                }
+            } else {
+                CompilerLogger.error(ctx, "无法解析结构体成员: " + Util.name(ctx));
+            }
         }
         return null;
     }
@@ -110,12 +123,40 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     public Object visitTerminal(TerminalNode node) {
         if (node.getSymbol().getText().equals(".")) {
             ParserRuleContext parent = (ParserRuleContext) node.getParent();
-            StructSymbol struct = (StructSymbol) types.get(parent.getChild(STRUCT));
+            Type structType = types.get(parent.getChild(STRUCT));
+            if (structType == null) {
+                CompilerLogger.error((ParserRuleContext)parent.getChild(STRUCT), "无法确定结构体类型");
+                return null;
+            }
+            
             ParserRuleContext member = (ParserRuleContext) parent.getChild(MEMBER_PARENT).getChild(MEMBER);
             String name = member.start.getText();
-            Type memberType = struct.resolveMember(name).type;
-            System.out.printf("struct %s access %s with type%n", struct.getName(), name, memberType.toString());
-            stashType(member, memberType);
+            
+            // 处理结构体类型可能是TypedefSymbol的情况
+            StructSymbol struct = null;
+            if (structType instanceof TypedefSymbol) {
+                Type targetType = ((TypedefSymbol) structType).getTargetType();
+                if (targetType instanceof StructSymbol) {
+                    struct = (StructSymbol) targetType;
+                } else {
+                    CompilerLogger.error(member, "类型 " + ((TypedefSymbol) structType).getName() + " 不是结构体类型");
+                    return null;
+                }
+            } else if (structType instanceof StructSymbol) {
+                struct = (StructSymbol) structType;
+            } else {
+                CompilerLogger.error(member, "类型 " + structType + " 不是结构体类型");
+                return null;
+            }
+            
+            Symbol memberSymbol = struct.resolveMember(name);
+            if (memberSymbol != null) {
+                Type memberType = memberSymbol.type;
+                logger.debug("结构体 {} 访问字段 {} 的类型为 {}", struct.getName(), name, memberType);
+                stashType(member, memberType);
+            } else {
+                CompilerLogger.error(member, "结构体 " + struct.getName() + " 没有名为 " + name + " 的成员");
+            }
         }
 
         return null;
@@ -146,8 +187,9 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
 
     @Override
     public Object visitPrimaryBOOL(PrimaryBOOLContext ctx) {
-        setType(ctx);
-        return null;
+        // 布尔值直接使用BOOLEAN类型
+        stashType(ctx, TypeTable.BOOLEAN);
+        return super.visitPrimaryBOOL(ctx);
     }
 
     @Override
@@ -179,6 +221,51 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         return null;
     }
 
+    @Override
+    public Object visitTypedefDecl(TypedefDeclContext ctx) {
+        // 获取typedef声明的名称和目标类型
+        String typeName = ctx.ID().getText();
+        String targetTypeName = ctx.type().getText();
+        
+        // 首先尝试从作用域中获取目标类型
+        Scope scope = scopes.get(ctx);
+        Symbol targetTypeSymbol = scope.resolve(targetTypeName);
+        Type targetType = null;
+        
+        if (targetTypeSymbol != null) {
+            // 如果在作用域中找到了类型符号
+            if (targetTypeSymbol instanceof Type) {
+                targetType = (Type) targetTypeSymbol;
+            } else if (targetTypeSymbol.type != null) {
+                targetType = targetTypeSymbol.type;
+            }
+        } else {
+            // 尝试从TypeTable中获取基本类型
+            targetType = TypeTable.getTypeByName(targetTypeName);
+        }
+        
+        if (targetType == null) {
+            CompilerLogger.error(ctx, "未知的类型: " + targetTypeName);
+            return null;
+        }
+        
+        // 更新TypedefSymbol中的目标类型
+        if (scope == null) {
+            CompilerLogger.error(ctx, "找不到作用域");
+            return null;
+        }
+        
+        Symbol typedefSymbol = scope.resolve(typeName);
+        if (typedefSymbol instanceof TypedefSymbol) {
+            ((TypedefSymbol) typedefSymbol).setTargetType(targetType);
+            logger.debug("解析类型别名: {} -> {}", typeName, targetType);
+        } else {
+            CompilerLogger.error(ctx, "内部错误: 无法找到类型定义符号 " + typeName);
+        }
+        
+        return null;
+    }
+
     private void setType(ParserRuleContext ctx) {
         // already defined type as in the case of struct members
         if (types.get(ctx) != null) {
@@ -196,26 +283,30 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
             } else {
                 stashType(ctx, s.type);
             }
-
-        } else if (tokenValue == CymbolParser.INT ||
-                tokenName.equals("int")) {
-            stashType(ctx, TypeTable.INT);
-        } else if (tokenValue == CymbolParser.FLOAT ||
-                tokenName.equals("float")) {
-            stashType(ctx, TypeTable.FLOAT);
-        } else if (tokenValue == CymbolParser.CHAR ||
-                tokenName.equals("char")) {
-            stashType(ctx, TypeTable.CHAR);
-        } else if (tokenValue == CymbolParser.STRING || tokenName.equals("String")) {
-            stashType(ctx, TypeTable.STRING);
-        } else if (tokenName.equals("true") ||
-                tokenName.equals("false") ||
-                tokenName.equals("bool")) {
-            stashType(ctx, TypeTable.BOOLEAN);
-        } else if (tokenName.equals("void")) {
-            stashType(ctx, TypeTable.VOID);
-        } else if (tokenName.equals("null")) {
-            stashType(ctx, TypeTable.NULL);
+        } else {
+            // 尝试按名称查找基本类型
+            Type type = TypeTable.getTypeByName(tokenName);
+            if (type != null) {
+                stashType(ctx, type);
+                return;
+            }
+            
+            // 如果不是已知类型名称，按照token类型判断
+            if (tokenValue == CymbolParser.INT || tokenName.equals("int")) {
+                stashType(ctx, TypeTable.INT);
+            } else if (tokenValue == CymbolParser.FLOAT || tokenName.equals("float")) {
+                stashType(ctx, TypeTable.FLOAT);
+            } else if (tokenValue == CymbolParser.CHAR || tokenName.equals("char")) {
+                stashType(ctx, TypeTable.CHAR);
+            } else if (tokenValue == CymbolParser.STRING || tokenName.equals("String")) {
+                stashType(ctx, TypeTable.STRING);
+            } else if (tokenName.equals("true") || tokenName.equals("false") || tokenName.equals("bool")) {
+                stashType(ctx, TypeTable.BOOLEAN);
+            } else if (tokenName.equals("void")) {
+                stashType(ctx, TypeTable.VOID);
+            } else if (tokenName.equals("null")) {
+                stashType(ctx, TypeTable.NULL);
+            }
         }
     }
 

@@ -24,7 +24,11 @@ public abstract class ScopedSymbol extends Symbol implements Scope {
 
     @Override
     public Type lookup(String name) {
-        return (Type) resolve(name);
+        Symbol symbol = resolve(name);
+        if (symbol != null && symbol.type instanceof Type) {
+            return symbol.type;
+        }
+        return null;
     }
 
     @Override

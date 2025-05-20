@@ -3,10 +3,12 @@ grammar Cymbol;
 package org.teachfx.antlr4.ep19.parser;
 }
 
-file :   (structDecl | functionDecl | varDecl)+ ;
+file :   (structDecl | typedefDecl | functionDecl | varDecl | statement)+ ;
 
 structDecl : 'struct' ID '{' structMemeber+ '}'
 ;
+
+typedefDecl : 'typedef' type ID ';' ;
 
 structMemeber
      :   type ID ';'
@@ -28,20 +30,21 @@ formalParameter
     :   type ID
     ;
 
-block:  '{' statetment* '}' ;    // possibly empty statement block
+block:  '{' statement* '}' ;    // possibly empty statement block
 
-statetment:   block               #statBlock
-    |   structDecl   #statStructDecl
-    |   varDecl             #statVarDecl
-    |   'return' expr? ';' #statReturn
-    |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
-    |   'while' '(' cond=expr ')' then=statetment #stateWhile
-    |   expr '=' expr ';' #statAssign // assignment
-    |   expr ';'       #stat // func call
+statement:   block               #statBlock
+    |   structDecl               #statStructDecl
+    |   typedefDecl              #statTypedefDecl
+    |   varDecl                  #statVarDecl
+    |   'return' expr? ';'       #statReturn
+    |   'if' '(' cond=expr ')' then=statement ('else' elseDo=statement)? #stateCondition
+    |   'while' '(' cond=expr ')' then=statement #stateWhile
+    |   expr '=' expr ';'        #statAssign // assignment
+    |   expr ';'                 #stat // func call
     ;
 
 expr
-  : expr '(' ( expr (',' expr)* )? ')'                  # exprFuncCall
+  : ID '(' ( expr (',' expr)* )? ')'                     # exprFuncCall // 内置函数调用和普通函数调用
   | expr o='.' expr                                     # exprStructFieldAccess
   | '-' expr                                            # exprUnary
   | '!' expr                                            # exprUnary
@@ -61,12 +64,9 @@ primary:    ID                   #primaryID   // variable reference
     |       BOOLEAN              #primaryBOOL
     ;
 
-ID  :   LETTER (LETTER | [0-9])* ;
+ID  :   [_a-zA-Z] [_a-zA-Z0-9]* ;
 BOOLEAN: 'true' | 'false';
 NULL : 'null';
-
-fragment
-LETTER : [a-zA-Z] ;
 
 INT :   [0-9]+ ;
 FLOAT : INT? '.' INT ;
@@ -75,9 +75,9 @@ CHAR :  '\'' . '\'' ;
 STRING: '"' ~( '"' | '\r' | '\n' )* '"'; 
 
 SLCOMMENT
-    :   '//' .*? '\n' -> skip
+    :   '//' .*? ('\n'|'\r'|'\r\n' | EOF) -> skip
     ;
 
-COMMNET
-    : '/*' .*? '\n' -> skip
+COMMENT
+    : '/*' .*? '*/' -> skip
     ;

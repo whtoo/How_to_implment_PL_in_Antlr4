@@ -14,9 +14,12 @@
     <artifactId>ep19</artifactId>
     <version>1.0.0</version>
     <properties>
-        <!-- 这里为包含g4文件的文件夹-->
-        <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep19/parser</parser.g4.dir>
+        <!-- 修正g4文件目录 -->
+        <parser.g4.dir>src/main/antlr4</parser.g4.dir>
         <run.main.entry>org.teachfx.antlr4.ep19.Compiler</run.main.entry>
+        <!-- 日志配置 -->
+        <slf4j.version>1.7.36</slf4j.version>
+        <log4j2.version>2.17.2</log4j2.version>
     </properties>
     <!-- 添加ANTLR4插件 -->
     <build>
@@ -35,7 +38,7 @@
                 <configuration>
                     <visitor>true</visitor>
                     <!-- 指定 ANTLR4 生成代码的目录 -->
-                    <outputDirectory>${basedir}/src/main/java/org/teachfx/antlr4/ep19/parser</outputDirectory>
+                    <outputDirectory>${basedir}/target/generated-sources/antlr4</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>
@@ -47,6 +50,8 @@
                 <targetPath>${project.build.directory}/classes</targetPath>
                 <includes>
                     <include>**/*.cymbol</include> <!-- 要包含的资源文件的模式 -->
+                    <include>**/*.xml</include>  <!-- 添加XML配置文件 -->
+                    <include>**/*.properties</include>  <!-- 添加properties文件 -->
                 </includes>
             </resource>
         </resources>
@@ -54,6 +59,45 @@
 
     <!-- 运行测试 -->
     <dependencies>
-
+        <!-- JUnit 5 Jupiter API for writing tests -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit 5 Jupiter Engine for running tests -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- SLF4J API -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        
+        <!-- Log4j2 实现 -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
+        
+        <!-- Log4j2 适配 SLF4J -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
     </dependencies>
 </project>

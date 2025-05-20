@@ -16,7 +16,7 @@ public abstract class BaseScope implements Scope {
     public void  preDefineSymbol() {
         if (builtSymbols.isEmpty()) {
             for (var sym : List.of(TypeTable.INT,TypeTable.FLOAT,TypeTable.VOID,TypeTable.BOOLEAN)) {
-                builtSymbols.put(sym.getName(),sym);
+                builtSymbols.put(sym.getName(), new Symbol(sym.getName(), sym));
             }
         }
     }
@@ -28,7 +28,13 @@ public abstract class BaseScope implements Scope {
 
     @Override
     public Type lookup(String name) {
-        return (Type) resolve(name);
+        Symbol symbol = resolve(name);
+        if (symbol != null && symbol instanceof Type) {
+            return (Type) symbol;
+        } else if (symbol != null && symbol.type instanceof Type) {
+            return symbol.type;
+        }
+        return null;
     }
 
     @Override

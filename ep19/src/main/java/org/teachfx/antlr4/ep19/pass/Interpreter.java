@@ -2,6 +2,7 @@ package org.teachfx.antlr4.ep19.pass;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;
+import org.teachfx.antlr4.ep19.misc.CompilerLogger;
 import org.teachfx.antlr4.ep19.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
 import org.teachfx.antlr4.ep19.runtime.FunctionSpace;
@@ -12,7 +13,11 @@ import org.teachfx.antlr4.ep19.symtab.TypeTable;
 import org.teachfx.antlr4.ep19.symtab.scope.Scope;
 import org.teachfx.antlr4.ep19.symtab.scope.ScopedSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.MethodSymbol;
+import org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
+import org.teachfx.antlr4.ep19.symtab.symbol.TypedefSymbol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -25,6 +30,7 @@ import java.util.stream.Collectors;
  */
 public class Interpreter extends CymbolBaseVisitor<Object> {
 
+    private static final Logger logger = LoggerFactory.getLogger(Interpreter.class);
     private static final ReturnValue sharedRetValue = new ReturnValue(null);
     private final ScopeUtil scopes;
     private final Stack<MemorySpace> memoryStack;
@@ -51,109 +57,203 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitVarDecl(VarDeclContext ctx) {
-        if (ctx.getChildCount() >= 2) {
-            System.out.printf("var as - %s = %s%n", ctx.getChild(1).getText(), ctx.getChild(3).getText());
-
-            this.currentSpace.define(ctx.getChild(1).getText(), visit(ctx.getChild(3)));
+        Scope scope = scopes.get(ctx);
+        
+        // 获取变量名和类型名
+        String varName = ctx.ID().getText();
+        String typeName = ctx.type().getText();
+        Object varValue = null;
+        
+        logger.debug("定义变量: {}，类型: {}", varName, typeName);
+        
+        // 尝试通过类型名获取类型符号
+        Symbol typeSymbol = scope.resolve(typeName);
+        
+        // 创建变量，为结构体和类型别名特殊处理
+        if (typeSymbol != null) {
+            if (typeSymbol instanceof StructSymbol) {
+                // 直接的结构体类型
+                StructSymbol structSymbol = (StructSymbol) typeSymbol;
+                varValue = new StructInstance(varName, this.currentSpace, structSymbol);
+                logger.debug("创建{}类型的结构体实例{}", structSymbol.getName(), varName);
+            } else if (typeSymbol instanceof TypedefSymbol) {
+                // 通过typedef定义的类型
+                TypedefSymbol typedefSymbol = (TypedefSymbol) typeSymbol;
+                if (typedefSymbol.getTargetType() instanceof StructSymbol) {
+                    StructSymbol structSymbol = (StructSymbol) typedefSymbol.getTargetType();
+                    varValue = new StructInstance(varName, this.currentSpace, structSymbol);
+                    logger.debug("创建{}->{}类型的结构体实例{}", typedefSymbol.getName(), structSymbol.getName(), varName);
+                }
+            }
         }
+        
+        // 如果有初始值表达式，用表达式的值初始化
+        if (ctx.expr() != null) {
+            varValue = visit(ctx.expr());
+        }
+        
+        // 定义变量
+        this.currentSpace.define(varName, varValue);
         return 0;
     }
 
     // < Expression evaluation
     @Override
     public Object visitExprBinary(ExprBinaryContext ctx) {
-
+        if (ctx.getChildCount() < 3) {
+            logger.error("错误: 二元表达式不完整");
+            return null;
+        }
+        
         Object left = visit(ctx.getChild(0));
         Object right = visit(ctx.getChild(2));
-        String op = ctx.o.getText();
+        
+        if (left == null || right == null) {
+            logger.error("错误: 二元表达式的操作数为null");
+            return null;
+        }
 
         Object ret = 0;
-
-        Integer lhs = (Integer) left;
-        Integer rhs = (Integer) right;
-
+        Number lhs = 0, rhs = 0;
+        if (left instanceof Number) {
+            lhs = (Number) left;
+        }
+        if (right instanceof Number) {
+            rhs = (Number) right;
+        }
+        
+        String op = ctx.getChild(1).getText();
         switch (op) {
             case "+" -> {
-                if (left.getClass().toString().equals("Float") || right.getClass().toString().equals("Float")) {
-                    ret = (Float) left + (Float) right;
+                if (left instanceof String || right instanceof String) {
+                    ret = left.toString() + right.toString();
+                } else if (left instanceof Float || right instanceof Float) {
+                    ret = lhs.floatValue() + rhs.floatValue();
                 } else {
-                    ret = (Integer) left + (Integer) right;
+                    ret = lhs.intValue() + rhs.intValue();
                 }
             }
             case "-" -> {
-                if (left.getClass().toString().equals("Float") || right.getClass().toString().equals("Float")) {
-                    ret = (Float) left - (Float) right;
+                if (left instanceof Float || right instanceof Float) {
+                    ret = lhs.floatValue() - rhs.floatValue();
                 } else {
-                    ret = (Integer) left - (Integer) right;
+                    ret = lhs.intValue() - rhs.intValue();
                 }
             }
             case "*" -> {
-                if (left.getClass().toString().equals("Float") || right.getClass().toString().equals("Float")) {
-                    ret = (Float) left * (Float) right;
+                if (left instanceof Float || right instanceof Float) {
+                    ret = lhs.floatValue() * rhs.floatValue();
                 } else {
-                    ret = (Integer) left * (Integer) right;
+                    ret = lhs.intValue() * rhs.intValue();
                 }
             }
             case "/" -> {
-                if (left.getClass().toString().equals("Float") || right.getClass().toString().equals("Float")) {
-                    ret = (Float) left / (Float) right;
+                if (left instanceof Float || right instanceof Float) {
+                    ret = lhs.floatValue() / rhs.floatValue();
                 } else {
                     ret = (Integer) left / (Integer) right;
                 }
             }
-            case "<" -> ret = (lhs < rhs) ? TypeTable.TRUE : TypeTable.FALSE;
-            case ">" -> ret = lhs > rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            case "<=" -> ret = lhs <= rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            case ">=" -> ret = lhs >= rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            case "!=" -> ret = lhs != rhs ? TypeTable.TRUE : TypeTable.FALSE;
-            case "==" -> ret = lhs == rhs ? TypeTable.TRUE : TypeTable.FALSE;
+            case "<" -> ret = (lhs.doubleValue() < rhs.doubleValue()) ? TypeTable.TRUE : TypeTable.FALSE;
+            case ">" -> ret = lhs.doubleValue() > rhs.doubleValue() ? TypeTable.TRUE : TypeTable.FALSE;
+            case "<=" -> ret = lhs.doubleValue() <= rhs.doubleValue() ? TypeTable.TRUE : TypeTable.FALSE;
+            case ">=" -> ret = lhs.doubleValue() >= rhs.doubleValue() ? TypeTable.TRUE : TypeTable.FALSE;
+            case "!=" -> ret = !left.equals(right) ? TypeTable.TRUE : TypeTable.FALSE;
+            case "==" -> ret = left.equals(right) ? TypeTable.TRUE : TypeTable.FALSE;
+            default -> {
+                logger.error("错误: 未知的二元操作符: {}", op);
+                ret = null;
+            }
         }
         return ret;
     }
 
     @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
-        // Resolve method symbol from scope unity by calling visitPrimaryID
-        System.out.println("visit func " + ctx.getText());
-        MethodSymbol method = (MethodSymbol) visit(ctx.getChild(0));
-
-        Object val = 0;
-        if (method.builtin) {
-            if ("print".equalsIgnoreCase(method.getName())) {
-                System.out.println(" eval " + ctx.getText());
-                List<ParseTree> args = ctx.children.subList(1, ctx.children.size() - 1);
-                String fmtArgs = args.stream()
-                        .map(this::visit)
-                        .filter(Objects::nonNull)
-                        .map(Object::toString)
-                        .collect(Collectors.joining(","));
-                System.out.println(" print res :" + fmtArgs);
-            }
-        } else {
-            FunctionSpace methodSpace = new FunctionSpace(method.getName(), method, this.currentSpace);
-            // currentSpace is not changed
-            // Fill params
-            Set<String> paramNames = method.getMembers().keySet();
-            int i = 0;
-            for (String name : paramNames) {
-
-                Object paramValue = visit(ctx.getChild(2 * (i + 1)));
-                System.out.println(" name " + name + "," + " val " + paramValue.toString());
-                methodSpace.define(name, paramValue);
-                i++;
-            }
-
-            stashSpace(methodSpace);
-            // exec blockDef
-            try {
-                visit(method.blockStmt);
-            } catch (ReturnValue e) {
-                val = e.value;
-            }
-
-            restoreSpace();
+        // 检查是否有函数表达式和参数
+        if (ctx.expr() == null || ctx.expr().isEmpty()) {
+            CompilerLogger.error(ctx, "函数调用缺少函数表达式");
+            return null;
         }
-        return val;
+        
+        // 获取第一个表达式（函数名）
+        ExprContext firstExpr = ctx.expr(0);
+        if (firstExpr == null) {
+            CompilerLogger.error(ctx, "函数调用缺少函数表达式");
+            return null;
+        }
+        
+        // 处理字符串字面量，避免将它们视为函数调用
+        String firstExprText = firstExpr.getText();
+        if (firstExprText.startsWith("\"") && firstExprText.endsWith("\"")) {
+            // 字符串字面量不能作为函数调用，直接返回字符串值
+            Object value = visit(firstExpr);
+            logger.debug("字符串字面量: {}", value);
+            return value;
+        }
+        
+        // 特殊处理print函数（内置函数）
+        if (firstExpr.getText().equals("print")) {
+            // 处理print函数：直接输出参数
+            for (int i = 1; i < ctx.expr().size(); i++) {
+                ExprContext exprCtx = ctx.expr(i);
+                if (exprCtx != null) {
+                    Object result = visit(exprCtx);
+                    if (result != null) {
+                        System.out.println(result);
+                        logger.info("输出: {}", result);
+                    } else {
+                        logger.info("输出: null");
+                    }
+                }
+            }
+            return null;
+        }
+        
+        // 处理函数名
+        Object exprValue = visit(firstExpr);
+        if (exprValue == null) {
+            // 检查是否为字段访问
+            if (firstExpr instanceof ExprStructFieldAccessContext) {
+                // 结构体字段访问处理
+                return visit(firstExpr);
+            }
+            CompilerLogger.error(ctx, "无法解析函数: " + firstExpr.getText());
+            return null;
+        }
+        
+        String funcName = null;
+        
+        // 如果是方法调用，函数名称可能是表达式的结果
+        if (exprValue instanceof String) {
+            funcName = (String) exprValue;
+        } else if (exprValue instanceof MethodSymbol) {
+            // 处理结构体方法调用
+            return callStructMethod((MethodSymbol) exprValue, ctx);
+        } else {
+            // 如果不是字符串也不是方法符号，直接返回表达式的值
+            return exprValue;
+        }
+        
+        logger.debug("访问函数: {}", funcName);
+        
+        // 查找函数符号
+        Scope scope = scopes.get(ctx);
+        if (scope == null) {
+            CompilerLogger.error(ctx, "找不到作用域，无法解析函数 " + funcName);
+            return null;
+        }
+        
+        Symbol symFunc = scope.resolve(funcName);
+        if (symFunc == null || !(symFunc instanceof MethodSymbol)) {
+            CompilerLogger.error(ctx, funcName + " 不是一个有效的函数");
+            return null;
+        }
+        
+        // 处理普通函数调用
+        Object result = callFunction((MethodSymbol) symFunc, ctx);
+        logger.info("函数调用结果: {}", result);
+        return result;
     }
 
     @Override
@@ -179,25 +279,64 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitExprStructFieldAccess(ExprStructFieldAccessContext ctx) {
-
-        StructInstance instance = (StructInstance) this.currentSpace.get(ctx.children.get(0).getText());
-
+        // 首先获取结构体实例
+        if (ctx.expr().size() < 2) {
+            CompilerLogger.error(ctx, "结构体字段访问语法不正确");
+            return null;
+        }
+        
+        // 获取结构体对象和字段名
+        Object struct = visit(ctx.expr(0));
         String fieldName = ctx.expr(1).getText();
-
-        return instance.get(fieldName);
+        
+        if (struct == null) {
+            CompilerLogger.error(ctx, "无法访问空结构体");
+            return null;
+        }
+        
+        if (!(struct instanceof StructInstance)) {
+            // 如果不是结构体实例，返回表达式的值
+            return struct;
+        }
+        
+        // 从结构体实例中获取字段值
+        StructInstance instance = (StructInstance) struct;
+        if (!instance.hasField(fieldName)) {
+            CompilerLogger.error(ctx, "结构体实例没有名为 " + fieldName + " 的字段");
+            return null;
+        }
+        
+        return instance.getField(fieldName);
     }
 
     // > Expression evaluation
     @Override
     public Object visitStatAssign(StatAssignContext ctx) {
+        if (ctx.expr() == null || ctx.expr().size() < 2) {
+            logger.error("错误: 赋值语句不完整");
+            return 0;
+        }
 
         ExprContext lhs = ctx.expr(0);
         ExprContext rhs = ctx.expr(1);
 
         if (lhs instanceof ExprStructFieldAccessContext swaps) {
-            StructInstance instance = (StructInstance) this.currentSpace.get(lhs.children.get(0).getText());
-            Object assignValue = visit(ctx.expr(1));
-            System.out.printf("assign %s with %s%n", lhs.getText(), assignValue);
+            if (swaps.children == null || swaps.children.size() < 3 || swaps.expr().size() < 2) {
+                logger.error("错误: 结构体字段访问不完整");
+                return 0;
+            }
+            
+            String structName = swaps.children.get(0).getText();
+            Object instanceObj = this.currentSpace.get(structName);
+            
+            if (!(instanceObj instanceof StructInstance)) {
+                logger.error("错误: {} 不是一个结构体实例", structName);
+                return 0;
+            }
+            
+            StructInstance instance = (StructInstance) instanceObj;
+            Object assignValue = visit(rhs);
+            logger.debug("赋值 {} 为 {}", lhs.getText(), assignValue);
             instance.update(swaps.expr(1).getText(), assignValue);
         } else {
             this.currentSpace.update(lhs.getText(), visit(rhs));
@@ -208,7 +347,11 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitStatReturn(StatReturnContext ctx) {
-        sharedRetValue.value = visit(ctx.getChild(1));
+        if (ctx.getChildCount() > 1 && ctx.getChild(1) != null) {
+            sharedRetValue.value = visit(ctx.getChild(1));
+        } else {
+            sharedRetValue.value = null;
+        }
         throw sharedRetValue;
     }
 
@@ -228,8 +371,16 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     public Object visitStateCondition(StateConditionContext ctx) {
         Object ret = 0;
         // System.out.println("exec in line " + ctx.start.getLine() + ":" + ctx.getText());
-        if (visit(ctx.cond) == TypeTable.TRUE) {
-            visit(ctx.then);
+        if (ctx.cond == null) {
+            logger.error("错误: if语句缺少条件表达式");
+            return ret;
+        }
+        
+        Object condValue = visit(ctx.cond);
+        if (condValue == TypeTable.TRUE) {
+            if (ctx.then != null) {
+                visit(ctx.then);
+            }
         } else {
             if (ctx.elseDo != null) {
                 visit(ctx.elseDo);
@@ -241,7 +392,18 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitStateWhile(StateWhileContext ctx) {
-        return super.visitStateWhile(ctx);
+        if (ctx.cond == null) {
+            logger.error("错误: while语句缺少条件表达式");
+            return null;
+        }
+        
+        while (visit(ctx.cond) == TypeTable.TRUE) {
+            if (ctx.then != null) {
+                visit(ctx.then);
+            }
+        }
+        
+        return null;
     }
 
     @Override
@@ -258,7 +420,13 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitPrimaryBOOL(PrimaryBOOLContext ctx) {
-        return Objects.equals(ctx.getText(), "true") ? TypeTable.TRUE : TypeTable.FALSE;
+        String text = ctx.getText();
+        if ("true".equals(text)) {
+            return TypeTable.TRUE;
+        } else if ("false".equals(text)) {
+            return TypeTable.FALSE;
+        }
+        return TypeTable.FALSE; // 默认情况返回FALSE
     }
 
     @Override
@@ -268,16 +436,30 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitPrimaryCHAR(PrimaryCHARContext ctx) {
-        // Return raw text
-        return ctx.getText();
+        // 提取字符字面量中的实际字符
+        String text = ctx.getText();
+        if (text.length() >= 3 && text.startsWith("'") && text.endsWith("'")) {
+            return text.charAt(1);
+        }
+        return text; // 安全起见，如果格式不对就返回原始文本
     }
 
     @Override
     public Object visitPrimaryID(PrimaryIDContext ctx) {
         Scope scope = this.scopes.get(ctx);
+        if (scope == null) {
+            logger.error("错误: 找不到 {} 的作用域", ctx.getText());
+            return null;
+        }
+        
         String tokenName = ctx.start.getText();
-
         Symbol symbol = scope.resolve(tokenName);
+        
+        if (symbol == null) {
+            logger.error("错误: 找不到符号 {}", tokenName);
+            return null;
+        }
+        
         if (ScopedSymbol.class.isAssignableFrom(symbol.getClass())) {
             // 作用域符号统统直接返回，它们都是一个自封闭的作用域和求值环境。
             // 针对它们的求值只能发生在其内部某个方法或者表达式的调用上。
@@ -288,7 +470,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitFunctionDecl(FunctionDeclContext ctx) {
-        System.out.println("func entry - " + ctx.ID().getText());
+        logger.debug("func entry - " + ctx.ID().getText());
         if (ctx.ID().getText().equalsIgnoreCase("main")) {
             // exec blockDef
             try {
@@ -309,7 +491,145 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitPrimarySTRING(PrimarySTRINGContext ctx) {
-        // Return raw text
-        return ctx.getText();
+        // 去除字符串两侧的引号
+        String text = ctx.getText();
+        if (text.length() >= 2 && text.startsWith("\"") && text.endsWith("\"")) {
+            return text.substring(1, text.length() - 1);
+        }
+        return text; // 安全起见，如果格式不对就返回原始文本
+    }
+
+    /**
+     * 调用结构体方法
+     * @param method 方法符号
+     * @param ctx 函数调用上下文
+     * @return 方法返回值
+     */
+    private Object callStructMethod(MethodSymbol method, ExprFuncCallContext ctx) {
+        // 安全检查
+        if (method == null || ctx == null) {
+            CompilerLogger.error(ctx, "方法或调用上下文为空");
+            return null;
+        }
+            
+        // 实现结构体方法调用
+        FunctionSpace methodSpace = new FunctionSpace(method.getName(), method, this.currentSpace);
+        
+        // 收集参数值
+        int paramCount = method.getMembers().size();
+        String[] paramNames = method.getMembers().keySet().toArray(new String[0]);
+        
+        // 确保参数数量匹配
+        if (ctx.expr().size() - 1 != paramCount) {
+            CompilerLogger.error(ctx, "方法 " + method.getName() + " 需要 " + paramCount + 
+                               " 个参数，但提供了 " + (ctx.expr().size() - 1) + " 个");
+            return null;
+        }
+        
+        // 处理参数
+        for (int i = 0; i < paramCount; i++) {
+            if (i + 1 >= ctx.expr().size()) {
+                CompilerLogger.error(ctx, "参数索引越界: " + (i + 1));
+                return null;
+            }
+            
+            Object paramValue = visit(ctx.expr(i + 1));
+            methodSpace.define(paramNames[i], paramValue);
+        }
+        
+        // 保存当前空间并切换到方法空间
+        stashSpace(methodSpace);
+        
+        // 执行方法体
+        Object result = null;
+        try {
+            if (method.blockStmt != null) {
+                visit(method.blockStmt);
+            } else {
+                CompilerLogger.error(ctx, "方法 " + method.getName() + " 没有方法体");
+            }
+        } catch (ReturnValue returnValue) {
+            result = returnValue.value;
+        } catch (Exception e) {
+            CompilerLogger.error(ctx, "执行方法 " + method.getName() + " 时发生错误: " + e.getMessage());
+        }
+        
+        // 恢复原空间
+        restoreSpace();
+        
+        return result;
+    }
+    
+    /**
+     * 调用普通函数
+     * @param function 函数符号
+     * @param ctx 函数调用上下文
+     * @return 函数返回值
+     */
+    private Object callFunction(MethodSymbol function, ExprFuncCallContext ctx) {
+        // 安全检查
+        if (function == null || ctx == null) {
+            CompilerLogger.error(ctx, "函数或调用上下文为空");
+            return null;
+        }
+            
+        // 处理内置函数
+        if (function.builtin) {
+            if ("print".equals(function.getName())) {
+                for (int i = 1; i < ctx.expr().size(); i++) {
+                    Object value = visit(ctx.expr(i));
+                    logger.info("输出: {}", value);
+                }
+                return null;
+            }
+            // 可以添加其他内置函数的处理
+        }
+        
+        // 创建函数调用空间
+        FunctionSpace functionSpace = new FunctionSpace(function.getName(), function, this.currentSpace);
+        
+        // 收集参数名和值
+        int paramCount = function.getMembers().size();
+        String[] paramNames = function.getMembers().keySet().toArray(new String[0]);
+        
+        // 确保参数数量匹配
+        if (ctx.expr().size() - 1 != paramCount) {
+            CompilerLogger.error(ctx, "函数 " + function.getName() + " 需要 " + paramCount + 
+                               " 个参数，但提供了 " + (ctx.expr().size() - 1) + " 个");
+            return null;
+        }
+        
+        // 处理参数
+        for (int i = 0; i < paramCount; i++) {
+            if (i + 1 >= ctx.expr().size()) {
+                CompilerLogger.error(ctx, "参数索引越界: " + (i + 1));
+                return null;
+            }
+            
+            Object paramValue = visit(ctx.expr(i + 1));
+            functionSpace.define(paramNames[i], paramValue);
+        }
+        
+        // 保存当前空间并切换到函数空间
+        stashSpace(functionSpace);
+        
+        // 执行函数体
+        Object result = null;
+        try {
+            if (function.blockStmt != null) {
+                visit(function.blockStmt);
+            } else {
+                CompilerLogger.error(ctx, "函数 " + function.getName() + " 没有函数体");
+            }
+        } catch (ReturnValue returnValue) {
+            result = returnValue.value;
+        } catch (Exception e) {
+            CompilerLogger.error(ctx, "执行函数 " + function.getName() + " 时发生错误: " + e.getMessage());
+        }
+        
+        // 恢复原空间
+        restoreSpace();
+        
+        return result;
     }
 }

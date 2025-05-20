@@ -13,9 +13,6 @@ import org.teachfx.antlr4.ep19.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.VariableSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.TypedefSymbol;
-import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -29,7 +26,6 @@ import java.util.Deque;
  * @purpose 解决变量的定位问题--属于哪个作用域
  */
 public class LocalDefine extends CymbolASTVisitor<Object> {
-    private static final Logger logger = LoggerFactory.getLogger(LocalDefine.class);
     private final ParseTreeProperty<Scope> scopes;
     private Scope currentScope = null;
     private Deque<Scope> scopeStack;
@@ -37,25 +33,16 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     public LocalDefine() {
         BaseScope globalScope = new GlobalScope();
         currentScope = globalScope;
-        
-        // 在全局作用域中注册所有基本类型
-        globalScope.define(new Symbol("int", TypeTable.INT));
-        globalScope.define(new Symbol("float", TypeTable.FLOAT));
-        globalScope.define(new Symbol("bool", TypeTable.BOOLEAN));
-        globalScope.define(new Symbol("char", TypeTable.CHAR));
-        globalScope.define(new Symbol("void", TypeTable.VOID));
-        globalScope.define(new Symbol("String", TypeTable.STRING));
-        globalScope.define(new Symbol("Object", TypeTable.OBJECT));
-        
-        // 注册内置函数
         MethodSymbol printFuncSymbol = new MethodSymbol("print", globalScope, null);
         printFuncSymbol.builtin = true;
-        printFuncSymbol.getMembers().put("value", new Symbol("value", TypeTable.OBJECT));
+        printFuncSymbol.getMembers().put("value", TypeTable.OBJECT);
+
         globalScope.define(printFuncSymbol);
 
         /// Define main entry
         MethodSymbol mainFuncSymbol = new MethodSymbol("main", globalScope, null);
         mainFuncSymbol.builtin = true;
+
         globalScope.define(mainFuncSymbol);
 
         scopes = new ParseTreeProperty<Scope>();
@@ -80,21 +67,17 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
 
     @Override
     public Object visitStructDecl(StructDeclContext ctx) {
-        String structName = ctx.ID().getText();
-        logger.debug("定义结构体: {}", structName);
-        
-        StructSymbol struct = new StructSymbol(structName, currentScope, ctx);
-        currentScope.define(struct);
-        
-        scopes.put(ctx, struct);
-        
-        Scope savedScope = currentScope;
-        currentScope = struct;
-        
+        StructSymbol structScope = new StructSymbol(Util.name(ctx), currentScope, ctx);
+        // mark struct symbol to current scope
+        currentScope.define(structScope);
+        // mark ctx to scope
+        stashScope(ctx);
+        // change scope
+        pushScope(structScope);
+        // visit sub-nodes
         super.visitStructDecl(ctx);
-        
-        currentScope = savedScope;
-        
+        // restore scope
+        popScope();
         return null;
     }
 
@@ -139,17 +122,11 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
 
     @Override
     public Object visitStructMemeber(StructMemeberContext ctx) {
-        logger.debug("处理结构体成员: {}", Util.name(ctx));
         if (ctx.ID() != null) {
             stashScope(ctx);
             VariableSymbol member = new VariableSymbol(Util.name(ctx));
-            
-            if (currentScope instanceof StructSymbol) {
-                StructSymbol structScope = (StructSymbol) currentScope;
-                structScope.addField(member);
-            } else {
-                logger.error("错误：当前作用域不是结构体作用域");
-            }
+            System.out.println("get struct - " + Util.name(ctx));
+            currentScope.define(member);
         }
         return super.visitStructMemeber(ctx);
     }
@@ -214,6 +191,7 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     }
 
     @Override
+@Override
     public Object visitStat(StatContext ctx) {
         stashScope(ctx);
         return super.visitStat(ctx);
@@ -232,13 +210,15 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     }
 
     @Override
-    public Object visitTypedefDecl(TypedefDeclContext ctx) {
         String typeName = ctx.ID().getText();
         String targetTypeName = ctx.type().getText();
-        logger.debug("定义类型别名: {} -> {}", typeName, targetTypeName);
         
-        TypedefSymbol typedef = new TypedefSymbol(typeName, null);
-        currentScope.define(typedef);
+        // 创建TypedefSymbol，但暂时不设置目标类型（因为可能还未定义）
+        // 目标类型将在LocalResolver阶段解析
+        TypedefSymbol typedefSymbol = new TypedefSymbol(typeName, null, ctx);
+        
+        currentScope.define(typedefSymbol);
+        System.out.println("define typedef: " + typeName + " -> " + targetTypeName);
         
         stashScope(ctx);
         return null;

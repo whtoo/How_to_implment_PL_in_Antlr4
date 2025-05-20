@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <Property name="logPath">logs</Property>
+        <Property name="logPattern">%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Property>
+    </Properties>
+    
+    <Appenders>
+        <!-- 控制台输出 -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${logPattern}"/>
+        </Console>
+        
+        <!-- 文件输出 -->
+        <RollingFile name="FileAppender" fileName="${logPath}/cymbol-compiler.log"
+                     filePattern="${logPath}/cymbol-compiler-%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="${logPattern}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+    </Appenders>
+    
+    <Loggers>
+        <!-- 根日志记录器设置为WARN级别 -->
+        <Root level="WARN">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileAppender"/>
+        </Root>
+        
+        <!-- 编译器包的日志级别设置 -->
+        <Logger name="org.teachfx.antlr4.ep19" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileAppender"/>
+        </Logger>
+        
+        <!-- 解析器包的日志级别设置 -->
+        <Logger name="org.teachfx.antlr4.ep19.parser" level="WARN" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileAppender"/>
+        </Logger>
+    </Loggers>
+</Configuration> 

@@ -2,6 +2,8 @@
 
 **Every watch and star is the fuel and firewood for this dream journey**
 [![Security Status](https://www.murphysec.com/platform3/v31/badge/1718907022023983104.svg)](https://www.murphysec.com/console/report/1718907021914931200/1718907022023983104)
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/whtoo/How_to_implment_PL_in_Antlr4)
 **Passion like fire, momentum like wind. Will like oil, flowing endlessly.**
 
 ## 1. Global Overview

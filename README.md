@@ -3,6 +3,8 @@
 ## 项目简介
 **每一个watch和star都是这场梦幻之旅的⛽️与干柴**
 [![Security Status](https://www.murphysec.com/platform3/v31/badge/1718907022023983104.svg)](https://www.murphysec.com/console/report/1718907021914931200/1718907022023983104)
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/whtoo/How_to_implment_PL_in_Antlr4)
 **兴❤️如🔥，其势如风.意许如油，汩汩不息。**
 
 ## 为什么会有这个系列的教程？

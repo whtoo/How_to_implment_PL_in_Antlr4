@@ -7,9 +7,9 @@ cd "$(dirname "$0")/.." || exit 1
 show_help() {
     echo "用法: $0 <命令> <模块名>"
     echo "命令:"
-    echo "  compile  - 编译指定模块"
+    echo "  compile  - 编译指定模块 (依赖 clean)"
     echo "  run      - 运行指定模块"
-    echo "  test     - 运行指定模块的测试"
+    echo "  test     - 运行指定模块的测试 (依赖 compile)"
     echo "  clean    - 清理指定模块的编译文件"
     echo "  help     - 显示此帮助信息"
     echo "模块名:"
@@ -29,6 +29,22 @@ validate_module() {
     fi
 }
 
+# 清理模块
+clean_module() {
+    local module=$1
+    echo "正在清理 $module..."
+    mvn clean -pl "$module"
+}
+
+# 编译模块 (依赖 clean)
+compile_module() {
+    local module=$1
+    # 先清理
+    clean_module "$module"
+    echo "正在编译 $module..."
+    mvn compile -pl "$module"
+}
+
 # 主逻辑
 if [ "$#" -lt 1 ] || [ "$1" = "help" ]; then
     show_help
@@ -45,8 +61,7 @@ case $command in
             exit 1
         fi
         validate_module "$module"
-        echo "正在编译 $module..."
-        mvn clean compile -pl "$module"
+        compile_module "$module"
         ;;
     run)
         if [ -z "$module" ]; then
@@ -66,6 +81,8 @@ case $command in
             exit 1
         fi
         validate_module "$module"
+        # 先编译 (编译会自动清理)
+        compile_module "$module"
         echo "正在运行 $module 的测试..."
         mvn test -pl "$module"
         ;;
@@ -75,8 +92,7 @@ case $command in
             exit 1
         fi
         validate_module "$module"
-        echo "正在清理 $module..."
-        mvn clean -pl "$module"
+        clean_module "$module"
         ;;
     *)
         echo "错误: 未知的命令 '$command'"

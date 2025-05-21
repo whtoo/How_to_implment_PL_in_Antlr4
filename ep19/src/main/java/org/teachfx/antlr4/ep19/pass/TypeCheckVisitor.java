@@ -126,208 +126,233 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
     @Override
     public Type visitExprFuncCall(ExprFuncCallContext ctx) {
-        // 检查函数名是否存在
-        if (ctx.ID() == null) {
-            CompilerLogger.error(ctx, "函数调用缺少函数名");
-            return TypeTable.VOID;
-        }
+        List<ExprContext> argExprsNodes;
+        List<Type> actualArgTypes = new ArrayList<>();
+        MethodSymbol methodToCall;
+        String callNameForErrorMsg;
 
-        // 获取函数名
-        String funcName = ctx.ID().getText();
-        CompilerLogger.debug(String.format("访问函数 -> : %s", ctx.getText()));
+        // Path 1: Direct function call like funcName(arg1, arg2)
+        if (ctx.ID() != null) {
+            callNameForErrorMsg = ctx.ID().getText();
+            CompilerLogger.debug(String.format("访问函数调用(ID): %s", callNameForErrorMsg));
 
-        // 特殊处理内置函数print
-        if (funcName.equals("print")) {
-            // 收集参数类型，但不进行严格检查，print可以接受任何类型
-            for (int i = 1; i < ctx.expr().size(); i++) {
-                visit(ctx.expr(i)); // 只是为了类型检查，不使用返回值
+            if (callNameForErrorMsg.equals("print")) {
+                // For "print", visit arguments for any side effects or nested checks, but no strict type checking here.
+                // Assuming ctx.expr() holds the arguments directly when ctx.ID() is present.
+                argExprsNodes = ctx.expr() != null ? ctx.expr() : new ArrayList<>();
+                for (ExprContext argExpr : argExprsNodes) {
+                    visit(argExpr);
+                }
+                return TypeTable.VOID; // print returns void
             }
-            return TypeTable.VOID; // print返回void
-        }
 
-        ExprContext firstExpr = ctx.expr(0);
-        // 处理结构体方法调用
-        if (firstExpr instanceof ExprStructFieldAccessContext) {
-            ExprStructFieldAccessContext fieldAccessCtx = (ExprStructFieldAccessContext) firstExpr;
+            Scope scope = scopeUtil.get(ctx);
+            Symbol symbol = scope.resolve(callNameForErrorMsg);
 
-            // 获取结构体类型和方法名
-            Type structType = visit(fieldAccessCtx.expr(0));
-            if (structType == null) {
-                CompilerLogger.error(ctx, "无法确定结构体类型");
+            if (!(symbol instanceof MethodSymbol)) {
+                CompilerLogger.error(ctx, "未定义的函数: " + callNameForErrorMsg);
+                return TypeTable.VOID;
+            }
+            methodToCall = (MethodSymbol) symbol;
+            // Assuming ctx.expr() holds arguments if ctx.ID() is present.
+            // If grammar uses exprList: argExprsNodes = ctx.exprList() != null ? ctx.exprList().expr() : new ArrayList<>();
+            argExprsNodes = ctx.expr() != null ? ctx.expr() : new ArrayList<>();
+
+        } else { // Path 2: Call on an expression, e.g., struct.method(args) or funcPtr(args)
+            if (ctx.expr().isEmpty()) {
+                CompilerLogger.error(ctx, "函数调用缺少可调用表达式和参数");
                 return TypeTable.VOID;
             }
 
-            // 处理typedef可能指向的结构体
-            if (structType instanceof TypedefSymbol) {
-                Type targetType = ((TypedefSymbol) structType).getTargetType();
-                if (targetType instanceof StructSymbol) {
-                    structType = targetType;
-                } else {
-                    CompilerLogger.error(ctx, "类型 " + structType + " 不是结构体类型");
+            ExprContext callableExpr = ctx.expr(0);
+            callNameForErrorMsg = callableExpr.getText(); // Initial name for errors, may be refined for structs
+            CompilerLogger.debug(String.format("访问函数调用(expr): %s", callNameForErrorMsg));
+
+            // Arguments are expr(1), expr(2), ...
+            argExprsNodes = new ArrayList<>();
+            for (int i = 1; i < ctx.expr().size(); i++) {
+                argExprsNodes.add(ctx.expr(i));
+            }
+
+            if (callableExpr instanceof ExprStructFieldAccessContext) {
+                ExprStructFieldAccessContext fieldAccessCtx = (ExprStructFieldAccessContext) callableExpr;
+                Type structInstanceType = visit(fieldAccessCtx.expr(0)); // Type of the struct instance
+
+                if (structInstanceType == null) {
+                    CompilerLogger.error(fieldAccessCtx.expr(0), "无法确定结构体实例 " + fieldAccessCtx.expr(0).getText() + " 的类型");
                     return TypeTable.VOID;
                 }
-            }
 
-            if (!(structType instanceof StructSymbol)) {
-                CompilerLogger.error(ctx, "类型 " + structType + " 不是结构体类型");
-                return TypeTable.VOID;
-            }
-
-            StructSymbol structSymbol = (StructSymbol) structType;
-            String methodName = fieldAccessCtx.expr(1).getText();
-
-            // 查找方法
-            Symbol methodSymbol = structSymbol.resolveMember(methodName);
-            if (methodSymbol == null) {
-                CompilerLogger.error(ctx, "结构体 " + structSymbol.getName() + " 没有名为 " + methodName + " 的成员");
-                return TypeTable.VOID;
-            }
-
-            if (!(methodSymbol instanceof MethodSymbol)) {
-                CompilerLogger.error(ctx, methodName + " 不是一个方法");
-                return TypeTable.VOID;
-            }
-
-            MethodSymbol method = (MethodSymbol) methodSymbol;
-
-            // 收集参数类型
-            List<Type> argTypes = new ArrayList<>();
-            for (int i = 1; i < ctx.expr().size(); i++) {
-                Type argType = visit(ctx.expr(i));
-                if (argType != null) { // 可能为null表示参数表达式有错误
-                    argTypes.add(argType);
+                // TypedefSymbol Handling
+                if (structInstanceType instanceof TypedefSymbol) {
+                    Type targetType = ((TypedefSymbol) structInstanceType).getTargetType();
+                    if (targetType instanceof StructSymbol) {
+                        structInstanceType = targetType;
+                    } else {
+                        CompilerLogger.error(fieldAccessCtx.expr(0), "类型别名 " + structInstanceType.getName() + " 解析后 (" + targetType.getName() + ") 不是结构体类型");
+                        return TypeTable.VOID;
+                    }
                 }
-            }
 
-            // 获取方法形参类型
-            List<Symbol> parameters = new ArrayList<>(method.getMembers().values());
-            Type[] paramTypes = parameters.stream()
-                    .map(param -> param.type)
-                    .toArray(Type[]::new);
+                if (!(structInstanceType instanceof StructSymbol)) {
+                    CompilerLogger.error(fieldAccessCtx.expr(0), "表达式 " + fieldAccessCtx.expr(0).getText() + " (类型: " + structInstanceType.getName() + ") 不是一个结构体实例");
+                    return TypeTable.VOID;
+                }
 
-            // 检查参数类型兼容性
-            TypeChecker.checkFunctionCallCompatibility(
-                    paramTypes,
-                    argTypes.toArray(new Type[0]),
-                    ctx
-            );
+                StructSymbol structSymbol = (StructSymbol) structInstanceType;
+                String methodName;
 
-            // 返回方法返回值类型
-            return method.type;
-        }
+                // Method Name Extraction from struct.member
+                if (fieldAccessCtx.ID() != null) { // Prefer expr.ID form
+                    methodName = fieldAccessCtx.ID().getText();
+                } else if (fieldAccessCtx.expr(1) != null && (fieldAccessCtx.expr(1) instanceof PrimaryIDContext || fieldAccessCtx.expr(1).getChildCount() == 1 && fieldAccessCtx.expr(1).getChild(0) instanceof PrimaryIDContext)) {
+                    methodName = fieldAccessCtx.expr(1).getText();
+                } else if (fieldAccessCtx.expr(1) != null) {
+                    methodName = fieldAccessCtx.expr(1).getText();
+                    CompilerLogger.warning(fieldAccessCtx.expr(1), "方法名 '" + methodName + "' 从复杂表达式中提取，可能不准确: " + fieldAccessCtx.expr(1).getText());
+                }
+                else {
+                    CompilerLogger.error(fieldAccessCtx, "无法从结构体字段访问中提取方法名: " + fieldAccessCtx.getText());
+                    return TypeTable.VOID;
+                }
+                callNameForErrorMsg = structSymbol.getName() + "." + methodName; // Refined name for error messages
 
-        // 处理普通函数调用
-        if (firstExpr.getText().contains(".")) {
-            // 如果是点号表达式但不是ExprStructFieldAccessContext，可能是语法错误
-            CompilerLogger.error(ctx, "无效的方法调用表达式: " + firstExpr.getText());
-            return TypeTable.VOID;
-        }
+                Symbol memberSymbol = structSymbol.resolveMember(methodName);
+                if (memberSymbol == null) {
+                    CompilerLogger.error(fieldAccessCtx, "结构体 " + structSymbol.getName() + " 没有名为 '" + methodName + "' 的成员");
+                    return TypeTable.VOID;
+                }
+                if (!(memberSymbol instanceof MethodSymbol)) {
+                    CompilerLogger.error(fieldAccessCtx, "'" + methodName + "' 在结构体 " + structSymbol.getName() + " 中不是一个方法");
+                    return TypeTable.VOID;
+                }
+                methodToCall = (MethodSymbol) memberSymbol;
 
-        // 获取函数名
-        String methodName = firstExpr.getText();
-        CompilerLogger.debug(String.format("访问函数 -> : %s", ctx.getText()));
-
-        // 对于非内置函数，尝试从符号表中解析
-        Scope scope = scopeUtil.get(ctx);
-        Symbol symbol = scope.resolve(methodName);
-
-        if (!(symbol instanceof MethodSymbol)) {
-            CompilerLogger.error(ctx, "未定义的函数: " + methodName);
-            return TypeTable.VOID;
-        }
-
-        MethodSymbol methodSymbol = (MethodSymbol) symbol;
-
-        // 收集参数类型
-        List<Type> argTypes = new ArrayList<>();
-        for (int i = 1; i < ctx.expr().size(); i++) {
-            Type argType = visit(ctx.expr(i));
-            if (argType != null) { // 可能为null表示参数表达式有错误
-                argTypes.add(argType);
+            } else {
+                // Fallback for other callable expressions (e.g., function pointers - basic support)
+                CompilerLogger.warning(callableExpr, "尝试通过文本名称解析可调用表达式: " + callableExpr.getText() + ". 这对于函数指针或复杂可调用对象可能无效.");
+                Scope scope = scopeUtil.get(ctx);
+                Symbol symbol = scope.resolve(callableExpr.getText());
+                if (!(symbol instanceof MethodSymbol)) {
+                    CompilerLogger.error(ctx, "表达式 " + callableExpr.getText() + " 未解析为可调用函数");
+                    return TypeTable.VOID;
+                }
+                methodToCall = (MethodSymbol) symbol;
             }
         }
 
-        // 获取函数形参类型
-        List<Symbol> parameters = new ArrayList<>(methodSymbol.getMembers().values());
-        Type[] paramTypes = parameters.stream()
+        // Common logic: Collect actual argument types
+        for (ExprContext argExpr : argExprsNodes) {
+            Type argType = visit(argExpr);
+            if (argType == null) { // Error visiting arg, should have been logged by visit()
+                return TypeTable.VOID; // Stop further checking for this call
+            }
+            actualArgTypes.add(argType);
+        }
+
+        // Get formal parameter types from the resolved method
+        List<Symbol> formalParams = new ArrayList<>(methodToCall.getMembers().values());
+        Type[] formalParamTypes = formalParams.stream()
                 .map(param -> param.type)
                 .toArray(Type[]::new);
 
-        // 检查参数类型兼容性
+        // Check compatibility
+        // Assuming TypeChecker.checkFunctionCallCompatibility logs errors internally using the context
         TypeChecker.checkFunctionCallCompatibility(
-                paramTypes,
-                argTypes.toArray(new Type[0]),
-                ctx
+                formalParamTypes,
+                actualArgTypes.toArray(new Type[0]),
+                ctx // Pass full context for error reporting line numbers
         );
+        // If checkFunctionCallCompatibility returns a boolean status, it should be checked here.
+        // For now, assuming it logs errors and doesn't throw/return status that needs immediate handling.
 
-        // 返回函数返回值类型
-        return methodSymbol.type;
+        // Return the method's return type
+        return methodToCall.type;
     }
 
     @Override
     public Type visitExprStructFieldAccess(ExprStructFieldAccessContext ctx) {
-        // 确保我们先访问子节点，获取类型信息
-        super.visitExprStructFieldAccess(ctx);
+        // The first child expression (e.g., expr(0)) should be the struct instance.
+        // The ID child should be the member name.
+        // Example ANTLR grammar: exprStructFieldAccess : expr '.' ID ;
+        
+        if (ctx.expr() == null || ctx.expr().isEmpty()) {
+            CompilerLogger.error(ctx, "无效的结构体字段访问：缺少结构体实例表达式。");
+            return TypeTable.VOID;
+        }
+        
+        ExprContext structInstanceExprCtx = ctx.expr(0); // Assuming expr(0) is the struct instance
+        Type structType = visit(structInstanceExprCtx); // Ensure the struct instance's type is resolved first
 
-        // 1. 检查左侧是否为结构体类型
-        ExprContext exprCtx = null;
-        if (ctx.getChildCount() > 0 && ctx.getChild(0) instanceof ExprContext) {
-            exprCtx = (ExprContext) ctx.getChild(0);
-        } else {
-            CompilerLogger.error(ctx, "无效的结构体字段访问表达式");
+        if (structType == null || structType == TypeTable.VOID) {
+            CompilerLogger.error(structInstanceExprCtx, "无法确定结构体实例表达式 '" + structInstanceExprCtx.getText() + "' 的类型。");
+            types.put(ctx, TypeTable.VOID);
             return TypeTable.VOID;
         }
 
-        Type structType = types.get(exprCtx);
-        if (structType == null) {
-            CompilerLogger.error(ctx, "无法确定结构体表达式的类型");
-            return TypeTable.VOID;
-        }
-
-        // 处理typedef可能指向的结构体
+        // Handle TypedefSymbol: resolve it to the actual StructSymbol if applicable.
         if (structType instanceof TypedefSymbol) {
-            Type targetType = ((TypedefSymbol) structType).getTargetType();
+            TypedefSymbol typedef = (TypedefSymbol) structType;
+            Type targetType = typedef.getTargetType(); // Assumes getTargetType() fully resolves.
             if (targetType instanceof StructSymbol) {
                 structType = targetType;
             } else {
-                CompilerLogger.error(ctx, "类型 " + structType + " 不是结构体类型");
+                CompilerLogger.error(ctx, "类型别名 '" + typedef.getName() + "' 解析后得到的类型 '" + (targetType != null ? targetType.getName() : "null") + "' 不是一个结构体类型。");
+                types.put(ctx, TypeTable.VOID);
                 return TypeTable.VOID;
             }
         }
 
         if (!(structType instanceof StructSymbol)) {
-            CompilerLogger.error(ctx, exprCtx.getText() + " 不是一个结构体实例");
+            CompilerLogger.error(structInstanceExprCtx, "表达式 '" + structInstanceExprCtx.getText() + "' (实际类型: " + structType.getName() + ") 不是结构体类型，无法访问其成员。");
+            types.put(ctx, TypeTable.VOID);
             return TypeTable.VOID;
         }
 
-        // 2. 检查右侧字段是否存在于结构体中
         StructSymbol structSymbol = (StructSymbol) structType;
-        String memberName = "";
-        if (ctx.getChildCount() >= 3) { // struct.field 格式的结构
-            memberName = ctx.getChild(2).getText();
-        } else {
-            CompilerLogger.error(ctx, "无效的结构体字段访问表达式");
+        String memberName;
+
+        // Member Name Extraction: Prefer ID if available (grammar: expr '.' ID)
+        // Fallback to expr(1) if grammar is expr '.' expr (where expr(1) is an identifier)
+        if (ctx.ID() != null) {
+            memberName = ctx.ID().getText();
+        } else if (ctx.expr().size() > 1 && ctx.expr(1) instanceof PrimaryIDContext) {
+            // This case might be less common if ID() is used for the member name.
+            // It implies a grammar like `expr(0) DOT expr(1)` where expr(1) is the identifier.
+            memberName = ctx.expr(1).getText();
+        } else if (ctx.expr().size() > 1) {
+             memberName = ctx.expr(1).getText();
+             CompilerLogger.warning(ctx.expr(1), "成员名称 '" + memberName + "' 从复杂表达式 '" + ctx.expr(1).getText() + "' 中提取，用于类型检查。这可能表示非标准用法或潜在的语法歧义。");
+        }
+        else {
+            CompilerLogger.error(ctx, "无效的结构体字段访问：无法提取成员名称。");
+            types.put(ctx, TypeTable.VOID);
             return TypeTable.VOID;
         }
 
         Symbol memberSymbol = structSymbol.resolveMember(memberName);
 
         if (memberSymbol == null) {
-            CompilerLogger.error(ctx, "结构体 " + structSymbol.getName() + " 没有名为 " + memberName + " 的成员");
+            CompilerLogger.error(ctx, "结构体 '" + structSymbol.getName() + "' 中没有名为 '" + memberName + "' 的成员。");
+            types.put(ctx, TypeTable.VOID);
             return TypeTable.VOID;
         }
 
-        // 3. 将成员的类型赋给整个表达式
-        Type memberType = memberSymbol.type;
-        types.put(ctx, memberType);
-
-        // 4. 如果是方法成员，确保类型正确
+        // Type Determination and Assignment for the ExprStructFieldAccessContext node
         if (memberSymbol instanceof MethodSymbol) {
-            // MethodSymbol已经实现了Type接口，所以可以直接使用
-            types.put(ctx, (Type)memberSymbol);
+            // For a method member, its "type" in an expression context is the method itself.
+            types.put(ctx, (MethodSymbol) memberSymbol);
+            return (MethodSymbol) memberSymbol;
+        } else {
+            // For a data field member, its type is the declared type of the field.
+            if (memberSymbol.type == null) {
+                 CompilerLogger.error(ctx, "成员字段 '" + memberName + "' 在结构体 '" + structSymbol.getName() + "' 中没有定义的类型。");
+                 types.put(ctx, TypeTable.VOID);
+                 return TypeTable.VOID;
+            }
+            types.put(ctx, memberSymbol.type);
+            return memberSymbol.type;
         }
-
-        return memberType;
     }
 
     @Override

@@ -165,6 +165,19 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         return ret;
     }
 
+    // 处理参数
+    private void processMethodParameters(ExprFuncCallContext ctx, int paramCount, String[] paramNames, FunctionSpace methodSpace) {
+        for (int i = 0; i < paramCount; i++) {
+            int paramIndex = i + 1; // 参数在ctx.expr()中的实际索引
+            if (paramIndex >= ctx.expr().size()) {
+                CompilerLogger.error(ctx, "方法调用参数索引越界: " + paramIndex);
+                return; // 这里应该抛出异常或返回错误，取决于具体错误处理策略
+            }
+            Object paramValue = visit(ctx.expr(paramIndex));
+            methodSpace.define(paramNames[i], paramValue);
+        }
+    }
+
     @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         // 检查是否有函数表达式和参数

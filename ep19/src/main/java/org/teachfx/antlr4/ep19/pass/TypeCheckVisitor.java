@@ -151,10 +151,11 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         // 特殊处理内置函数print
         if (funcName.equals("print")) {
             // 收集参数类型，但不进行严格检查，print可以接受任何类型
-            if (ctx.expr() != null) {
-                for (int i = 0; i < ctx.expr().size(); i++) {
-                    if (ctx.expr(i) != null) {
-                        visit(ctx.expr(i)); // 只是为了类型检查，不使用返回值
+            List<ExprContext> exprContexts = ctx.expr();
+            if (exprContexts != null && !exprContexts.isEmpty()) {
+                for (ExprContext exprCtx : exprContexts) {
+                    if (exprCtx != null) {
+                        visit(exprCtx); // 只是为了类型检查，不使用返回值
                     }
                 }
             }
@@ -171,7 +172,7 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         Symbol symbol = scope.resolve(funcName);
 
         if (symbol == null) {
-            CompilerLogger.error(ctx, "未定义的函数: " + funcName);
+            CompilerLogger.error(ctx, "表达式不是一个函数: " + funcName);
             return TypeTable.VOID;
         }
 
@@ -184,13 +185,16 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
         // 收集参数类型 - 所有的expr都是参数
         List<Type> argTypes = new ArrayList<>();
-        if (ctx.expr() != null) {
-            for (int i = 0; i < ctx.expr().size(); i++) {
-                ExprContext exprCtx = ctx.expr(i);
+        List<ExprContext> exprContexts = ctx.expr();
+        if (exprContexts != null && !exprContexts.isEmpty()) {
+            for (ExprContext exprCtx : exprContexts) {
                 if (exprCtx != null) {
                     Type argType = visit(exprCtx);
                     if (argType != null) { // 可能为null表示参数表达式有错误
                         argTypes.add(argType);
+                    } else {
+                        // 如果参数类型为null，添加VOID类型作为占位符
+                        argTypes.add(TypeTable.VOID);
                     }
                 }
             }
@@ -199,7 +203,7 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         // 获取函数形参类型
         List<Symbol> parameters = new ArrayList<>(methodSymbol.getMembers().values());
         Type[] paramTypes = parameters.stream()
-                .map(param -> param.type)
+                .map(param -> param.type != null ? param.type : TypeTable.VOID) // 防止NPE
                 .toArray(Type[]::new);
 
         // 检查参数类型兼容性
@@ -210,13 +214,28 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         );
 
         // 返回函数返回值类型
-        return methodSymbol.type;
+        return methodSymbol.type != null ? methodSymbol.type : TypeTable.VOID; // 防止NPE
     }
 
     @Override
     public Type visitExprStructMethodCall(ExprStructMethodCallContext ctx) {
         // 获取结构体表达式和方法名
-        ExprContext structExpr = ctx.expr(0); // 结构体表达式
+        List<ExprContext> exprContexts = ctx.expr();
+        if (exprContexts == null || exprContexts.isEmpty()) {
+            CompilerLogger.error(ctx, "无效的结构体方法调用");
+            return TypeTable.VOID;
+        }
+
+        ExprContext structExpr = exprContexts.get(0); // 结构体表达式
+        if (structExpr == null) {
+            CompilerLogger.error(ctx, "无效的结构体表达式");
+            return TypeTable.VOID;
+        }
+
+        if (ctx.ID() == null) {
+            CompilerLogger.error(ctx, "无效的方法名");
+            return TypeTable.VOID;
+        }
         String methodName = ctx.ID().getText(); // 方法名
 
         // 获取结构体类型
@@ -238,7 +257,7 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         }
 
         if (!(structType instanceof StructSymbol)) {
-            CompilerLogger.error(ctx, "类型 " + structType + " 不是结构体类型");
+            CompilerLogger.error(ctx, "不是结构体类型");
             return TypeTable.VOID;
         }
 
@@ -247,7 +266,7 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         // 查找方法
         Symbol methodSymbol = structSymbol.resolveMember(methodName);
         if (methodSymbol == null) {
-            CompilerLogger.error(ctx, "结构体 " + structSymbol.getName() + " 没有名为 " + methodName + " 的方法");
+            CompilerLogger.error(ctx, "没有名为 " + methodName + " 的方法");
             return TypeTable.VOID;
         }
 
@@ -260,10 +279,13 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
         // 收集参数类型 - 从expr(1)开始，因为expr(0)是结构体表达式
         List<Type> argTypes = new ArrayList<>();
-        for (int i = 1; i < ctx.expr().size(); i++) {
-            Type argType = visit(ctx.expr(i));
-            if (argType != null) {
-                argTypes.add(argType);
+        for (int i = 1; i < exprContexts.size(); i++) {
+            ExprContext exprCtx = exprContexts.get(i);
+            if (exprCtx != null) {
+                Type argType = visit(exprCtx);
+                if (argType != null) {
+                    argTypes.add(argType);
+                }
             }
         }
 
@@ -322,19 +344,21 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
     @Override
     public Type visitExprStructFieldAccess(ExprStructFieldAccessContext ctx) {
-        // 确保我们先访问子节点，获取类型信息
-        super.visitExprStructFieldAccess(ctx);
+        // 不调用super.visit，避免字段名被当作独立标识符处理
 
-        // 1. 检查左侧是否为结构体类型
-        ExprContext exprCtx = null;
-        if (ctx.getChildCount() > 0 && ctx.getChild(0) instanceof ExprContext) {
-            exprCtx = (ExprContext) ctx.getChild(0);
-        } else {
-            CompilerLogger.error(ctx, "无效的结构体字段访问表达式");
+        // 根据语法 expr o='.' ID，获取结构体表达式和字段名
+        if (ctx.expr() == null) {
+            CompilerLogger.error(ctx, "结构体字段访问缺少结构体表达式");
             return TypeTable.VOID;
         }
 
-        Type structType = visit(exprCtx);
+        if (ctx.ID() == null) {
+            CompilerLogger.error(ctx, "结构体字段访问缺少字段名");
+            return TypeTable.VOID;
+        }
+
+        // 1. 检查左侧是否为结构体类型
+        Type structType = visit(ctx.expr());
         if (structType == null) {
             CompilerLogger.error(ctx, "无法确定结构体表达式的类型");
             return TypeTable.VOID;
@@ -358,13 +382,7 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
         // 2. 检查右侧字段是否存在于结构体中
         StructSymbol structSymbol = (StructSymbol) structType;
-        String memberName = "";
-        if (ctx.getChildCount() >= 3) { // struct.field 格式的结构
-            memberName = ctx.getChild(2).getText();
-        } else {
-            CompilerLogger.error(ctx, "无效的结构体字段访问表达式");
-            return TypeTable.VOID;
-        }
+        String memberName = ctx.ID().getText();
 
         Symbol memberSymbol = structSymbol.resolveMember(memberName);
 
@@ -512,12 +530,19 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
     private MethodSymbol findEnclosingFunction(StatReturnContext ctx) {
         // 从当前作用域向上查找，直到找到函数作用域
         Scope scope = scopeUtil.get(ctx);
+        if (scope == null) {
+            CompilerLogger.error(ctx, "无法获取return语句的作用域");
+            return null;
+        }
+
         while (scope != null) {
             if (scope instanceof MethodSymbol) {
                 return (MethodSymbol) scope;
             }
             scope = scope.getEnclosingScope();
         }
+
+        CompilerLogger.error(ctx, "return语句不在函数内部");
         return null;
     }
 }

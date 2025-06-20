@@ -149,6 +149,51 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     }
 
     @Override
+    public Object visitExprStructFieldAccess(ExprStructFieldAccessContext ctx) {
+        // 先访问结构体表达式，确保其类型被正确解析
+        if (ctx.expr() != null) {
+            visit(ctx.expr());
+        }
+
+        // 获取结构体表达式和字段名
+        String fieldName = ctx.ID() != null ? ctx.ID().getText() : "";
+
+        // 获取结构体类型
+        Type structType = types.get(ctx.expr());
+        if (structType != null) {
+            // 处理typedef可能指向的结构体
+            if (structType instanceof TypedefSymbol) {
+                Type targetType = ((TypedefSymbol) structType).getTargetType();
+                if (targetType instanceof StructSymbol) {
+                    structType = targetType;
+                }
+            }
+
+            if (structType instanceof StructSymbol) {
+                StructSymbol structSymbol = (StructSymbol) structType;
+                Symbol fieldSymbol = structSymbol.resolveMember(fieldName);
+
+                if (fieldSymbol != null && fieldSymbol.type != null) {
+                    // 将字段的类型关联到整个字段访问表达式
+                    stashType(ctx, fieldSymbol.type);
+                    logger.debug("结构体字段访问 {} 的类型为 {}", ctx.getText(), fieldSymbol.type);
+                } else {
+                    stashType(ctx, TypeTable.VOID);
+                    logger.debug("结构体字段 {} 未找到或类型为空", fieldName);
+                }
+            } else {
+                stashType(ctx, TypeTable.VOID);
+                logger.debug("表达式 {} 不是结构体类型", ctx.expr().getText());
+            }
+        } else {
+            stashType(ctx, TypeTable.VOID);
+            logger.debug("无法确定结构体表达式 {} 的类型", ctx.expr().getText());
+        }
+
+        return null;
+    }
+
+    @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         super.visitExprFuncCall(ctx);
 
@@ -387,8 +432,33 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
 
     @Override
     public Object visitPrimaryID(PrimaryIDContext ctx) {
+        // 检查是否是结构体字段访问中的字段名，如果是则跳过类型设置
+        // 因为字段名应该由TypeCheckVisitor的visitExprStructFieldAccess处理
+        if (isFieldNameInStructAccess(ctx)) {
+            return null;
+        }
         setType(ctx);
         return null;
+    }
+
+    /**
+     * 检查当前ID是否是结构体字段访问表达式中的字段名
+     */
+    private boolean isFieldNameInStructAccess(PrimaryIDContext ctx) {
+        // 检查父节点链：PrimaryID -> ExprPrimary -> ExprStructFieldAccess
+        if (ctx.getParent() != null && 
+            ctx.getParent().getParent() != null &&
+            ctx.getParent().getParent() instanceof ExprStructFieldAccessContext) {
+
+            ExprStructFieldAccessContext fieldAccessCtx = (ExprStructFieldAccessContext) ctx.getParent().getParent();
+            // 检查当前ID是否是字段访问表达式的右侧（字段名）
+            // 根据语法 expr o='.' ID，字段名通过ID()方法获取
+            if (fieldAccessCtx.ID() != null &&
+                fieldAccessCtx.ID().getText().equals(ctx.getText())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Object visitPrimaryINT(PrimaryINTContext ctx) {

@@ -280,20 +280,25 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         // 特殊处理print函数（内置函数）
         if (funcName.equals("print")) {
             // 处理print函数：直接输出参数
-            if (ctx.expr() != null) {
+            if (ctx.expr() != null && !ctx.expr().isEmpty()) {
                 for (int i = 0; i < ctx.expr().size(); i++) {
                     ExprContext exprCtx = ctx.expr(i);
                     if (exprCtx != null) {
                         Object result = visit(exprCtx);
                         if (result != null) {
-                            System.out.println(result);
+                            System.out.print(result);
                             logger.info("输出: {}", result);
                         } else {
-                            System.out.println("null");
+                            System.out.print("null");
                             logger.info("输出: null");
                         }
                     }
                 }
+                // 在所有参数输出完毕后换行
+                System.out.println();
+            } else {
+                // 如果没有参数，只输出换行
+                System.out.println();
             }
             return null;
         }
@@ -342,15 +347,20 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
     @Override
     public Object visitExprStructFieldAccess(ExprStructFieldAccessContext ctx) {
-        // 首先获取结构体实例
-        if (ctx.expr().size() < 2) {
-            CompilerLogger.error(ctx, "结构体字段访问语法不正确");
+        // 根据语法 expr o='.' ID，获取结构体表达式和字段名
+        if (ctx.expr() == null) {
+            CompilerLogger.error(ctx, "结构体字段访问缺少结构体表达式");
+            return null;
+        }
+
+        if (ctx.ID() == null) {
+            CompilerLogger.error(ctx, "结构体字段访问缺少字段名");
             return null;
         }
 
         // 获取结构体对象和字段名
-        Object struct = visit(ctx.expr(0));
-        String fieldName = ctx.expr(1).getText();
+        Object struct = visit(ctx.expr());
+        String fieldName = ctx.ID().getText();
 
         if (struct == null) {
             CompilerLogger.error(ctx, "无法访问空结构体");
@@ -358,27 +368,12 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         }
 
         if (!(struct instanceof StructInstance)) {
-            // 如果不是结构体实例，返回表达式的值
-            return struct;
+            CompilerLogger.error(ctx, "表达式不是结构体实例，无法访问字段 " + fieldName);
+            return null;
         }
 
         // 从结构体实例中获取字段值
         StructInstance instance = (StructInstance) struct;
-
-        // 检查是否为方法访问
-        if (ctx.getParent() instanceof ExprFuncCallContext) {
-            // 如果父节点是函数调用，则这是一个方法访问
-            // 获取结构体类型
-            StructSymbol structSymbol = instance.getStructSymbol();
-            if (structSymbol != null) {
-                // 查找方法
-                Symbol methodSymbol = structSymbol.resolveMember(fieldName);
-                if (methodSymbol instanceof MethodSymbol) {
-                    // 返回方法符号，让函数调用处理
-                    return methodSymbol;
-                }
-            }
-        }
 
         // 普通字段访问
         if (!instance.hasField(fieldName)) {
@@ -401,23 +396,24 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         ExprContext rhs = ctx.expr(1);
 
         if (lhs instanceof ExprStructFieldAccessContext swaps) {
-            if (swaps.children == null || swaps.children.size() < 3 || swaps.expr().size() < 2) {
+            if (swaps.expr() == null || swaps.ID() == null) {
                 logger.error("错误: 结构体字段访问不完整");
                 return 0;
             }
 
-            String structName = swaps.children.get(0).getText();
-            Object instanceObj = this.currentSpace.get(structName);
+            // 获取结构体实例
+            Object structObj = visit(swaps.expr());
+            String fieldName = swaps.ID().getText();
 
-            if (!(instanceObj instanceof StructInstance)) {
-                logger.error("错误: {} 不是一个结构体实例", structName);
+            if (!(structObj instanceof StructInstance)) {
+                logger.error("错误: 表达式不是结构体实例，无法赋值字段 {}", fieldName);
                 return 0;
             }
 
-            StructInstance instance = (StructInstance) instanceObj;
+            StructInstance instance = (StructInstance) structObj;
             Object assignValue = visit(rhs);
             logger.debug("赋值 {} 为 {}", lhs.getText(), assignValue);
-            instance.update(swaps.expr(1).getText(), assignValue);
+            instance.update(fieldName, assignValue);
         } else {
             this.currentSpace.update(lhs.getText(), visit(rhs));
         }

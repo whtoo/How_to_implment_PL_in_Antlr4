@@ -84,7 +84,7 @@ public class StructAndTypedefTest {
     void testStructFieldAccessUndefinedFieldError() {
         String code = "struct Point { int x; } Point p; p.z = 1;";
         // This error is from TypeChecker.checkStructFieldAccess
-        assertCompilationError(code, "没有名为 z 的字段");
+        assertCompilationError(code, "没有名为 z 的成员");
     }
 
     @Test

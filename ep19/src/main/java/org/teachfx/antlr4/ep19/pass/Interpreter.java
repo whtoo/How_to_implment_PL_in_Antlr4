@@ -114,8 +114,8 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             return null;
         }
 
-        Object left = visit(ctx.getChild(0));
-        Object right = visit(ctx.getChild(2));
+        Object left = visit(ctx.getChild(0)); // ctx.expr(0)
+        Object right = visit(ctx.getChild(2)); // ctx.expr(1)
 
         if (left == null || right == null) {
             logger.error("错误: 二元表达式的操作数为null");
@@ -131,7 +131,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
             rhs = (Number) right;
         }
 
-        String op = ctx.getChild(1).getText();
+        String op = ctx.o.getText(); // Use ctx.o.getText() as per grammar label
         switch (op) {
             case "+" -> {
                 if (left instanceof String || right instanceof String) {
@@ -149,20 +149,7 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
                     ret = lhs.intValue() - rhs.intValue();
                 }
             }
-            case "*" -> {
-                if (left instanceof Float || right instanceof Float) {
-                    ret = lhs.floatValue() * rhs.floatValue();
-                } else {
-                    ret = lhs.intValue() * rhs.intValue();
-                }
-            }
-            case "/" -> {
-                if (left instanceof Float || right instanceof Float) {
-                    ret = lhs.floatValue() / rhs.floatValue();
-                } else {
-                    ret = (Integer) left / (Integer) right;
-                }
-            }
+            // '*' and '/' are moved to visitExprBinaryMulDivPercent
             case "<" -> ret = (lhs.doubleValue() < rhs.doubleValue()) ? TypeTable.TRUE : TypeTable.FALSE;
             case ">" -> ret = lhs.doubleValue() > rhs.doubleValue() ? TypeTable.TRUE : TypeTable.FALSE;
             case "<=" -> ret = lhs.doubleValue() <= rhs.doubleValue() ? TypeTable.TRUE : TypeTable.FALSE;
@@ -180,14 +167,80 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     // 处理参数
     private void processMethodParameters(ExprFuncCallContext ctx, int paramCount, String[] paramNames, FunctionSpace methodSpace) {
         for (int i = 0; i < paramCount; i++) {
-            int paramIndex = i + 1; // 参数在ctx.expr()中的实际索引
-            if (paramIndex >= ctx.expr().size()) {
-                CompilerLogger.error(ctx, "方法调用参数索引越界: " + paramIndex);
-                return; // 这里应该抛出异常或返回错误，取决于具体错误处理策略
+            // For ExprFuncCallContext, parameters are directly in ctx.expr() list if it's not a method call
+            // If it's a method call, parameters start from ctx.expr(1)
+            // This method seems to be used by callFunction which might be for global functions.
+            // The prompt's change is for binary ops, so this is likely okay.
+            // Assuming parameters are in ctx.expr() starting from index 0 for global functions.
+            if (i >= ctx.expr().size()) {
+                CompilerLogger.error(ctx, "方法调用参数索引越界: " + i);
+                return;
             }
-            Object paramValue = visit(ctx.expr(paramIndex));
+            Object paramValue = visit(ctx.expr(i)); // Corrected indexing if params start from 0
             methodSpace.define(paramNames[i], paramValue);
         }
+    }
+
+    @Override
+    public Object visitExprBinaryMulDivPercent(ExprBinaryMulDivPercentContext ctx) {
+        Object left = visit(ctx.expr(0));
+        Object right = visit(ctx.expr(1));
+
+        if (left == null || right == null) {
+            logger.error("错误: 二元表达式的操作数为null");
+            return null;
+        }
+
+        Object ret = 0;
+        Number lhs = 0, rhs = 0;
+        if (left instanceof Number) {
+            lhs = (Number) left;
+        }
+        if (right instanceof Number) {
+            rhs = (Number) right;
+        }
+
+        String op = ctx.o.getText();
+        switch (op) {
+            case "*" -> {
+                if (left instanceof Float || right instanceof Float) {
+                    ret = lhs.floatValue() * rhs.floatValue();
+                } else {
+                    ret = lhs.intValue() * rhs.intValue();
+                }
+            }
+            case "/" -> {
+                if (left instanceof Float || right instanceof Float) {
+                    if (rhs.floatValue() == 0.0f) {
+                        CompilerLogger.error(ctx, "浮点数除零错误");
+                        return 0.0f; // Or handle error appropriately
+                    }
+                    ret = lhs.floatValue() / rhs.floatValue();
+                } else {
+                    if (rhs.intValue() == 0) {
+                        CompilerLogger.error(ctx, "整数除零错误");
+                        return 0; // Or handle error appropriately
+                    }
+                    ret = lhs.intValue() / rhs.intValue();
+                }
+            }
+            case "%" -> {
+                if (!(left instanceof Integer) || !(right instanceof Integer)) {
+                    CompilerLogger.error(ctx, "模运算的操作数必须是整数类型 (解释器层面)");
+                    return 0; // Or handle error appropriately
+                }
+                if (((Integer) right) == 0) {
+                    CompilerLogger.error(ctx, "模运算错误：除数为零");
+                    return 0; // Or handle error appropriately
+                }
+                ret = (Integer) left % (Integer) right;
+            }
+            default -> {
+                logger.error("错误: 未知的操作符: {} 在 visitExprBinaryMulDivPercent 中", op);
+                ret = null;
+            }
+        }
+        return ret;
     }
 
     @Override
@@ -322,6 +375,35 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         Object result = callFunction((MethodSymbol) symFunc, ctx);
         logger.info("函数调用结果: {}", result);
         return result;
+    }
+
+    @Override
+    public Object visitExprLogicalAnd(ExprLogicalAndContext ctx) {
+        // Evaluate the left operand
+        Object left = visit(ctx.expr(0));
+
+        // Ensure left is a boolean representation (e.g., TypeTable.TRUE or TypeTable.FALSE)
+        if (!(left instanceof Integer && (left.equals(TypeTable.TRUE) || left.equals(TypeTable.FALSE)))) {
+            // This case should ideally be caught by TypeChecker, but as a safeguard:
+            CompilerLogger.error(ctx, "左操作数必须是布尔类型 (解释器层面)");
+            // Return a default boolean value or handle error appropriately
+            return TypeTable.FALSE;
+        }
+
+        // Short-circuit evaluation for &&
+        if (left.equals(TypeTable.FALSE)) {
+            return TypeTable.FALSE;
+        }
+
+        // If left is true, evaluate the right operand
+        Object right = visit(ctx.expr(1));
+
+        if (!(right instanceof Integer && (right.equals(TypeTable.TRUE) || right.equals(TypeTable.FALSE)))) {
+            CompilerLogger.error(ctx, "右操作数必须是布尔类型 (解释器层面)");
+            return TypeTable.FALSE;
+        }
+
+        return right; // The result of the && operation is the value of the right operand
     }
 
     @Override

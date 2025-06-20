@@ -39,3 +39,11 @@ SmallProgram,small,7,458088,true
 NestedStructs,medium,3,721920,false
 MediumProgram,medium,28,2326200,true
 LargeProgram,large,94,8124024,true
+SmallProgram,small,420,5120680,true
+MediumProgram,medium,52,7386608,true
+LargeProgram,large,124,4381360,true
+ComplexProgram,large,22,1882736,false
+SmallProgram,small,8,711472,true
+NestedStructs,medium,3,485800,false
+MediumProgram,medium,30,2097152,true
+LargeProgram,large,92,8323000,true

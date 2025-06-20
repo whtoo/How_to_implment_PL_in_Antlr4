@@ -68,16 +68,13 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
 
         // 创建变量，为结构体和类型别名特殊处理
         if (typeSymbol != null) {
-            if (typeSymbol instanceof StructSymbol) {
+            if (typeSymbol instanceof StructSymbol structSymbol) {
                 // 直接的结构体类型
-                StructSymbol structSymbol = (StructSymbol) typeSymbol;
                 varValue = new StructInstance(varName, this.currentSpace, structSymbol);
                 logger.debug("创建{}类型的结构体实例{}", structSymbol.getName(), varName);
-            } else if (typeSymbol instanceof TypedefSymbol) {
+            } else if (typeSymbol instanceof TypedefSymbol typedefSymbol) {
                 // 通过typedef定义的类型
-                TypedefSymbol typedefSymbol = (TypedefSymbol) typeSymbol;
-                if (typedefSymbol.getTargetType() instanceof StructSymbol) {
-                    StructSymbol structSymbol = (StructSymbol) typedefSymbol.getTargetType();
+                if (typedefSymbol.getTargetType() instanceof StructSymbol structSymbol) {
                     varValue = new StructInstance(varName, this.currentSpace, structSymbol);
                     logger.debug("创建{}->{}类型的结构体实例{}", typedefSymbol.getName(), structSymbol.getName(), varName);
                 }

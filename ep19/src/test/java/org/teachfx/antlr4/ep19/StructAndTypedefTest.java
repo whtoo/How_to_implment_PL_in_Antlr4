@@ -19,6 +19,49 @@ public class StructAndTypedefTest {
             "Expected error containing '" + expectedErrorMessageSubstring + "'. Got: " + String.join("\n", result.errors) + "\nCode:\n" + code);
     }
 
+    // 嵌套结构体测试
+    @Test
+    void testNestedStructDeclaration() {
+        String code = "struct Inner { int value; } struct Outer { Inner inner; }";
+        assertCompilesNoError(code);
+    }
+
+    @Test
+    void testNestedStructFieldAccess() {
+        String code = "struct Inner { int value; } struct Outer { Inner inner; } Outer o; o.inner.value = 10;";
+        assertCompilesNoError(code);
+    }
+
+    @Test
+    void testMultipleLevelNestedStruct() {
+        String code = "struct Level3 { int data; } struct Level2 { Level3 l3; } struct Level1 { Level2 l2; } Level1 l1; l1.l2.l3.data = 42;";
+        assertCompilesNoError(code);
+    }
+
+    @Test
+    void testNestedStructWithTypedef() {
+        String code = "struct Inner { int value; } typedef Inner MyInner; struct Outer { MyInner inner; } Outer o; o.inner.value = 10;";
+        assertCompilesNoError(code);
+    }
+
+    @Test
+    void testNestedStructMethodCall() {
+        String code = "struct Inner { int value; int getValue() { return value; } } struct Outer { Inner inner; } Outer o; int x; x = (o.inner).getValue();";
+        assertCompilesNoError(code);
+    }
+
+    @Test
+    void testNestedStructUndefinedFieldError() {
+        String code = "struct Inner { int value; } struct Outer { Inner inner; } Outer o; o.inner.nonexistent = 10;";
+        assertCompilationError(code, "没有名为 nonexistent 的成员");
+    }
+
+    @Test
+    void testNestedStructTypeMismatchError() {
+        String code = "struct Inner { int value; } struct Outer { Inner inner; } Outer o; float f; f = 1.0; o.inner.value = f;";
+        assertCompilationError(code, "类型不兼容");
+    }
+
     @Test
     void testValidStructDeclaration() {
         String code = "struct Point { int x; float y; }";
@@ -62,7 +105,7 @@ public class StructAndTypedefTest {
         String code = "struct Point { int x; } typedef Point MyPoint; MyPoint p; p.x = 1;";
         assertCompilesNoError(code);
     }
-    
+
     @Test
     void testTypedefChaining() {
         String code = "typedef int MyInt1; typedef MyInt1 MyInt2; MyInt2 i; i = 5;";
@@ -75,7 +118,7 @@ public class StructAndTypedefTest {
         // Error comes from LocalResolver during lookup for UnknownType
         assertCompilationError(code, "未知的类型: UnknownType");
     }
-    
+
     @Test
     void testStructWithMethodCall() {
         String code = "struct Calc { int val; int getVal() { return val; } } Calc c; c.val=1; int x; x=c.getVal();";
@@ -99,7 +142,7 @@ public class StructAndTypedefTest {
         String code = "struct Calc { int val; } Calc c; c.undefinedMethod();";
         assertCompilationError(code, "没有名为 undefinedMethod 的方法");
     }
-    
+
     @Test
     void testStructWithMethodReturningStruct() {
         String code = "struct Coord { int x; } struct Factory { Coord makeCoord() { Coord c; c.x=1; return c;}} Factory f; Coord res; res = f.makeCoord();";

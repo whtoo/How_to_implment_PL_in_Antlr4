@@ -1,0 +1,25 @@
+Test Name,Program Size,Compilation Time (ms),Memory Used (bytes),Success
+SmallProgram,small,883,2381096,true
+MediumProgram,medium,98,4844520,true
+LargeProgram,large,284,12752208,true
+ComplexProgram,large,30,1853536,false
+SmallProgram,small,12,552416,true
+NestedStructs,medium,6,488104,false
+MediumProgram,medium,42,2097152,true
+LargeProgram,large,168,8059304,true
+SmallProgram,small,816,2663144,true
+MediumProgram,medium,117,4890448,true
+LargeProgram,large,277,13054840,true
+ComplexProgram,large,29,1647440,false
+SmallProgram,small,11,549280,true
+NestedStructs,medium,4,577952,false
+MediumProgram,medium,42,2058984,true
+LargeProgram,large,167,7939648,true
+SmallProgram,small,647,2737576,true
+MediumProgram,medium,75,4901176,true
+LargeProgram,large,168,12837600,true
+ComplexProgram,large,24,1979144,false
+SmallProgram,small,10,588472,true
+NestedStructs,medium,5,617288,false
+MediumProgram,medium,25,2068296,true
+LargeProgram,large,102,7970680,true

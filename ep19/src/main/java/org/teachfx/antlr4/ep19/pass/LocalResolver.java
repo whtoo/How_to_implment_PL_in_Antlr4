@@ -104,16 +104,37 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         super.visitExprFuncCall(ctx);
 
+        // 检查函数名是否存在
+        if (ctx.ID() == null) {
+            CompilerLogger.error(ctx, "函数调用缺少函数名: " + ctx.getText());
+            stashType(ctx, TypeTable.VOID);
+            return null;
+        }
+
+        // 获取函数名 - 根据语法，函数名来自ID，不是expr(0)
+        String funcName = ctx.ID().getText();
+
         // 特殊处理内置函数print
-        if (ctx.expr(FUNC_EXPR).getText().equals("print")) {
+        if (funcName.equals("print")) {
             // 为print函数设置void返回类型
             stashType(ctx, TypeTable.VOID);
             logger.debug("处理print函数调用，设置返回类型为void");
             return null;
         }
 
-        // 这里有一个func name ctx和symbol没有建立匹配的问题
-        copyType(ctx.expr(FUNC_EXPR), ctx);
+        // 对于普通函数，从符号表中查找并设置类型
+        Scope scope = scopes.get(ctx);
+        if (scope != null) {
+            Symbol symbol = scope.resolve(funcName);
+            if (symbol != null && symbol.type != null) {
+                stashType(ctx, symbol.type);
+            } else {
+                // 如果找不到函数，设置为void类型
+                stashType(ctx, TypeTable.VOID);
+            }
+        } else {
+            stashType(ctx, TypeTable.VOID);
+        }
 
         return null;
     }
@@ -254,6 +275,15 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
 
                 // 将成员类型与整个表达式关联
                 stashType(parent, memberType);
+
+                // 支持嵌套结构体：如果成员本身是结构体类型，确保它也被正确处理
+                if (memberType instanceof StructSymbol || 
+                    (memberType instanceof TypedefSymbol && 
+                     ((TypedefSymbol) memberType).getTargetType() instanceof StructSymbol)) {
+                    // 不需要在这里做额外处理，因为当访问嵌套结构体字段时，
+                    // 会再次调用此方法，此时parent.getChild(STRUCT)将是上一级的字段访问表达式
+                    logger.debug("成员 {} 是结构体类型，支持嵌套访问", name);
+                }
             } else {
                 logger.error("结构体 {} 没有名为 {} 的成员", struct.getName(), name);
             }

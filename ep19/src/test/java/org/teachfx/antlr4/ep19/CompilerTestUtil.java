@@ -10,7 +10,8 @@ import org.teachfx.antlr4.ep19.parser.CymbolParser;
 import org.teachfx.antlr4.ep19.pass.LocalDefine;
 import org.teachfx.antlr4.ep19.pass.LocalResolver;
 import org.teachfx.antlr4.ep19.pass.TypeCheckVisitor;
-import org.teachfx.antlr4.ep19.misc.CompilerLogger; // Assuming CompilerLogger is in this package or accessible
+import org.teachfx.antlr4.ep19.pass.Interpreter;
+import org.teachfx.antlr4.ep19.misc.CompilerLogger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -32,13 +33,26 @@ public class CompilerTestUtil {
     }
 
     public static CompilationResult compile(String cymbolCode) {
+        return compile(cymbolCode, false);
+    }
+
+    /**
+     * Compiles and optionally interprets Cymbol code.
+     * 
+     * @param cymbolCode The Cymbol code to compile
+     * @param interpret Whether to run the interpreter
+     * @return The compilation result
+     */
+    public static CompilationResult compile(String cymbolCode, boolean interpret) {
         PrintStream originalErr = System.err;
         PrintStream originalOut = System.out;
         ByteArrayOutputStream errContent = new ByteArrayOutputStream();
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
-        
+
         List<String> errorMessages = new ArrayList<>();
         boolean success = true;
+        ParseTree parseTree = null;
+        ScopeUtil scopeUtil = null;
 
         try {
             System.setErr(new PrintStream(errContent));
@@ -70,7 +84,7 @@ public class CompilerTestUtil {
                 }
             });
 
-            ParseTree parseTree = parser.file();
+            parseTree = parser.file();
 
             if (!errorMessages.isEmpty()) { // Check for syntax errors before proceeding
                 return new CompilationResult(false, errorMessages, outContent.toString());
@@ -79,11 +93,11 @@ public class CompilerTestUtil {
             LocalDefine localDefine = new LocalDefine();
             parseTree.accept(localDefine);
 
-            ScopeUtil scopeUtil = new ScopeUtil(localDefine.getScopes());
+            scopeUtil = new ScopeUtil(localDefine.getScopes());
 
             LocalResolver localResolver = new LocalResolver(scopeUtil);
             parseTree.accept(localResolver);
-            
+
             // If errors occurred in LocalDefine or LocalResolver via CompilerLogger, they are captured.
             if (!errorMessages.isEmpty()) {
                  return new CompilationResult(false, errorMessages, outContent.toString());
@@ -91,16 +105,17 @@ public class CompilerTestUtil {
 
             TypeCheckVisitor typeChecker = new TypeCheckVisitor(scopeUtil, localResolver.types);
             parseTree.accept(typeChecker);
-            
+
             // Check errors from TypeCheckVisitor
             if (!errorMessages.isEmpty()) {
                 success = false;
             }
-            
-            // Optionally, run the interpreter if type checking is successful to verify print outputs
-            // For now, focus on type checking errors.
-            // Interpreter interpreter = new Interpreter(scopeUtil);
-            // interpreter.interpret(parseTree);
+
+            // Run the interpreter if requested and type checking is successful
+            if (interpret && success) {
+                Interpreter interpreter = new Interpreter(scopeUtil);
+                interpreter.interpret(parseTree);
+            }
 
         } catch (Exception e) {
             success = false;
@@ -111,7 +126,7 @@ public class CompilerTestUtil {
             System.setOut(originalOut);
             CompilerLogger.setErrorListener(null); // Reset listener
         }
-        
+
         return new CompilationResult(success && errorMessages.isEmpty(), errorMessages, outContent.toString());
     }
 } 

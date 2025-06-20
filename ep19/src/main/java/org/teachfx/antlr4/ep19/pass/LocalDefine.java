@@ -255,6 +255,12 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     }
 
     @Override
+    public Object visitStatReturn(StatReturnContext ctx) {
+        stashScope(ctx);
+        return super.visitStatReturn(ctx);
+    }
+
+    @Override
     public Object visitExprStructFieldAccess(ExprStructFieldAccessContext ctx) {
         stashScope(ctx);
         return super.visitExprStructFieldAccess(ctx);

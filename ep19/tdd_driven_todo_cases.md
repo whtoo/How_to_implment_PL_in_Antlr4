@@ -210,13 +210,27 @@ Error: "错误[<unknown>:1:10]: Unknown type for id: true，源码: 'true'"
 |-----------|--------|--------|--------------|-------|
 | ComprehensiveTest | 10 | 23 | 30% | Array support, function calls, struct access issues |
 | StructAndTypedefTest | 10 | 12 | 45% | Method calls, field access error handling |
-| IntegrationTest | 1 | 11 | 8% | Interpreter output, function scope issues |
+| IntegrationTest | 8 | 4 | 67% | ✅ **MAJOR IMPROVEMENT** - Core functionality working |
 | TypeSystemTest | 13 | 8 | 62% | Boolean literals, function scope issues |
-| FunctionAndMethodTest | 0 | 5 | 0% | Complete failure - function system broken |
+| FunctionAndMethodTest | 4 | 1 | 80% | ✅ **MAJOR IMPROVEMENT** - Function system working |
 | ErrorRecoveryTest | 8 | 0 | 100% | ✅ Working correctly |
 | PerformanceBenchmarkTest | 4 | 2 | 67% | Complex programs fail due to core issues |
 
-**Total: 46 passed, 61 failed (43% success rate)**
+**Total: 57 passed, 50 failed (53% success rate)**
+
+## 🎉 MAJOR PROGRESS ACHIEVED! 🎉
+
+### Key Improvements Made:
+✅ **Fixed Function Call NPE** - Resolved critical null pointer exceptions
+✅ **Fixed Function Scope Issues** - Return statements now properly scoped  
+✅ **Fixed Interpreter Output** - Print function now working correctly
+✅ **Fixed Function Parameter Counting** - Function calls with parameters working
+✅ **Added Struct Method Call Grammar** - New grammar rule implemented (needs precedence fix)
+
+### Success Rate Improvements:
+- **IntegrationTest**: 8% → 67% (+59% improvement!)
+- **FunctionAndMethodTest**: 0% → 80% (+80% improvement!)
+- **Overall**: 43% → 53% (+10% improvement)
 
 ## Recommendations
 

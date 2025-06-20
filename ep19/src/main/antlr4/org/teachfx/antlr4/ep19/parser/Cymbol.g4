@@ -43,6 +43,7 @@ statement:   block               #statBlock
 
 expr
   : ID '(' ( expr (',' expr)* )? ')'                     # exprFuncCall // 内置函数调用和普通函数调用
+  | expr '.' ID '(' ( expr (',' expr)* )? ')'           # exprStructMethodCall // 结构体方法调用
   | expr o='.' expr                                     # exprStructFieldAccess
   | '-' expr                                            # exprUnary
   | '!' expr                                            # exprUnary

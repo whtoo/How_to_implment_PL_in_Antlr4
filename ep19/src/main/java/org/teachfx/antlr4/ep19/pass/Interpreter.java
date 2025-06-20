@@ -179,134 +179,111 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
     }
 
     @Override
+    public Object visitExprStructMethodCall(ExprStructMethodCallContext ctx) {
+        // 获取结构体表达式和方法名
+        ExprContext structExpr = ctx.expr(0);
+        String methodName = ctx.ID().getText();
+
+        // 获取结构体实例
+        Object structObj = visit(structExpr);
+        if (structObj == null) {
+            CompilerLogger.error(ctx, "无法访问空结构体");
+            return null;
+        }
+
+        if (!(structObj instanceof StructInstance)) {
+            CompilerLogger.error(ctx, "表达式不是结构体实例");
+            return null;
+        }
+
+        StructInstance instance = (StructInstance) structObj;
+        MethodSymbol methodSymbol = instance.getMethod(methodName);
+
+        if (methodSymbol == null) {
+            CompilerLogger.error(ctx, "结构体 " + instance.getStructSymbol().getName() +
+                               " 没有名为 " + methodName + " 的方法");
+            return null;
+        }
+
+        // 创建方法调用空间
+        FunctionSpace methodSpace = new FunctionSpace(methodSymbol.getName(), methodSymbol, instance);
+
+        // 收集参数名和值
+        int paramCount = methodSymbol.getMembers().size();
+        String[] paramNames = methodSymbol.getMembers().keySet().toArray(new String[0]);
+
+        // 确保参数数量匹配 - 从expr(1)开始，因为expr(0)是结构体表达式
+        int argCount = ctx.expr().size() - 1;
+        if (argCount != paramCount) {
+            CompilerLogger.error(ctx, "方法 " + methodName + " 需要 " + paramCount +
+                               " 个参数，但提供了 " + argCount + " 个");
+            return null;
+        }
+
+        // 处理参数 - 从expr(1)开始
+        for (int i = 0; i < paramCount; i++) {
+            if (i + 1 >= ctx.expr().size()) {
+                CompilerLogger.error(ctx, "参数索引越界: " + (i + 1));
+                return null;
+            }
+
+            Object paramValue = visit(ctx.expr(i + 1));
+            methodSpace.define(paramNames[i], paramValue);
+        }
+
+        // 保存当前空间并切换到方法空间
+        stashSpace(methodSpace);
+
+        // 执行方法体
+        Object result = null;
+        try {
+            if (methodSymbol.blockStmt != null) {
+                visit(methodSymbol.blockStmt);
+            } else {
+                CompilerLogger.error(ctx, "方法 " + methodName + " 没有方法体");
+            }
+        } catch (ReturnValue returnValue) {
+            result = returnValue.value;
+        } catch (Exception e) {
+            CompilerLogger.error(ctx, "执行方法 " + methodName + " 时发生错误: " + e.getMessage());
+        }
+
+        // 恢复原空间
+        restoreSpace();
+
+        return result;
+    }
+
+    @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
-        // 检查是否有函数表达式和参数
-        if (ctx.expr() == null || ctx.expr().isEmpty()) {
-            CompilerLogger.error(ctx, "函数调用缺少函数表达式");
+        // 检查函数名是否存在
+        if (ctx.ID() == null) {
+            CompilerLogger.error(ctx, "函数调用缺少函数名");
             return null;
         }
 
-        // 获取第一个表达式（函数名或结构体方法访问）
-        ExprContext firstExpr = ctx.expr(0);
-        if (firstExpr == null) {
-            CompilerLogger.error(ctx, "函数调用缺少函数表达式");
-            return null;
-        }
-
-        // 处理字符串字面量，避免将它们视为函数调用
-        String firstExprText = firstExpr.getText();
-        if (firstExprText.startsWith("\"") && firstExprText.endsWith("\"")) {
-            // 字符串字面量不能作为函数调用，直接返回字符串值
-            Object value = visit(firstExpr);
-            logger.debug("字符串字面量: {}", value);
-            return value;
-        }
+        // 获取函数名 - 根据语法，函数名来自ID，不是expr(0)
+        String funcName = ctx.ID().getText();
 
         // 特殊处理print函数（内置函数）
-        if (firstExpr.getText().equals("print")) {
+        if (funcName.equals("print")) {
             // 处理print函数：直接输出参数
-            for (int i = 1; i < ctx.expr().size(); i++) {
-                ExprContext exprCtx = ctx.expr(i);
-                if (exprCtx != null) {
-                    Object result = visit(exprCtx);
-                    if (result != null) {
-                        System.out.println(result);
-                        logger.info("输出: {}", result);
-                    } else {
-                        logger.info("输出: null");
+            if (ctx.expr() != null) {
+                for (int i = 0; i < ctx.expr().size(); i++) {
+                    ExprContext exprCtx = ctx.expr(i);
+                    if (exprCtx != null) {
+                        Object result = visit(exprCtx);
+                        if (result != null) {
+                            System.out.println(result);
+                            logger.info("输出: {}", result);
+                        } else {
+                            System.out.println("null");
+                            logger.info("输出: null");
+                        }
                     }
                 }
             }
             return null;
-        }
-
-        // 处理结构体方法调用
-        if (firstExpr instanceof ExprStructFieldAccessContext) {
-            ExprStructFieldAccessContext fieldAccessCtx = (ExprStructFieldAccessContext) firstExpr;
-
-            // 获取结构体实例和方法名
-            if (fieldAccessCtx.expr().size() >= 2) {
-                Object structObj = visit(fieldAccessCtx.expr(0));
-                String methodName = fieldAccessCtx.expr(1).getText();
-
-                if (structObj instanceof StructInstance) {
-                    StructInstance instance = (StructInstance) structObj;
-                    MethodSymbol methodSymbol = instance.getMethod(methodName);
-
-                    if (methodSymbol != null) {
-                        // 创建方法调用空间
-                        FunctionSpace methodSpace = new FunctionSpace(methodSymbol.getName(), methodSymbol, instance);
-
-                        // 收集参数
-                        int paramCount = methodSymbol.getMembers().size();
-                        String[] paramNames = methodSymbol.getMembers().keySet().toArray(new String[0]);
-
-                        // 确保参数数量匹配
-                        if (ctx.expr().size() - 1 != paramCount) {
-                            CompilerLogger.error(ctx, "方法 " + methodName + " 需要 " + paramCount +
-                                               " 个参数，但提供了 " + (ctx.expr().size() - 1) + " 个");
-                            return null;
-                        }
-
-                        // 处理参数
-                        for (int i = 0; i < paramCount; i++) {
-                            if (i + 1 >= ctx.expr().size()) {
-                                CompilerLogger.error(ctx, "参数索引越界: " + (i + 1));
-                                return null;
-                            }
-
-                            Object paramValue = visit(ctx.expr(i + 1));
-                            methodSpace.define(paramNames[i], paramValue);
-                        }
-
-                        // 保存当前空间并切换到方法空间
-                        stashSpace(methodSpace);
-
-                        // 执行方法体
-                        Object result = null;
-                        try {
-                            if (methodSymbol.blockStmt != null) {
-                                visit(methodSymbol.blockStmt);
-                            } else {
-                                CompilerLogger.error(ctx, "方法 " + methodName + " 没有方法体");
-                            }
-                        } catch (ReturnValue returnValue) {
-                            result = returnValue.value;
-                        } catch (Exception e) {
-                            CompilerLogger.error(ctx, "执行方法 " + methodName + " 时发生错误: " + e.getMessage());
-                        }
-
-                        // 恢复原空间
-                        restoreSpace();
-
-                        return result;
-                    } else {
-                        CompilerLogger.error(ctx, "结构体 " + instance.getStructSymbol().getName() +
-                                           " 没有名为 " + methodName + " 的方法");
-                        return null;
-                    }
-                }
-            }
-        }
-
-        // 处理普通函数调用
-        Object exprValue = visit(firstExpr);
-        if (exprValue == null) {
-            CompilerLogger.error(ctx, "无法解析函数: " + firstExpr.getText());
-            return null;
-        }
-
-        String funcName = null;
-
-        // 如果是方法调用，函数名称可能是表达式的结果
-        if (exprValue instanceof String) {
-            funcName = (String) exprValue;
-        } else if (exprValue instanceof MethodSymbol) {
-            // 处理结构体方法调用
-            return callStructMethod((MethodSymbol) exprValue, ctx);
-        } else {
-            // 如果不是字符串也不是方法符号，直接返回表达式的值
-            return exprValue;
         }
 
         logger.debug("访问函数: {}", funcName);
@@ -611,20 +588,20 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         String[] paramNames = method.getMembers().keySet().toArray(new String[0]);
 
         // 确保参数数量匹配
-        if (ctx.expr().size() - 1 != paramCount) {
+        if (ctx.expr().size() != paramCount) {
             CompilerLogger.error(ctx, "方法 " + method.getName() + " 需要 " + paramCount +
-                               " 个参数，但提供了 " + (ctx.expr().size() - 1) + " 个");
+                               " 个参数，但提供了 " + ctx.expr().size() + " 个");
             return null;
         }
 
         // 处理参数
         for (int i = 0; i < paramCount; i++) {
-            if (i + 1 >= ctx.expr().size()) {
-                CompilerLogger.error(ctx, "参数索引越界: " + (i + 1));
+            if (i >= ctx.expr().size()) {
+                CompilerLogger.error(ctx, "参数索引越界: " + i);
                 return null;
             }
 
-            Object paramValue = visit(ctx.expr(i + 1));
+            Object paramValue = visit(ctx.expr(i));
             methodSpace.define(paramNames[i], paramValue);
         }
 
@@ -684,20 +661,20 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         String[] paramNames = function.getMembers().keySet().toArray(new String[0]);
 
         // 确保参数数量匹配
-        if (ctx.expr().size() - 1 != paramCount) {
+        if (ctx.expr().size() != paramCount) {
             CompilerLogger.error(ctx, "函数 " + function.getName() + " 需要 " + paramCount +
-                               " 个参数，但提供了 " + (ctx.expr().size() - 1) + " 个");
+                               " 个参数，但提供了 " + ctx.expr().size() + " 个");
             return null;
         }
 
         // 处理参数
         for (int i = 0; i < paramCount; i++) {
-            if (i + 1 >= ctx.expr().size()) {
-                CompilerLogger.error(ctx, "参数索引越界: " + (i + 1));
+            if (i >= ctx.expr().size()) {
+                CompilerLogger.error(ctx, "参数索引越界: " + i);
                 return null;
             }
 
-            Object paramValue = visit(ctx.expr(i + 1));
+            Object paramValue = visit(ctx.expr(i));
             functionSpace.define(paramNames[i], paramValue);
         }
 

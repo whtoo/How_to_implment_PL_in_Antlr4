@@ -101,6 +101,50 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     }
 
     @Override
+    public Object visitExprStructMethodCall(ExprStructMethodCallContext ctx) {
+        super.visitExprStructMethodCall(ctx);
+
+        // 获取结构体表达式和方法名
+        ExprContext structExpr = ctx.expr(0);
+        String methodName = ctx.ID().getText();
+
+        // 获取结构体类型
+        Type structType = types.get(structExpr);
+        if (structType == null) {
+            // 先访问结构体表达式以获取其类型
+            visit(structExpr);
+            structType = types.get(structExpr);
+        }
+
+        if (structType != null) {
+            // 处理typedef可能指向的结构体
+            if (structType instanceof TypedefSymbol) {
+                Type targetType = ((TypedefSymbol) structType).getTargetType();
+                if (targetType instanceof StructSymbol) {
+                    structType = targetType;
+                }
+            }
+
+            if (structType instanceof StructSymbol) {
+                StructSymbol structSymbol = (StructSymbol) structType;
+                Symbol methodSymbol = structSymbol.resolveMember(methodName);
+
+                if (methodSymbol != null && methodSymbol.type != null) {
+                    stashType(ctx, methodSymbol.type);
+                } else {
+                    stashType(ctx, TypeTable.VOID);
+                }
+            } else {
+                stashType(ctx, TypeTable.VOID);
+            }
+        } else {
+            stashType(ctx, TypeTable.VOID);
+        }
+
+        return null;
+    }
+
+    @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         super.visitExprFuncCall(ctx);
 

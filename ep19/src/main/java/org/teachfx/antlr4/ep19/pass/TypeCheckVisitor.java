@@ -196,6 +196,77 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
     }
 
     @Override
+    public Type visitExprStructMethodCall(ExprStructMethodCallContext ctx) {
+        // 获取结构体表达式和方法名
+        ExprContext structExpr = ctx.expr(0); // 结构体表达式
+        String methodName = ctx.ID().getText(); // 方法名
+
+        // 获取结构体类型
+        Type structType = visit(structExpr);
+        if (structType == null) {
+            CompilerLogger.error(ctx, "无法确定结构体表达式的类型");
+            return TypeTable.VOID;
+        }
+
+        // 处理typedef可能指向的结构体
+        if (structType instanceof TypedefSymbol) {
+            Type targetType = ((TypedefSymbol) structType).getTargetType();
+            if (targetType instanceof StructSymbol) {
+                structType = targetType;
+            } else {
+                CompilerLogger.error(ctx, "类型 " + structType + " 不是结构体类型");
+                return TypeTable.VOID;
+            }
+        }
+
+        if (!(structType instanceof StructSymbol)) {
+            CompilerLogger.error(ctx, "类型 " + structType + " 不是结构体类型");
+            return TypeTable.VOID;
+        }
+
+        StructSymbol structSymbol = (StructSymbol) structType;
+
+        // 查找方法
+        Symbol methodSymbol = structSymbol.resolveMember(methodName);
+        if (methodSymbol == null) {
+            CompilerLogger.error(ctx, "结构体 " + structSymbol.getName() + " 没有名为 " + methodName + " 的方法");
+            return TypeTable.VOID;
+        }
+
+        if (!(methodSymbol instanceof MethodSymbol)) {
+            CompilerLogger.error(ctx, methodName + " 不是一个方法");
+            return TypeTable.VOID;
+        }
+
+        MethodSymbol method = (MethodSymbol) methodSymbol;
+
+        // 收集参数类型 - 从expr(1)开始，因为expr(0)是结构体表达式
+        List<Type> argTypes = new ArrayList<>();
+        for (int i = 1; i < ctx.expr().size(); i++) {
+            Type argType = visit(ctx.expr(i));
+            if (argType != null) {
+                argTypes.add(argType);
+            }
+        }
+
+        // 获取方法形参类型
+        List<Symbol> parameters = new ArrayList<>(method.getMembers().values());
+        Type[] paramTypes = parameters.stream()
+                .map(param -> param.type)
+                .toArray(Type[]::new);
+
+        // 检查参数类型兼容性
+        TypeChecker.checkFunctionCallCompatibility(
+                paramTypes,
+                argTypes.toArray(new Type[0]),
+                ctx
+        );
+
+        // 返回方法返回值类型
+        return method.type;
+    }
+
+    @Override
     public Type visitExprStructFieldAccess(ExprStructFieldAccessContext ctx) {
         // 确保我们先访问子节点，获取类型信息
         super.visitExprStructFieldAccess(ctx);

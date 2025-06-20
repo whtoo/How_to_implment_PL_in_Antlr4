@@ -114,6 +114,13 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
     }
 
     @Override
+    public Object visitExprStructMethodCall(ExprStructMethodCallContext ctx) {
+        super.visitExprStructMethodCall(ctx);
+        stashScope(ctx);
+        return null;
+    }
+
+    @Override
     public Object visitExprFuncCall(ExprFuncCallContext ctx) {
         super.visitExprFuncCall(ctx);
         stashScope(ctx);

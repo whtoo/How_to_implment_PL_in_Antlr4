@@ -72,9 +72,13 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         Scope scope = scopes.get(ctx);
         scope.define(var);
 
-        // 如果有初始化表达式，确保它被处理
-        if (ctx.expr() != null) {
-            visit(ctx.expr());
+        // 如果有表达式，确保它们被处理（可能包括数组大小和初始化表达式）
+        if (ctx.expr() != null && !ctx.expr().isEmpty()) {
+            for (ExprContext expr : ctx.expr()) {
+                if (expr != null) {
+                    visit(expr);
+                }
+            }
         }
 
         return null;
@@ -363,7 +367,16 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
     public Object visitPrimaryBOOL(PrimaryBOOLContext ctx) {
         // 布尔值直接使用BOOLEAN类型
         stashType(ctx, TypeTable.BOOLEAN);
-        return super.visitPrimaryBOOL(ctx);
+
+        // 确保布尔字面量也被正确识别
+        String boolText = ctx.getText();
+        if ("true".equals(boolText) || "false".equals(boolText)) {
+            // 将布尔字面量与BOOLEAN类型关联
+            types.put(ctx, TypeTable.BOOLEAN);
+            logger.debug("将布尔字面量 {} 与类型 BOOLEAN 关联", boolText);
+        }
+
+        return null;
     }
 
     @Override
@@ -523,6 +536,13 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
 
         int tokenValue = ctx.start.getType();
         String tokenName = ctx.start.getText();
+
+        // 特殊处理布尔字面量
+        if (tokenName.equals("true") || tokenName.equals("false")) {
+            stashType(ctx, TypeTable.BOOLEAN);
+            return;
+        }
+
         if (tokenValue == CymbolParser.ID) {
             Scope scope = scopes.get(ctx);
             Symbol s = scope.resolve(tokenName);
@@ -549,7 +569,7 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
                 stashType(ctx, TypeTable.CHAR);
             } else if (tokenValue == CymbolParser.STRING || tokenName.equals("String")) {
                 stashType(ctx, TypeTable.STRING);
-            } else if (tokenName.equals("true") || tokenName.equals("false") || tokenName.equals("bool")) {
+            } else if (tokenValue == CymbolParser.BOOLEAN || tokenName.equals("bool")) {
                 stashType(ctx, TypeTable.BOOLEAN);
             } else if (tokenName.equals("void")) {
                 stashType(ctx, TypeTable.VOID);

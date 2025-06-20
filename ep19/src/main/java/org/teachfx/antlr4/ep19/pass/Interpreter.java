@@ -85,8 +85,20 @@ public class Interpreter extends CymbolBaseVisitor<Object> {
         }
 
         // 如果有初始值表达式，用表达式的值初始化
-        if (ctx.expr() != null) {
-            varValue = visit(ctx.expr());
+        if (ctx.expr() != null && !ctx.expr().isEmpty()) {
+            // 获取初始化表达式（最后一个表达式，如果存在的话）
+            ExprContext initExpr = null;
+            if (ctx.expr().size() == 1) {
+                // 只有初始化表达式：type ID = expr
+                initExpr = ctx.expr(0);
+            } else if (ctx.expr().size() == 2) {
+                // 有数组大小和初始化表达式：type ID[expr] = expr
+                initExpr = ctx.expr(1);
+            }
+
+            if (initExpr != null) {
+                varValue = visit(initExpr);
+            }
         }
 
         // 定义变量

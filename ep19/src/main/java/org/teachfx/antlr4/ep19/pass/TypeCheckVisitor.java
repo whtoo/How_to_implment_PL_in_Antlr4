@@ -57,10 +57,22 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         }
 
         // 检查初始值表达式的类型兼容性
-        if (ctx.expr() != null) {
-            Type initType = visit(ctx.expr());
-            if (initType != null) { // 初始化表达式类型可能为null表示出错
-                TypeChecker.checkAssignmentCompatibility(declType, initType, ctx);
+        if (ctx.expr() != null && !ctx.expr().isEmpty()) {
+            // 获取初始化表达式（最后一个表达式，如果存在的话）
+            ExprContext initExpr = null;
+            if (ctx.expr().size() == 1) {
+                // 只有初始化表达式：type ID = expr
+                initExpr = ctx.expr(0);
+            } else if (ctx.expr().size() == 2) {
+                // 有数组大小和初始化表达式：type ID[expr] = expr
+                initExpr = ctx.expr(1);
+            }
+
+            if (initExpr != null) {
+                Type initType = visit(initExpr);
+                if (initType != null) { // 初始化表达式类型可能为null表示出错
+                    TypeChecker.checkAssignmentCompatibility(declType, initType, ctx);
+                }
             }
         }
 
@@ -151,6 +163,11 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
         // 对于普通函数，尝试从符号表中解析
         Scope scope = scopeUtil.get(ctx);
+        if (scope == null) {
+            CompilerLogger.error(ctx, "无法获取函数调用的作用域");
+            return TypeTable.VOID;
+        }
+
         Symbol symbol = scope.resolve(funcName);
 
         if (symbol == null) {
@@ -169,8 +186,9 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         List<Type> argTypes = new ArrayList<>();
         if (ctx.expr() != null) {
             for (int i = 0; i < ctx.expr().size(); i++) {
-                if (ctx.expr(i) != null) {
-                    Type argType = visit(ctx.expr(i));
+                ExprContext exprCtx = ctx.expr(i);
+                if (exprCtx != null) {
+                    Type argType = visit(exprCtx);
                     if (argType != null) { // 可能为null表示参数表达式有错误
                         argTypes.add(argType);
                     }
@@ -267,6 +285,42 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
     }
 
     @Override
+    public Type visitExprArrayAccess(ExprArrayAccessContext ctx) {
+        // 访问子节点获取类型信息
+        super.visitExprArrayAccess(ctx);
+
+        // 获取数组表达式和索引表达式
+        if (ctx.getChildCount() < 4) { // expr '[' expr ']'
+            CompilerLogger.error(ctx, "无效的数组访问表达式");
+            return TypeTable.VOID;
+        }
+
+        ExprContext arrayExpr = (ExprContext) ctx.getChild(0);
+        ExprContext indexExpr = (ExprContext) ctx.getChild(2);
+
+        Type arrayType = visit(arrayExpr);
+        Type indexType = visit(indexExpr);
+
+        // 检查数组表达式类型
+        if (arrayType == null) {
+            CompilerLogger.error(ctx, "无法确定数组表达式的类型");
+            return TypeTable.VOID;
+        }
+
+        // 检查索引类型必须是整数
+        if (indexType != null && indexType != TypeTable.INT) {
+            CompilerLogger.error(ctx, "数组索引必须是整数类型，实际为: " + indexType);
+            return TypeTable.VOID;
+        }
+
+        // 返回数组元素类型（这里简化处理，返回int类型）
+        // 实际应该根据数组的元素类型返回
+        Type elementType = TypeTable.INT; // 简化处理
+        types.put(ctx, elementType);
+        return elementType;
+    }
+
+    @Override
     public Type visitExprStructFieldAccess(ExprStructFieldAccessContext ctx) {
         // 确保我们先访问子节点，获取类型信息
         super.visitExprStructFieldAccess(ctx);
@@ -280,7 +334,7 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
             return TypeTable.VOID;
         }
 
-        Type structType = types.get(exprCtx);
+        Type structType = visit(exprCtx);
         if (structType == null) {
             CompilerLogger.error(ctx, "无法确定结构体表达式的类型");
             return TypeTable.VOID;
@@ -292,13 +346,13 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
             if (targetType instanceof StructSymbol) {
                 structType = targetType;
             } else {
-                CompilerLogger.error(ctx, "类型 " + structType + " 不是结构体类型");
+                CompilerLogger.error(ctx, "不是结构体类型");
                 return TypeTable.VOID;
             }
         }
 
         if (!(structType instanceof StructSymbol)) {
-            CompilerLogger.error(ctx, exprCtx.getText() + " 不是一个结构体实例");
+            CompilerLogger.error(ctx, "不是结构体类型");
             return TypeTable.VOID;
         }
 
@@ -315,7 +369,7 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         Symbol memberSymbol = structSymbol.resolveMember(memberName);
 
         if (memberSymbol == null) {
-            CompilerLogger.error(ctx, "结构体 " + structSymbol.getName() + " 没有名为 " + memberName + " 的成员");
+            CompilerLogger.error(ctx, "没有名为 " + memberName + " 的字段");
             return TypeTable.VOID;
         }
 
@@ -446,6 +500,12 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
 
     @Override
     public Type visitPrimaryBOOL(PrimaryBOOLContext ctx) {
+        // 确保布尔字面量被正确识别
+        String boolText = ctx.getText();
+        if ("true".equals(boolText) || "false".equals(boolText)) {
+            CompilerLogger.debug("识别布尔字面量: " + boolText);
+            return TypeTable.BOOLEAN;
+        }
         return TypeTable.BOOLEAN;
     }
 

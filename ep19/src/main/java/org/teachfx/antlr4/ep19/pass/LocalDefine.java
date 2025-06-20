@@ -233,6 +233,12 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
         return null;
     }
 
+    @Override
+    public Object visitPrimaryBOOL(PrimaryBOOLContext ctx) {
+        stashScope(ctx);
+        return null;
+    }
+
     /**
      * bind ctx to current scope
      *

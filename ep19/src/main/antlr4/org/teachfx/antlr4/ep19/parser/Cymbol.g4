@@ -14,7 +14,7 @@ structMemeber
      ;
 
 varDecl
-    :   type ID ('=' expr)? ';'
+    :   type ID ('[' expr ']')? ('=' expr)? ';'  // Support array declaration: int arr[5];
     ;
 type:  primaryType | ID ; // pre-defined types
 primaryType: 'float' | 'int' | 'void' | 'bool' | 'String' | 'Object';
@@ -44,6 +44,7 @@ statement:   block               #statBlock
 expr
   : ID '(' ( expr (',' expr)* )? ')'                     # exprFuncCall // 内置函数调用和普通函数调用
   | expr '.' ID '(' ( expr (',' expr)* )? ')'           # exprStructMethodCall // 结构体方法调用
+  | expr '[' expr ']'                                   # exprArrayAccess // 数组访问
   | expr o='.' expr                                     # exprStructFieldAccess
   | '-' expr                                            # exprUnary
   | '!' expr                                            # exprUnary

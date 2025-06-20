@@ -4,11 +4,24 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.teachfx.antlr4.ep19.misc.CompilerLogger;
 import org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
+import org.teachfx.antlr4.ep19.symtab.symbol.TypedefSymbol;
 
 /**
  * 类型检查器，负责类型兼容性检查
  */
 public class TypeChecker {
+
+    // Helper method to resolve TypedefSymbol to its actual underlying type
+    private static Type resolveToActualType(Type type) {
+        Type currentType = type;
+        while (currentType instanceof TypedefSymbol) {
+            currentType = ((TypedefSymbol) currentType).getTargetType();
+            if (currentType == null) { // Should not happen in a valid AST
+                return TypeTable.VOID; // Or some error type
+            }
+        }
+        return currentType;
+    }
 
     /**
      * 检查赋值操作的类型兼容性
@@ -36,25 +49,28 @@ public class TypeChecker {
     }
     
     private static boolean areTypesCompatible(Type lhsType, Type rhsType) {
+        Type actualLhsType = resolveToActualType(lhsType);
+        Type actualRhsType = resolveToActualType(rhsType);
+
         // 如果类型相同，直接兼容
-        if (lhsType == rhsType) {
+        if (actualLhsType == actualRhsType) {
             return true;
         }
 
         // null可以赋值给任何非基本类型
-        if (rhsType == TypeTable.NULL && !lhsType.isPrimitive()) {
+        if (actualRhsType == TypeTable.NULL && !actualLhsType.isPrimitive()) {
             return true;
         }
 
         // 数值类型的隐式转换（int -> float是安全的）
-        if (lhsType == TypeTable.FLOAT && rhsType == TypeTable.INT) {
+        if (actualLhsType == TypeTable.FLOAT && actualRhsType == TypeTable.INT) {
             return true;
         }
 
         // 结构体类型兼容性检查
-        if (!lhsType.isPrimitive() && !rhsType.isPrimitive()) {
+        if (!actualLhsType.isPrimitive() && !actualRhsType.isPrimitive()) {
             // 实现继承关系检查
-            return isSubtype(rhsType, lhsType);
+            return isSubtype(actualRhsType, actualLhsType);
         }
         
         return false;
@@ -63,10 +79,21 @@ public class TypeChecker {
     private static boolean isSubtype(Type type, Type superType) {
         // 这里需要完整的类型继承关系检查实现
         // 当前只是一个示例实现
-        return type == superType;
+        // For typedefs, we should compare their actual resolved types
+        Type actualType = resolveToActualType(type);
+        Type actualSuperType = resolveToActualType(superType);
+
+        return actualType == actualSuperType;
     }
 
     /**
+     * 检查二元操作的类型兼容性
+
+        // null可以赋值给任何非基本类型
+        if (rhsType == TypeTable.NULL && !lhsType.isPrimitive()) {
+            return true;
+        }
+
      * 检查二元操作的类型兼容性
      * @param leftType 左操作数类型
      * @param rightType 右操作数类型
@@ -86,16 +113,19 @@ public class TypeChecker {
             if ((leftType == TypeTable.INT || leftType == TypeTable.FLOAT) &&
                 (rightType == TypeTable.INT || rightType == TypeTable.FLOAT)) {
 
+            Type actualLeftType = resolveToActualType(leftType);
+            Type actualRightType = resolveToActualType(rightType);
+
                 // 如果任一操作数是float，结果为float
-                if (leftType == TypeTable.FLOAT || rightType == TypeTable.FLOAT) {
+            if (actualLeftType == TypeTable.FLOAT || actualRightType == TypeTable.FLOAT) {
                     return TypeTable.FLOAT;
-                } else {
+            } else if (actualLeftType == TypeTable.INT && actualRightType == TypeTable.INT) {
                     return TypeTable.INT;
                 }
             }
 
             // 字符串连接
-            if (operator.equals("+") && (leftType == TypeTable.STRING || rightType == TypeTable.STRING)) {
+        if (operator.equals("+") && (resolveToActualType(leftType) == TypeTable.STRING || resolveToActualType(rightType) == TypeTable.STRING)) {
                 return TypeTable.STRING;
             }
 
@@ -105,17 +135,22 @@ public class TypeChecker {
 
         // 比较运算符: ==, !=, <, >, <=, >=
         if (operator.equals("==") || operator.equals("!=")) {
+        Type actualLeftType = resolveToActualType(leftType);
+        Type actualRightType = resolveToActualType(rightType);
             // 基本类型之间可以比较相等性
-            if (leftType.isPrimitive() && rightType.isPrimitive()) {
+        if (actualLeftType.isPrimitive() && actualRightType.isPrimitive() && actualLeftType == actualRightType) {
                 return TypeTable.BOOLEAN;
             }
+        if (actualLeftType == TypeTable.FLOAT && actualRightType == TypeTable.INT) return TypeTable.BOOLEAN;
+        if (actualLeftType == TypeTable.INT && actualRightType == TypeTable.FLOAT) return TypeTable.BOOLEAN;
+
 
             // 非基本类型只能与同类型或null比较
-            if (!leftType.isPrimitive() && (rightType == leftType || rightType == TypeTable.NULL)) {
+        if (!actualLeftType.isPrimitive() && (actualRightType == actualLeftType || actualRightType == TypeTable.NULL)) {
                 return TypeTable.BOOLEAN;
             }
 
-            if (!rightType.isPrimitive() && (leftType == rightType || leftType == TypeTable.NULL)) {
+        if (!actualRightType.isPrimitive() && (actualLeftType == actualRightType || actualLeftType == TypeTable.NULL)) {
                 return TypeTable.BOOLEAN;
             }
 
@@ -124,9 +159,11 @@ public class TypeChecker {
         }
 
         if (operator.equals("<") || operator.equals(">") || operator.equals("<=") || operator.equals(">=")) {
+        Type actualLeftType = resolveToActualType(leftType);
+        Type actualRightType = resolveToActualType(rightType);
             // 只有数值类型可以进行大小比较
-            if ((leftType == TypeTable.INT || leftType == TypeTable.FLOAT) &&
-                (rightType == TypeTable.INT || rightType == TypeTable.FLOAT)) {
+        if ((actualLeftType == TypeTable.INT || actualLeftType == TypeTable.FLOAT) &&
+            (actualRightType == TypeTable.INT || actualRightType == TypeTable.FLOAT)) {
                 return TypeTable.BOOLEAN;
             }
 
@@ -146,15 +183,16 @@ public class TypeChecker {
      * @return 操作结果类型，如果不兼容返回null
      */
     public static Type checkUnaryOperationCompatibility(Type operandType, String operator, ParserRuleContext ctx) {
-        if (operandType == null) {
+        Type actualOperandType = resolveToActualType(operandType);
+        if (actualOperandType == null) {
             CompilerLogger.error(ctx, "操作数类型未定义");
             return null;
         }
 
         // 负号运算符: -
         if (operator.equals("-")) {
-            if (operandType == TypeTable.INT || operandType == TypeTable.FLOAT) {
-                return operandType; // 返回相同类型
+            if (actualOperandType == TypeTable.INT || actualOperandType == TypeTable.FLOAT) {
+                return actualOperandType; // 返回相同类型
             }
 
             CompilerLogger.error(ctx, "类型 " + operandType + " 不支持负号操作");
@@ -163,7 +201,7 @@ public class TypeChecker {
 
         // 逻辑非运算符: !
         if (operator.equals("!")) {
-            if (operandType == TypeTable.BOOLEAN) {
+            if (actualOperandType == TypeTable.BOOLEAN) {
                 return TypeTable.BOOLEAN;
             }
 

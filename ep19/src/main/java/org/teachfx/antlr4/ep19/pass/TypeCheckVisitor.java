@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.teachfx.antlr4.ep19.misc.CompilerLogger;
 import org.teachfx.antlr4.ep19.misc.ScopeUtil;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
+// import org.teachfx.antlr4.ep19.parser.CymbolParser.ExprParenContext; // Remove this
 import org.teachfx.antlr4.ep19.symtab.Type;
 import org.teachfx.antlr4.ep19.symtab.TypeChecker;
 import org.teachfx.antlr4.ep19.symtab.TypeTable;
@@ -307,6 +308,15 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
     }
 
     @Override
+    public Type visitExprGroup(ExprGroupContext ctx) { // Changed from ExprParenContext
+        Type type = visit(ctx.expr());
+        if (type != null) {
+            types.put(ctx, type);
+        }
+        return type;
+    }
+
+    @Override
     public Type visitExprArrayAccess(ExprArrayAccessContext ctx) {
         // 访问子节点获取类型信息
         super.visitExprArrayAccess(ctx);
@@ -387,7 +397,7 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         Symbol memberSymbol = structSymbol.resolveMember(memberName);
 
         if (memberSymbol == null) {
-            CompilerLogger.error(ctx, "没有名为 " + memberName + " 的字段");
+            CompilerLogger.error(ctx, "没有名为 " + memberName + " 的成员");
             return TypeTable.VOID;
         }
 

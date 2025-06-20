@@ -171,8 +171,14 @@ public class LocalDefine extends CymbolASTVisitor<Object> {
                 structScope.addMethod(methodSymbol);
 
                 // 为方法创建新的作用域
-                stashScope(ctx);
-                pushScope(methodSymbol);
+                stashScope(ctx); // Associates the StructMemeberContext node with the current scope (which is the struct scope here)
+                                 // This line might need review, but the main change is below.
+                pushScope(methodSymbol); // currentScope is now methodSymbol
+
+                // Explicitly visit the return type node and associate it with the methodSymbol scope
+                if (ctx.type() != null) {
+                    visit(ctx.type());
+                }
 
                 // 访问方法参数和方法体
                 if (ctx.formalParameters() != null) {

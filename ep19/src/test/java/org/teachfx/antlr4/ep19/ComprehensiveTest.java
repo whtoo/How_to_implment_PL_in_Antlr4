@@ -182,7 +182,7 @@ public class ComprehensiveTest {
     @Test
     void testUndefinedFunction() {
         String code = "void main() { int x = foo(); }";
-        assertCompilationError(code, "未定义的函数");
+        assertCompilationError(code, "表达式不是一个函数");
     }
 
     @Test
@@ -244,7 +244,7 @@ public class ComprehensiveTest {
     @Test
     void testStructMethodAccess() {
         String code = "struct Point { int x; int y; } void main() { Point p; p.move(); }";
-        assertCompilationError(code, "没有名为 move 的成员");
+        assertCompilationError(code, "没有名为 move 的方法");
     }
 
     @Test
@@ -262,7 +262,7 @@ public class ComprehensiveTest {
     @Test
     void testNonFunctionCall() {
         String code = "void main() { int i = 5; i(); }";
-        assertCompilationError(code, "不是一个有效的函数");
+        assertCompilationError(code, "表达式不是一个函数");
     }
 
     @Test

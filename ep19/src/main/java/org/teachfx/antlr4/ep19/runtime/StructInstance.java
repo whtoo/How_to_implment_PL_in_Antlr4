@@ -15,9 +15,30 @@ public class StructInstance extends MemorySpace {
     public StructInstance(String name, MemorySpace enclosingSpace, StructSymbol symbol) {
         super(name, enclosingSpace);
         this.symbol = symbol;
-        // 初始化所有字段为默认值
-        for (String key : symbol.getMembers().keySet()) {
-            define(key, null);
+        // 初始化所有字段
+        for (Symbol memberSymbol : symbol.getMembers().values()) {
+            if (memberSymbol instanceof MethodSymbol) {
+                // Methods are not stored as values in the instance's memory space directly
+                continue;
+            }
+
+            String fieldName = memberSymbol.getName();
+            org.teachfx.antlr4.ep19.symtab.Type fieldType = memberSymbol.type;
+            Object fieldValue = null;
+
+            org.teachfx.antlr4.ep19.symtab.Type actualType = fieldType;
+            if (fieldType instanceof org.teachfx.antlr4.ep19.symtab.symbol.TypedefSymbol) {
+                actualType = ((org.teachfx.antlr4.ep19.symtab.symbol.TypedefSymbol) fieldType).getTargetType();
+            }
+
+            if (actualType instanceof org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol) {
+                // If the field is a struct, initialize it with a new StructInstance
+                fieldValue = new StructInstance(fieldName, this, (org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol) actualType);
+            } else {
+                // For primitive types or other non-struct types, initialize to null (or default primitive value if specified)
+                fieldValue = null;
+            }
+            define(fieldName, fieldValue);
         }
     }
 

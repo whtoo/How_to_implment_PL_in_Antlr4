@@ -17,6 +17,7 @@ import org.teachfx.antlr4.ep19.symtab.symbol.StructSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.Symbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.VariableSymbol;
 import org.teachfx.antlr4.ep19.symtab.symbol.TypedefSymbol;
+import org.teachfx.antlr4.ep19.symtab.type.ArrayType; // Added import
 
 /**
  * @description 给变量分配类型
@@ -49,27 +50,56 @@ public class LocalResolver extends CymbolASTVisitor<Object> {
         // 先访问子节点，确保类型节点已经被处理
         super.visitVarDecl(ctx);
 
-        // 获取变量类型
-        Type type = scopes.lookup(ctx.type());
+        // 获取变量基本类型
+        Type baseType = scopes.lookup(ctx.type());
         String varName = Util.name(ctx);
+        Type finalType;
+
+        // Check if it's an array declaration by inspecting the parse tree structure
+        // Grammar: type ID ('[' expr ']')? ('=' expr)? ';'
+        // Children: TypeContext, ID_TerminalNode, (optional LBRACK_TerminalNode, ExprContext, RBRACK_TerminalNode), ...
+        boolean isArrayDeclaration = false;
+        if (ctx.getChildCount() >= 5 && // Must have at least type, ID, [, expr, ] sequence
+            ctx.getChild(2) instanceof TerminalNode &&
+            ctx.getChild(2).getText().equals("[") &&
+            ctx.getChild(3) instanceof ExprContext && // expr for size
+            ctx.getChild(4) instanceof TerminalNode &&
+            ctx.getChild(4).getText().equals("]")) {
+            isArrayDeclaration = true;
+        }
+
+        if (isArrayDeclaration) {
+            if (baseType != null) {
+                finalType = new ArrayType(baseType);
+                logger.debug("变量 {} 是数组类型，元素类型为 {}, 最终类型为 {}", varName, baseType.getName(), finalType.getName());
+            } else {
+                CompilerLogger.error(ctx, "Unknown base type for array variable: " + varName);
+                finalType = TypeTable.VOID; // Error case, use VOID to prevent NPE, error already logged
+            }
+        } else {
+            finalType = baseType;
+            String finalTypeName = (finalType != null) ? finalType.getName() : "null";
+            logger.debug("变量 {} 的类型为 {}", varName, finalTypeName);
+        }
 
         // 创建变量符号
-        VariableSymbol var = new VariableSymbol(varName, type);
+        VariableSymbol var = new VariableSymbol(varName, finalType);
 
-        if (type == null) {
-            CompilerLogger.error(ctx, "Unknown type when declaring variable: " + var);
+        if (finalType == null) {
+             CompilerLogger.error(ctx, "Unknown type for variable: " + varName + ". Base type was " + (baseType != null ? baseType.getName() : "null"));
+        } else if (finalType == TypeTable.VOID && baseType == null && isArrayDeclaration) {
+            // This case means baseType was null for an array, error already logged by "Unknown base type for array variable".
         } else {
-            logger.debug("变量 {} 的类型为 {}", varName, type);
-
             // 将变量ID节点与其类型关联起来
             if (ctx.ID() != null) {
-                stashType(ctx.ID(), type);
-                logger.debug("将变量ID节点 {} 与类型 {} 关联", ctx.ID().getText(), type);
+                String typeNameToLog = (finalType.getName() != null) ? finalType.getName() : finalType.toString();
+                stashType(ctx.ID(), finalType); // Associate the ID node with the final type
+                logger.debug("将变量ID节点 {} 与类型 {} 关联", ctx.ID().getText(), typeNameToLog);
             }
         }
 
         // 将变量添加到当前作用域
-        Scope scope = scopes.get(ctx);
+        Scope scope = scopes.get(ctx); // currentScope should be correct here from DefPhase/stashScope
         scope.define(var);
 
         // 如果有表达式，确保它们被处理（可能包括数组大小和初始化表达式）

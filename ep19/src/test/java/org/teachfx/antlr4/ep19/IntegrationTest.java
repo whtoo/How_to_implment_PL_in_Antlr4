@@ -160,6 +160,6 @@ public class IntegrationTest {
     @Test
     void testRuntimeError() {
         String code = "void main() { int x = 5; int y = 0; int z = x / y; print(z); }";
-        assertCompilationOrExecutionError(code, "Exception during compilation");
+        assertCompilationOrExecutionError(code, "整数除零错误");
     }
 }

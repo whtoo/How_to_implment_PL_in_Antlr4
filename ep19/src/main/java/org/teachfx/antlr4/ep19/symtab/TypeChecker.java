@@ -12,7 +12,8 @@ import org.teachfx.antlr4.ep19.symtab.symbol.TypedefSymbol;
 public class TypeChecker {
 
     // Helper method to resolve TypedefSymbol to its actual underlying type
-    private static Type resolveToActualType(Type type) {
+    public static Type resolveToActualType(Type type) { // Changed to public
+
         Type currentType = type;
         while (currentType instanceof TypedefSymbol) {
             currentType = ((TypedefSymbol) currentType).getTargetType();

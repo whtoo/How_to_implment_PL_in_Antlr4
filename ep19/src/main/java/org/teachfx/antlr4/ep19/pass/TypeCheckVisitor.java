@@ -6,6 +6,7 @@ import org.teachfx.antlr4.ep19.misc.ScopeUtil;
 import org.teachfx.antlr4.ep19.parser.CymbolParser.*;
 // import org.teachfx.antlr4.ep19.parser.CymbolParser.ExprParenContext; // Remove this
 import org.teachfx.antlr4.ep19.symtab.Type;
+import org.teachfx.antlr4.ep19.symtab.type.ArrayType; // Added import
 import org.teachfx.antlr4.ep19.symtab.TypeChecker;
 import org.teachfx.antlr4.ep19.symtab.TypeTable;
 import org.teachfx.antlr4.ep19.symtab.scope.Scope;
@@ -118,6 +119,69 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
         }
 
         return resultType;
+    }
+
+    @Override
+    public Type visitExprBinaryMulDivPercent(ExprBinaryMulDivPercentContext ctx) {
+        Type leftType = visit(ctx.expr(0));
+        Type rightType = visit(ctx.expr(1));
+        String operator = ctx.o.getText();
+        Type resultType = null;
+
+        if (leftType == null || rightType == null) {
+            return TypeTable.VOID; // Error already reported
+        }
+
+        if (operator.equals("*") || operator.equals("/")) {
+            // Existing logic for * and / using TypeChecker can be called, or replicated
+            // For now, let's assume TypeChecker.checkBinaryOperationCompatibility handles * / correctly
+            resultType = TypeChecker.checkBinaryOperationCompatibility(leftType, rightType, operator, ctx);
+        } else if (operator.equals("%")) {
+            Type actualLeftType = TypeChecker.resolveToActualType(leftType); // Use existing helper
+            Type actualRightType = TypeChecker.resolveToActualType(rightType);
+            if (actualLeftType != TypeTable.INT || actualRightType != TypeTable.INT) {
+                CompilerLogger.error(ctx, "模运算的操作数必须是整数类型，实际为: " + leftType + ", " + rightType);
+                resultType = TypeTable.VOID;
+            } else {
+                resultType = TypeTable.INT;
+            }
+        } else {
+            // Should not happen if grammar and visitor names match
+            CompilerLogger.error(ctx, "未知的运算符: " + operator + " 在 ExprBinaryMulDivPercentContext 中");
+            resultType = TypeTable.VOID;
+        }
+
+        if (resultType == null || resultType == TypeTable.VOID) {
+            types.put(ctx, TypeTable.VOID);
+            return TypeTable.VOID;
+        }
+
+        types.put(ctx, resultType);
+        return resultType;
+    }
+
+    @Override
+    public Type visitExprLogicalAnd(ExprLogicalAndContext ctx) {
+        Type leftType = visit(ctx.expr(0));
+        Type rightType = visit(ctx.expr(1));
+
+        boolean error = false;
+        if (leftType != TypeTable.BOOLEAN) {
+            CompilerLogger.error(ctx.expr(0), "逻辑与操作符'&&'的左操作数必须是布尔类型");
+            error = true;
+        }
+        if (rightType != TypeTable.BOOLEAN) {
+            CompilerLogger.error(ctx.expr(1), "逻辑与操作符'&&'的右操作数必须是布尔类型");
+            error = true;
+        }
+
+        if (error) {
+            types.put(ctx, TypeTable.VOID); // Or an error type
+            return TypeTable.VOID;
+        }
+
+        types.put(ctx, TypeTable.BOOLEAN);
+        return TypeTable.BOOLEAN;
     }
 
     @Override
@@ -339,15 +403,20 @@ public class TypeCheckVisitor extends CymbolASTVisitor<Type> {
             return TypeTable.VOID;
         }
 
+        // NEW CHECK: Verify if the base expression is actually an array type
+        if (!(arrayType instanceof ArrayType)) {
+            CompilerLogger.error(ctx, "不是数组类型");
+            return TypeTable.VOID;
+        }
+
         // 检查索引类型必须是整数
         if (indexType != null && indexType != TypeTable.INT) {
             CompilerLogger.error(ctx, "数组索引必须是整数类型，实际为: " + indexType);
             return TypeTable.VOID;
         }
 
-        // 返回数组元素类型（这里简化处理，返回int类型）
-        // 实际应该根据数组的元素类型返回
-        Type elementType = TypeTable.INT; // 简化处理
+        // 返回数组元素类型
+        Type elementType = ((ArrayType) arrayType).getElementType();
         types.put(ctx, elementType);
         return elementType;
     }

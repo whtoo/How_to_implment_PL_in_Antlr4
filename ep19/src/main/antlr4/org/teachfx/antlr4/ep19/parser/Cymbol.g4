@@ -48,9 +48,10 @@ expr
   | expr o='.' ID                                      # exprStructFieldAccess
   | '-' expr                                            # exprUnary
   | '!' expr                                            # exprUnary
-  | expr o=('*' | '/') expr                             # exprBinary
-  | expr o=('+' | '-') expr                             # exprBinary
-  | expr o=('!=' | '==' | '<' | '>' | '<=' | '>=') expr # exprBinary
+  | expr o=('*' | '/' | PERCENT) expr                  # exprBinaryMulDivPercent // Modified for % and relabeled
+  | expr o=('+' | '-') expr                             # exprBinary // Kept general label for now
+  | expr o=('!=' | '==' | '<' | '>' | '<=' | '>=') expr # exprBinary // Kept general label for now
+  | expr o=AMPAMP expr                                  # exprLogicalAnd // Added '&&'
   | 'new' expr '(' (expr (',' expr)* )? ')'             # exprNew // new Point()
   | primary                                             # exprPrimary 
   | '(' expr ')'                                        # exprGroup
@@ -65,6 +66,8 @@ primary:    ID                   #primaryID   // variable reference
     ;
 
 ID  :   [_a-zA-Z] [_a-zA-Z0-9]* ;
+AMPAMP: '&&';
+PERCENT : '%'; // Added '%' token
 BOOLEAN: 'true' | 'false';
 NULL : 'null';
 

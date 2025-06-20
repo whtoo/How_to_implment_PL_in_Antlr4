@@ -10,6 +10,7 @@ This document tracks the progress of fixing test failures in the EP19 Cymbol com
 - **Failed**: 0
 - **Skipped**: 6 (in PerformanceBenchmarkTest)
 
+
 ## Failure Categories and Analysis
 
 ### 1. Array Support Partially Implemented
@@ -18,6 +19,7 @@ This document tracks the progress of fixing test failures in the EP19 Cymbol com
 **Failing Tests**: (Historical)
 - ✅ `ComprehensiveTest::testInvalidArrayAccess()` - FIXED (Compiler now correctly errors on indexing non-array types due to proper ArrayType implementation).
 - ✅ `ComprehensiveTest::testInvalidArrayIndex()` - FIXED (Now correctly reports index type error after ArrayType fix).
+
 
 **Root Cause**: Initially, array type checking was incomplete. A proper `ArrayType` was missing, leading to inability to distinguish array variables from scalar variables of the same base type.
 
@@ -46,6 +48,7 @@ Error: "数组索引必须是整数类型，实际为: bool"
 - ✅ `StructAndTypedefTest::testStructMethodCallUndefinedMethod()` - FIXED
 - ✅ `IntegrationTest::testComplexProgram()` - FIXED (Modulo operator '%' implemented, resolving final syntax issue in this test).
 
+
 **Root Cause**: Null pointer exception in `ExprFuncCallContext.expr(int)` returning null.
 
 **Error Pattern (Historical)**:
@@ -64,6 +67,7 @@ because the return value of "org.teachfx.antlr4.ep19.parser.CymbolParser$ExprFun
 **Status**: ✅ Fixed - Error Messages Standardized
 
 **Failing Tests**: (Historical)
+
 - `ComprehensiveTest::testNonStructFieldAccess()`
 - `StructAndTypedefTest::testAccessFieldOnNonStructTypeError()`
 - `StructAndTypedefTest::testNestedStructUndefinedFieldError()`
@@ -85,6 +89,7 @@ because the return value of "org.teachfx.antlr4.ep19.parser.CymbolParser$ExprFun
 
 **Root Cause**: Functions were not being properly recognized in their scope context. Return types within struct methods also had resolution issues.
 
+
 **TODO**:
 - [x] Fix function scope detection in LocalDefine/LocalResolver
 - [x] Ensure return statements are properly associated with their containing functions
@@ -96,12 +101,14 @@ because the return value of "org.teachfx.antlr4.ep19.parser.CymbolParser$ExprFun
 **Status**: ✅ Fixed - Core Interpreter Functionality Restored
 
 **Failing Tests**: (Historical)
+
 - `IntegrationTest::testBasicArithmetic()`
 - `IntegrationTest::testIfStatement()`
 - `IntegrationTest::testVariableDeclarationAndAssignment()`
 - `IntegrationTest::testWhileLoop()`
 
 **Root Cause**: Interpreter was not producing expected output, suggesting print functionality or interpreter execution was broken.
+
 
 **TODO**:
 - [x] Debug interpreter execution flow
@@ -113,6 +120,7 @@ because the return value of "org.teachfx.antlr4.ep19.parser.CymbolParser$ExprFun
 **Status**: ✅ Fixed - Nested Structs Initialized
 
 **Failing Tests**: (Historical)
+
 - `IntegrationTest::testNestedStructs()`
 - `IntegrationTest::testStructDeclarationAndUsage()`
 
@@ -188,6 +196,7 @@ because the return value of "org.teachfx.antlr4.ep19.parser.CymbolParser$ExprFun
 Following the completion of Phase 2, further analysis of remaining TODOs and test failures led to the following critical fixes:
 
 **Key Improvements Made:**
+
 *   **Nested Struct Initialization Fixed:** Modified `StructInstance.java` to correctly initialize fields that are themselves structs with new `StructInstance` objects, rather than `null`.
 *   **Struct Method Return Type Resolution:** Corrected an issue in `LocalDefine.java` by ensuring that the `TypeContext` for a struct method's return type is explicitly visited and associated with the method's scope.
 *   **Typedef Compatibility in TypeChecker:** Enhanced `TypeChecker.java` by adding `resolveToActualType()` and using it in compatibility checking methods.
@@ -222,6 +231,7 @@ Following Phase 2.5, the remaining active test failures were addressed:
 *   With these final changes, all 101 active tests in the EP19 suite now pass.
 *   The compiler's language feature set has been expanded (`&&`, `%`), and its type system made more robust, especially for array types.
 
+
 ## Recommendations
 1.  **Grammar Refinement for Precedence**: While the `&&` and `%` operators were added, a more robust definition of operator precedence in `Cymbol.g4` (e.g., by chaining `expr` rules like `expr : logicalAndExpr; logicalAndExpr : equalityExpr (AMPAMP equalityExpr)*; ...`) would be beneficial for future extensions and clarity, rather than relying on the order of alternatives in a flat `expr` list.
 2.  **Array Element Type Access**: The `TypeCheckVisitor.visitExprArrayAccess` now correctly returns the `elementType` from `ArrayType`. Ensure all downstream uses (e.g., in `TypeChecker` or `Interpreter` if they need to know the result type of an array access) are consistent.
@@ -255,6 +265,7 @@ Note: All previously failing active tests in ComprehensiveTest and IntegrationTe
 
 ✅ **All Active Tests Passing!** The EP19 compiler implementation is now robust, with all 101 active tests passing (107 total tests including 6 skipped). The recent efforts focused on implementing proper array type checking, adding logical AND (`&&`) and modulo (`%`) operators, and ensuring their correct type checking and interpretation.
 
+
 **Key achievements across all phases:**
 1. ✅ **Function system fully working**
 2. ✅ **Interpreter output and basic execution flow corrected**
@@ -270,3 +281,4 @@ Note: All previously failing active tests in ComprehensiveTest and IntegrationTe
 - The test suite effectively validates compiler correctness.
 
 The compiler is in a very healthy state with all active tests green.
+

@@ -13,6 +13,7 @@ public class TypeChecker {
 
     // Helper method to resolve TypedefSymbol to its actual underlying type
     public static Type resolveToActualType(Type type) { // Changed to public
+
         Type currentType = type;
         while (currentType instanceof TypedefSymbol) {
             currentType = ((TypedefSymbol) currentType).getTargetType();

@@ -96,22 +96,22 @@ This document contains a list of actionable improvement tasks for the Cymbol com
     - Update success rate statistics and test results
     - Add documentation for struct method call functionality
 
-19. [ ] Create comprehensive API documentation
+19. [x] Create comprehensive API documentation
     - Document all public classes and methods
     - Add examples for common use cases
     - Include parameter and return value descriptions
 
-20. [ ] Write a user guide for the Cymbol language
+20. [x] Write a user guide for the Cymbol language
     - Document language syntax and semantics
     - Provide examples of common programming patterns
     - Include a quick reference guide
 
-21. [ ] Document the type system
+21. [x] Document the type system
     - Explain type compatibility rules
     - Document type inference and conversion
     - Provide examples of type checking
 
-22. [ ] Create architecture documentation
+22. [x] Create architecture documentation
     - Document the compiler pipeline
     - Explain the role of each compiler pass
     - Include diagrams of the compilation process

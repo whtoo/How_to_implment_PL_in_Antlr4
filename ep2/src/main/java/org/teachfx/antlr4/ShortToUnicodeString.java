@@ -1,7 +1,8 @@
 package org.teachfx.antlr4.ep2;
 
-import org.teachfx.antlr4.ep2.ArrayInitParser.ArrayContext;
-import org.teachfx.antlr4.ep2.ArrayInitParser.ValueContext;
+import org.teachfx.antlr4.ep2.parser.ArrayInitBaseListener;
+import org.teachfx.antlr4.ep2.parser.ArrayInitParser.ArrayContext;
+import org.teachfx.antlr4.ep2.parser.ArrayInitParser.ValueContext;
 
 /**
  * Convert short array init like {1,2,3} to "\u0001\u0002\u0003"

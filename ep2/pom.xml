@@ -14,9 +14,7 @@
     <artifactId>ep2</artifactId>
     <version>1.0.0</version>
     <properties>
-        <!-- 这里为包含g4文件的文件夹-->
-        <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep20/parser</parser.g4.dir>
-        <run.main.entry>org.teachfx.antlr4.ep20.Compiler</run.main.entry>
+        <run.main.entry>org.teachfx.antlr4.ep2.Test</run.main.entry>
     </properties>
     <!-- 添加ANTLR4插件 -->
     <build>
@@ -34,9 +32,9 @@
                 </executions>
                 <configuration>
                     <visitor>true</visitor>
-                    <sourceDirectory>${basedir}/${parser.g4.file}</sourceDirectory>
+                    <sourceDirectory>${basedir}/src/main/java/org/teachfx/antlr4</sourceDirectory>
                     <!-- 指定 ANTLR4 生成代码的目录 -->
-                    <outputDirectory>${basedir}/src/main/java/org/teachfx/antlr4/ep20/parser</outputDirectory>
+                    <outputDirectory>${basedir}/src/main/java</outputDirectory>
                 </configuration>
             </plugin>
         </plugins>

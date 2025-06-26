@@ -132,18 +132,71 @@ mvn clean package
 - Antlr4运行时
 - Log4j日志
 - Apache Commons工具库
-### 3.1. 目录如下所述:
+### 3.1 Build Process
+1. After cloning the project, execute in the root directory:
+```bash
+mvn clean install
+```
+   This command will build all modules. Note: Some older episodes (ep1-ep15) might have outdated configurations in their `pom.xml` files and may require manual adjustments to build correctly.
+2. Build specific module (e.g., ep20):
+```bash
+cd ep20
+mvn clean package
+```
+   Alternatively, from the project root:
+```bash
+mvn clean package -pl ep20
+```
 
-- `src`: the folder to maintain sources
-    * `org/teachfx/antlr4` -- top package name.
-        * `ep${num}` -- `num` in `{1,2,3,...,25}`
-        * current `num` is `20`
-- `lib`: the folder to maintain dependencies
-### 3.2. 从哪儿开始？
-当所有依赖都安装完毕后，以ep20为例
+### 3.2 Modular Configuration
+The project uses a Maven multi-module structure. Each `ep*` directory (e.g., `ep1`, `ep20`) is an independent Maven module, typically containing:
+- `pom.xml` - Module-specific Maven configuration.
+- `src/main/java` - Java source code for the module.
+- `src/main/antlr4` - ANTLR grammar files (`.g4`) if the module uses ANTLR. Some older modules might have `.g4` files under `src/main/java`.
+- `src/main/resources` - Resource files for the module.
+- `src/test/java` - Java test source code.
 
-```Bash
+### 3.3 Dependency Management
+All dependencies are managed via Maven. Key dependencies are defined in the parent `pom.xml` and inherited by submodules:
+- ANTLR4 runtime (`org.antlr:antlr4`)
+- Log4j2 (`org.apache.logging.log4j:log4j-core`, `log4j-api`)
+- Apache Commons Lang (`org.apache.commons:commons-lang3`)
+- JUnit 5 and AssertJ (for testing)
+
+### 3.4 How to Start (Running Examples)
+Once the project is built (e.g., via `mvn clean install`), you can run specific episodes. The `scripts/run.sh` script is provided as a convenience for this.
+
+**Using `run.sh`:**
+The script helps compile, run, and test individual modules.
+```bash
 cd your_project_dir
+
+# General usage:
+# ./scripts/run.sh <command> <module_name> [extra_arguments_for_run_command]
+
+# Examples:
+./scripts/run.sh compile ep16    # Compile ep16 module
+./scripts/run.sh run ep16       # Run ep16 module's main class
+# For modules that take input files, like ep20 or ep21:
+./scripts/run.sh run ep20 "src/main/resources/t.cymbol"
+./scripts/run.sh run ep21 "src/main/resources/t.cymbol"
+./scripts/run.sh test ep19      # Run tests for ep19
+
+# View help for run.sh:
+./scripts/run.sh help
+```
+**Note on older episodes (ep1-ep15):** These episodes might have outdated `run.main.entry` configurations in their `pom.xml` files. If `run.sh run <module>` fails for these, you might need to:
+1. Check the `pom.xml` of the specific episode and correct the `<run.main.entry>` property to point to the actual main class.
+2. Or, run the main class directly using `mvn exec:java -pl <module_name> -Dexec.mainClass="your.main.Class" -Dexec.args="..."`.
+
+**Running without `run.sh` (Standard Maven):**
+You can also run modules using standard Maven commands if you know the main class:
+```bash
+# Example for ep20, assuming its pom.xml has correct run.main.entry
+mvn exec:java -pl ep20 -Dexec.args="src/main/resources/t.cymbol"
+```
+
+## 4. 参考或者模仿材料来源
 
 # 使用run.sh脚本
 ./scripts/run.sh <命令> <模块名> [额外参数]

@@ -127,13 +127,13 @@
 <!--                            </arguments>-->
 <!--                        </configuration>-->
 <!--                    </execution>-->
-                    <execution>
-                        <id>run</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                    </execution>
+<!--                    <execution>-->
+<!--                        <id>run</id>-->
+<!--                        <phase>verify</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>java</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
                 </executions>
                 <configuration>
                     <mainClass>${run.main.entry}</mainClass> <!-- 替换为你的主类 -->
@@ -177,21 +177,21 @@
     </build>
 
     <modules>
-<!--        <module>ep1</module>-->
-<!--        <module>ep2</module>-->
-<!--        <module>ep3</module>-->
-<!--        <module>ep4</module>-->
-<!--        <module>ep5</module>-->
-<!--        <module>ep6</module>-->
-<!--        <module>ep7</module>-->
-<!--        <module>ep8</module>-->
-<!--        <module>ep9</module>-->
-<!--        <module>ep10</module>-->
-<!--        <module>ep11</module>-->
-<!--        <module>ep12</module>-->
-<!--        <module>ep13</module>-->
-<!--        <module>ep14</module>-->
-<!--        <module>ep15</module>-->
+        <module>ep1</module>
+        <module>ep2</module>
+        <module>ep3</module>
+        <module>ep4</module>
+        <module>ep5</module>
+        <module>ep6</module>
+        <module>ep7</module>
+        <module>ep8</module>
+        <module>ep9</module>
+        <module>ep10</module>
+        <module>ep11</module>
+        <module>ep12</module>
+        <module>ep13</module>
+        <module>ep14</module>
+        <module>ep15</module>
         <module>ep16</module>
         <module>ep17</module>
         <module>ep18</module>

@@ -196,7 +196,7 @@ You can also run modules using standard Maven commands if you know the main clas
 mvn exec:java -pl ep20 -Dexec.args="src/main/resources/t.cymbol"
 ```
 
-## 4. 参考或者模仿材料来源
+## 3.5. 命令示例
 
 # 使用run.sh脚本
 ./scripts/run.sh <命令> <模块名> [额外参数]
@@ -212,7 +212,6 @@ mvn exec:java -pl ep20 -Dexec.args="src/main/resources/t.cymbol"
 
 # 查看帮助
 ./scripts/run.sh help
-```
 
 ## 4. 参考或者模仿材料来源
 ### 4.1 如何解释一个程序

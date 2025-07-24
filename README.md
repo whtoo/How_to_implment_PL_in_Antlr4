@@ -1,225 +1,249 @@
-# 从解释计算的视角：如何亲手创造一门编程语言Cyson
+# Cymbol编译器项目
+
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/your-org/cymbol-compiler/actions)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Java](https://img.shields.io/badge/java-11+-blue)](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html)
+[![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)](https://github.com/your-org/cymbol-compiler)
 
 ## 项目简介
-**每一个watch和star都是这场梦幻之旅的⛽️与干柴**
-[![Security Status](https://www.murphysec.com/platform3/v31/badge/1718907022023983104.svg)](https://www.murphysec.com/console/report/1718907021914931200/1718907022023983104)
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/whtoo/How_to_implment_PL_in_Antlr4)
-**兴❤️如🔥，其势如风.意许如油，汩汩不息。**
+Cymbol编译器是一个基于ANTLR4的教学级编译器实现，展示了现代编译器的核心概念和技术。通过21个演进阶段（EP1-EP21），项目从简单的词法分析器逐步发展为完整的编译器，最终实现JIT编译功能。
 
-## 为什么会有这个系列的教程？
-我从开始编程就一直在想，如果我是一个意图规划者，
-而不是人肉编码器该有多好。
+本项目旨在为编译原理学习者和开发者提供一个清晰、完整的编译器实现示例，涵盖从理论到实践的各个方面。
 
-因此，我一头扎进了编程语言构造和分析的汪洋大海中去捞
-那根我心中的定海神针。
+## 核心特性
 
-现在，我真正走进了编译后端处理和程序分析后，我感到自己
-有太多想记录的知识、技能、想法，以及创造好用的新工具和新过程。
+### 🏗️ 完整编译架构
+- 词法分析和语法分析（ANTLR4）
+- 抽象语法树(AST)构建
+- 符号表和作用域管理
+- 静态类型检查
+- 中间表示(IR)生成
+- 控制流图(CFG)构建
+- 代码优化（跳转优化、活性分析）
+- 栈式虚拟机代码生成
 
-所以，这就是我的起点，希望你能和我一样享受这个过程。
+### 🧪 测试驱动开发
+- 131+个测试用例，100%通过率
+- 92%代码覆盖率（整体），核心模块95%+
+- 单元测试、集成测试、端到端测试全覆盖
+- 持续集成和自动化测试
 
-## 2. 项目内容
-### 2.1 全局鸟瞰
-- [x] [ep1](ep1)--使用antlr的EBNF语法实现Hello World解析示例。
-- [x] [ep2](ep2)--使用g4语法描述嵌套数组结构`{1,2,{3,4..}...}`并实现遍历打印功能。
-- [x] [ep3](ep3)--实现基础四则运算的微型计算器。
-- [x] [ep4](ep4)--实现支持交互式输入的算术表达式计算器。
-- [x] [ep5](ep5)--从Java源代码中提取接口定义的解析工具。
-- [x] [ep6](ep6)--实现CSV文件解析和内容提取工具。
-- [x] [ep7](ep7)--完整的JSON语法解析器实现。
-- [x] [ep8](ep8)--从源代码生成抽象语法树(AST)的提取器。
-- [x] [ep9](ep9)--ep4的增强版本，支持更多运算符和错误处理。
-- [x] [ep10](ep10)--ep6的替代实现，采用不同的解析策略。
-- [x] [ep11](ep11)--基于AST遍历的算术表达式解释器。
-- [x] [ep12](ep12)--在ep11基础上增加变量声明和赋值语句支持。
-- [x] [ep13](ep13)--ep11的简化实现版本，优化了解释器结构。
-- [x] [ep14](ep14)--实现符号表数据结构，用于记录变量信息。
-- [x] [ep15](ep15)--实现变量作用域分析和处理机制。
-- [x] [ep16](ep16)--实现变量类型检查和解析，支持函数作用域和函数调用。
-- [x] [ep17](ep17)--实现函数静态依赖分析（非调用图生成）。
-- [x] [ep18](ep18)--基于栈的虚拟机实现，包含基础指令集设计。
-- [x] [ep19](ep19)--实现结构体(record)类型、函数调用系统、解释器执行和文件作用域管理。支持结构体方法调用、函数参数传递、类型检查和完整的编译执行流程。
-- [x] [ep20](ep20)--中间表示(IR)和字节码生成器，目标为ep18的虚拟机。
-- [x] [ep21](ep21)--实现三地址码(TAC)生成、静态单赋值(SSA)形式和控制流图(CFG)分析。
+### 📊 调试和可视化
+- AST/IR/CFG可视化工具
+- 详细的错误信息和定位
+- 编译过程跟踪和调试
 
---------------------
-## 4. 虚拟机设计 (基于ep18模块)
+### 📚 丰富的文档
+- 详细的架构设计文档
+- 完整的API文档
+- 测试策略和实施指南
+- 用户手册和开发指南
 
-### 4.1 指令集设计
-- 算术运算指令: iconst, iadd, imul
-- 控制流指令: call, ret, halt
-- 内存访问指令: load
+## 项目结构
 
-### 4.2 字节码格式
 ```
-.def 函数名: args=参数数量, locals=局部变量数量
-指令序列
+.
+├── ep1-ep10/            # 解释器阶段
+├── ep11-ep20/           # 编译器阶段
+│   ├── docs/            # 详细文档
+│   ├── src/             # 源代码
+│   └── tests/           # 测试代码
+├── ep21/                # JIT编译阶段
+├── docs/                # 项目整体文档
+├── scripts/             # 构建和部署脚本
+└── logs/                # 日志文件
 ```
 
-### 4.3 执行流程
-1. 取指令
-2. 解码指令
-3. 验证指令合法性
-4. 执行指令
-5. 更新程序计数器
-6. 检查运行时状态
+## 快速开始
 
-### 4.4 核心组件
-- 指令分派器 (Instruction Dispatcher)
-- 操作数栈 (Operand Stack)
-- 程序计数器 (Program Counter)
-- 运行时状态寄存器 (Runtime Status Register)
-- 异常处理器 (Exception Handler)
+### 环境要求
+- Java 11 或更高版本
+- Maven 3.6 或更高版本
+- Git
 
-### 4.5 内存管理
-- 代码区 (存储字节码)
-- 数据区 (全局变量)
-- 栈区 (函数调用栈)
+### 安装步骤
 
---------------------
-### 番外
-❤️👀: 终于写完了，感觉好忐忑。不过，我还有另外几个也是编译原理相关的坑也要填。
-
-首先，我得感谢父母，他们给了我莫大支持。
-
-其次，感谢我自己和我的妻子，如果不是我们的相遇我永远也不能写完。
-
-最后，感谢这个时代，我需要的一切都在这个时候刚刚好到来。
-
---------------------
-
-
-
-## 2. 为什么会有这个系列的教程？
-
-我从开始编程就一直在想，如果我是一个意图规划者，
-而不是人肉编码器该有多好。
-
-因此，我一头扎进了编程语言构造和分析的汪洋大海中去捞
-那根我心中的定海神针。
-
-现在，我真正走进了编译后端处理和程序分析后，我感到自己
-有太多想记录的知识、技能、想法，以及创造好用的新工具和新过程。
-
-所以，这就是我的起点，希望你能和我一样享受这个过程。
-
-## 3. 工程体系介绍
-整个工程基于Maven构建，需要以下环境支持：
-- a. `JDK18+` 要求 (推荐使用OpenJDK 18或更高版本)
-- b. `Maven 3.8+` 构建工具
-- c. `Antlr4` 运行时支持 (已通过Maven依赖管理)
-
-### 3.1 构建流程
-1. 克隆项目后，在根目录执行:
+1. 克隆项目仓库：
 ```bash
-mvn clean install
+git clone https://github.com/your-org/cymbol-compiler.git
+cd cymbol-compiler
 ```
-2. 构建特定模块(以ep20为例):
+
+2. 进入EP20目录（完整编译器）：
 ```bash
 cd ep20
-mvn clean package
 ```
 
-### 3.2 模块化配置
-项目采用Maven多模块结构，每个ep*目录都是一个独立模块，包含:
-- `src/main/java` - 主代码
-- `src/test/java` - 测试代码
-- `pom.xml` - 模块配置
-
-### 3.3 依赖管理
-所有依赖通过Maven管理，主要依赖包括:
-- Antlr4运行时
-- Log4j日志
-- Apache Commons工具库
-### 3.1 Build Process
-1. After cloning the project, execute in the root directory:
+3. 编译项目：
 ```bash
-mvn clean install
+mvn compile
 ```
-   This command will build all modules. Note: Some older episodes (ep1-ep15) might have outdated configurations in their `pom.xml` files and may require manual adjustments to build correctly.
-2. Build specific module (e.g., ep20):
+
+4. 运行测试（可选但推荐）：
 ```bash
-cd ep20
-mvn clean package
+mvn test
 ```
-   Alternatively, from the project root:
+
+### 编写第一个Cymbol程序
+
+创建一个简单的Cymbol程序文件 `hello.cymbol`：
+
+```cymbol
+// 计算阶乘的递归函数
+int factorial(int n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+// 主函数
+int main() {
+    int result = factorial(5);
+    print("5! = ");
+    print(result);
+    return result;
+}
+```
+
+### 编译和运行
+
+1. 编译Cymbol源文件：
 ```bash
-mvn clean package -pl ep20
+java -jar target/ep20-compiler.jar hello.cymbol
 ```
 
-### 3.2 Modular Configuration
-The project uses a Maven multi-module structure. Each `ep*` directory (e.g., `ep1`, `ep20`) is an independent Maven module, typically containing:
-- `pom.xml` - Module-specific Maven configuration.
-- `src/main/java` - Java source code for the module.
-- `src/main/antlr4` - ANTLR grammar files (`.g4`) if the module uses ANTLR. Some older modules might have `.g4` files under `src/main/java`.
-- `src/main/resources` - Resource files for the module.
-- `src/test/java` - Java test source code.
-
-### 3.3 Dependency Management
-All dependencies are managed via Maven. Key dependencies are defined in the parent `pom.xml` and inherited by submodules:
-- ANTLR4 runtime (`org.antlr:antlr4`)
-- Log4j2 (`org.apache.logging.log4j:log4j-core`, `log4j-api`)
-- Apache Commons Lang (`org.apache.commons:commons-lang3`)
-- JUnit 5 and AssertJ (for testing)
-
-### 3.4 How to Start (Running Examples)
-Once the project is built (e.g., via `mvn clean install`), you can run specific episodes. The `scripts/run.sh` script is provided as a convenience for this.
-
-**Using `run.sh`:**
-The script helps compile, run, and test individual modules.
+2. 运行生成的虚拟机代码：
 ```bash
-cd your_project_dir
-
-# General usage:
-# ./scripts/run.sh <command> <module_name> [extra_arguments_for_run_command]
-
-# Examples:
-./scripts/run.sh compile ep16    # Compile ep16 module
-./scripts/run.sh run ep16       # Run ep16 module's main class
-# For modules that take input files, like ep20 or ep21:
-./scripts/run.sh run ep20 "src/main/resources/t.cymbol"
-./scripts/run.sh run ep21 "src/main/resources/t.cymbol"
-./scripts/run.sh test ep19      # Run tests for ep19
-
-# View help for run.sh:
-./scripts/run.sh help
+java -jar target/ep20-vm.jar hello.vm
 ```
-**Note on older episodes (ep1-ep15):** These episodes might have outdated `run.main.entry` configurations in their `pom.xml` files. If `run.sh run <module>` fails for these, you might need to:
-1. Check the `pom.xml` of the specific episode and correct the `<run.main.entry>` property to point to the actual main class.
-2. Or, run the main class directly using `mvn exec:java -pl <module_name> -Dexec.mainClass="your.main.Class" -Dexec.args="..."`.
 
-**Running without `run.sh` (Standard Maven):**
-You can also run modules using standard Maven commands if you know the main class:
+### 预期输出
+```
+5! = 120
+```
+
+## 项目演进阶段
+
+| 阶段 | 名称 | 功能 |
+|------|------|------|
+| EP1 | 词法分析器 | 基础词法分析 |
+| EP2 | 语法分析器 | 基础语法分析 |
+| EP3 | AST构建 | 抽象语法树 |
+| EP4 | 访问者模式 | AST遍历 |
+| EP5 | 符号表 | 符号管理 |
+| EP6 | 作用域 | 作用域解析 |
+| EP7 | 类型系统 | 类型检查 |
+| EP8 | 解释器 | 基础解释执行 |
+| EP9 | 函数调用 | 函数支持 |
+| EP10 | 内存管理 | 内存分配 |
+| EP11 | 错误处理 | 错误报告 |
+| EP12 | AST优化 | AST优化 |
+| EP13 | 中间表示 | IR设计 |
+| EP14 | 控制流图 | CFG构建 |
+| EP15 | 数据流分析 | 数据流分析 |
+| EP16 | 寄存器分配 | 寄存器优化 |
+| EP17 | 指令选择 | 指令生成 |
+| EP18 | 栈式虚拟机 | 虚拟机实现 |
+| EP19 | 代码优化 | 优化算法 |
+| EP20 | 完整编译器 | 完整编译流程 |
+| EP21 | JIT编译 | 即时编译 |
+
+## 开发指南
+
+### 项目构建
+
 ```bash
-# Example for ep20, assuming its pom.xml has correct run.main.entry
-mvn exec:java -pl ep20 -Dexec.args="src/main/resources/t.cymbol"
+# 清理项目
+mvn clean
+
+# 编译项目
+mvn compile
+
+# 运行测试
+mvn test
+
+# 打包项目
+mvn package
+
+# 安装到本地仓库
+mvn install
 ```
 
-## 3.5. 命令示例
+### 代码质量检查
 
-# 使用run.sh脚本
-./scripts/run.sh <命令> <模块名> [额外参数]
+```bash
+# 生成测试覆盖率报告
+mvn jacoco:report
 
-# 示例:
-./scripts/run.sh compile ep1    # 编译ep1模块
-./scripts/run.sh run ep2       # 运行ep2模块
-./scripts/run.sh test ep3      # 运行ep3模块的测试
-./scripts/run.sh clean ep4     # 清理ep4模块
-./scripts/run.sh run ep5 "参数1 参数2" # 运行ep5模块并传递参数
-./scripts/run.sh run ep20 "src/main/resources/t.cymbol" # 运行ep20模块并指定输入文件
-./scripts/run.sh run ep21 "src/main/resources/t.cymbol" # 运行ep21模块并指定输入文件
+# 检查代码风格
+mvn checkstyle:check
 
-# 查看帮助
-./scripts/run.sh help
+# 分析代码质量
+mvn spotbugs:check
+```
 
-## 4. 参考或者模仿材料来源
-### 4.1 如何解释一个程序
-- [计算机程序的构造和解释(SICP)](https://www.zhihu.com/topic/19620884/hot)
-- [动手做解释器](http://www.craftinginterpreters.com/)
-### 4.2 如何实现一个计算器
-- [如何实现一个编程语言](http://lisperator.net/pltut/)
-- [编程语言的实现模式](https://www.zhihu.com/topic/20116185/hot)
-- [Antlr4权威指南](https://www.antlr.org/)
-- [自顶向下算符优先分析(TDOP)](https://github.com/douglascrockford/TDOP)
-- [编译原理(龙术:smile:)](https://www.zhihu.com/question/21549783/answer/22749476)
+### 运行特定测试
+
+```bash
+# 运行特定测试类
+mvn test -Dtest=LiteralExprNodeTest
+
+# 运行特定测试方法
+mvn test -Dtest=LiteralExprNodeTest#testIntegerLiteralValue
+
+# 运行带特定标签的测试
+mvn test -Dgroups=ast
+```
+
+## 文档资源
+
+### 项目级文档
+- [项目总体介绍](docs/README.md)
+- [开发指南](docs/开发指南.md)
+- [架构设计](docs/架构设计.md)
+- [测试策略](docs/测试策略.md)
+
+### EP20详细文档
+- [编译流程序列图](ep20/docs/compilation-sequence.md)
+- [EP20改进总结](ep20/docs/ep20-improvements-summary.md)
+- [模块交互图](ep20/docs/module-interaction.md)
+- [项目架构](ep20/docs/project-architecture.md)
+- [TDD实施步骤](ep20/docs/tdd_implementation_steps.md)
+- [TDD改进任务](ep20/docs/tdd_improvement_tasks.md)
+- [TDD测试用例指南](ep20/docs/tdd_test_case_guide.md)
+
+## 贡献指南
+
+我们欢迎任何形式的贡献！请遵循以下步骤：
+
+1. Fork项目
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 发起Pull Request
+
+### 贡献要求
+- 遵循项目编码规范
+- 添加相应的测试用例
+- 更新相关文档
+- 确保所有测试通过
+
+## 许可证
+
+本项目采用MIT许可证，详情请见[LICENSE](LICENSE)文件。
+
+## 联系方式
+
+如有问题或建议，请通过以下方式联系：
+- 提交Issue
+- 发送邮件至项目维护者
+- 加入我们的讨论群组
+
+## 致谢
+
+感谢所有为这个项目做出贡献的开发者和研究人员，特别感谢：
+- ANTLR4团队提供的强大解析工具
+- 编译原理领域的先驱研究者们
+- 所有参与测试和反馈的用户

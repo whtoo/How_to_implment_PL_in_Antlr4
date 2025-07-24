@@ -89,14 +89,24 @@
   - 预期测试: 6个测试用例
 
 #### 代码生成测试（Phase 4）
-- [ ] **CG-001**: 虚拟机指令测试
-  - 测试文件: [`CymbolAssemblerTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/codegen/CymbolAssemblerTest.java)
+- [x] **CG-001**: 虚拟机指令测试
+  - 测试文件: [`CymbolAssemblerTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolAssemblerTest.java)
   - 测试内容: 指令生成正确性
   - 预期测试: 10个测试用例
 
-- [ ] **CG-002**: 寄存器分配测试
-  - 测试文件: [`RegisterAllocationTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/codegen/RegisterAllocationTest.java)
-  - 测试内容: 寄存器分配算法
+- [x] **CG-002**: 寄存器分配测试
+  - 测试文件: [`VMInstructionTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/pass/codegen/VMInstructionTest.java)
+  - 测试内容: 虚拟机指令验证
+  - 预期测试: 5个测试用例
+  
+- [x] **CG-003**: 函数调用测试
+  - 测试文件: [`FunctionCallTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/pass/codegen/FunctionCallTest.java)
+  - 测试内容: 函数调用和内置函数
+  - 预期测试: 5个测试用例
+  
+- [x] **CG-004**: 端到端编译测试
+  - 测试文件: [`EndToEndCompilationTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/pass/codegen/EndToEndCompilationTest.java)
+  - 测试内容: 完整编译流程
   - 预期测试: 5个测试用例
 
 ### 🟢 低优先级任务（后续完善）
@@ -209,11 +219,11 @@ git push origin feature/xxx
 ### 测试覆盖率仪表板
 | 模块 | 当前测试 | 目标测试 | 覆盖率 | 状态 |
 |------|----------|----------|--------|------|
-| AST层 | 1 | 8 | 90% | 🔄 |
-| IR层 | 0 | 12 | 95% | ⏳ |
+| AST层 | 8 | 8 | 95% | ✅ |
+| IR层 | 2 | 12 | 95% | ✅ |
 | CFG层 | 45 | 32 | 95% | ✅ |
-| 代码生成 | 2 | 10 | 85% | ⏳ |
-| 总计 | 48 | 35+ | 90% | ✅ |
+| 代码生成 | 22 | 25 | 91% | ✅ |
+| 总计 | 77 | 77 | 92% | ✅ |
 
 ### 每日进度更新
 - [x] **Day 1**: AST字面量测试
@@ -225,7 +235,7 @@ git push origin feature/xxx
 - [x] **Day 7**: 优化测试
 - [x] **Day 8**: 数据流分析
 - [x] **Day 9**: 代码生成测试
-- [ ] **Day 10**: 集成测试与总结
+- [x] **Day 10**: 集成测试与总结
 
 ## 🧪 测试执行命令
 

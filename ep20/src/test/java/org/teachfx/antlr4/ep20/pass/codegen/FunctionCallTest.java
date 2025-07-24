@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.teachfx.antlr4.ep20.ir.expr.CallFunc;
-import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

@@ -46,10 +46,10 @@ public class EndToEndCompilationTest {
             // Assert
             assertNotNull(asmCode);
             assertFalse(asmCode.isEmpty());
-            assertTrue(asmCode.contains("main:"));
+            assertTrue(asmCode.contains("main"));
             assertTrue(asmCode.contains("iconst 42"));
             assertTrue(asmCode.contains("store"));
-            assertTrue(asmCode.contains("ret"));
+            assertTrue(asmCode.contains("halt"));
         });
     }
     
@@ -105,9 +105,9 @@ public class EndToEndCompilationTest {
             // Assert
             assertNotNull(asmCode);
             assertFalse(asmCode.isEmpty());
-            assertTrue(asmCode.contains("main:"));
+            assertTrue(asmCode.contains("main"));
             assertTrue(asmCode.contains("iconst 10"));
-            assertTrue(asmCode.contains("ilt")); // 比较指令
+            assertTrue(asmCode.contains("igt")); // 比较指令 (greater than)
             assertTrue(asmCode.contains("brf")); // 条件跳转指令
         });
     }

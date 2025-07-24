@@ -103,6 +103,15 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Exec Maven Plugin -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>org.teachfx.antlr4.ep20.Compiler</mainClass>
+                </configuration>
+            </plugin>
         </plugins>
         <!-- 定义源码目录 -->
         <sourceDirectory>src/main/java</sourceDirectory>

@@ -2,18 +2,11 @@ package org.teachfx.antlr4.ep20.pass.cfg;
 
 import org.junit.jupiter.api.Test;
 import org.teachfx.antlr4.ep20.ir.IRNode;
-import org.teachfx.antlr4.ep20.ir.expr.ImmValue;
-import org.teachfx.antlr4.ep20.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;
-import org.teachfx.antlr4.ep20.ir.expr.arith.BinExpr;
-import org.teachfx.antlr4.ep20.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
 import org.teachfx.antlr4.ep20.ir.stmt.FuncEntryLabel;
 import org.teachfx.antlr4.ep20.ir.stmt.JMP;
 import org.teachfx.antlr4.ep20.ir.stmt.Label;
-import org.teachfx.antlr4.ep20.symtab.type.OperatorType;
-import org.teachfx.antlr4.ep20.utils.Kind;
-
 import java.util.ArrayList;
 import java.util.List;
 

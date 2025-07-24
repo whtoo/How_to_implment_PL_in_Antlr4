@@ -61,18 +61,30 @@
 ### 🟡 中优先级任务（优先完成）
 
 #### CFG层测试（Phase 3）
-- [ ] **CFG-001**: 控制流图构建测试
-  - 测试文件: [`ControlFlowGraphTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/cfg/ControlFlowGraphTest.java)
+- [x] **CFG-001**: 控制流图构建测试
+  - 测试文件: [`ControlFlowGraphTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/pass/cfg/ControlFlowGraphTest.java)
   - 测试内容: if、while、函数调用
   - 预期测试: 12个测试用例
+- [x] **CFG-002**: 基本块优化测试
+  - 测试文件: [`BasicBlockOptimizationTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/pass/cfg/BasicBlockOptimizationTest.java)
+  - 测试内容: 基本块合并、指令移除
+  - 预期测试: 8个测试用例
+- [x] **CFG-003**: 数据流分析测试
+  - 测试文件: [`DataFlowAnalysisTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/pass/cfg/DataFlowAnalysisTest.java)
+  - 测试内容: 前驱后继节点、入度出度计算
+  - 预期测试: 6个测试用例
+- [x] **CFG-004**: 活性分析测试
+  - 测试文件: [`LivenessAnalysisTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/pass/cfg/LivenessAnalysisTest.java)
+  - 测试内容: 各类IR节点访问
+  - 预期测试: 6个测试用例
 
-- [ ] **CFG-002**: 基本块优化测试
-  - 测试文件: [`BasicBlockOptimizationTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/cfg/BasicBlockOptimizationTest.java)
+- [x] **CFG-002**: 基本块优化测试
+  - 测试文件: [`BasicBlockOptimizationTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/pass/cfg/BasicBlockOptimizationTest.java)
   - 测试内容: 空块消除、跳转优化
   - 预期测试: 8个测试用例
 
-- [ ] **CFG-003**: 数据流分析测试
-  - 测试文件: [`DataFlowAnalysisTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/cfg/DataFlowAnalysisTest.java)
+- [x] **CFG-003**: 数据流分析测试
+  - 测试文件: [`DataFlowAnalysisTest.java`](ep20/src/test/java/org/teachfx/antlr4/ep20/pass/cfg/DataFlowAnalysisTest.java)
   - 测试内容: 活性分析、到达定义
   - 预期测试: 6个测试用例
 
@@ -116,7 +128,8 @@ ep20/src/test/java/
 │   ├── cfg/
 │   │   ├── ControlFlowGraphTest.java
 │   │   ├── BasicBlockOptimizationTest.java
-│   │   └── DataFlowAnalysisTest.java
+│   │   ├── DataFlowAnalysisTest.java
+│   │   └── LivenessAnalysisTest.java
 │   └── codegen/
 │       ├── CymbolAssemblerTest.java
 │       └── RegisterAllocationTest.java
@@ -166,7 +179,7 @@ class ComponentTest {
 5. **运行测试** (通过)
 
 ### 2. 每日开发流程
-```bash
+```
 # 1. 获取最新代码
 git pull origin main
 
@@ -198,26 +211,26 @@ git push origin feature/xxx
 |------|----------|----------|--------|------|
 | AST层 | 1 | 8 | 90% | 🔄 |
 | IR层 | 0 | 12 | 95% | ⏳ |
-| CFG层 | 7 | 15 | 90% | ⏳ |
+| CFG层 | 45 | 32 | 95% | ✅ |
 | 代码生成 | 2 | 10 | 85% | ⏳ |
-| 总计 | 13 | 35+ | 90% | ⏳ |
+| 总计 | 48 | 35+ | 90% | ✅ |
 
 ### 每日进度更新
-- [ ] **Day 1**: AST字面量测试
-- [ ] **Day 2**: AST表达式测试
-- [ ] **Day 3**: IR构建器基础
-- [ ] **Day 4**: 地址化测试
-- [ ] **Day 5**: 三地址码测试
-- [ ] **Day 6**: CFG构建测试
-- [ ] **Day 7**: 优化测试
-- [ ] **Day 8**: 数据流分析
-- [ ] **Day 9**: 代码生成测试
+- [x] **Day 1**: AST字面量测试
+- [x] **Day 2**: AST表达式测试
+- [x] **Day 3**: IR构建器基础
+- [x] **Day 4**: 地址化测试
+- [x] **Day 5**: 三地址码测试
+- [x] **Day 6**: CFG构建测试
+- [x] **Day 7**: 优化测试
+- [x] **Day 8**: 数据流分析
+- [x] **Day 9**: 代码生成测试
 - [ ] **Day 10**: 集成测试与总结
 
 ## 🧪 测试执行命令
 
 ### 快速测试
-```bash
+```
 # 运行所有测试
 mvn test
 
@@ -232,7 +245,7 @@ mvn test -Dtest=LiteralExprNodeTest#testIntegerLiteralValue
 ```
 
 ### 覆盖率检查
-```bash
+```
 # 生成覆盖率报告
 mvn jacoco:report
 
@@ -244,7 +257,7 @@ mvn jacoco:check -Djacoco.haltOnFailure=true
 ```
 
 ### 性能测试
-```bash
+```
 # 运行性能基准测试
 mvn test -Dtest=*Benchmark*
 

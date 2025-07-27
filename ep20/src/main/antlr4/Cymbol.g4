@@ -15,7 +15,7 @@ typedefDecl
     ;
 
 structDecl
-    :   'struct' ID '{' structMember* '}' ';'
+    :   'struct' ID '{' structMember* '}'
     ;
 
 structMember

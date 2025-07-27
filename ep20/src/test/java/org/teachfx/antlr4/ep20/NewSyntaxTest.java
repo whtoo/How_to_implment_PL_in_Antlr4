@@ -101,4 +101,16 @@ public class NewSyntaxTest {
             return false;
         }
     }
+    
+    @Test
+    public void testStructDeclarationWithSemicolon() {
+        String source = "struct Person { int age; string name; }; int test() { Person p; p.age = 25; return p.age; }";
+        assertTrue(canParse(source), "Should parse struct declaration with semicolon");
+    }
+    
+    @Test
+    public void testFieldAccessWithSemicolon() {
+        String source = "struct Point { int x; int y; }; int test() { Point p; p.x = 10; p.y = 20; return p.x + p.y; }";
+        assertTrue(canParse(source), "Should parse field access with semicolon");
+    }
 }

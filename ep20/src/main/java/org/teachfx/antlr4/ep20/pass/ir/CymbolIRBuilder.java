@@ -7,6 +7,9 @@ import org.teachfx.antlr4.ep20.ast.ASTVisitor;
 import org.teachfx.antlr4.ep20.ast.CompileUnit;
 import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
 import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.StructDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.StructMemberNode;
+import org.teachfx.antlr4.ep20.ast.decl.TypedefDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
@@ -307,7 +310,45 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     public Void visit(ContinueStmtNode continueStmtNode) {
         curNode = continueStmtNode;
         jump(continueStack.peek());
-
+ 
+        return null;
+    }
+    
+    @Override
+    public Void visit(StructDeclNode structDeclNode) {
+        // IR生成阶段不需要处理结构体声明
+        return null;
+    }
+    
+    @Override
+    public Void visit(StructMemberNode structMemberNode) {
+        // IR生成阶段不需要处理结构体成员
+        return null;
+    }
+    
+    @Override
+    public Void visit(TypedefDeclNode typedefDeclNode) {
+        // IR生成阶段不需要处理typedef声明
+        return null;
+    }
+    
+    @Override
+    public VarSlot visit(ArrayLiteralNode arrayLiteralNode) {
+        // IR生成阶段暂不处理数组字面量
+        return null;
+    }
+    
+    @Override
+    public VarSlot visit(CastExprNode castExprNode) {
+        // IR生成阶段暂不处理类型转换表达式
+        castExprNode.getExpr().accept(this);
+        return null;
+    }
+    
+    @Override
+    public VarSlot visit(FieldAccessNode fieldAccessNode) {
+        // IR生成阶段暂不处理字段访问表达式
+        fieldAccessNode.getObject().accept(this);
         return null;
     }
 

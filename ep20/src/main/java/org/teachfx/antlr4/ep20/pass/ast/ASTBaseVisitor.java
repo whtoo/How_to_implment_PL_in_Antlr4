@@ -4,6 +4,9 @@ import org.teachfx.antlr4.ep20.ast.ASTVisitor;
 import org.teachfx.antlr4.ep20.ast.CompileUnit;
 import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
 import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.StructDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.StructMemberNode;
+import org.teachfx.antlr4.ep20.ast.decl.TypedefDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
@@ -160,6 +163,40 @@ public class ASTBaseVisitor implements ASTVisitor<Void,Void> {
 
     @Override
     public Void visit(ContinueStmtNode continueStmtNode) {
+        return null;
+    }
+    
+    @Override
+    public Void visit(StructDeclNode structDeclNode) {
+        structDeclNode.getMembers().forEach(member -> member.accept(this));
+        return null;
+    }
+    
+    @Override
+    public Void visit(StructMemberNode structMemberNode) {
+        return null;
+    }
+    
+    @Override
+    public Void visit(TypedefDeclNode typedefDeclNode) {
+        return null;
+    }
+    
+    @Override
+    public Void visit(ArrayLiteralNode arrayLiteralNode) {
+        arrayLiteralNode.getElements().forEach(element -> element.accept(this));
+        return null;
+    }
+    
+    @Override
+    public Void visit(CastExprNode castExprNode) {
+        castExprNode.getExpr().accept(this);
+        return null;
+    }
+    
+    @Override
+    public Void visit(FieldAccessNode fieldAccessNode) {
+        fieldAccessNode.getObject().accept(this);
         return null;
     }
 }

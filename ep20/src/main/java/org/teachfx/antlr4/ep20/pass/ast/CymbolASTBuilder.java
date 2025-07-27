@@ -5,6 +5,9 @@ import org.teachfx.antlr4.ep20.ast.CompileUnit;
 import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
 import org.teachfx.antlr4.ep20.ast.decl.VarDeclListNode;
 import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.StructDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.StructMemberNode;
+import org.teachfx.antlr4.ep20.ast.decl.TypedefDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
@@ -15,6 +18,7 @@ import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 import org.teachfx.antlr4.ep20.symtab.type.ArrayType;
 import org.teachfx.antlr4.ep20.symtab.type.OperatorType.BinaryOpType;
 import org.teachfx.antlr4.ep20.symtab.type.OperatorType.UnaryOpType;
+import org.teachfx.antlr4.ep20.symtab.type.TypeTable;
 
 import java.util.List;
 import java.util.Objects;
@@ -44,6 +48,10 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
                 compilationUnit.addVarDecl(varDeclNode);
             } else if (node instanceof FuncDeclNode funcDeclNode) {
                 compilationUnit.addFuncDecl(funcDeclNode);
+            } else if (node instanceof TypedefDeclNode typedefDeclNode) {
+                // 处理typedef声明
+            } else if (node instanceof StructDeclNode structDeclNode) {
+                // 处理结构体声明
             }
         }
         compilationUnit.setCtx(ctx);
@@ -52,7 +60,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitVarDecl(CymbolParser.VarDeclContext ctx) {
-        var typeNode = (TypeNode)visit(ctx.primaryType());
+        var typeNode = (TypeNode)visit(ctx.type());
         var symbol = new VariableSymbol(ctx.ID().getText(),typeNode.getBaseType());
         
         ExprNode assignNode = null;
@@ -70,19 +78,34 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
     }
 
     @Override
-    public ASTNode visitPrimaryType(CymbolParser.PrimaryTypeContext ctx) {
+    public ASTNode visitType(CymbolParser.TypeContext ctx) {
+        if (ctx.primaryType() != null) {
+            return visit(ctx.primaryType());
+        } else {
+            // 处理typedef类型 - 使用基础类型，稍后在语义分析阶段解析
+            return new TypeNode(TypeTable.INT); // 暂时使用int作为占位符
+        }
+    }
 
+    @Override
+    public ASTNode visitPrimaryType(CymbolParser.PrimaryTypeContext ctx) {
         switch(ctx.getText()) {
-            case "Bool" -> {
-                return TypeNode.BoolNode;
+            case "float" -> {
+                return new TypeNode(TypeTable.FLOAT);
             }
-            case "Void" -> {
+            case "int" -> {
+                return TypeNode.IntNode;
+            }
+            case "void" -> {
                 return TypeNode.VoidNode;
             }
-            case "String" -> {
+            case "bool" -> {
+                return TypeNode.BoolNode;
+            }
+            case "string" -> {
                 return TypeNode.StrNode;
             }
-            case "Object" -> {
+            case "object" -> {
                 return TypeNode.ObjNode;
             }
             default -> {
@@ -112,7 +135,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitFormalParameter(CymbolParser.FormalParameterContext ctx) {
-         TypeNode paramTypeNode = (TypeNode)visit(ctx.primaryType());
+         TypeNode paramTypeNode = (TypeNode)visit(ctx.type());
          String paramName = ctx.ID().getText();
 
          return new VarDeclNode(new VariableSymbol(paramName, paramTypeNode.getBaseType()),null,null,ctx);
@@ -246,5 +269,51 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
     @Override
     public ASTNode visitPrimaryBOOL(CymbolParser.PrimaryBOOLContext ctx) {
         return new BoolExprNode(Boolean.valueOf(ctx.getText()),ctx);
+    }
+
+    @Override
+    public ASTNode visitArrayInitializer(CymbolParser.ArrayInitializerContext ctx) {
+        List<ExprNode> elements = ctx.expr().stream()
+            .map(expr -> (ExprNode) visit(expr))
+            .toList();
+        return new ArrayLiteralNode(elements, ctx);
+    }
+    
+    @Override
+    public ASTNode visitExprCast(CymbolParser.ExprCastContext ctx) {
+        TypeNode targetType = (TypeNode) visit(ctx.primaryType());
+        ExprNode expr = (ExprNode) visit(ctx.expr());
+        return new CastExprNode(targetType, expr, ctx);
+    }
+    
+    @Override
+    public ASTNode visitExprFieldAccess(CymbolParser.ExprFieldAccessContext ctx) {
+        ExprNode object = (ExprNode) visit(ctx.expr());
+        String fieldName = ctx.ID().getText();
+        return new FieldAccessNode(object, fieldName, ctx);
+    }
+    
+    @Override
+    public ASTNode visitTypedefDecl(CymbolParser.TypedefDeclContext ctx) {
+        TypeNode originalType = (TypeNode) visit(ctx.type());
+        String aliasName = ctx.ID().getText();
+        return new TypedefDeclNode(originalType, aliasName, ctx);
+    }
+    
+    @Override
+    public ASTNode visitStructDecl(CymbolParser.StructDeclContext ctx) {
+        String structName = ctx.ID().getText();
+        List<StructMemberNode> members = ctx.structMember().stream()
+            .map(memberCtx -> (StructMemberNode) visit(memberCtx))
+            .toList();
+        return new StructDeclNode(structName, members, ctx);
+    }
+    
+    @Override
+    public ASTNode visitStructMember(CymbolParser.StructMemberContext ctx) {
+        TypeNode memberType = (TypeNode) visit(ctx.type());
+        String memberName = ctx.ID().getText();
+        int arraySize = 0; // 简化处理，实际应该解析数组大小
+        return new StructMemberNode(memberType, memberName, arraySize, ctx);
     }
 }

@@ -26,6 +26,30 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVarDecl(CymbolParser.VarDeclContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link CymbolParser#typedefDecl}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTypedefDecl(CymbolParser.TypedefDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CymbolParser#structDecl}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructDecl(CymbolParser.StructDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CymbolParser#structMember}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStructMember(CymbolParser.StructMemberContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CymbolParser#type}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitType(CymbolParser.TypeContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link CymbolParser#primaryType}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -118,6 +142,20 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitStatBlock(CymbolParser.StatBlockContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code exprFieldAccess}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprFieldAccess(CymbolParser.ExprFieldAccessContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code exprCast}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprCast(CymbolParser.ExprCastContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code exprBinary}
 	 * labeled alternative in {@link CymbolParser#expr}.

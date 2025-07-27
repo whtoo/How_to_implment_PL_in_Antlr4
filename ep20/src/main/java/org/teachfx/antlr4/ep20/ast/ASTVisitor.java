@@ -2,6 +2,9 @@ package org.teachfx.antlr4.ep20.ast;
 
 import org.teachfx.antlr4.ep20.ast.decl.FuncDeclNode;
 import org.teachfx.antlr4.ep20.ast.decl.VarDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.StructDeclNode;
+import org.teachfx.antlr4.ep20.ast.decl.StructMemberNode;
+import org.teachfx.antlr4.ep20.ast.decl.TypedefDeclNode;
 import org.teachfx.antlr4.ep20.ast.expr.*;
 import org.teachfx.antlr4.ep20.ast.stmt.*;
 import org.teachfx.antlr4.ep20.ast.type.TypeNode;
@@ -16,6 +19,12 @@ public interface ASTVisitor<S,E> {
     S visit(FuncDeclNode funcDeclNode);
 
     S visit(VarDeclStmtNode varDeclStmtNode);
+    
+    S visit(StructDeclNode structDeclNode);
+    
+    S visit(StructMemberNode structMemberNode);
+    
+    S visit(TypedefDeclNode typedefDeclNode);
 
     /// Type
     E visit(TypeNode typeNode);
@@ -40,6 +49,12 @@ public interface ASTVisitor<S,E> {
             return visit((StringExprNode) node);
         } else if (node instanceof UnaryExprNode) {
             return visit((UnaryExprNode) node);
+        } else if (node instanceof ArrayLiteralNode) {
+            return visit((ArrayLiteralNode) node);
+        } else if (node instanceof CastExprNode) {
+            return visit((CastExprNode) node);
+        } else if (node instanceof FieldAccessNode) {
+            return visit((FieldAccessNode) node);
         }
         return null;
     }
@@ -61,6 +76,12 @@ public interface ASTVisitor<S,E> {
     E visit(StringExprNode stringExprNode);
 
     E visit(UnaryExprNode unaryExprNode);
+    
+    E visit(ArrayLiteralNode arrayLiteralNode);
+    
+    E visit(CastExprNode castExprNode);
+    
+    E visit(FieldAccessNode fieldAccessNode);
 
     /// Stmt
     S visit(IfStmtNode ifStmtNode);

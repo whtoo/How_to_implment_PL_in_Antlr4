@@ -32,6 +32,46 @@ public interface CymbolListener extends ParseTreeListener {
 	 */
 	void exitVarDecl(CymbolParser.VarDeclContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link CymbolParser#typedefDecl}.
+	 * @param ctx the parse tree
+	 */
+	void enterTypedefDecl(CymbolParser.TypedefDeclContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CymbolParser#typedefDecl}.
+	 * @param ctx the parse tree
+	 */
+	void exitTypedefDecl(CymbolParser.TypedefDeclContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link CymbolParser#structDecl}.
+	 * @param ctx the parse tree
+	 */
+	void enterStructDecl(CymbolParser.StructDeclContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CymbolParser#structDecl}.
+	 * @param ctx the parse tree
+	 */
+	void exitStructDecl(CymbolParser.StructDeclContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link CymbolParser#structMember}.
+	 * @param ctx the parse tree
+	 */
+	void enterStructMember(CymbolParser.StructMemberContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CymbolParser#structMember}.
+	 * @param ctx the parse tree
+	 */
+	void exitStructMember(CymbolParser.StructMemberContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link CymbolParser#type}.
+	 * @param ctx the parse tree
+	 */
+	void enterType(CymbolParser.TypeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CymbolParser#type}.
+	 * @param ctx the parse tree
+	 */
+	void exitType(CymbolParser.TypeContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link CymbolParser#primaryType}.
 	 * @param ctx the parse tree
 	 */
@@ -189,6 +229,30 @@ public interface CymbolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitStatBlock(CymbolParser.StatBlockContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code exprFieldAccess}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprFieldAccess(CymbolParser.ExprFieldAccessContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code exprFieldAccess}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprFieldAccess(CymbolParser.ExprFieldAccessContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code exprCast}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprCast(CymbolParser.ExprCastContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code exprCast}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprCast(CymbolParser.ExprCastContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code exprBinary}
 	 * labeled alternative in {@link CymbolParser#expr}.

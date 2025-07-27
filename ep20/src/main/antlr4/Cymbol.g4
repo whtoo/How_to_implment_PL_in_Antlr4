@@ -4,12 +4,25 @@ grammar Cymbol;
 package org.teachfx.antlr4.ep20.parser;
 }
 
-file :   (functionDecl | varDecl)+ #compilationUnit ;
+file :   (functionDecl | varDecl | typedefDecl | structDecl)+ #compilationUnit ;
 
 varDecl
-    :   primaryType ID ('[' expr ']')? ('=' (expr | arrayInitializer))? ';'
+    :   type ID ('[' expr ']')? ('=' (expr | arrayInitializer))? ';'
     ;
 
+typedefDecl
+    :   'typedef' type ID ';'
+    ;
+
+structDecl
+    :   'struct' ID '{' structMember* '}' ';'
+    ;
+
+structMember
+    :   type ID ('[' expr ']')? ';'
+    ;
+
+type: primaryType | ID;
 primaryType: 'float' | 'int' | 'void' | 'bool' | 'string' | 'object';
 
 functionDecl
@@ -19,7 +32,7 @@ formalParameters
     :   formalParameter (',' formalParameter)*
     ;
 formalParameter
-    :   primaryType ID ('[' ']')?
+    :   type ID ('[' expr ']')?  // 支持带大小的数组参数，如 int arr[3] 或不带大小的数组参数，如 int arr[]
     ;
 
 block:  '{' stmts=statetment* '}' ;    // possibly empty statement block
@@ -37,6 +50,8 @@ statetment:   varDecl             #statVarDecl
 
 expr:   callFunc=expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
     |   expr '[' expr ']' #exprArrayAccess    // array access: arr[index]
+    |   expr '.' ID #exprFieldAccess          // struct field access: obj.field
+    |   '(' primaryType ')' expr #exprCast         // type cast: (int)floatVal
     |   o='-' expr         #exprUnary       // unary minus
     |   o='!' expr         #exprUnary       // boolean not
     |   expr o=('*'|'/'|'%') expr    #exprBinary

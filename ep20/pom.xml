@@ -15,7 +15,7 @@
     <version>1.0.0</version>
     <properties>
         <!-- 这里为包含g4文件的文件夹-->
-        <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep20/parser</parser.g4.dir>
+        <parser.g4.dir>src/main/antlr4</parser.g4.dir>
         <run.main.entry>org.teachfx.antlr4.ep20.Compiler</run.main.entry>
     </properties>
     <!-- 运行测试 -->
@@ -61,6 +61,10 @@
                     <visitor>true</visitor>
                     <!-- 指定 ANTLR4 生成代码的目录 -->
                     <outputDirectory>${basedir}/src/main/java/org/teachfx/antlr4/ep20/parser</outputDirectory>
+                    <arguments>
+                        <argument>-lib</argument>
+                        <argument>${basedir}/src/main/antlr4</argument>
+                    </arguments>
                 </configuration>
             </plugin>
             <!-- JaCoCo plugin for code coverage -->

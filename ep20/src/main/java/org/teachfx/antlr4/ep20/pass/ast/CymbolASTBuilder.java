@@ -12,6 +12,7 @@ import org.teachfx.antlr4.ep20.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.parser.CymbolVisitor;
 import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
+import org.teachfx.antlr4.ep20.symtab.type.ArrayType;
 import org.teachfx.antlr4.ep20.symtab.type.OperatorType.BinaryOpType;
 import org.teachfx.antlr4.ep20.symtab.type.OperatorType.UnaryOpType;
 
@@ -53,7 +54,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
     public ASTNode visitVarDecl(CymbolParser.VarDeclContext ctx) {
         var typeNode = (TypeNode)visit(ctx.primaryType());
         var symbol = new VariableSymbol(ctx.ID().getText(),typeNode.getBaseType());
-        var assignNode  = (ExprNode) visit(ctx.expr());
+        var assignNode  = (ExprNode) visit(ctx.arrayInitializer());
         var idExprNode = new IDExprNode(ctx.ID().getText(),null);
         idExprNode.setRefSymbol(symbol);
 
@@ -202,6 +203,13 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
     public ASTNode visitExprFuncCall(CymbolParser.ExprFuncCallContext ctx) {
         List<ExprNode> argsNode = ctx.expr().stream().skip(1).map(arg -> (ExprNode) visit(arg)).toList();
         return new CallFuncNode(ctx.expr(0).getText(),argsNode,ctx);
+    }
+
+    @Override
+    public ASTNode visitExprArrayAccess(CymbolParser.ExprArrayAccessContext ctx) {
+        var array = (ExprNode) visit(ctx.expr(0));
+        var index = (ExprNode) visit(ctx.expr(1));
+        return new ArrayAccessNode(array, index, ctx);
     }
 
     @Override

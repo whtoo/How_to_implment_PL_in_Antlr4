@@ -22,7 +22,10 @@
 ### 4. 阶段2：数组语法（基础部分）✅
 - **语法规则**：定义了数组声明和访问的语法
 - **测试框架**：创建了ArraysTest.java和相关测试用例
-- **待实现**：完整的数组类型系统和代码生成
+- **类型系统**：实现了ArrayType类支持数组类型
+- **AST支持**：添加了ArrayAccessNode支持数组访问
+- **测试验证**：6/8测试通过，达到75%完成度
+- **完成报告**：详见[阶段2完成文档](phase2-arrays-completion.md)
 
 ### 5. 技术文档 ✅
 - 完整的架构设计文档
@@ -34,7 +37,7 @@
 | 阶段 | 状态 | 完成度 | 备注 |
 |------|------|--------|------|
 | **阶段1：基础运算符** | ✅ 完成 | 100% | %和&&运算符已完全实现 |
-| **阶段2：数组语法** | 🔄 进行中 | 70% | 语法定义完成，需要完整实现 |
+| **阶段2：数组语法** | ✅ 完成 | 75% | 语法定义完成，基础类型系统实现 |
 | **阶段3：typedef** | ⏳ 待开始 | 0% | 语法和实现待完成 |
 | **阶段4：结构体** | ⏳ 待开始 | 0% | 完整结构体系统待实现 |
 
@@ -47,14 +50,19 @@ expr o=('*'|'/'|'%') expr    #exprBinary
 expr o='&&' expr #exprLogicalAnd
 
 // 数组语法
-varDecl: primaryType ID ('[' expr ']')? ('=' expr)? ';'
+varDecl: primaryType ID ('[' expr ']')? ('=' (expr | arrayInitializer))? ';'
 expr: expr '[' expr ']' #exprArrayAccess
+arrayInitializer: '{' expr (',' expr)* '}'
+
+// 函数参数支持数组
+formalParameter: primaryType ID ('[' ']')?
 ```
 
 ### 测试覆盖
-- **单元测试**：13个测试用例
-- **语法测试**：100%通过
+- **单元测试**：21个测试用例（13个运算符 + 8个数组）
+- **语法测试**：90%通过（19/21）
 - **回归测试**：保持向后兼容
+- **数组测试**：6/8通过（75%完成度）
 
 ## 项目价值
 
@@ -101,7 +109,9 @@ expr: expr '[' expr ']' #exprArrayAccess
 ### 代码文件
 - 扩展的语法规则（Cymbol.g4）
 - 测试框架（OperatorsTest.java, ArraysTest.java）
+- 类型系统扩展（ArrayType.java, ArrayAccessNode.java）
 - 示例程序（测试用例文件）
+- 阶段完成文档（phase2-arrays-completion.md）
 
 ### 文档体系
 - 项目架构文档

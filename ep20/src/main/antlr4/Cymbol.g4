@@ -77,6 +77,7 @@ primary:    ID                   #primaryID   // variable reference
 ID  :   LETTER (LETTER | [0-9])* ;
 BOOLEAN: 'true' | 'false';
 NULL : 'null';
+NEW : 'new';
 
 fragment
 LETTER : [a-zA-Z] ;

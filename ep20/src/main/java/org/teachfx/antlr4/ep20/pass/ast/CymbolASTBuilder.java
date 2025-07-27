@@ -49,9 +49,9 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
             } else if (node instanceof FuncDeclNode funcDeclNode) {
                 compilationUnit.addFuncDecl(funcDeclNode);
             } else if (node instanceof TypedefDeclNode typedefDeclNode) {
-                // 处理typedef声明
+                compilationUnit.addTypedefDecl(typedefDeclNode);
             } else if (node instanceof StructDeclNode structDeclNode) {
-                // 处理结构体声明
+                compilationUnit.addStructDecl(structDeclNode);
             }
         }
         compilationUnit.setCtx(ctx);

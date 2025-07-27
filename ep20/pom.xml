@@ -49,7 +49,7 @@
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
-                <version>4.11.0</version>
+                <version>4.13.2</version>
                 <executions>
                     <execution>
                         <goals>
@@ -60,11 +60,7 @@
                 <configuration>
                     <visitor>true</visitor>
                     <!-- 指定 ANTLR4 生成代码的目录 -->
-                    <outputDirectory>${basedir}/src/main/java/org/teachfx/antlr4/ep20/parser</outputDirectory>
-                    <arguments>
-                        <argument>-lib</argument>
-                        <argument>${basedir}/src/main/antlr4</argument>
-                    </arguments>
+                    <outputDirectory>${basedir}/target/generated-sources/antlr4</outputDirectory>
                 </configuration>
             </plugin>
             <!-- JaCoCo plugin for code coverage -->

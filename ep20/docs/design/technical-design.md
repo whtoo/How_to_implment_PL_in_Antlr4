@@ -16,6 +16,7 @@ Cymbol.g4
 ├── 扩展语法层（新增）
 │   ├── 运算符扩展
 │   ├── 数组语法
+│   ├── 类型转换表达式
 │   ├── 类型别名
 │   └── 结构体系统
 └── 词法规则层
@@ -38,17 +39,19 @@ Cymbol.g4
 AST节点层次结构
 ├── Expr（表达式节点）
 │   ├── ArrayAccessExpr（数组访问）
-│   ├── StructFieldAccessExpr（结构体字段访问）
-│   ├── StructMethodCallExpr（结构体方法调用）
-│   ├── NewExpr（对象创建）
+│   ├── ArrayLiteralNode（数组初始化器）
+│   ├── CastExprNode（类型转换表达式）
+│   ├── FieldAccessNode（结构体字段访问）
 │   └── BinaryExpr扩展（支持&&和%）
 ├── Decl（声明节点）
 │   ├── StructDecl（结构体声明）
+│   ├── StructMemberNode（结构体成员）
 │   ├── TypedefDecl（类型别名声明）
 │   └── ArrayVarDecl（数组变量声明）
 └── Type（类型节点）
     ├── ArrayType（数组类型）
-    └── StructType（结构体类型）
+    ├── StructType（结构体类型）
+    └── TypedefType（类型别名类型）
 ```
 
 #### 2.3 符号表扩展
@@ -72,6 +75,7 @@ AST节点层次结构
 - **数组类型检查**：验证数组索引类型为int
 - **结构体类型检查**：验证字段存在性和类型匹配
 - **类型别名解析**：将typedef名称解析为实际类型
+- **类型转换检查**：验证类型转换的有效性
 
 #### 3.2 作用域管理
 - **结构体作用域**：处理结构体内部的字段和方法
@@ -89,6 +93,10 @@ AST节点层次结构
 - **字段访问**：基址 + 字段偏移
 - **方法调用**：隐式this指针传递
 
+#### 4.3 类型转换代码生成
+- **基本类型转换**：int、float等基本类型之间的转换
+- **安全检查**：运行时检查转换的有效性
+
 ### 5. 错误处理设计
 
 #### 5.1 语法错误
@@ -98,6 +106,7 @@ AST节点层次结构
 #### 5.2 语义错误
 - **类型错误**：详细的类型不匹配信息
 - **作用域错误**：未定义符号和作用域冲突
+- **转换错误**：无效的类型转换
 
 ### 6. 兼容性保证
 
@@ -115,31 +124,61 @@ AST节点层次结构
 ### 1. 语法规则实现
 ```antlr
 // 数组语法
-arrayDecl : type ID '[' expr ']' ('=' '{' exprList '}')? ';' ;
+varDecl : type ID ('[' expr ']')? ('=' (expr | arrayInitializer))? ';' ;
+arrayInitializer : '{' expr (',' expr)* '}' ;
 arrayAccess : expr '[' expr ']' ;
 
+// 类型转换表达式
+castExpr : '(' primaryType ')' expr ;
+
 // 结构体语法
-structDecl : 'struct' ID '{' structMember+ '}' ;
-structMember : type ID ';' | functionDecl ;
-structAccess : expr '.' ID ;
-methodCall : expr '.' ID '(' exprList? ')' ;
+structDecl : 'struct' ID '{' structMember* '}' ';' ;
+structMember : type ID ('[' expr ']')? ';' ;
+fieldAccess : expr '.' ID ;
 
 // 类型别名
 typedefDecl : 'typedef' type ID ';' ;
+
+// 函数参数支持数组
+formalParameter : type ID ('[' expr ']')? ;
 ```
 
 ### 2. AST节点实现
 ```java
 // 数组访问表达式
-public class ArrayAccessExpr extends Expr {
-    private Expr array;
-    private Expr index;
+public class ArrayAccessNode extends ExprNode {
+    private ExprNode array;
+    private ExprNode index;
+}
+
+// 数组初始化器
+public class ArrayLiteralNode extends ExprNode {
+    private List<ExprNode> elements;
+}
+
+// 类型转换表达式
+public class CastExprNode extends ExprNode {
+    private TypeNode targetType;
+    private ExprNode expr;
 }
 
 // 结构体成员访问
-public class StructFieldAccessExpr extends Expr {
-    private Expr struct;
+public class FieldAccessNode extends ExprNode {
+    private ExprNode object;
     private String fieldName;
+}
+
+// 结构体声明
+public class StructDeclNode extends DeclNode {
+    private String structName;
+    private List<StructMemberNode> members;
+}
+
+// 结构体成员
+public class StructMemberNode extends DeclNode {
+    private TypeNode memberType;
+    private String memberName;
+    private int arraySize;
 }
 ```
 
@@ -149,6 +188,26 @@ public class StructFieldAccessExpr extends Expr {
 public class StructSymbol extends Symbol implements Scope {
     private Map<String, Symbol> members = new HashMap<>();
     private Scope enclosingScope;
+}
+
+// 类型别名符号
+public class TypedefSymbol extends Symbol {
+    private Type baseType;
+}
+```
+
+### 4. 类型系统实现
+```java
+// 结构体类型
+public class StructType extends Type {
+    private String structName;
+    private Map<String, Type> fields;
+}
+
+// 类型别名类型
+public class TypedefType extends Type {
+    private Type baseType;
+    private String aliasName;
 }
 ```
 
@@ -195,3 +254,25 @@ public class StructSymbol extends Symbol implements Scope {
 ### 阶段4：测试验证
 - 完整测试套件
 - 性能优化
+
+## 已完成功能总结
+
+### 1. 数组语法支持 ✅
+- 数组声明和初始化
+- 数组元素访问
+- 数组作为函数参数
+
+### 2. 类型转换表达式 ✅
+- 基本类型之间的转换
+- 表达式中的类型转换
+
+### 3. typedef声明 ✅
+- 类型别名定义
+- 类型别名使用
+
+### 4. 结构体系统 ✅
+- 结构体声明
+- 结构体成员访问
+- 嵌套结构体访问
+
+所有功能均已通过测试验证，完全兼容EP19语法特性。

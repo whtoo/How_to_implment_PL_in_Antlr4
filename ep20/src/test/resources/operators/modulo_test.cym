@@ -1,0 +1,22 @@
+// 测试取模运算符
+int testModulo() {
+    int a = 10;
+    int b = 3;
+    int result = a % b;
+    return result;  // 应该返回1
+}
+
+// 测试取模运算的边界情况
+int testModuloEdgeCases() {
+    int result1 = 5 % 5;   // 0
+    int result2 = 0 % 5;   // 0
+    int result3 = 7 % 4;   // 3
+    return result1 + result2 + result3;  // 应该返回3
+}
+
+// 测试取模运算在表达式中
+int testModuloInExpression() {
+    int x = 15;
+    int y = 4;
+    return (x % y) * 2;  // 应该返回6
+}

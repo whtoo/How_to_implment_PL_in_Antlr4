@@ -1,0 +1,28 @@
+// 测试数组声明
+int testArrayDeclaration() {
+    int arr[5];
+    arr[0] = 10;
+    arr[1] = 20;
+    return arr[0] + arr[1];  // 应该返回30
+}
+
+// 测试带初始化的数组声明
+int testArrayWithInit() {
+    int numbers[3] = {1, 2, 3};
+    return numbers[0] + numbers[1] + numbers[2];  // 应该返回6
+}
+
+// 测试不同基本类型的数组
+int testDifferentTypes() {
+    float floats[2];
+    floats[0] = 1.5;
+    floats[1] = 2.5;
+    return (int)(floats[0] + floats[1]);  // 应该返回4
+}
+
+// 测试数组边界
+int testArrayBounds() {
+    int bounds[10];
+    bounds[9] = 100;
+    return bounds[9];  // 应该返回100
+}

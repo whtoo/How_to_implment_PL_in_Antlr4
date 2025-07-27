@@ -202,6 +202,18 @@ public interface CymbolListener extends ParseTreeListener {
 	 */
 	void exitExprBinary(CymbolParser.ExprBinaryContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code exprLogicalAnd}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprLogicalAnd(CymbolParser.ExprLogicalAndContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code exprLogicalAnd}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprLogicalAnd(CymbolParser.ExprLogicalAndContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code exprGroup}
 	 * labeled alternative in {@link CymbolParser#expr}.
 	 * @param ctx the parse tree
@@ -226,6 +238,18 @@ public interface CymbolListener extends ParseTreeListener {
 	 */
 	void exitExprUnary(CymbolParser.ExprUnaryContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code exprArrayAccess}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprArrayAccess(CymbolParser.ExprArrayAccessContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code exprArrayAccess}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprArrayAccess(CymbolParser.ExprArrayAccessContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code exprPrimary}
 	 * labeled alternative in {@link CymbolParser#expr}.
 	 * @param ctx the parse tree
@@ -249,6 +273,16 @@ public interface CymbolListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitExprFuncCall(CymbolParser.ExprFuncCallContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link CymbolParser#arrayInitializer}.
+	 * @param ctx the parse tree
+	 */
+	void enterArrayInitializer(CymbolParser.ArrayInitializerContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link CymbolParser#arrayInitializer}.
+	 * @param ctx the parse tree
+	 */
+	void exitArrayInitializer(CymbolParser.ArrayInitializerContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code primaryID}
 	 * labeled alternative in {@link CymbolParser#primary}.

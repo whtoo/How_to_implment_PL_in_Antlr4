@@ -1,0 +1,35 @@
+// 测试逻辑与运算符
+bool testLogicalAnd() {
+    bool a = true;
+    bool b = false;
+    bool result = a && b;
+    return result;  // 应该返回false
+}
+
+// 测试逻辑与运算的真值表
+bool testLogicalAndTruthTable() {
+    bool t1 = true && true;    // true
+    bool t2 = true && false;   // false
+    bool t3 = false && true;   // false
+    bool t4 = false && false;  // false
+    
+    return t1 || !t2 || !t3 || !t4;  // 应该返回true
+}
+
+// 测试逻辑与在条件语句中
+int testLogicalAndInCondition() {
+    int x = 5;
+    int y = 10;
+    
+    if (x > 0 && y > 0) {
+        return 1;  // 应该返回1
+    }
+    return 0;
+}
+
+// 测试逻辑与的短路行为
+int testLogicalAndShortCircuit() {
+    int counter = 0;
+    bool result = (counter = 1) && (counter = 2);
+    return counter;  // 应该返回2
+}

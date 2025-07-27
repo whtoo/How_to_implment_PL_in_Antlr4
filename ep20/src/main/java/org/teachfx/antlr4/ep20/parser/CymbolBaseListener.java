@@ -223,6 +223,18 @@ public class CymbolBaseListener implements CymbolListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterExprLogicalAnd(CymbolParser.ExprLogicalAndContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExprLogicalAnd(CymbolParser.ExprLogicalAndContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterExprGroup(CymbolParser.ExprGroupContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -247,6 +259,18 @@ public class CymbolBaseListener implements CymbolListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterExprArrayAccess(CymbolParser.ExprArrayAccessContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExprArrayAccess(CymbolParser.ExprArrayAccessContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterExprPrimary(CymbolParser.ExprPrimaryContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -266,6 +290,18 @@ public class CymbolBaseListener implements CymbolListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitExprFuncCall(CymbolParser.ExprFuncCallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterArrayInitializer(CymbolParser.ArrayInitializerContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitArrayInitializer(CymbolParser.ArrayInitializerContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

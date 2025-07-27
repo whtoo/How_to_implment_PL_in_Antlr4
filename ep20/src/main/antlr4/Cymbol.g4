@@ -7,7 +7,7 @@ package org.teachfx.antlr4.ep20.parser;
 file :   (functionDecl | varDecl)+ #compilationUnit ;
 
 varDecl
-    :   primaryType ID ('=' expr)? ';'
+    :   primaryType ID ('[' expr ']')? ('=' (expr | arrayInitializer))? ';'
     ;
 
 primaryType: 'float' | 'int' | 'void' | 'bool' | 'string' | 'object';
@@ -19,7 +19,7 @@ formalParameters
     :   formalParameter (',' formalParameter)*
     ;
 formalParameter
-    :   primaryType ID
+    :   primaryType ID ('[' ']')?
     ;
 
 block:  '{' stmts=statetment* '}' ;    // possibly empty statement block
@@ -36,13 +36,19 @@ statetment:   varDecl             #statVarDecl
     ;
 
 expr:   callFunc=expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
+    |   expr '[' expr ']' #exprArrayAccess    // array access: arr[index]
     |   o='-' expr         #exprUnary       // unary minus
     |   o='!' expr         #exprUnary       // boolean not
-    |   expr o=('*'|'/') expr    #exprBinary
+    |   expr o=('*'|'/'|'%') expr    #exprBinary
     |   expr o=('+'|'-') expr #exprBinary
     |   expr o=('=='|'!='|'>'|'>='|'<'|'<=') expr #exprBinary
+    |   expr o='&&' expr #exprLogicalAnd
     |   primary #exprPrimary
     |   '(' expr ')'         #exprGroup
+    ;
+
+arrayInitializer
+    :   '{' expr (',' expr)* '}'
     ;
 
 primary:    ID                   #primaryID   // variable reference

@@ -126,6 +126,13 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprBinary(CymbolParser.ExprBinaryContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code exprLogicalAnd}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprLogicalAnd(CymbolParser.ExprLogicalAndContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code exprGroup}
 	 * labeled alternative in {@link CymbolParser#expr}.
 	 * @param ctx the parse tree
@@ -140,6 +147,13 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitExprUnary(CymbolParser.ExprUnaryContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code exprArrayAccess}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprArrayAccess(CymbolParser.ExprArrayAccessContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code exprPrimary}
 	 * labeled alternative in {@link CymbolParser#expr}.
 	 * @param ctx the parse tree
@@ -153,6 +167,12 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitExprFuncCall(CymbolParser.ExprFuncCallContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CymbolParser#arrayInitializer}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayInitializer(CymbolParser.ArrayInitializerContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code primaryID}
 	 * labeled alternative in {@link CymbolParser#primary}.

@@ -54,7 +54,15 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
     public ASTNode visitVarDecl(CymbolParser.VarDeclContext ctx) {
         var typeNode = (TypeNode)visit(ctx.primaryType());
         var symbol = new VariableSymbol(ctx.ID().getText(),typeNode.getBaseType());
-        var assignNode  = (ExprNode) visit(ctx.arrayInitializer());
+        
+        ExprNode assignNode = null;
+        if (ctx.arrayInitializer() != null) {
+            assignNode = (ExprNode) visit(ctx.arrayInitializer());
+        } else if (!ctx.expr().isEmpty()) {
+            // 获取初始化表达式，应该是最后一个expr
+            assignNode = (ExprNode) visit(ctx.expr(ctx.expr().size() - 1));
+        }
+        
         var idExprNode = new IDExprNode(ctx.ID().getText(),null);
         idExprNode.setRefSymbol(symbol);
 

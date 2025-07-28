@@ -219,21 +219,85 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Git as Git仓库
-    participant CI as CI系统
-    participant Maven as Maven构建
-    participant Test as 测试套件
+    participant CI as CI/CD系统
+    participant Build as 构建系统
+    participant Cache as 缓存系统
+    participant Security as 安全扫描
+    participant Quality as 质量分析
+    participant Test as 自动化测试
     participant Coverage as 覆盖率检查
-    participant Deploy as 部署系统
+    participant Approval as 审批系统
+    participant DeployDev as 开发环境部署
+    participant DeployTest as 测试环境部署
+    participant DeployStaging as 预生产环境部署
+    participant DeployProd as 生产环境部署
+    participant HealthCheck as 健康检查
+    participant Rollback as 回滚机制
+    participant Notification as 通知系统
 
     Git->>CI: 代码推送
-    CI->>Maven: 触发构建
-    Maven->>Test: 运行测试
-    Test-->>Maven: 测试结果
-    Maven->>Coverage: 检查覆盖率
-    Coverage-->>Maven: 覆盖率报告
-    alt 测试通过且覆盖率达标
-        Maven->>Deploy: 部署应用
-    else 测试失败或覆盖率不足
-        Maven->>CI: 构建失败
+    CI->>Cache: 检查构建缓存
+    Cache-->>CI: 缓存命中情况
+    
+    alt 缓存未命中或代码变更
+        CI->>Build: 触发构建
+        Build->>Cache: 保存依赖缓存
+        Cache-->>Build: 缓存保存确认
+    else 缓存命中且无代码变更
+        CI->>Build: 使用缓存构建
     end
-    CI-->>Git: 更新状态
+    
+    Build-->>CI: 构建完成
+    
+    par 并行执行
+        CI->>Security: 安全扫描
+        Security-->>CI: 安全报告
+        CI->>Quality: 代码质量分析
+        Quality-->>CI: 质量报告
+    end
+    
+    CI->>Test: 运行自动化测试
+    Test-->>CI: 测试结果
+    
+    alt 测试通过
+        CI->>Coverage: 检查代码覆盖率
+        Coverage-->>CI: 覆盖率报告
+        
+        alt 覆盖率达标
+            CI->>DeployDev: 部署到开发环境
+            DeployDev-->>CI: 部署结果
+            
+            CI->>DeployTest: 部署到测试环境
+            DeployTest-->>CI: 部署结果
+            
+            CI->>DeployStaging: 部署到预生产环境
+            DeployStaging-->>CI: 部署结果
+            
+            CI->>Approval: 请求生产环境部署审批
+            Approval-->>CI: 审批通过
+            
+            CI->>DeployProd: 部署到生产环境
+            DeployProd-->>HealthCheck: 健康检查
+            
+            alt 健康检查通过
+                HealthCheck-->>Notification: 部署成功通知
+            else 健康检查失败
+                HealthCheck->>Rollback: 触发回滚
+                Rollback-->>Notification: 回滚完成通知
+            end
+            
+        else 覆盖率不足
+            CI->>Notification: 覆盖率不足通知
+        end
+        
+    else 测试失败
+        CI->>Notification: 测试失败通知
+    end
+    
+    Notification->>Git: 更新状态
+    
+    alt 构建或部署超时
+        CI->>Notification: 超时通知
+        Notification->>Git: 更新状态
+    end
+```

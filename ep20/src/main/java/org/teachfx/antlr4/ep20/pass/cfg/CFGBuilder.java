@@ -1,9 +1,7 @@
 package org.teachfx.antlr4.ep20.pass.cfg;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.teachfx.antlr4.ep20.ir.IRNode;
-import org.teachfx.antlr4.ep20.ir.JMPInstr;
 import org.teachfx.antlr4.ep20.ir.stmt.CJMP;
 import org.teachfx.antlr4.ep20.ir.stmt.JMP;
 

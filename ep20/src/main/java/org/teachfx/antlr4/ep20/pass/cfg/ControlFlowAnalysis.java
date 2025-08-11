@@ -9,7 +9,6 @@ import org.teachfx.antlr4.ep20.ir.JMPInstr;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> {

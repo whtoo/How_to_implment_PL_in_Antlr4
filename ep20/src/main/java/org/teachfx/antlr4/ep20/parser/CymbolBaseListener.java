@@ -211,6 +211,18 @@ public class CymbolBaseListener implements CymbolListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterExprCast(CymbolParser.ExprCastContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExprCast(CymbolParser.ExprCastContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterExprBinary(CymbolParser.ExprBinaryContext ctx) { }
 	/**
 	 * {@inheritDoc}

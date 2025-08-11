@@ -19,7 +19,7 @@ formalParameters
     :   formalParameter (',' formalParameter)*
     ;
 formalParameter
-    :   primaryType ID ('[' ']')?
+    :   primaryType ID ('[' expr? ']')?
     ;
 
 block:  '{' stmts=statetment* '}' ;    // possibly empty statement block
@@ -43,6 +43,7 @@ expr:   callFunc=expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call
     |   expr o=('+'|'-') expr #exprBinary
     |   expr o=('=='|'!='|'>'|'>='|'<'|'<=') expr #exprBinary
     |   expr o='&&' expr #exprLogicalAnd
+    |   '(' primaryType ')' expr #exprCast
     |   primary #exprPrimary
     |   '(' expr ')'         #exprGroup
     ;

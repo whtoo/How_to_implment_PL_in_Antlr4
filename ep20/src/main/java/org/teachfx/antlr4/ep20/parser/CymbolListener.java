@@ -190,6 +190,18 @@ public interface CymbolListener extends ParseTreeListener {
 	 */
 	void exitStatBlock(CymbolParser.StatBlockContext ctx);
 	/**
+	 * Enter a parse tree produced by the {@code exprCast}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterExprCast(CymbolParser.ExprCastContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code exprCast}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitExprCast(CymbolParser.ExprCastContext ctx);
+	/**
 	 * Enter a parse tree produced by the {@code exprBinary}
 	 * labeled alternative in {@link CymbolParser#expr}.
 	 * @param ctx the parse tree

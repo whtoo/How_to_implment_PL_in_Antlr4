@@ -119,6 +119,13 @@ public interface CymbolVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitStatBlock(CymbolParser.StatBlockContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code exprCast}
+	 * labeled alternative in {@link CymbolParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExprCast(CymbolParser.ExprCastContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code exprBinary}
 	 * labeled alternative in {@link CymbolParser#expr}.
 	 * @param ctx the parse tree

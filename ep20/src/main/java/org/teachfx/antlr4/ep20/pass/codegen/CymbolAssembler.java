@@ -2,7 +2,6 @@ package org.teachfx.antlr4.ep20.pass.codegen;
 
 import org.teachfx.antlr4.ep20.ir.IRNode;
 import org.teachfx.antlr4.ep20.ir.IRVisitor;
-import org.teachfx.antlr4.ep20.ir.Prog;
 import org.teachfx.antlr4.ep20.ir.expr.CallFunc;
 import org.teachfx.antlr4.ep20.ir.expr.Expr;
 import org.teachfx.antlr4.ep20.ir.expr.addr.FrameSlot;

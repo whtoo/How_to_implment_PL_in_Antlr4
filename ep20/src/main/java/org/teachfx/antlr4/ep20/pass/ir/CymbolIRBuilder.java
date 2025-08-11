@@ -31,7 +31,6 @@ import org.teachfx.antlr4.ep20.symtab.scope.Scope;
 import org.teachfx.antlr4.ep20.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
 

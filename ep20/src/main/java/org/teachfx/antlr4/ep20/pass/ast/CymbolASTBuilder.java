@@ -15,7 +15,6 @@ import org.teachfx.antlr4.ep20.parser.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep20.parser.CymbolParser;
 import org.teachfx.antlr4.ep20.parser.CymbolVisitor;
 import org.teachfx.antlr4.ep20.symtab.symbol.VariableSymbol;
-import org.teachfx.antlr4.ep20.symtab.type.ArrayType;
 import org.teachfx.antlr4.ep20.symtab.type.OperatorType.BinaryOpType;
 import org.teachfx.antlr4.ep20.symtab.type.OperatorType.UnaryOpType;
 import org.teachfx.antlr4.ep20.symtab.type.TypeTable;

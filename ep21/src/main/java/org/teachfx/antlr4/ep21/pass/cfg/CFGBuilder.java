@@ -14,10 +14,12 @@ public class CFGBuilder {
     private final CFG<IRNode> cfg;
     private final List<BasicBlock<IRNode>> basicBlocks;
     private final List<Triple<Integer, Integer,Integer>> edges;
+    private final Set<LinearIRBlock> visitedBlocks;
 
     public CFGBuilder(LinearIRBlock startBlock) {
         basicBlocks = new ArrayList<>();
         edges = new ArrayList<>();
+        visitedBlocks = new HashSet<>();
 
         var cachedEdgeLink = new HashSet<String>();
 
@@ -27,6 +29,14 @@ public class CFGBuilder {
     }
 
     private void build(LinearIRBlock block,Set<String> cachedEdgeLinks) {
+        // 检查块是否已经被访问过，防止无限递归
+        if (visitedBlocks.contains(block)) {
+            System.out.println("DEBUG CFGBuilder: Block ord=" + block.getOrd() + " already visited, skipping");
+            return;
+        }
+        
+        visitedBlocks.add(block);
+        
         var currentBlock = BasicBlock.buildFromLinearBlock(block,basicBlocks);
         basicBlocks.add(currentBlock);
         

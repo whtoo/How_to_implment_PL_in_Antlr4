@@ -37,7 +37,7 @@ public interface ErrorIssuer {
      * @param to where to print
      */
     default void printErrors(PrintStream to) {
-        errors.sort(Comparator.comparing(o -> o.location));
+        errors.sort((a, b) -> a.location.compareTo(b.location));
         errors.forEach(to::println);
     }
 }

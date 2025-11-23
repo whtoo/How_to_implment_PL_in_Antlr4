@@ -34,6 +34,33 @@ public class Compiler {
     private final  static Logger logger = LogManager.getLogger(Compiler.class);
     
     /**
+     * 验证ANTLR版本信息
+     */
+    private static void checkANTLRVersions() {
+        logger.info("=== ANTLR版本检查 ===");
+        
+        try {
+            // 检查运行时版本
+            String runtimeVersion = org.antlr.v4.runtime.Token.class.getPackage().getImplementationVersion();
+            logger.info("ANTLR运行时版本: {}", runtimeVersion);
+            String toolVersion = org.antlr.v4.tool.ANTLRToolListener.class.getPackage().getImplementationVersion();
+            String majorVersion = toolVersion.split("\\.")[0];
+
+            if (runtimeVersion != null && !runtimeVersion.startsWith(majorVersion)) {
+                logger.warn("⚠️  版本不匹配警告: 工具版本({})与运行时版本({})不匹配",toolVersion, runtimeVersion);
+                logger.warn("这可能导致生成代码与运行时不兼容的问题");
+            } else {
+                logger.info("✅ 版本匹配正常");
+            }
+            
+        } catch (Exception e) {
+            logger.error("检查ANTLR版本时出错", e);
+        }
+        
+        logger.info("=== 版本检查完成 ===");
+    }
+    
+    /**
      * 健壮地解析输出目录路径，优先从类加载器获取资源路径，然后回退到其他策略
      */
     private static Path resolveOutputDirectory() {
@@ -121,6 +148,9 @@ public class Compiler {
     }
 
     public static void main(String[] args) throws IOException {
+        // 首先检查ANTLR版本
+        checkANTLRVersions();
+        
         String fileName = args.length > 0 ? args[0] : null;
         InputStream is = System.in;
         if (fileName != null) {
@@ -184,7 +214,7 @@ public class Compiler {
         try {
             // 使用健壮的路径解析方法
             var outputDir = ensureOutputDirectory();
-            var filePath = outputDir.resolve("t.vm");
+            var filePath = outputDir.resolve("t.cymbol");
             
             logger.debug("保存汇编信息到: {}", filePath);
             

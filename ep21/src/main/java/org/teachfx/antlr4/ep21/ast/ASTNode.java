@@ -13,11 +13,13 @@ abstract public class ASTNode implements Dumpable {
     }
     public Location getLocation() {
         if(ctx == null) { return null; }
+        // 简化实现，使用默认文件名
+        String fileName = "unknown";
         if(ctx.getStart() != ctx.getStop()) {
-            return new Location(ctx.getStart().getLine(),ctx.getStart().getStartIndex(),ctx.stop.getLine(),ctx.stop.getStopIndex());
+            return new Location(fileName, ctx.getStart().getLine(), ctx.getStart().getStartIndex(), ctx.stop.getStopIndex());
         }
 
-        return new Location(ctx.getStart().getLine(),ctx.getStart().getStartIndex(),ctx.stop.getLine(),ctx.stop.getStopIndex());
+        return new Location(fileName, ctx.getStart().getLine(), ctx.getStart().getStartIndex(), ctx.stop.getStopIndex());
     }
 
     public void accept(ASTVisitor visitor){}

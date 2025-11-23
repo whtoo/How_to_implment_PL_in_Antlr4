@@ -22,12 +22,12 @@ formalParameter
     :   primaryType ID
     ;
 
-block:  '{' stmts=statetment* '}' ;    // possibly empty statement block
+block:  '{' stmts=statement* '}' ;    // possibly empty statement block
 
-statetment:   varDecl             #statVarDecl
+statement:   varDecl             #statVarDecl
     |   'return' expr? ';' #statReturn
-    |   'if' '(' cond=expr ')' then=statetment ('else' elseDo=statetment)? #stateCondition
-    |   'while' '(' cond=expr ')' then=statetment #stateWhile
+    |   'if' '(' cond=expr ')' then=statement ('else' elseDo=statement)? #stateCondition
+    |   'while' '(' cond=expr ')' then=statement #stateWhile
     |   'break' ';' #visitBreak
     |   'continue' ';' #visitContinue
     |   expr '=' expr ';' #statAssign // assignment
@@ -70,6 +70,6 @@ SLCOMMENT
     :   '//' .*? '\n' -> skip
     ;
 
-COMMNET
+COMMENT
     : '/*' .*? '*/' '\n' -> skip
     ;

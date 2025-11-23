@@ -21,6 +21,10 @@ import org.teachfx.antlr4.ep21.pass.symtab.LocalDefine;
 import org.teachfx.antlr4.ep21.utils.StreamUtils;
 
 import java.io.*;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -28,6 +32,84 @@ import java.util.stream.Stream;
 public class Compiler {
 
     private final  static Logger logger = LogManager.getLogger(Compiler.class);
+    
+    /**
+     * 健壮地解析输出目录路径，优先从类加载器获取资源路径，然后回退到其他策略
+     */
+    private static Path resolveOutputDirectory() {
+        // 策略1：从当前类的资源目录获取路径
+        try {
+            var classLoader = Compiler.class.getClassLoader();
+            var resource = classLoader.getResource("");
+            if (resource != null) {
+                var path = Paths.get(resource.toURI());
+                if (Files.exists(path) && Files.isDirectory(path)) {
+                    logger.debug("使用类加载器资源路径: {}", path);
+                    return path;
+                }
+            }
+        } catch (URISyntaxException | SecurityException e) {
+            logger.debug("从类加载器获取路径失败: {}", e.getMessage());
+        }
+
+        // 策略2：从项目根目录推断路径
+        try {
+            var currentDir = Paths.get(System.getProperty("user.dir"));
+            var projectRoot = currentDir;
+            
+            // 查找项目根目录（包含pom.xml的目录）
+            while (projectRoot != null && !Files.exists(projectRoot.resolve("pom.xml"))) {
+                projectRoot = projectRoot.getParent();
+            }
+            
+            if (projectRoot != null) {
+                var targetClasses = projectRoot.resolve("target/classes");
+                if (Files.exists(targetClasses) && Files.isDirectory(targetClasses)) {
+                    logger.debug("使用target/classes目录: {}", targetClasses);
+                    return targetClasses;
+                }
+                
+                var resourcesDir = projectRoot.resolve("src/main/resources");
+                if (Files.exists(resourcesDir) && Files.isDirectory(resourcesDir)) {
+                    logger.debug("使用src/main/resources目录: {}", resourcesDir);
+                    return resourcesDir;
+                }
+                
+                logger.debug("使用项目根目录: {}", projectRoot);
+                return projectRoot;
+            }
+        } catch (Exception e) {
+            logger.debug("从项目根目录推断路径失败: {}", e.getMessage());
+        }
+
+        // 策略3：回退到当前工作目录
+        try {
+            var fallbackPath = Paths.get(System.getProperty("user.dir"));
+            logger.debug("使用回退路径（当前工作目录）: {}", fallbackPath);
+            return fallbackPath;
+        } catch (Exception e) {
+            logger.error("所有路径解析策略都失败", e);
+            throw new RuntimeException("无法解析输出目录路径", e);
+        }
+    }
+
+    /**
+     * 确保输出目录存在，如果不存在则创建
+     */
+    private static Path ensureOutputDirectory() {
+        var outputDir = resolveOutputDirectory();
+        if (!Files.exists(outputDir)) {
+            try {
+                Files.createDirectories(outputDir);
+                logger.debug("已创建输出目录: {}", outputDir);
+            } catch (IOException e) {
+                logger.error("创建输出目录失败: {}", outputDir, e);
+                throw new RuntimeException("无法创建输出目录", e);
+            }
+        }
+        return outputDir;
+    }
+    
     protected static void printIRTree(List<IRNode> irNodeList) {
         var prettyFormatText = irNodeList.stream().map(irNode -> {
             if (irNode instanceof Label) {
@@ -99,62 +181,47 @@ public class Compiler {
     }
 
     protected static void saveToEp18Res(String buffer) {
-        String modulePath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
-        if (modulePath == null) {
-            modulePath = "../ep21/target/classes";
-        }
-        System.out.println("working path");
-        System.out.println("file path %s".formatted(modulePath));
-        File moduleDirectory = new File(modulePath);
-        if (moduleDirectory.exists()) {
-            logger.debug("模块路径：" + moduleDirectory.getAbsolutePath());
-            var filePath = modulePath+"/t.vm";
-            File file = new File(filePath);
-            try (var outputStream = new FileOutputStream(file)) {
-                if (!file.exists()) {
-                    var res = file.createNewFile();
-                    logger.debug("create file %s is %b".formatted(filePath,res));
-                }
-                outputStream.write(buffer.getBytes());
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-        } else {
-            logger.error("模块路径不存在！");
+        try {
+            // 使用健壮的路径解析方法
+            var outputDir = ensureOutputDirectory();
+            var filePath = outputDir.resolve("t.vm");
+            
+            logger.debug("保存汇编信息到: {}", filePath);
+            
+            // 使用NIO进行文件操作，更高效和健壮
+            Files.writeString(filePath, buffer);
+            
+            logger.debug("成功保存汇编信息到: {}", filePath.toAbsolutePath());
+            
+        } catch (IOException e) {
+            logger.error("保存汇编信息失败", e);
+            throw new RuntimeException("保存汇编信息到文件失败", e);
         }
     }
 
-    protected static void saveToEp20Res(String buffer,String suffix) {
-        String modulePath = Thread.currentThread().getContextClassLoader().getResource("").getPath();
-        if (modulePath == null) {
-            modulePath = "../ep21/target/classes";
-        }
-        File moduleDirectory = new File(modulePath);
-        logger.debug("file path %s".formatted(moduleDirectory.getAbsolutePath()));
-        if (moduleDirectory.exists()) {
-            logger.debug("模块路径：" + moduleDirectory.getAbsolutePath());
-            var filePath = modulePath+"/graph_%s.md".formatted(suffix);
-            File file = new File(filePath);
-            try (var outputStream = new FileOutputStream(file)) {
-                if (!file.exists()) {
-                   var res = file.createNewFile();
-                   logger.debug("create file %s is %b".formatted(filePath,res));
-                }
-                String template = """
-                        ```mermaid
-                        %s
-                        ```
-                        """.formatted(buffer);
-                outputStream.write(template.getBytes());
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-        } else {
-            logger.error("模块路径不存在！");
+    protected static void saveToEp20Res(String buffer, String suffix) {
+        try {
+            // 使用健壮的路径解析方法
+            var outputDir = ensureOutputDirectory();
+            var filePath = outputDir.resolve("graph_%s.md".formatted(suffix));
+            
+            logger.debug("保存控制流图到: {}", filePath);
+            
+            // 格式化内容为Mermaid图表
+            var template = """
+                    ```mermaid
+                    %s
+                    ```
+                    """.formatted(buffer);
+            
+            // 使用NIO进行文件操作，更高效和健壮
+            Files.writeString(filePath, template);
+            
+            logger.debug("成功保存控制流图到: {}", filePath.toAbsolutePath());
+            
+        } catch (IOException e) {
+            logger.error("保存控制流图失败", e);
+            throw new RuntimeException("保存控制流图到文件失败", e);
         }
     }
 }

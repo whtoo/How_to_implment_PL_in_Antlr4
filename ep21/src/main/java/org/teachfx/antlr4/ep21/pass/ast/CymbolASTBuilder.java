@@ -120,7 +120,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitStatBlock(CymbolParser.StatBlockContext ctx) {
-        var stmtList = ctx.block().statetment().stream().map((stmtCtx)-> (StmtNode)visit(stmtCtx))
+        var stmtList = ctx.block().statement().stream().map((stmtCtx)-> (StmtNode)visit(stmtCtx))
                 .toList();
         var stmtNode = new BlockStmtNode(stmtList,ctx);
         stmtNode.setParentScopeType(ScopeType.BlockScope);

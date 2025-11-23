@@ -23,15 +23,15 @@ public class CymbolParser extends Parser {
 		T__9=10, T__10=11, T__11=12, T__12=13, T__13=14, T__14=15, T__15=16, T__16=17, 
 		T__17=18, T__18=19, T__19=20, T__20=21, T__21=22, T__22=23, T__23=24, 
 		T__24=25, T__25=26, T__26=27, T__27=28, T__28=29, T__29=30, ID=31, BOOLEAN=32, 
-		NULL=33, INT=34, FLOAT=35, WS=36, CHAR=37, STRING=38, SLCOMMENT=39, COMMNET=40;
+		NULL=33, INT=34, FLOAT=35, WS=36, CHAR=37, STRING=38, SLCOMMENT=39, COMMENT=40;
 	public static final int
 		RULE_file = 0, RULE_varDecl = 1, RULE_primaryType = 2, RULE_functionDecl = 3, 
-		RULE_formalParameters = 4, RULE_formalParameter = 5, RULE_block = 6, RULE_statetment = 7, 
+		RULE_formalParameters = 4, RULE_formalParameter = 5, RULE_block = 6, RULE_statement = 7, 
 		RULE_expr = 8, RULE_primary = 9;
 	private static String[] makeRuleNames() {
 		return new String[] {
 			"file", "varDecl", "primaryType", "functionDecl", "formalParameters", 
-			"formalParameter", "block", "statetment", "expr", "primary"
+			"formalParameter", "block", "statement", "expr", "primary"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -50,7 +50,7 @@ public class CymbolParser extends Parser {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
 			null, null, null, null, null, null, null, null, null, null, null, null, 
 			null, null, null, null, null, null, null, "ID", "BOOLEAN", "NULL", "INT", 
-			"FLOAT", "WS", "CHAR", "STRING", "SLCOMMENT", "COMMNET"
+			"FLOAT", "WS", "CHAR", "STRING", "SLCOMMENT", "COMMENT"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -500,12 +500,12 @@ public class CymbolParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class BlockContext extends ParserRuleContext {
-		public StatetmentContext stmts;
-		public List<StatetmentContext> statetment() {
-			return getRuleContexts(StatetmentContext.class);
+		public StatementContext stmts;
+		public List<StatementContext> statement() {
+			return getRuleContexts(StatementContext.class);
 		}
-		public StatetmentContext statetment(int i) {
-			return getRuleContext(StatetmentContext.class,i);
+		public StatementContext statement(int i) {
+			return getRuleContext(StatementContext.class,i);
 		}
 		public BlockContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -542,7 +542,7 @@ public class CymbolParser extends Parser {
 				{
 				{
 				setState(57);
-				((BlockContext)_localctx).stmts = statetment();
+				((BlockContext)_localctx).stmts = statement();
 				}
 				}
 				setState(62);
@@ -565,23 +565,23 @@ public class CymbolParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class StatetmentContext extends ParserRuleContext {
-		public StatetmentContext(ParserRuleContext parent, int invokingState) {
+	public static class StatementContext extends ParserRuleContext {
+		public StatementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_statetment; }
+		@Override public int getRuleIndex() { return RULE_statement; }
 	 
-		public StatetmentContext() { }
-		public void copyFrom(StatetmentContext ctx) {
+		public StatementContext() { }
+		public void copyFrom(StatementContext ctx) {
 			super.copyFrom(ctx);
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class StatBlockContext extends StatetmentContext {
+	public static class StatBlockContext extends StatementContext {
 		public BlockContext block() {
 			return getRuleContext(BlockContext.class,0);
 		}
-		public StatBlockContext(StatetmentContext ctx) { copyFrom(ctx); }
+		public StatBlockContext(StatementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterStatBlock(this);
@@ -597,11 +597,11 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class StatVarDeclContext extends StatetmentContext {
+	public static class StatVarDeclContext extends StatementContext {
 		public VarDeclContext varDecl() {
 			return getRuleContext(VarDeclContext.class,0);
 		}
-		public StatVarDeclContext(StatetmentContext ctx) { copyFrom(ctx); }
+		public StatVarDeclContext(StatementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterStatVarDecl(this);
@@ -617,11 +617,11 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class ExprStatContext extends StatetmentContext {
+	public static class ExprStatContext extends StatementContext {
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
-		public ExprStatContext(StatetmentContext ctx) { copyFrom(ctx); }
+		public ExprStatContext(StatementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterExprStat(this);
@@ -637,16 +637,16 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class StateWhileContext extends StatetmentContext {
+	public static class StateWhileContext extends StatementContext {
 		public ExprContext cond;
-		public StatetmentContext then;
+		public StatementContext then;
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
-		public StatetmentContext statetment() {
-			return getRuleContext(StatetmentContext.class,0);
+		public StatementContext statement() {
+			return getRuleContext(StatementContext.class,0);
 		}
-		public StateWhileContext(StatetmentContext ctx) { copyFrom(ctx); }
+		public StateWhileContext(StatementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterStateWhile(this);
@@ -662,8 +662,8 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class VisitContinueContext extends StatetmentContext {
-		public VisitContinueContext(StatetmentContext ctx) { copyFrom(ctx); }
+	public static class VisitContinueContext extends StatementContext {
+		public VisitContinueContext(StatementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterVisitContinue(this);
@@ -679,14 +679,14 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class StatAssignContext extends StatetmentContext {
+	public static class StatAssignContext extends StatementContext {
 		public List<ExprContext> expr() {
 			return getRuleContexts(ExprContext.class);
 		}
 		public ExprContext expr(int i) {
 			return getRuleContext(ExprContext.class,i);
 		}
-		public StatAssignContext(StatetmentContext ctx) { copyFrom(ctx); }
+		public StatAssignContext(StatementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterStatAssign(this);
@@ -702,11 +702,11 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class StatReturnContext extends StatetmentContext {
+	public static class StatReturnContext extends StatementContext {
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
-		public StatReturnContext(StatetmentContext ctx) { copyFrom(ctx); }
+		public StatReturnContext(StatementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterStatReturn(this);
@@ -722,20 +722,20 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class StateConditionContext extends StatetmentContext {
+	public static class StateConditionContext extends StatementContext {
 		public ExprContext cond;
-		public StatetmentContext then;
-		public StatetmentContext elseDo;
+		public StatementContext then;
+		public StatementContext elseDo;
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
-		public List<StatetmentContext> statetment() {
-			return getRuleContexts(StatetmentContext.class);
+		public List<StatementContext> statement() {
+			return getRuleContexts(StatementContext.class);
 		}
-		public StatetmentContext statetment(int i) {
-			return getRuleContext(StatetmentContext.class,i);
+		public StatementContext statement(int i) {
+			return getRuleContext(StatementContext.class,i);
 		}
-		public StateConditionContext(StatetmentContext ctx) { copyFrom(ctx); }
+		public StateConditionContext(StatementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterStateCondition(this);
@@ -751,8 +751,8 @@ public class CymbolParser extends Parser {
 		}
 	}
 	@SuppressWarnings("CheckReturnValue")
-	public static class VisitBreakContext extends StatetmentContext {
-		public VisitBreakContext(StatetmentContext ctx) { copyFrom(ctx); }
+	public static class VisitBreakContext extends StatementContext {
+		public VisitBreakContext(StatementContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
 			if ( listener instanceof CymbolListener ) ((CymbolListener)listener).enterVisitBreak(this);
@@ -768,9 +768,9 @@ public class CymbolParser extends Parser {
 		}
 	}
 
-	public final StatetmentContext statetment() throws RecognitionException {
-		StatetmentContext _localctx = new StatetmentContext(_ctx, getState());
-		enterRule(_localctx, 14, RULE_statetment);
+	public final StatementContext statement() throws RecognitionException {
+		StatementContext _localctx = new StatementContext(_ctx, getState());
+		enterRule(_localctx, 14, RULE_statement);
 		int _la;
 		try {
 			setState(99);
@@ -817,7 +817,7 @@ public class CymbolParser extends Parser {
 				setState(74);
 				match(T__9);
 				setState(75);
-				((StateConditionContext)_localctx).then = statetment();
+				((StateConditionContext)_localctx).then = statement();
 				setState(78);
 				_errHandler.sync(this);
 				switch ( getInterpreter().adaptivePredict(_input,7,_ctx) ) {
@@ -826,7 +826,7 @@ public class CymbolParser extends Parser {
 					setState(76);
 					match(T__15);
 					setState(77);
-					((StateConditionContext)_localctx).elseDo = statetment();
+					((StateConditionContext)_localctx).elseDo = statement();
 					}
 					break;
 				}
@@ -845,7 +845,7 @@ public class CymbolParser extends Parser {
 				setState(83);
 				match(T__9);
 				setState(84);
-				((StateWhileContext)_localctx).then = statetment();
+				((StateWhileContext)_localctx).then = statement();
 				}
 				break;
 			case 5:

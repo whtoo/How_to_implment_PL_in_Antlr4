@@ -41,7 +41,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     private LinearIRBlock exitBlock = null;
     private Stack<LinearIRBlock> breakStack;
     private Stack<LinearIRBlock> continueStack;
-    private Stack<VarSlot> evalExprStack;
+    private Stack<VarSlot> evalExprStack = null; // 显式初始化为null
 
     private ASTNode curNode = null;
     @Override
@@ -314,6 +314,8 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     public void forkNewBlock(Scope scope) {
         currentBlock = new LinearIRBlock();
         currentBlock.setScope(scope);
+        // 确保evalExprStack在每次fork新block时正确初始化
+        evalExprStack = new Stack<>();
         breakStack = new Stack<>();
         continueStack = new Stack<>();
     }
@@ -342,7 +344,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
             popEvalOperand();
             return Optional.of(OperandSlot.pushStack());
         } else if(stmt instanceof CJMP) {
-            popEvalOperand();
+            // CJMP不需要操作evalExprStack，因为它不是表达式
         } else if (stmt instanceof CallFunc callFunc) {
             int i = callFunc.getArgs();
 
@@ -391,8 +393,18 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     static int cnt = 0;
     protected VarSlot pushEvalOperand(Operand operand) {
 
+        // 日志验证：检查evalExprStack状态
+        System.out.println("DEBUG CymbolIRBuilder: pushEvalOperand called, evalExprStack=" +
+                          (evalExprStack == null ? "null" : "initialized"));
+
         if (curNode != null) {
             logger.debug(curNode.toString());
+        }
+
+        // 空检查
+        if (evalExprStack == null) {
+            System.out.println("DEBUG CymbolIRBuilder: evalExprStack is null, throwing exception");
+            throw new NullPointerException("evalExprStack is not initialized");
         }
 
         if (!(operand instanceof OperandSlot)){

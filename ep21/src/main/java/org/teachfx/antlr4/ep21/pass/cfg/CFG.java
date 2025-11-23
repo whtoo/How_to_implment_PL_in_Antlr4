@@ -26,8 +26,26 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
     private final List<IFlowOptimizer<I>> optimizers = new ArrayList<>();
 
     public CFG(List<BasicBlock<I>> nodes, List<Triple<Integer, Integer,Integer>> edges) {
+        // 日志验证：检查nodes列表状态
+        System.out.println("DEBUG CFG: Constructor called with " + nodes.size() + " nodes and " + edges.size() + " edges");
+        
         // Generate init
-        var maxOrd = nodes.stream().max(BasicBlock::compareTo).map(BasicBlock::getId).get() + 1;
+        if (nodes.isEmpty()) {
+            System.out.println("DEBUG CFG: Empty nodes list - handling gracefully");
+            this.nodes = nodes;
+            this.edges = edges;
+            this.links = new ArrayList<>();
+            return;
+        }
+        
+        // 计算最大索引，确保数组大小足够容纳所有节点
+        int maxNodeId = nodes.stream().mapToInt(BasicBlock::getId).max().orElse(0);
+        int maxEdgeFrom = edges.stream().mapToInt(Triple::getLeft).max().orElse(0);
+        int maxEdgeTo = edges.stream().mapToInt(Triple::getMiddle).max().orElse(0);
+        int maxOrd = Math.max(Math.max(maxNodeId, maxEdgeFrom), maxEdgeTo) + 1;
+        
+        System.out.println("DEBUG CFG: maxNodeId=" + maxNodeId + ", maxEdgeFrom=" + maxEdgeFrom +
+                          ", maxEdgeTo=" + maxEdgeTo + ", maxOrd=" + maxOrd);
         this.nodes = nodes;
         this.edges = edges;
 
@@ -39,8 +57,13 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
         for (var edge : edges) {
             var u = edge.getLeft();
             var v = edge.getMiddle();
-            links.get(u).getRight().add(v);
-            links.get(v).getLeft().add(u);
+            System.out.println("DEBUG CFG: Processing edge from " + u + " to " + v);
+            if (u < links.size() && v < links.size()) {
+                links.get(u).getRight().add(v);
+                links.get(v).getLeft().add(u);
+            } else {
+                System.out.println("DEBUG CFG: Edge indices out of bounds - u=" + u + ", v=" + v + ", links.size=" + links.size());
+            }
         }
     }
 

@@ -83,109 +83,109 @@ public interface CymbolListener extends ParseTreeListener {
 	void exitBlock(CymbolParser.BlockContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code statVarDecl}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void enterStatVarDecl(CymbolParser.StatVarDeclContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code statVarDecl}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void exitStatVarDecl(CymbolParser.StatVarDeclContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code statReturn}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void enterStatReturn(CymbolParser.StatReturnContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code statReturn}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void exitStatReturn(CymbolParser.StatReturnContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code stateCondition}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void enterStateCondition(CymbolParser.StateConditionContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code stateCondition}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void exitStateCondition(CymbolParser.StateConditionContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code stateWhile}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void enterStateWhile(CymbolParser.StateWhileContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code stateWhile}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void exitStateWhile(CymbolParser.StateWhileContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code visitBreak}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void enterVisitBreak(CymbolParser.VisitBreakContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code visitBreak}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void exitVisitBreak(CymbolParser.VisitBreakContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code visitContinue}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void enterVisitContinue(CymbolParser.VisitContinueContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code visitContinue}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void exitVisitContinue(CymbolParser.VisitContinueContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code statAssign}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void enterStatAssign(CymbolParser.StatAssignContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code statAssign}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void exitStatAssign(CymbolParser.StatAssignContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code exprStat}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void enterExprStat(CymbolParser.ExprStatContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code exprStat}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void exitExprStat(CymbolParser.ExprStatContext ctx);
 	/**
 	 * Enter a parse tree produced by the {@code statBlock}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void enterStatBlock(CymbolParser.StatBlockContext ctx);
 	/**
 	 * Exit a parse tree produced by the {@code statBlock}
-	 * labeled alternative in {@link CymbolParser#statetment}.
+	 * labeled alternative in {@link CymbolParser#statement}.
 	 * @param ctx the parse tree
 	 */
 	void exitStatBlock(CymbolParser.StatBlockContext ctx);

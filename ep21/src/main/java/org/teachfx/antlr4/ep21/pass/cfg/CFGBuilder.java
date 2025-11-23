@@ -29,27 +29,61 @@ public class CFGBuilder {
     private void build(LinearIRBlock block,Set<String> cachedEdgeLinks) {
         var currentBlock = BasicBlock.buildFromLinearBlock(block,basicBlocks);
         basicBlocks.add(currentBlock);
-        var lastInstr = block.getStmts().get(block.getStmts().size() - 1);
+        
+        // 日志验证：检查stmts列表状态
+        var stmts = block.getStmts();
+        System.out.println("DEBUG CFGBuilder: Processing block ord=" + block.getOrd() + ", stmts size=" + stmts.size());
+        
+        // 修复：提取currentOrd到方法作用域
         var currentOrd = block.getOrd();
+        
+        // 边界检查：确保stmts列表不为空再访问最后一个元素
+        if (stmts.isEmpty()) {
+            System.out.println("DEBUG CFGBuilder: Empty stmts list, but still need to check for control flow");
+        } else {
+            var lastInstr = stmts.get(stmts.size() - 1);
+            System.out.println("DEBUG CFGBuilder: Last instruction type=" + lastInstr.getClass().getSimpleName() + ", ord=" + currentOrd);
 
-        if (lastInstr instanceof JMP jmp) {
-            var destOrd = jmp.getNext().getOrd();
-            var key = currentOrd + "-" + destOrd + "-" + 5;
-            if (!cachedEdgeLinks.contains(key)) {
-                cachedEdgeLinks.add(key);
-                edges.add(Triple.of(currentOrd, destOrd,5));
-            }
-        } else if (lastInstr instanceof CJMP cjmp) {
-            var elseOrd = cjmp.getElseBlock().getOrd();
-            var key = currentOrd + "-" + elseOrd + "-" + 5;
-            if (!cachedEdgeLinks.contains(key)) {
-                cachedEdgeLinks.add(key);
-                edges.add(Triple.of(currentOrd, elseOrd,5));
+            if (lastInstr instanceof JMP jmp) {
+                var destBlock = jmp.getNext();
+                var destOrd = destBlock.getOrd();
+                String key = currentOrd + "-" + destOrd + "-" + 5;
+                System.out.println("DEBUG CFGBuilder: JMP instruction - from " + currentOrd + " to " + destOrd);
+                if (!cachedEdgeLinks.contains(key)) {
+                    cachedEdgeLinks.add(key);
+                    edges.add(Triple.of(currentOrd, destOrd,5));
+                }
+                // 递归构建跳转目标block
+                build(destBlock, cachedEdgeLinks);
+            } else if (lastInstr instanceof CJMP cjmp) {
+                var thenBlock = cjmp.getThenBlock();
+                var elseBlock = cjmp.getElseBlock();
+                
+                // 处理then分支
+                var thenOrd = thenBlock.getOrd();
+                String thenKey = currentOrd + "-" + thenOrd + "-" + 5;
+                System.out.println("DEBUG CFGBuilder: CJMP instruction - from " + currentOrd + " to then " + thenOrd);
+                if (!cachedEdgeLinks.contains(thenKey)) {
+                    cachedEdgeLinks.add(thenKey);
+                    edges.add(Triple.of(currentOrd, thenOrd,5));
+                }
+                build(thenBlock, cachedEdgeLinks);
+                
+                // 处理else分支
+                var elseOrd = elseBlock.getOrd();
+                String elseKey = currentOrd + "-" + elseOrd + "-" + 5;
+                System.out.println("DEBUG CFGBuilder: CJMP instruction - from " + currentOrd + " to else " + elseOrd);
+                if (!cachedEdgeLinks.contains(elseKey)) {
+                    cachedEdgeLinks.add(elseKey);
+                    edges.add(Triple.of(currentOrd, elseOrd,5));
+                }
+                build(elseBlock, cachedEdgeLinks);
             }
         }
 
         for (var successor : block.getSuccessors()){
-            var key = currentOrd + "-" + successor.getOrd() + "-" + 10;
+            String key = currentOrd + "-" + successor.getOrd() + "-" + 10;
+            System.out.println("DEBUG CFGBuilder: Successor edge - from " + currentOrd + " to " + successor.getOrd());
             if (!cachedEdgeLinks.contains(key)) {
                 cachedEdgeLinks.add(key);
                 edges.add(Triple.of(currentOrd, successor.getOrd(),10));

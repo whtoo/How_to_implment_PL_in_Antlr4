@@ -82,7 +82,7 @@ WS
 CHAR
 STRING
 SLCOMMENT
-COMMNET
+COMMENT
 
 rule names:
 file
@@ -92,7 +92,7 @@ functionDecl
 formalParameters
 formalParameter
 block
-statetment
+statement
 expr
 primary
 

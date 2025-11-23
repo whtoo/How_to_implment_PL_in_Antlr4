@@ -23,7 +23,7 @@ public class CymbolLexer extends Lexer {
 		T__9=10, T__10=11, T__11=12, T__12=13, T__13=14, T__14=15, T__15=16, T__16=17, 
 		T__17=18, T__18=19, T__19=20, T__20=21, T__21=22, T__22=23, T__23=24, 
 		T__24=25, T__25=26, T__26=27, T__27=28, T__28=29, T__29=30, ID=31, BOOLEAN=32, 
-		NULL=33, INT=34, FLOAT=35, WS=36, CHAR=37, STRING=38, SLCOMMENT=39, COMMNET=40;
+		NULL=33, INT=34, FLOAT=35, WS=36, CHAR=37, STRING=38, SLCOMMENT=39, COMMENT=40;
 	public static String[] channelNames = {
 		"DEFAULT_TOKEN_CHANNEL", "HIDDEN"
 	};
@@ -38,7 +38,7 @@ public class CymbolLexer extends Lexer {
 			"T__9", "T__10", "T__11", "T__12", "T__13", "T__14", "T__15", "T__16", 
 			"T__17", "T__18", "T__19", "T__20", "T__21", "T__22", "T__23", "T__24", 
 			"T__25", "T__26", "T__27", "T__28", "T__29", "ID", "BOOLEAN", "NULL", 
-			"LETTER", "INT", "FLOAT", "WS", "CHAR", "STRING", "SLCOMMENT", "COMMNET"
+			"LETTER", "INT", "FLOAT", "WS", "CHAR", "STRING", "SLCOMMENT", "COMMENT"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -57,7 +57,7 @@ public class CymbolLexer extends Lexer {
 			null, null, null, null, null, null, null, null, null, null, null, null, 
 			null, null, null, null, null, null, null, null, null, null, null, null, 
 			null, null, null, null, null, null, null, "ID", "BOOLEAN", "NULL", "INT", 
-			"FLOAT", "WS", "CHAR", "STRING", "SLCOMMENT", "COMMNET"
+			"FLOAT", "WS", "CHAR", "STRING", "SLCOMMENT", "COMMENT"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();

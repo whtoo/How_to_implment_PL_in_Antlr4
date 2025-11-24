@@ -1,9 +1,5 @@
 grammar Cymbol;
 
-@header {
-package org.teachfx.antlr4.ep21.parser;
-}
-
 file :   (functionDecl | varDecl)+ #compilationUnit ;
 
 varDecl

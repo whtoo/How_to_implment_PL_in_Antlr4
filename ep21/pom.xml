@@ -15,7 +15,7 @@
     <version>1.0.0</version>
     <properties>
         <!-- 这里为包含g4文件的文件夹-->
-        <parser.g4.dir>src/main/antlr4</parser.g4.dir>
+        <parser.g4.dir>src/main/antlr4/org/teachfx/antlr4/ep21</parser.g4.dir>
         <run.main.entry>org.teachfx.antlr4.ep21.Compiler</run.main.entry>
     </properties>
     <!-- 运行测试 -->

@@ -153,14 +153,14 @@ class ControlFlowAnalysisTest {
     @Test
     void testDebugFlagBehavior() {
         // Arrange
-        boolean originalDebug = ControlFlowAnalysis.DEBUG;
+        boolean originalDebug = ControlFlowAnalysis.isDebugEnabled();
 
         // Act
-        ControlFlowAnalysis.DEBUG = true;
+        ControlFlowAnalysis.setDebugEnabled(true);
         controlFlowAnalysis.onHandle(testCfg);
 
         // Reset
-        ControlFlowAnalysis.DEBUG = originalDebug;
+        ControlFlowAnalysis.setDebugEnabled(originalDebug);
 
         // Assert
         // 这个测试主要验证DEBUG标志不会导致异常

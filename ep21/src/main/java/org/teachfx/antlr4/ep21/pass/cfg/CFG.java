@@ -173,7 +173,7 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
      * @param edge edge to remove, Triple<Integer,Integer,Integer> : <起始节点，终止节点,权重>
      *
      */
-    public void removeEdge(Triple<Integer,Integer,Integer> edge) {
+    public boolean removeEdge(Triple<Integer,Integer,Integer> edge) {
         edges.remove(edge);
         var srcBlockId = edge.getLeft();
         var destBlockId = edge.getMiddle();
@@ -183,6 +183,7 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
             links.get(srcBlockId).getRight().remove(destBlockId);
             links.get(destBlockId).getLeft().remove(srcBlockId);
         }
+        return nonRel;
     }
 
     public void removeNode(BasicBlock<I> node) {

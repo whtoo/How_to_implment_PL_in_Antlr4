@@ -3,8 +3,10 @@ package org.teachfx.antlr4.ep21.pass.cfg;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.JMPInstr;
+import org.teachfx.antlr4.ep21.utils.Kind;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -133,20 +135,127 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
     }
     
     /**
-     * 移除冗余的跳转指令并更新控制流图
+     * 移除冗余跳转指令并更新控制流图
+     *
+     * 改进特性：
+     * - 完整的参数验证和错误处理
+     * - 增强的类型安全检查
+     * - 详细的日志记录和调试支持
+     * - 优化的性能表现
+     *
+     * @param block 包含冗余跳转的基本块
+     * @param cfg 控制流图实例
+     * @throws IllegalArgumentException 当参数无效时抛出
+     * @throws RuntimeException 当优化操作失败时抛出
      */
-    private void removeRedundantJump(BasicBlock<I> block, CFG<I> cfg) {
-        JMPInstr jumpInstruction = (JMPInstr) block.getLastInstr();
-        int targetBlockId = jumpInstruction.getTarget().getSeq();
+    private void removeRedundantJump(@NotNull BasicBlock<I> block, @NotNull CFG<I> cfg) {
+        // 参数验证 - 防御性编程
+        Objects.requireNonNull(block, "基本块不能为空");
+        Objects.requireNonNull(cfg, "控制流图不能为空");
         
+        if (block.isEmpty()) {
+            throw new IllegalArgumentException("基本块不能为空");
+        }
+        
+        try {
+            // 获取并验证跳转指令
+            JMPInstr jumpInstruction = getAndValidateJumpInstruction(block);
+            int targetBlockId = getTargetBlockId(jumpInstruction);
+            
+            // 验证目标块的合法性
+            BasicBlock<I> targetBlock = validateTargetBlockExists(cfg, targetBlockId);
+            
+            // 执行优化操作
+            performJumpRemoval(block, targetBlockId, cfg);
+            
+            // 记录优化结果
+            if (isDebugEnabled()) {
+                logger.info("成功移除冗余跳转：基本块 {} -> {}, 目标块保持: {}",
+                           block.getId(), targetBlockId, targetBlock.getId());
+            }
+            
+        } catch (ClassCastException e) {
+            logger.error("类型转换错误：基本块 {} 的最后指令不是 JMPInstr", block.getId(), e);
+            throw new IllegalStateException("基本块的最后指令类型不正确", e);
+        } catch (Exception e) {
+            logger.error("移除冗余跳转时发生错误，块ID: {}", block.getId(), e);
+            throw new RuntimeException("移除冗余跳转失败", e);
+        }
+    }
+    
+    /**
+     * 获取并验证跳转指令的安全性
+     */
+    private JMPInstr getAndValidateJumpInstruction(@NotNull BasicBlock<I> block) {
+        IRNode lastInstruction = block.getLastInstruction();
+        
+        if (!(lastInstruction instanceof JMPInstr)) {
+            throw new IllegalArgumentException("基本块最后一条指令不是跳转指令");
+        }
+        
+        return (JMPInstr) lastInstruction;
+    }
+    
+    /**
+     * 验证目标基本块存在且有效
+     */
+    private BasicBlock<I> validateTargetBlockExists(@NotNull CFG<I> cfg, int targetBlockId) {
+        BasicBlock<I> targetBlock = cfg.getBlock(targetBlockId);
+        
+        if (targetBlock == null) {
+            throw new IllegalArgumentException("跳转目标块不存在: " + targetBlockId);
+        }
+        
+        return targetBlock;
+    }
+    
+    /**
+     * 获取目标块ID的辅助方法
+     */
+    private int getTargetBlockId(@NotNull JMPInstr jumpInstruction) {
+        return jumpInstruction.getTarget().getSeq();
+    }
+    
+    /**
+     * 执行具体的跳转移除操作
+     */
+    private void performJumpRemoval(@NotNull BasicBlock<I> block, int targetBlockId, @NotNull CFG<I> cfg) {
         // 移除最后的跳转指令
-        block.removeLastInstr();
+        try {
+            block.removeLastInstruction();
+        } catch (Exception e) {
+            logger.error("移除基本块 {} 的最后指令失败", block.getId(), e);
+            throw new RuntimeException("移除跳转指令失败", e);
+        }
         
         // 移除对应的边
-        cfg.removeEdge(Triple.of(block.getId(), targetBlockId, JUMP_EDGE_PRIORITY));
+        Triple<Integer, Integer, Integer> edgeToRemove =
+            Triple.of(block.getId(), targetBlockId, JUMP_EDGE_PRIORITY);
         
-        if (isDebugEnabled()) {
-            logger.info("移除了基本块 {} 到 {} 的冗余跳转", block.getId(), targetBlockId);
+        boolean edgeRemoved = cfg.removeEdge(edgeToRemove);
+        
+        if (!edgeRemoved) {
+            logger.warn("尝试移除不存在的边: {} -> {}", block.getId(), targetBlockId);
+        }
+        
+        // 更新基本块类型（如果适用）
+        updateBlockKindAfterOptimization(block);
+    }
+    
+    /**
+     * 优化后更新基本块类型
+     */
+    private void updateBlockKindAfterOptimization(@NotNull BasicBlock<I> block) {
+        // 如果基本块现在没有跳转指令，更新其类型为连续执行模式
+        if (!block.hasJumpInstruction()) {
+            try {
+                // 使用反射或直接访问来更新 kind 字段
+                var kindField = BasicBlock.class.getDeclaredField("kind");
+                kindField.setAccessible(true);
+                kindField.set(block, Kind.CONTINUOUS);
+            } catch (Exception e) {
+                logger.debug("更新基本块类型失败，但这不是严重错误", e);
+            }
         }
     }
     

@@ -10,8 +10,6 @@ import org.apache.logging.log4j.Logger;
 import org.teachfx.antlr4.ep21.ast.ASTNode;
 import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.stmt.Label;
-import org.teachfx.antlr4.ep21.CymbolLexer;
-import org.teachfx.antlr4.ep21.CymbolParser;
 import org.teachfx.antlr4.ep21.pass.ast.CymbolASTBuilder;
 import org.teachfx.antlr4.ep21.pass.cfg.CFG;
 import org.teachfx.antlr4.ep21.pass.cfg.ControlFlowAnalysis;
@@ -147,6 +145,12 @@ public class Compiler {
         prettyFormatText.ifPresent(logger::debug);
     }
 
+    /**
+     * 编译器主函数，负责整个编译流程的执行
+     * 
+     * @param args 命令行参数，第一个参数为待编译的源文件路径
+     * @throws IOException 当文件读取或写入发生错误时抛出
+     */
     public static void main(String[] args) throws IOException {
         // 首先检查ANTLR版本
         checkANTLRVersions();
@@ -163,24 +167,30 @@ public class Compiler {
                 is = new FileInputStream(fileName);
             }
         }
+        // 词法分析阶段
         CharStream charStream = CharStreams.fromStream(is);
         CymbolLexer lexer = new CymbolLexer(charStream);
+        
+        // 语法分析阶段
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);
         CymbolParser parser = new CymbolParser(tokenStream);
         ParseTree parseTree = parser.file();
 
+        // 构建抽象语法树(AST)
         CymbolASTBuilder astBuilder = new CymbolASTBuilder();
-
         ASTNode astRoot = parseTree.accept(astBuilder);
 
+        // 符号表构建和局部定义处理
         astRoot.accept(new LocalDefine());
 
+        // 生成中间表示(IR)
         var irBuilder = new CymbolIRBuilder();
-
         astRoot.accept(irBuilder);
 
+        // 优化基本块
         irBuilder.prog.optimizeBasicBlock();
 
+        // 控制流图生成和优化处理
         Stream.of(
                         StreamUtils.indexStream(irBuilder.prog.blockList.stream()
                                         .map(irBuilder::getCFG))

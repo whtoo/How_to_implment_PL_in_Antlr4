@@ -20,6 +20,13 @@ public class Loc<I extends IRNode> {
     public Stream<I> getInstr() {
         return Stream.of(instr);
     }
+    
+    /**
+     * 获取指令
+     */
+    public I getInstruction() {
+        return instr;
+    }
 
     @Override
     public String toString() {

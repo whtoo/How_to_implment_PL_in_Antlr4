@@ -33,8 +33,154 @@ graph TD
     JMP --> thenBlock
     CJMP -->|条件真| then
     CJMP -->|条件假| other
- ```
+  ```
 
+## 🆕 新增功能
+
+### 1. MIR/LIR体系
+
+EP21现在支持分层中间表示：
+- **MIR (Medium-level Intermediate Representation)**: 中层IR，更接近源代码抽象
+- **LIR (Low-level Intermediate Representation)**: 低层IR，更接近目标机器代码
+
+#### 核心类
+- `MIRNode`: MIR节点基类
+- `LIRNode`: LIR节点基类  
+- `MIRFunction`: MIR函数表示
+- `LIRAssign`: LIR赋值指令
+- `MIRStmt`: MIR语句基类
+- `MIRExpr`: MIR表达式基类
+
+#### 使用示例
+```java
+// 创建MIR函数
+MIRFunction func = new MIRFunction("testFunc");
+
+// 创建MIR赋值语句
+MIRExpr source = new MIRExpr() {...}; // 实现具体表达式
+MIRAssignStmt assign = new MIRAssignStmt("result", source);
+
+// 创建LIR赋值指令
+LIRAssign lirAssign = new LIRAssign(target, source, 
+    LIRAssign.RegisterType.REGISTER);
+```
+
+### 2. CFG可视化增强
+
+现在支持多种格式的控制流图输出：
+- **Mermaid格式**: 适合在Markdown中直接显示
+- **DOT格式**: 适合Graphviz等专业工具
+
+#### 输出文件
+- `graph_X_origin.md`: 原始控制流图(Mermaid格式)
+- `graph_X_origin.dot`: 原始控制流图(DOT格式)  
+- `graph_X_optimized.md`: 优化后控制流图(Mermaid格式)
+- `graph_X_optimized.dot`: 优化后控制流图(DOT格式)
+
+### 3. 数据流分析框架
+
+基于`Loc`类实现了完整的数据流分析框架：
+
+#### 核心类
+- `DataFlowFramework`: 数据流分析框架基类
+- `LiveVariableAnalyzer`: 活跃变量分析器
+
+#### 功能特性
+- 活跃变量分析
+- 基本块的liveIn/liveOut集合计算
+- 指令级别的活跃性分析
+
+#### 使用示例
+```java
+// 创建活跃变量分析器
+LiveVariableAnalyzer analyzer = new LiveVariableAnalyzer(cfg);
+
+// 执行分析
+analyzer.analyze();
+
+// 查看分析结果
+analyzer.printAnalysisResult();
+```
+
+### 4. 理想图生成
+
+实现SSA(静态单赋值)形式的理想图生成：
+
+#### 核心类
+- `SSAGraph`: SSA图生成器
+
+#### 主要功能
+- Φ函数自动插入
+- 变量重命名
+- SSA图的可视化输出
+
+#### 使用示例
+```java
+// 创建SSA图
+SSAGraph ssaGraph = new SSAGraph(cfg);
+
+// 构建SSA图
+ssaGraph.buildSSA();
+
+// 生成可视化输出
+String mermaid = ssaGraph.toMermaid();
+String dot = ssaGraph.toDOT();
+```
+
+### 5. 测试验证
+
+提供了完整的测试套件：
+
+#### 测试类
+- `SimpleTest`: 简化版测试类（无需JUnit）
+
+#### 运行测试
+```bash
+# 编译项目
+mvn clean compile
+
+# 运行测试
+mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.test.SimpleTest"
+```
+
+## 代码结构
+
+### 新增目录
+```
+src/main/java/org/teachfx/antlr4/ep21/
+├── ir/
+│   ├── mir/           # MIR相关类
+│   │   ├── MIRNode.java
+│   │   ├── MIRFunction.java
+│   │   ├── MIRStmt.java
+│   │   └── MIRExpr.java
+│   └── lir/           # LIR相关类
+│       ├── LIRNode.java
+│       └── LIRAssign.java
+├── analysis/
+│   ├── dataflow/      # 数据流分析
+│   │   ├── DataFlowFramework.java
+│   │   └── LiveVariableAnalyzer.java
+│   └── ssa/           # SSA分析
+│       └── SSAGraph.java
+└── test/              # 测试代码
+    └── SimpleTest.java
+```
+
+## 编译流程
+
+完整的编译流程现在包括：
+
+1. **语法分析** → 解析树
+2. **AST构建** → 抽象语法树
+3. **符号表分析** → 作用域和符号信息
+4. **IR生成** → 三地址码(TAC)
+5. **MIR/LIR转换** → 分层中间表示
+6. **基本块优化** → 优化TAC
+7. **CFG构建和分析** → 控制流程图
+8. **数据流分析** → 活跃变量分析
+9. **SSA转换** → 静态单赋值形式
+10. **代码生成** → 目标汇编代码
 
 ## DONE
 
@@ -110,4 +256,3 @@ L10 --> L8
 L8 --> L4
 L8 --> L6
 L6 --> L3
-```

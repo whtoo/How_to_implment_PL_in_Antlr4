@@ -17,6 +17,8 @@ import org.teachfx.antlr4.ep21.pass.codegen.CymbolAssembler;
 import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep21.pass.symtab.LocalDefine;
 import org.teachfx.antlr4.ep21.utils.StreamUtils;
+import org.teachfx.antlr4.ep21.CymbolLexer;
+import org.teachfx.antlr4.ep21.CymbolParser;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -197,10 +199,20 @@ public class Compiler {
                                 .peek(cfgPair -> {
                                     var cfg = cfgPair.getRight();
                                     var idx = cfgPair.getLeft();
-                                    saveToEp20Res(cfg.toString(), "%d_origin".formatted(idx));
+                                    
+                                    // 生成Mermaid和DOT两种格式的控制流图
+                                    String mermaidContent = cfg.toString();
+                                    String dotContent = cfg.toDOT();
+                                    saveCFGInBothFormats(mermaidContent, dotContent, "%d_origin".formatted(idx));
+                                    
+                                    // 应用控制流优化
                                     cfg.addOptimizer(new ControlFlowAnalysis<>());
                                     cfg.applyOptimizers();
-                                    saveToEp20Res(cfg.toString(), "%d_optimized".formatted(idx));
+                                    
+                                    // 保存优化后的控制流图
+                                    String optimizedMermaid = cfg.toString();
+                                    String optimizedDot = cfg.toDOT();
+                                    saveCFGInBothFormats(optimizedMermaid, optimizedDot, "%d_optimized".formatted(idx));
                                 })
                                 .map(Pair::getRight)
                                 .map(CFG::getIRNodes)
@@ -263,5 +275,34 @@ public class Compiler {
             logger.error("保存控制流图失败", e);
             throw new RuntimeException("保存控制流图到文件失败", e);
         }
+    }
+    
+    /**
+     * 保存DOT格式的控制流图
+     */
+    protected static void saveDOTToFile(String dotContent, String suffix) {
+        try {
+            var outputDir = ensureOutputDirectory();
+            var filePath = outputDir.resolve("cfg_%s.dot".formatted(suffix));
+            
+            logger.debug("保存DOT格式控制流图到: {}", filePath);
+            
+            // 使用NIO进行文件操作
+            Files.writeString(filePath, dotContent);
+            
+            logger.debug("成功保存DOT格式控制流图到: {}", filePath.toAbsolutePath());
+            
+        } catch (IOException e) {
+            logger.error("保存DOT格式控制流图失败", e);
+            throw new RuntimeException("保存DOT格式控制流图失败", e);
+        }
+    }
+    
+    /**
+     * 同时生成Mermaid和DOT两种格式的控制流图
+     */
+    protected static void saveCFGInBothFormats(String mermaidContent, String dotContent, String suffix) {
+        saveToEp20Res(mermaidContent, suffix);
+        saveDOTToFile(dotContent, suffix);
     }
 }

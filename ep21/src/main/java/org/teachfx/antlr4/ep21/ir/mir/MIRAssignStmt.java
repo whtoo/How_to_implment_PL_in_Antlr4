@@ -11,6 +11,13 @@ public class MIRAssignStmt extends MIRStmt {
     private final MIRExpr source;
     
     public MIRAssignStmt(String target, MIRExpr source) {
+        if (target == null || target.trim().isEmpty()) {
+            throw new IllegalArgumentException("target variable name cannot be null or empty");
+        }
+        if (source == null) {
+            throw new NullPointerException("source expression cannot be null");
+        }
+        System.out.println("DEBUG MIRAssignStmt: target='" + target + "', source=" + source);
         this.target = target;
         this.source = source;
     }

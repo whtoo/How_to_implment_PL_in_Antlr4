@@ -314,6 +314,17 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     public void forkNewBlock(Scope scope) {
         currentBlock = new LinearIRBlock();
         currentBlock.setScope(scope);
+        
+        // 自动添加Label到新创建的基本块，处理null scope情况
+        Label label;
+        if (scope != null) {
+            label = new Label(scope);
+        } else {
+            // 当scope为null时，使用toString()和null scope构造Label
+            label = new Label("L0", null); // 使用默认标签名
+        }
+        currentBlock.addStmt(label);
+        
         // 确保evalExprStack在每次fork新block时正确初始化
         evalExprStack = new Stack<>();
         breakStack = new Stack<>();
@@ -328,12 +339,28 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     }
 
     public void setCurrentBlock(LinearIRBlock nextBlock) {
-        currentBlock.setLink(nextBlock);
+        // 防止在currentBlock为null时调用setLink
+        if (currentBlock != null) {
+            currentBlock.setLink(nextBlock);
+        } else {
+            logger.warn("setCurrentBlock called with null currentBlock, skipping link operation");
+        }
         currentBlock = nextBlock;
     }
 
 
     public Optional<VarSlot> addInstr(IRNode stmt) {
+        // 添加null检查
+        if (stmt == null) {
+            logger.error("addInstr called with null stmt");
+            throw new NullPointerException("stmt cannot be null");
+        }
+
+        // 检查当前块是否存在
+        if (getCurrentBlock() == null) {
+            logger.error("addInstr called with null currentBlock");
+            throw new IllegalStateException("Current block is not initialized. Call forkNewBlock() first.");
+        }
 
         getCurrentBlock().addStmt(stmt);
         if (stmt instanceof BinExpr) {

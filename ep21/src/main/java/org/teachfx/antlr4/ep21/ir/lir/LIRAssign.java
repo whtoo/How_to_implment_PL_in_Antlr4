@@ -15,6 +15,16 @@ public class LIRAssign extends LIRNode {
     }
     
     public LIRAssign(Operand target, Operand source, RegisterType type) {
+        if (target == null) {
+            throw new NullPointerException("target operand cannot be null");
+        }
+        if (source == null) {
+            throw new NullPointerException("source operand cannot be null");
+        }
+        if (type == null) {
+            throw new NullPointerException("register type cannot be null");
+        }
+        System.out.println("DEBUG LIRAssign: target=" + target + ", source=" + source + ", type=" + type);
         this.target = target;
         this.source = source;
         this.registerType = type;

@@ -243,15 +243,13 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
 
     /**
      * Returns the last instruction in the basic block.
-     * 
-     * @return the last instruction
-     * @throws NoSuchElementException if the basic block is empty
+     *
+     * @return the last instruction, or null if the basic block is empty
      */
     @SuppressWarnings("unchecked")
-    @NotNull
     public I getLastInstr() {
         if (codes.isEmpty()) {
-            throw new NoSuchElementException("Cannot get last instruction from empty basic block");
+            return null;
         }
         return ((Loc<I>) codes.get(codes.size() - 1)).instr;
     }
@@ -295,7 +293,8 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
     /**
      * Merges this block with the next block.
      * Removes the last jump instruction and merges the next block's instructions.
-     * 
+     * The nextBlock is completely cleared after merging.
+     *
      * @param nextBlock the block to merge with this block
      * @throws NullPointerException if nextBlock is null
      * @throws IllegalStateException if this block doesn't have a jump instruction
@@ -310,11 +309,14 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
             }
         }
 
-        // Merge instructions and update kind
+        // Merge all instructions from nextBlock
         @SuppressWarnings("unchecked")
-        List<Loc<I>> nextInstructions = (List<Loc<I>>) nextBlock.dropLabelSeq();
+        List<Loc<I>> nextInstructions = (List<Loc<I>>) nextBlock.codes;
         codes.addAll(nextInstructions);
         kind = nextBlock.kind;
+        
+        // Clear the nextBlock completely after merging
+        nextBlock.codes.clear();
     }
 
     /**

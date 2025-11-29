@@ -24,9 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class CFGBuilder {
     private static final Logger logger = LogManager.getLogger(CFGBuilder.class);
     
-    // Edge type constants for better maintainability and reduced magic numbers
-    private static final int JUMP_EDGE_TYPE = 5;
-    private static final int SUCCESSOR_EDGE_TYPE = 10;
+    // 使用CFGConstants中的常量，避免重复定义魔法数字
     private static final int MAX_RECURSION_DEPTH = 10000;
     
     private final CFG<IRNode> cfg;
@@ -196,9 +194,9 @@ public class CFGBuilder {
             }
             
             int targetBlockId = targetBlock.getOrd();
-            String edgeKey = createEdgeKey(currentBlockId, targetBlockId, JUMP_EDGE_TYPE);
+            String edgeKey = createEdgeKey(currentBlockId, targetBlockId, CFGConstants.JUMP_EDGE_TYPE);
             
-            if (addEdgeIfNotExists(edgeKey, currentBlockId, targetBlockId, JUMP_EDGE_TYPE)) {
+            if (addEdgeIfNotExists(edgeKey, currentBlockId, targetBlockId, CFGConstants.JUMP_EDGE_TYPE)) {
                 logger.debug("Added jump edge: {} -> {}", currentBlockId, targetBlockId);
                 traverseBlock(targetBlock);
             }
@@ -239,9 +237,9 @@ public class CFGBuilder {
                              int currentBlockId, LinearIRBlock targetBlock, String branchType) {
         try {
             int targetBlockId = targetBlock.getOrd();
-            String edgeKey = createEdgeKey(currentBlockId, targetBlockId, JUMP_EDGE_TYPE);
+            String edgeKey = createEdgeKey(currentBlockId, targetBlockId, CFGConstants.JUMP_EDGE_TYPE);
             
-            if (addEdgeIfNotExists(edgeKey, currentBlockId, targetBlockId, JUMP_EDGE_TYPE)) {
+            if (addEdgeIfNotExists(edgeKey, currentBlockId, targetBlockId, CFGConstants.JUMP_EDGE_TYPE)) {
                 logger.debug("Added {} branch edge: {} -> {}", 
                            branchType, currentBlockId, targetBlockId);
                 traverseBlock(targetBlock);
@@ -268,9 +266,9 @@ public class CFGBuilder {
                 }
                 
                 int successorId = successor.getOrd();
-                String edgeKey = createEdgeKey(currentBlockId, successorId, SUCCESSOR_EDGE_TYPE);
+                String edgeKey = createEdgeKey(currentBlockId, successorId, CFGConstants.SUCCESSOR_EDGE_TYPE);
                 
-                if (addEdgeIfNotExists(edgeKey, currentBlockId, successorId, SUCCESSOR_EDGE_TYPE)) {
+                if (addEdgeIfNotExists(edgeKey, currentBlockId, successorId, CFGConstants.SUCCESSOR_EDGE_TYPE)) {
                     logger.debug("Added successor edge: {} -> {}", currentBlockId, successorId);
                     traverseBlock(successor);
                 }

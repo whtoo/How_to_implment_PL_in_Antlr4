@@ -45,7 +45,7 @@ class ControlFlowAnalysisTest {
         nodes.add(block2);
 
         // 添加边：从block1到block2
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, 5));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, CFGConstants.JUMP_EDGE_TYPE));
 
         return new CFG<>(nodes, edges);
     }
@@ -109,7 +109,7 @@ class ControlFlowAnalysisTest {
                                                        new org.teachfx.antlr4.ep21.ir.stmt.Label("L1", null), 0);
 
         nodes.add(jmpBlock);
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 0, 5)); // 自循环
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 0, CFGConstants.JUMP_EDGE_TYPE)); // 自循环
 
         CFG<IRNode> jmpCfg = new CFG<>(nodes, edges);
 
@@ -137,7 +137,7 @@ class ControlFlowAnalysisTest {
                                                         new org.teachfx.antlr4.ep21.ir.stmt.Label("L1", null), 0);
 
         nodes.add(cjmpBlock);
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, 5));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, CFGConstants.JUMP_EDGE_TYPE));
 
         CFG<IRNode> cjmpCfg = new CFG<>(nodes, edges);
 
@@ -180,7 +180,7 @@ class ControlFlowAnalysisTest {
             
             // 添加边
             if (i < 4) {
-                edges.add(org.apache.commons.lang3.tuple.Triple.of(i, i + 1, 5));
+                edges.add(org.apache.commons.lang3.tuple.Triple.of(i, i + 1, CFGConstants.JUMP_EDGE_TYPE));
             }
         }
 
@@ -372,8 +372,8 @@ class ControlFlowAnalysisTest {
         nodes.add(block2);
         
         // 创建线性链结构：0->1->2
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, 10));
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(1, 2, 10));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, CFGConstants.SUCCESSOR_EDGE_TYPE));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(1, 2, CFGConstants.SUCCESSOR_EDGE_TYPE));
         
         return new CFG<>(nodes, edges);
     }
@@ -398,7 +398,7 @@ class ControlFlowAnalysisTest {
         nodes.add(block1);
         nodes.add(block2);
         
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, 10));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, CFGConstants.SUCCESSOR_EDGE_TYPE));
         
         return new CFG<>(nodes, edges);
     }
@@ -431,8 +431,8 @@ class ControlFlowAnalysisTest {
         nodes.add(block3);
         
         // 创建分支结构：0 -> 1 和 0 -> 2
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, 5));
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 2, 5));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, CFGConstants.JUMP_EDGE_TYPE));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 2, CFGConstants.JUMP_EDGE_TYPE));
         
         return new CFG<>(nodes, edges);
     }
@@ -451,7 +451,7 @@ class ControlFlowAnalysisTest {
             new org.teachfx.antlr4.ep21.ir.stmt.Label("L0", null), 0);
         
         nodes.add(block);
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 0, 5)); // 自循环
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 0, CFGConstants.JUMP_EDGE_TYPE)); // 自循环
         
         return new CFG<>(nodes, edges);
     }
@@ -483,8 +483,8 @@ class ControlFlowAnalysisTest {
         nodes.add(block1);
         nodes.add(block2);
         
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, 10));
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(1, 2, 10));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 1, CFGConstants.SUCCESSOR_EDGE_TYPE));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(1, 2, CFGConstants.SUCCESSOR_EDGE_TYPE));
         
         return new CFG<>(nodes, edges);
     }
@@ -516,8 +516,8 @@ class ControlFlowAnalysisTest {
         nodes.add(block1);
         nodes.add(block2);
         
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 2, 10));
-        edges.add(org.apache.commons.lang3.tuple.Triple.of(1, 2, 10));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(0, 2, CFGConstants.SUCCESSOR_EDGE_TYPE));
+        edges.add(org.apache.commons.lang3.tuple.Triple.of(1, 2, CFGConstants.SUCCESSOR_EDGE_TYPE));
         
         return new CFG<>(nodes, edges);
     }

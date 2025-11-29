@@ -171,7 +171,7 @@ class CFGBuilderTest {
             startBlock.addStmt(jmp);
             
             Set<String> cachedEdges = new HashSet<>();
-            String edgeKey = startBlock.getOrd() + "-" + targetBlock.getOrd() + "-5";
+            String edgeKey = startBlock.getOrd() + "-" + targetBlock.getOrd() + "-" + CFGConstants.JUMP_EDGE_TYPE;
             cachedEdges.add(edgeKey);
             
             assertTrue(cachedEdges.contains(edgeKey));

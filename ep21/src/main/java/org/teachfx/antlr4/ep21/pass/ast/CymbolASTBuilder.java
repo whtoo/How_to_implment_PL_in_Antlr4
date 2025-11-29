@@ -39,10 +39,11 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
         var compilationUnit = new CompileUnit();
         for(var childNode : ctx.children) {
             var node = visit(childNode);
-            if(node instanceof VarDeclNode varDeclNode) {
-                compilationUnit.addVarDecl(varDeclNode);
-            } else if (node instanceof FuncDeclNode funcDeclNode) {
-                compilationUnit.addFuncDecl(funcDeclNode);
+            // Java 21 模式匹配增强
+            switch (node) {
+                case VarDeclNode varDeclNode -> compilationUnit.addVarDecl(varDeclNode);
+                case FuncDeclNode funcDeclNode -> compilationUnit.addFuncDecl(funcDeclNode);
+                case null, default -> { /* 忽略其他类型节点 */ }
             }
         }
         compilationUnit.setCtx(ctx);
@@ -62,24 +63,14 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitPrimaryType(CymbolParser.PrimaryTypeContext ctx) {
-
-        switch(ctx.getText()) {
-            case "Bool" -> {
-                return TypeNode.BoolNode;
-            }
-            case "Void" -> {
-                return TypeNode.VoidNode;
-            }
-            case "String" -> {
-                return TypeNode.StrNode;
-            }
-            case "Object" -> {
-                return TypeNode.ObjNode;
-            }
-            default -> {
-                return TypeNode.IntNode;
-            }
-        }
+        // Java 21 改进的switch表达式
+        return switch(ctx.getText()) {
+            case "Bool" -> TypeNode.BoolNode;
+            case "Void" -> TypeNode.VoidNode;
+            case "String" -> TypeNode.StrNode;
+            case "Object" -> TypeNode.ObjNode;
+            default -> TypeNode.IntNode;
+        };
     }
 
     @Override

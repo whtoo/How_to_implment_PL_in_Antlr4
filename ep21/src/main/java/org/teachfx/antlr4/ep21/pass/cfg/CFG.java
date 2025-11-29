@@ -68,7 +68,11 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
     }
 
     public BasicBlock<I> getBlock(int id) {
-        return nodes.get(id);
+        // 使用流而不是数组索引来查找block
+        return nodes.stream()
+                .filter(block -> block.getId() == id)
+                .findFirst()
+                .orElse(null);
     }
 
     public String toDOT() {
@@ -87,13 +91,27 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
         }
         buf.append("\n");
         
-        // 添加所有边
+        // 添加所有边，并检测重复边
+        Set<String> seenEdges = new HashSet<>();
+        Set<String> duplicateEdges = new HashSet<>();
+        
         for (Triple<Integer, Integer, Integer> edge : edges) {
+            String edgeKey = edge.getLeft() + "->" + edge.getMiddle();
             buf.append("  ");
             buf.append(edge.getLeft());
             buf.append(" -> ");
             buf.append(edge.getMiddle());
             buf.append(";\n");
+            
+            // 检测重复边
+            if (!seenEdges.add(edgeKey)) {
+                duplicateEdges.add(edgeKey);
+                logger.warn("发现重复边: {} -> {}", edge.getLeft(), edge.getMiddle());
+            }
+        }
+        
+        if (!duplicateEdges.isEmpty()) {
+            logger.error("CFG中检测到 {} 个重复边: {}", duplicateEdges.size(), duplicateEdges);
         }
         
         buf.append("}\n");
@@ -174,16 +192,57 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
      *
      */
     public boolean removeEdge(Triple<Integer,Integer,Integer> edge) {
-        edges.remove(edge);
+        logger.debug("尝试移除边: {} -> {}, 权重: {}", edge.getLeft(), edge.getMiddle(), edge.getRight());
+        
+        // 精确匹配要移除的边
+        boolean edgeFound = false;
+        Triple<Integer, Integer, Integer> edgeToRemove = null;
+        
+        for (var existingEdge : edges) {
+            if (existingEdge.getLeft() == edge.getLeft() &&
+                existingEdge.getMiddle() == edge.getMiddle() &&
+                existingEdge.getRight() == edge.getRight()) {
+                edgeFound = true;
+                edgeToRemove = existingEdge;
+                break;
+            }
+        }
+        
+        if (!edgeFound) {
+            logger.warn("边不存在于edges列表中: {} -> {}, 权重: {}", edge.getLeft(), edge.getMiddle(), edge.getRight());
+            return false;
+        }
+        
+        boolean removed = edges.remove(edgeToRemove);
+        logger.debug("从edges列表中移除结果: {}", removed);
+        
         var srcBlockId = edge.getLeft();
         var destBlockId = edge.getMiddle();
-        var nonRel = getInEdges(destBlockId).noneMatch(q -> q.getLeft().compareTo(srcBlockId) == 0);
-
-        if (nonRel) {
-            links.get(srcBlockId).getRight().remove(destBlockId);
-            links.get(destBlockId).getLeft().remove(srcBlockId);
+        
+        // 检查是否还有其他从srcBlockId到destBlockId的边（忽略权重）
+        var otherEdges = edges.stream()
+            .filter(e -> e.getLeft() == srcBlockId && e.getMiddle() == destBlockId)
+            .count();
+        
+        logger.debug("移除后，从{}到{}还有其他 {} 条边", srcBlockId, destBlockId, otherEdges);
+        
+        // 只有当没有其他边时，才移除links中的连接
+        if (otherEdges == 0) {
+            logger.debug("移除links中的连接: {} -> {}", srcBlockId, destBlockId);
+            if (srcBlockId < links.size() && destBlockId < links.size()) {
+                links.get(srcBlockId).getRight().remove(destBlockId);
+                links.get(destBlockId).getLeft().remove(srcBlockId);
+                logger.debug("成功移除links连接");
+                return true;
+            } else {
+                logger.warn("links索引越界: srcBlockId={}, destBlockId={}, links.size={}",
+                           srcBlockId, destBlockId, links.size());
+                return false;
+            }
+        } else {
+            logger.debug("由于还有其他边存在，不移除links连接");
+            return true;
         }
-        return nonRel;
     }
 
     public void removeNode(BasicBlock<I> node) {

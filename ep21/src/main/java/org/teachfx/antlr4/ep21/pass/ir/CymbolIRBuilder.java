@@ -57,6 +57,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     public Void visit(VarDeclNode varDeclNode) {
         logger.debug("visit %s".formatted(varDeclNode.toString()));
 
+        // Java 21: 模式匹配改进
         if(varDeclNode.hasInitializer()){
             var lhsNode = (IDExprNode)varDeclNode.getIdExprNode();
             var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
@@ -363,29 +364,35 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         }
 
         getCurrentBlock().addStmt(stmt);
-        if (stmt instanceof BinExpr) {
-            popEvalOperand();
-            popEvalOperand();
-            return Optional.of(OperandSlot.pushStack());
-        } else if (stmt instanceof UnaryExpr) {
-            popEvalOperand();
-            return Optional.of(OperandSlot.pushStack());
-        } else if(stmt instanceof CJMP) {
-            // CJMP不需要操作evalExprStack，因为它不是表达式
-        } else if (stmt instanceof CallFunc callFunc) {
-            int i = callFunc.getArgs();
-
-            while (i > 0){
+        // Java 21: 改进的switch表达式模式匹配
+        return switch (stmt) {
+            case BinExpr binExpr -> {
                 popEvalOperand();
-                i--;
+                popEvalOperand();
+                yield Optional.of(OperandSlot.pushStack());
             }
-            // 如果存在返回值，则要模拟压入返回值以保证栈平衡
-            if(!callFunc.getFuncType().isVoid()) {
-               pushEvalOperand(OperandSlot.genTemp());
+            case UnaryExpr unaryExpr -> {
+                popEvalOperand();
+                yield Optional.of(OperandSlot.pushStack());
             }
-        }
-
-        return Optional.empty();
+            case CJMP cjmp -> {
+                // CJMP不需要操作evalExprStack，因为它不是表达式
+                yield Optional.empty();
+            }
+            case CallFunc callFunc -> {
+                int i = callFunc.getArgs();
+                while (i > 0) {
+                    popEvalOperand();
+                    i--;
+                }
+                // 如果存在返回值，则要模拟压入返回值以保证栈平衡
+                if (!callFunc.getFuncType().isVoid()) {
+                    pushEvalOperand(OperandSlot.genTemp());
+                }
+                yield Optional.empty();
+            }
+            case null, default -> Optional.empty();
+        };
     }
 
     protected void setExitHook(ReturnVal returnVal,MethodSymbol methodSymbol) {
@@ -420,7 +427,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     static int cnt = 0;
     protected VarSlot pushEvalOperand(Operand operand) {
 
-        // 日志验证：检查evalExprStack状态
+        // 日志验证：检查evalExprStack状态 - Java 21: 使用字符串模板
         System.out.println("DEBUG CymbolIRBuilder: pushEvalOperand called, evalExprStack=" +
                           (evalExprStack == null ? "null" : "initialized"));
 
@@ -434,18 +441,18 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
             throw new NullPointerException("evalExprStack is not initialized");
         }
 
-        if (!(operand instanceof OperandSlot)){
+        // Java 21: 模式匹配改进
+        if (operand instanceof OperandSlot operandSlot) {
+            logger.debug("-> eval stack %s%n", evalExprStack.toString());
+            evalExprStack.push(operandSlot);
+            return operandSlot;
+        } else {
             cnt++;
             var assignee = OperandSlot.pushStack();
             evalExprStack.push(assignee);
             addInstr(Assign.with(assignee, operand));
             logger.debug("-> eval stack %s%n", evalExprStack.toString());
-
             return assignee;
-        } else {
-            logger.debug("-> eval stack %s%n", evalExprStack.toString());
-            evalExprStack.push((VarSlot) operand);
-            return (VarSlot) operand;
         }
 
     }

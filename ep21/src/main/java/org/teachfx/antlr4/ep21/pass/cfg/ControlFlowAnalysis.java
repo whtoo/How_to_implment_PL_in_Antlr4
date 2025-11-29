@@ -32,8 +32,13 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
     private static volatile boolean dynamicDebugEnabled = DEBUG;
     
     // 常量定义 - 避免Magic Numbers
-    private static final int JUMP_EDGE_PRIORITY = 5;
-    private static final int SUCCESSOR_EDGE_PRIORITY = 10;
+    // 注意：这些常量必须与CFGBuilder中定义的常量保持一致
+    private static final int JUMP_EDGE_TYPE = 5;
+    private static final int SUCCESSOR_EDGE_TYPE = 10;
+    
+    // 为向后兼容保留旧常量
+    private static final int JUMP_EDGE_PRIORITY = JUMP_EDGE_TYPE;
+    private static final int SUCCESSOR_EDGE_PRIORITY = SUCCESSOR_EDGE_TYPE;
     
     /**
      * 获取当前调试状态
@@ -230,7 +235,10 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
         
         // 移除对应的边
         Triple<Integer, Integer, Integer> edgeToRemove =
-            Triple.of(block.getId(), targetBlockId, JUMP_EDGE_PRIORITY);
+            Triple.of(block.getId(), targetBlockId, JUMP_EDGE_TYPE);
+        
+        logger.debug("准备移除跳转边: {} -> {}, 权重: {}",
+                    block.getId(), targetBlockId, JUMP_EDGE_TYPE);
         
         boolean edgeRemoved = cfg.removeEdge(edgeToRemove);
         

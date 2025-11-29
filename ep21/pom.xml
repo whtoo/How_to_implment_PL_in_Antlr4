@@ -17,26 +17,26 @@
         <!-- 这里为包含g4文件的文件夹-->
         <parser.g4.dir>src/main/antlr4/org/teachfx/antlr4/ep21</parser.g4.dir>
         <run.main.entry>org.teachfx.antlr4.ep21.Compiler</run.main.entry>
+        
+        <!-- 依赖版本 -->
+        <jgrapht.version>1.5.2</jgrapht.version>
+        <jetbrains.annotations.version>24.0.1</jetbrains.annotations.version>
     </properties>
+    
     <!-- 运行测试 -->
     <dependencies>
 
         <dependency>
             <groupId>org.jgrapht</groupId>
             <artifactId>jgrapht-core</artifactId>
-            <version>1.5.2</version>
+            <version>${jgrapht.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-            <version>13.0</version>
+            <version>${jetbrains.annotations.version}</version>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -47,7 +47,6 @@
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
-                <version>4.13.2</version>
                 <executions>
                     <execution>
                         <goals>
@@ -64,7 +63,6 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <id>add-source</id>

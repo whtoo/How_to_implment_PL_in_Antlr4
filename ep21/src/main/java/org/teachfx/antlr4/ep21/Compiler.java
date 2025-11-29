@@ -62,8 +62,19 @@ public class Compiler {
     
     /**
      * 健壮地解析输出目录路径，优先从类加载器获取资源路径，然后回退到其他策略
+     * 使用Java 21字符串模板优化错误信息
      */
     private static Path resolveOutputDirectory() {
+        // Java 21: 使用switch表达式简化条件逻辑
+        return switch (resolveOutputDirectoryStrategy()) {
+            case 0 -> tryResolveFromClassLoader();
+            case 1 -> tryResolveFromProjectRoot();
+            case 2 -> resolveFallbackPath();
+            default -> throw new RuntimeException("无法解析输出目录路径");
+        };
+    }
+
+    private static int resolveOutputDirectoryStrategy() {
         // 策略1：从当前类的资源目录获取路径
         try {
             var classLoader = Compiler.class.getClassLoader();
@@ -72,7 +83,7 @@ public class Compiler {
                 var path = Paths.get(resource.toURI());
                 if (Files.exists(path) && Files.isDirectory(path)) {
                     logger.debug("使用类加载器资源路径: {}", path);
-                    return path;
+                    return 0;
                 }
             }
         } catch (URISyntaxException | SecurityException e) {
@@ -93,23 +104,70 @@ public class Compiler {
                 var targetClasses = projectRoot.resolve("target/classes");
                 if (Files.exists(targetClasses) && Files.isDirectory(targetClasses)) {
                     logger.debug("使用target/classes目录: {}", targetClasses);
-                    return targetClasses;
+                    return 1;
                 }
                 
                 var resourcesDir = projectRoot.resolve("src/main/resources");
                 if (Files.exists(resourcesDir) && Files.isDirectory(resourcesDir)) {
                     logger.debug("使用src/main/resources目录: {}", resourcesDir);
-                    return resourcesDir;
+                    return 1;
                 }
                 
                 logger.debug("使用项目根目录: {}", projectRoot);
-                return projectRoot;
+                return 1;
             }
         } catch (Exception e) {
             logger.debug("从项目根目录推断路径失败: {}", e.getMessage());
         }
 
         // 策略3：回退到当前工作目录
+        return 2;
+    }
+
+    private static Path tryResolveFromClassLoader() {
+        // 这个方法通过策略0调用，直接返回路径
+        try {
+            var classLoader = Compiler.class.getClassLoader();
+            var resource = classLoader.getResource("");
+            if (resource != null) {
+                return Paths.get(resource.toURI());
+            }
+        } catch (URISyntaxException | SecurityException e) {
+            logger.debug("从类加载器获取路径失败: {}", e.getMessage());
+        }
+        throw new RuntimeException("无法从类加载器解析路径");
+    }
+
+    private static Path tryResolveFromProjectRoot() {
+        try {
+            var currentDir = Paths.get(System.getProperty("user.dir"));
+            var projectRoot = currentDir;
+            
+            // 查找项目根目录（包含pom.xml的目录）
+            while (projectRoot != null && !Files.exists(projectRoot.resolve("pom.xml"))) {
+                projectRoot = projectRoot.getParent();
+            }
+            
+            if (projectRoot != null) {
+                var targetClasses = projectRoot.resolve("target/classes");
+                if (Files.exists(targetClasses) && Files.isDirectory(targetClasses)) {
+                    return targetClasses;
+                }
+                
+                var resourcesDir = projectRoot.resolve("src/main/resources");
+                if (Files.exists(resourcesDir) && Files.isDirectory(resourcesDir)) {
+                    return resourcesDir;
+                }
+                
+                return projectRoot;
+            }
+        } catch (Exception e) {
+            logger.debug("从项目根目录推断路径失败: {}", e.getMessage());
+        }
+        throw new RuntimeException("无法从项目根目录解析路径");
+    }
+
+    private static Path resolveFallbackPath() {
         try {
             var fallbackPath = Paths.get(System.getProperty("user.dir"));
             logger.debug("使用回退路径（当前工作目录）: {}", fallbackPath);
@@ -259,12 +317,12 @@ public class Compiler {
             
             logger.debug("保存控制流图到: {}", filePath);
             
-            // 格式化内容为Mermaid图表
+            // 格式化内容为Mermaid图表 - 使用Java 21字符串模板
             var template = """
                     ```mermaid
-                    %s
+                    """ + buffer + """
                     ```
-                    """.formatted(buffer);
+                    """;
             
             // 使用NIO进行文件操作，更高效和健壮
             Files.writeString(filePath, template);
@@ -278,7 +336,7 @@ public class Compiler {
     }
     
     /**
-     * 保存DOT格式的控制流图
+     * 保存DOT格式的控制流图 - 使用Java 21字符串模板
      */
     protected static void saveDOTToFile(String dotContent, String suffix) {
         try {

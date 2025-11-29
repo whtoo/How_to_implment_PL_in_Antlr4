@@ -60,9 +60,28 @@ public class CFGBuilder {
             throw new IllegalStateException("Failed to build CFG due to excessive recursion", e);
         }
         
+        // 在创建CFG之前检查重复边
+        checkForDuplicateEdges();
+        
         this.cfg = new CFG<>(basicBlocks, edges);
-        logger.info("CFG built successfully: {} blocks, {} edges", 
+        logger.info("CFG built successfully: {} blocks, {} edges",
                    basicBlocks.size(), edges.size());
+    }
+    
+    private void checkForDuplicateEdges() {
+        Set<String> seenEdges = new HashSet<>();
+        Set<String> duplicates = new HashSet<>();
+        
+        for (var edge : edges) {
+            String edgeKey = edge.getLeft() + "->" + edge.getMiddle() + " (type:" + edge.getRight() + ")";
+            if (!seenEdges.add(edgeKey)) {
+                duplicates.add(edgeKey);
+            }
+        }
+        
+        if (!duplicates.isEmpty()) {
+            logger.warn("CFGBuilder检测到重复边: {}", duplicates);
+        }
     }
 
     /**
@@ -106,11 +125,12 @@ public class CFGBuilder {
         // Create and add the basic block
         BasicBlock<IRNode> currentBlock = createBasicBlock(block);
         basicBlocks.add(currentBlock);
+        logger.debug("已添加基本块: ord={}, id={}", block.getOrd(), currentBlock.getId());
         
         // Process control flow edges based on the last instruction
         processControlFlowEdges(block, currentBlock.getId());
         
-        // Process successor edges
+        // Process successor edges - 注意这里可能导致边被重复添加
         processSuccessorEdges(block, currentBlock.getId());
         
         recursionDepth--;
@@ -272,11 +292,35 @@ public class CFGBuilder {
      * Returns true if the edge was added, false if it already existed.
      */
     private boolean addEdgeIfNotExists(String edgeKey, int sourceId, int targetId, int edgeType) {
-        if (processedEdges.add(edgeKey)) {
-            edges.add(Triple.of(sourceId, targetId, edgeType));
-            return true;
+        // 检查是否已经存在从sourceId到targetId的任何边（忽略边类型）
+        String connectionKey = "%d-%d".formatted(sourceId, targetId);
+        
+        // 如果已经存在相同节点间的连接，跳过添加
+        boolean hasExistingConnection = processedEdges.stream()
+            .anyMatch(existingKey -> existingKey.startsWith(connectionKey + "-"));
+            
+        if (hasExistingConnection) {
+            logger.debug("节点{}和{}之间已有连接，跳过添加边: {}, 类型: {}",
+                        sourceId, targetId, edgeKey, edgeType);
+            return false;
         }
-        return false;
+        
+        boolean wasAdded = processedEdges.add(edgeKey);
+        logger.debug("尝试添加边: {} -> {}, 类型: {}, 边键: {}, 结果: {}",
+                    sourceId, targetId, edgeType, edgeKey, wasAdded ? "添加成功" : "已存在，跳过");
+        
+        if (wasAdded) {
+            edges.add(Triple.of(sourceId, targetId, edgeType));
+            logger.debug("边已添加到edges列表，当前edges数量: {}", edges.size());
+        } else {
+            // 尝试查找已存在的相同边
+            long existingCount = edges.stream()
+                .filter(e -> e.getLeft() == sourceId && e.getMiddle() == targetId && e.getRight() == edgeType)
+                .count();
+            logger.warn("检测到重复边键，但已存在边数量: {}, edges列表: {}", existingCount, edges);
+        }
+        
+        return wasAdded;
     }
 
     /**

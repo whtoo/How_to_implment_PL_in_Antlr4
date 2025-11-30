@@ -13,6 +13,7 @@ import org.teachfx.antlr4.ep21.ir.stmt.Label;
 import org.teachfx.antlr4.ep21.pass.ast.CymbolASTBuilder;
 import org.teachfx.antlr4.ep21.pass.cfg.CFG;
 import org.teachfx.antlr4.ep21.pass.cfg.ControlFlowAnalysis;
+import org.teachfx.antlr4.ep21.pass.cfg.LivenessAnalysis;
 import org.teachfx.antlr4.ep21.pass.codegen.CymbolAssembler;
 import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep21.pass.symtab.LocalDefine;
@@ -27,6 +28,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Compiler {
@@ -433,5 +436,18 @@ public class Compiler {
     protected static void saveCFGInBothFormats(String mermaidContent, String dotContent, String suffix) {
         saveMermaidControlFlowGraph(mermaidContent, suffix);
         saveDOTToFile(dotContent, suffix);
+    }
+    
+    /**
+     * 记录活性分析结果
+     */
+    protected static void logLivenessAnalysisResults(LivenessAnalysis livenessAnalysis, CFG<IRNode> cfg, int functionIdx) {
+        logger.info("函数 {} 活性分析结果:", functionIdx);
+        for (var block : cfg.nodes) {
+            logger.info("  基本块 {}: liveIn={}, liveOut={}",
+                block.getId(),
+                livenessAnalysis.getLiveIn(block),
+                livenessAnalysis.getLiveOut(block));
+        }
     }
 }

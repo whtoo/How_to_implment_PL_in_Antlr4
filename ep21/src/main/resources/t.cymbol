@@ -5,6 +5,9 @@ int dec1(int x) {
 
 int main() {
     int i = 10;
+    int j = 11;
+    int x = 0;
+    
     while(i > 0) {
         if (i > 5) {
             print(i);

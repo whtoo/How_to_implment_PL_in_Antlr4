@@ -31,6 +31,19 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
     // 动态调试控制 - 允许测试修改调试状态
     private static volatile boolean dynamicDebugEnabled = DEBUG;
     
+    // 活性分析实例 - 集成到控制流分析中
+    private LivenessAnalysis livenessAnalysis;
+    
+    public ControlFlowAnalysis() {
+        this.livenessAnalysis = new LivenessAnalysis();
+    }
+    
+    public ControlFlowAnalysis(boolean enableLivenessAnalysis) {
+        if (enableLivenessAnalysis) {
+            this.livenessAnalysis = new LivenessAnalysis();
+        }
+    }
+    
     // 使用CFGConstants中的常量，避免重复定义魔法数字
     
     /**
@@ -70,6 +83,11 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
             
             // 第二阶段：合并基本块
             optimizeBasicBlockMerging(cfg);
+            
+            // 第三阶段：执行活性分析（如果启用）
+            if (livenessAnalysis != null) {
+                performLivenessAnalysis(cfg);
+            }
             
         } catch (Exception e) {
             logger.error("控制流分析过程中发生错误", e);

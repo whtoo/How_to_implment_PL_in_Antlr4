@@ -9,7 +9,6 @@ import org.teachfx.antlr4.ep21.ir.JMPInstr;
 import org.teachfx.antlr4.ep21.utils.Kind;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 控制流分析优化器 - 负责对控制流图(CFG)进行优化

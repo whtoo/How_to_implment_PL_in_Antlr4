@@ -226,17 +226,40 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
             throw new RuntimeException("移除跳转指令失败", e);
         }
         
-        // 移除对应的边
-        Triple<Integer, Integer, Integer> edgeToRemove =
+        // 重要：不移除控制流边，因为控制流关系仍然存在
+        // 只移除JMP指令，保留边连接，因为目标块仍然是顺序执行的下一个块
+        // 将JUMP边类型转换为SUCCESSOR边类型，反映顺序执行关系
+        
+        // 终极修复：检查是否已存在任何类型的边，避免创建重复边
+        boolean hasAnyEdge = cfg.edges.stream()
+            .anyMatch(edge -> edge.getLeft() == block.getId() && edge.getMiddle() == targetBlockId);
+            
+        if (hasAnyEdge) {
+            logger.debug("节点{}和{}之间已存在边，跳过转换操作", block.getId(), targetBlockId);
+            // 更新基本块类型（如果适用）
+            updateBlockKindAfterOptimization(block);
+            return;
+        }
+        
+        Triple<Integer, Integer, Integer> jumpEdgeToRemove =
             Triple.of(block.getId(), targetBlockId, CFGConstants.JUMP_EDGE_TYPE);
         
-        logger.debug("准备移除跳转边: {} -> {}, 权重: {}",
-                    block.getId(), targetBlockId, CFGConstants.JUMP_EDGE_TYPE);
+        logger.debug("准备转换跳转边为顺序边: {} -> {}, 权重: {} -> {}",
+                    block.getId(), targetBlockId, CFGConstants.JUMP_EDGE_TYPE, CFGConstants.SUCCESSOR_EDGE_TYPE);
         
-        boolean edgeRemoved = cfg.removeEdge(edgeToRemove);
+        // 移除JUMP边
+        boolean edgeRemoved = cfg.removeEdge(jumpEdgeToRemove);
         
-        if (!edgeRemoved) {
-            logger.warn("尝试移除不存在的边: {} -> {}", block.getId(), targetBlockId);
+        if (edgeRemoved) {
+            // 添加SUCCESSOR边来保持控制流连接
+            Triple<Integer, Integer, Integer> successorEdgeToAdd =
+                Triple.of(block.getId(), targetBlockId, CFGConstants.SUCCESSOR_EDGE_TYPE);
+            
+            cfg.edges.add(successorEdgeToAdd);
+            logger.debug("成功添加顺序边: {} -> {}, 权重: {}",
+                        block.getId(), targetBlockId, CFGConstants.SUCCESSOR_EDGE_TYPE);
+        } else {
+            logger.warn("尝试移除不存在的跳转边: {} -> {}", block.getId(), targetBlockId);
         }
         
         // 更新基本块类型（如果适用）
@@ -294,7 +317,7 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
     /**
      * 处理基本块合并操作
      */
-    private void handleBasicBlockMerging(BasicBlock<I> block, CFG<I> cfg, 
+    private void handleBasicBlockMerging(BasicBlock<I> block, CFG<I> cfg,
                                         List<BasicBlock<I>> blocksToRemove) {
         List<Triple<Integer, Integer, Integer>> inEdges = cfg.getInEdges(block.getId()).toList();
         Triple<Integer, Integer, Integer> incomingEdge = inEdges.get(0);
@@ -315,6 +338,39 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
             
             // 移除入边
             cfg.removeEdge(incomingEdge);
+            
+            // 终极修复：将当前块的出边转移到前驱块，但要检查是否已存在
+            List<Triple<Integer, Integer, Integer>> outEdges = new ArrayList<>(cfg.edges.stream()
+                .filter(edge -> edge.getLeft() == block.getId())
+                .toList());
+            
+            for (Triple<Integer, Integer, Integer> outEdge : outEdges) {
+                // 检查前驱块是否已存在到目标块的边（任何类型）
+                boolean hasExistingEdge = cfg.edges.stream()
+                    .anyMatch(edge -> edge.getLeft() == predecessor.getId() &&
+                                     edge.getMiddle() == outEdge.getMiddle());
+                
+                if (hasExistingEdge) {
+                    logger.debug("前驱块{}到目标块{}的边已存在，跳过转移",
+                               predecessor.getId(), outEdge.getMiddle());
+                    // 只移除当前块的边，不添加新边
+                    cfg.removeEdge(outEdge);
+                    continue;
+                }
+                
+                // 移除旧的边
+                cfg.removeEdge(outEdge);
+                // 添加新的边，源节点改为前驱块
+                Triple<Integer, Integer, Integer> newEdge = Triple.of(
+                    predecessor.getId(),
+                    outEdge.getMiddle(),
+                    outEdge.getRight()
+                );
+                cfg.edges.add(newEdge);
+                logger.debug("转移边: {} -> {} 改为 {} -> {}",
+                           block.getId(), outEdge.getMiddle(),
+                           predecessor.getId(), outEdge.getMiddle());
+            }
             
             // 标记当前块为待移除
             blocksToRemove.add(block);

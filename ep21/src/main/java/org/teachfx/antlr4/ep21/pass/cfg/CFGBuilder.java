@@ -32,6 +32,7 @@ public class CFGBuilder {
     private final List<Triple<Integer, Integer, Integer>> edges;
     private final Set<LinearIRBlock> visitedBlocks;
     private final Set<String> processedEdges;
+    private final Set<String> processedConnections; // 终极修复：跟踪节点对，忽略边类型
     
     private int recursionDepth = 0;
 
@@ -49,6 +50,7 @@ public class CFGBuilder {
         this.edges = new ArrayList<>();
         this.visitedBlocks = new HashSet<>();
         this.processedEdges = ConcurrentHashMap.newKeySet(); // Thread-safe edge tracking
+        this.processedConnections = ConcurrentHashMap.newKeySet(); // 终极修复：跟踪节点对
         
         try {
             buildControlFlowGraph(startBlock);
@@ -288,37 +290,41 @@ public class CFGBuilder {
     /**
      * Adds an edge to the graph if it doesn't already exist.
      * Returns true if the edge was added, false if it already existed.
+     * 终极修复：使用processedConnections确保同一对节点只有一条边（忽略边类型）
      */
     private boolean addEdgeIfNotExists(String edgeKey, int sourceId, int targetId, int edgeType) {
-        // 检查是否已经存在从sourceId到targetId的任何边（忽略边类型）
+        // 终极修复：只跟踪节点对，完全忽略边类型
         String connectionKey = "%d-%d".formatted(sourceId, targetId);
         
-        // 如果已经存在相同节点间的连接，跳过添加
-        boolean hasExistingConnection = processedEdges.stream()
-            .anyMatch(existingKey -> existingKey.startsWith(connectionKey + "-"));
+        synchronized (processedEdges) {
+            // 第一道防线：检查processedConnections（只关心节点对）
+            if (processedConnections.contains(connectionKey)) {
+                logger.debug("节点对 {}-{} 已存在，跳过添加边: {}（类型: {}）",
+                            sourceId, targetId, edgeKey, edgeType);
+                return false;
+            }
             
-        if (hasExistingConnection) {
-            logger.debug("节点{}和{}之间已有连接，跳过添加边: {}, 类型: {}",
-                        sourceId, targetId, edgeKey, edgeType);
-            return false;
-        }
-        
-        boolean wasAdded = processedEdges.add(edgeKey);
-        logger.debug("尝试添加边: {} -> {}, 类型: {}, 边键: {}, 结果: {}",
-                    sourceId, targetId, edgeType, edgeKey, wasAdded ? "添加成功" : "已存在，跳过");
-        
-        if (wasAdded) {
+            // 第二道防线：检查edges列表（额外保险）
+            boolean existsInEdges = edges.stream()
+                .anyMatch(e -> e.getLeft() == sourceId && e.getMiddle() == targetId);
+                
+            if (existsInEdges) {
+                logger.warn("edges中已存在边 {} -> {}，跳过添加（类型: {}）",
+                           sourceId, targetId, edgeType);
+                // 添加到processedConnections防止后续重复
+                processedConnections.add(connectionKey);
+                return false;
+            }
+            
+            // 所有检查通过，原子性添加
+            processedConnections.add(connectionKey);
+            processedEdges.add(edgeKey);
             edges.add(Triple.of(sourceId, targetId, edgeType));
-            logger.debug("边已添加到edges列表，当前edges数量: {}", edges.size());
-        } else {
-            // 尝试查找已存在的相同边
-            long existingCount = edges.stream()
-                .filter(e -> e.getLeft() == sourceId && e.getMiddle() == targetId && e.getRight() == edgeType)
-                .count();
-            logger.warn("检测到重复边键，但已存在边数量: {}, edges列表: {}", existingCount, edges);
+            
+            logger.debug("边成功添加: {} -> {}, 类型: {}, edges: {}, connections: {}",
+                       sourceId, targetId, edgeType, edges.size(), processedConnections.size());
+            return true;
         }
-        
-        return wasAdded;
     }
 
     /**

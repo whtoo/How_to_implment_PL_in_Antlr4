@@ -47,14 +47,39 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
         System.out.println("DEBUG CFG: maxNodeId=" + maxNodeId + ", maxEdgeFrom=" + maxEdgeFrom +
                           ", maxEdgeTo=" + maxEdgeTo + ", maxOrd=" + maxOrd);
         this.nodes = nodes;
-        this.edges = edges;
+        
+        // 重复边检测和去重逻辑 - 基于节点对（源节点->目标节点）去重
+        Set<String> seenEdgePairs = new HashSet<>();
+        List<Triple<Integer, Integer, Integer>> deduplicatedEdges = new ArrayList<>();
+        Set<String> duplicateEdgePairs = new HashSet<>();
+        
+        for (var edge : edges) {
+            String edgePair = edge.getLeft() + "->" + edge.getMiddle();
+            if (seenEdgePairs.add(edgePair)) {
+                // 第一次看到这个节点对，添加到去重后的列表
+                deduplicatedEdges.add(edge);
+            } else {
+                // 已经存在这个节点对，记录重复边并跳过
+                duplicateEdgePairs.add(edgePair);
+                logger.warn("检测到重复边，将被忽略: {} -> {} (类型: {})",
+                           edge.getLeft(), edge.getMiddle(), edge.getRight());
+            }
+        }
+        
+        if (!duplicateEdgePairs.isEmpty()) {
+            logger.info("CFG构造函数去重完成: 原始边数={}, 去重后边数={}, 移除重复边={}",
+                       edges.size(), deduplicatedEdges.size(), edges.size() - deduplicatedEdges.size());
+            logger.info("移除的重复边节点对: {}", duplicateEdgePairs);
+        }
+        
+        this.edges = deduplicatedEdges;
 
         links = new ArrayList<>();
         for (var i = 0; i < maxOrd; i++) {
             links.add(Pair.of(new TreeSet<>(), new TreeSet<>()));
         }
 
-        for (var edge : edges) {
+        for (var edge : deduplicatedEdges) {
             var u = edge.getLeft();
             var v = edge.getMiddle();
             System.out.println("DEBUG CFG: Processing edge from " + u + " to " + v);

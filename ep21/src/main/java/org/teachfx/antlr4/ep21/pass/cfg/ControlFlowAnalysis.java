@@ -84,11 +84,6 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
             // 第二阶段：合并基本块
             optimizeBasicBlockMerging(cfg);
             
-            // 第三阶段：执行活性分析（如果启用）
-            if (livenessAnalysis != null) {
-                performLivenessAnalysis(cfg);
-            }
-            
         } catch (Exception e) {
             logger.error("控制流分析过程中发生错误", e);
             throw new RuntimeException("控制流优化失败", e);

@@ -285,27 +285,51 @@ public class Compiler {
                     return assembler;
                 })
                 .forEach(assembler -> {
-                    saveToEp18Res(assembler.getAsmInfo());
+                    saveVMCode(assembler.getAsmInfo());
                     logger.debug("\n%s".formatted(assembler.getAsmInfo()));
                 });
     }
 
-    protected static void saveToEp18Res(String buffer) {
+    /**
+     * 将虚拟机汇编代码保存到文件
+     * 文件名格式为 output_<timestamp>_<index>.vm，避免文件覆盖问题
+     *
+     * @param buffer 要保存的汇编代码内容，不能为null或空
+     * @throws IllegalArgumentException 如果buffer为null或空
+     * @throws RuntimeException 如果文件保存失败
+     */
+    protected static void saveVMCode(String buffer) {
+        // 输入验证
+        if (buffer == null || buffer.trim().isEmpty()) {
+            logger.warn("尝试保存空的汇编代码内容");
+            throw new IllegalArgumentException("汇编代码内容不能为空");
+        }
+        
         try {
             // 使用健壮的路径解析方法
             var outputDir = ensureOutputDirectory();
-            var filePath = outputDir.resolve("t.cymbol");
             
-            logger.debug("保存汇编信息到: {}", filePath);
+            // 生成唯一的文件名，避免覆盖问题
+            var timestamp = System.currentTimeMillis();
+            var fileName = "output_%d.vm".formatted(timestamp);
+            var filePath = outputDir.resolve(fileName);
+            
+            logger.info("开始保存虚拟机汇编代码到: {}", filePath);
             
             // 使用NIO进行文件操作，更高效和健壮
             Files.writeString(filePath, buffer);
             
-            logger.debug("成功保存汇编信息到: {}", filePath.toAbsolutePath());
+            logger.info("成功保存虚拟机汇编代码到: {}", filePath.toAbsolutePath());
             
         } catch (IOException e) {
-            logger.error("保存汇编信息失败", e);
-            throw new RuntimeException("保存汇编信息到文件失败", e);
+            logger.error("保存虚拟机汇编代码失败 - I/O错误: {}", e.getMessage(), e);
+            throw new RuntimeException("保存虚拟机汇编代码到文件失败: " + e.getMessage(), e);
+        } catch (SecurityException e) {
+            logger.error("保存虚拟机汇编代码失败 - 权限错误: {}", e.getMessage(), e);
+            throw new RuntimeException("没有权限保存虚拟机汇编代码到文件: " + e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("保存虚拟机汇编代码失败 - 未知错误: {}", e.getMessage(), e);
+            throw new RuntimeException("保存虚拟机汇编代码时发生未知错误: " + e.getMessage(), e);
         }
     }
 

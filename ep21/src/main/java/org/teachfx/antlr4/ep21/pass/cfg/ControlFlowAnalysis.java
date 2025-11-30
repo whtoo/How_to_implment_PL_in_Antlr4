@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> {
     // 调试开关 - 使用final防止意外修改，但提供动态控制支持测试
-    public static final boolean DEBUG = false;
+    public static final boolean DEBUG = true;
     protected static final Logger logger = LogManager.getLogger(ControlFlowAnalysis.class);
     
     // 动态调试控制 - 允许测试修改调试状态
@@ -333,6 +333,16 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
                 .map(cfg::getBlock);
         
         predecessorOpt.ifPresent(predecessor -> {
+            if (isDebugEnabled()) {
+                logger.info("开始合并操作: 前驱块{} -> 当前块{}", predecessor.getId(), block.getId());
+                logger.info("合并前 - 前驱块出边: {}", cfg.edges.stream()
+                    .filter(edge -> edge.getLeft() == predecessor.getId())
+                    .collect(java.util.stream.Collectors.toList()));
+                logger.info("合并前 - 当前块出边: {}", cfg.edges.stream()
+                    .filter(edge -> edge.getLeft() == block.getId())
+                    .collect(java.util.stream.Collectors.toList()));
+            }
+            
             // 合并前驱块和当前块
             predecessor.mergeNearBlock(block);
             
@@ -343,6 +353,10 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
             List<Triple<Integer, Integer, Integer>> outEdges = new ArrayList<>(cfg.edges.stream()
                 .filter(edge -> edge.getLeft() == block.getId())
                 .toList());
+            
+            if (isDebugEnabled()) {
+                logger.info("需要转移的出边数量: {}", outEdges.size());
+            }
             
             for (Triple<Integer, Integer, Integer> outEdge : outEdges) {
                 // 检查前驱块是否已存在到目标块的边（任何类型）
@@ -376,6 +390,9 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
             blocksToRemove.add(block);
             
             if (isDebugEnabled()) {
+                logger.info("合并后 - 前驱块出边: {}", cfg.edges.stream()
+                    .filter(edge -> edge.getLeft() == predecessor.getId())
+                    .collect(java.util.stream.Collectors.toList()));
                 logger.info("成功合并基本块: {} 和 {}",
                            predecessor.getId(), block.getId());
             }

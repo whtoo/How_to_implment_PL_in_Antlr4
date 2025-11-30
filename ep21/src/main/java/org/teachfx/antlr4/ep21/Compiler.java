@@ -333,29 +333,76 @@ public class Compiler {
         }
     }
 
-    protected static void saveToEp20Res(String buffer, String suffix) {
+    /**
+     * 将Mermaid格式的控制流图保存到Markdown文件
+     *
+     * @param mermaidContent Mermaid图表内容，不能为null或空
+     * @param fileSuffix 文件后缀，用于生成唯一文件名，不能为null或空
+     * @throws IllegalArgumentException 如果参数无效
+     * @throws RuntimeException 如果文件保存失败
+     */
+    protected static void saveMermaidControlFlowGraph(String mermaidContent, String fileSuffix) {
+        // 1. 参数验证 - 防御性编程
+        if (mermaidContent == null || mermaidContent.trim().isEmpty()) {
+            logger.warn("尝试保存空的Mermaid内容");
+            throw new IllegalArgumentException("Mermaid图表内容不能为空");
+        }
+        
+        if (fileSuffix == null || fileSuffix.trim().isEmpty()) {
+            logger.warn("尝试使用空的文件后缀");
+            throw new IllegalArgumentException("文件后缀不能为空");
+        }
+        
+        // 2. 文件后缀安全检查 - 防止路径遍历攻击
+        String safeSuffix = fileSuffix.replaceAll("[^a-zA-Z0-9_-]", "_");
+        if (!safeSuffix.equals(fileSuffix)) {
+            logger.warn("文件后缀包含非法字符，已清理: {} -> {}", fileSuffix, safeSuffix);
+        }
+        
         try {
-            // 使用健壮的路径解析方法
-            var outputDir = ensureOutputDirectory();
-            var filePath = outputDir.resolve("graph_%s.md".formatted(suffix));
+            // 3. 使用健壮的路径解析方法
+            Path outputDir = ensureOutputDirectory();
+            String fileName = "cfg_mermaid_%s.md".formatted(safeSuffix);
+            Path filePath = outputDir.resolve(fileName);
             
-            logger.debug("保存控制流图到: {}", filePath);
+            // 4. 路径安全性检查 - 确保文件在输出目录内
+            if (!filePath.normalize().startsWith(outputDir.normalize())) {
+                logger.error("非法的文件路径: {}", filePath);
+                throw new SecurityException("生成的文件路径超出了允许的输出目录");
+            }
             
-            // 格式化内容为Mermaid图表 - 使用Java 21字符串模板
-            var template = """
-                    ```mermaid
-                    """ + buffer + """
-                    ```
-                    """;
+            logger.debug("开始保存Mermaid控制流图到: {}", filePath);
             
-            // 使用NIO进行文件操作，更高效和健壮
-            Files.writeString(filePath, template);
+            // 5. 使用StringBuilder进行高效的字符串构建
+            StringBuilder templateBuilder = new StringBuilder(128)
+                .append("```mermaid\n")
+                .append(mermaidContent)
+                .append("\n```");
             
-            logger.debug("成功保存控制流图到: {}", filePath.toAbsolutePath());
+            String formattedContent = templateBuilder.toString();
+            
+            // 6. 使用NIO进行文件操作，更高效和健壮
+            // 添加CREATE和TRUNCATE_EXISTING选项确保原子性
+            Files.writeString(
+                filePath,
+                formattedContent,
+                java.nio.charset.StandardCharsets.UTF_8,
+                java.nio.file.StandardOpenOption.CREATE,
+                java.nio.file.StandardOpenOption.TRUNCATE_EXISTING,
+                java.nio.file.StandardOpenOption.WRITE
+            );
+            
+            logger.info("成功保存Mermaid控制流图到: {}", filePath.toAbsolutePath());
             
         } catch (IOException e) {
-            logger.error("保存控制流图失败", e);
-            throw new RuntimeException("保存控制流图到文件失败", e);
+            logger.error("保存Mermaid控制流图失败 - I/O错误: {}", e.getMessage(), e);
+            throw new RuntimeException("保存Mermaid控制流图到文件失败: " + e.getMessage(), e);
+        } catch (SecurityException e) {
+            logger.error("保存Mermaid控制流图失败 - 安全错误: {}", e.getMessage(), e);
+            throw new RuntimeException("没有权限保存Mermaid控制流图: " + e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("保存Mermaid控制流图失败 - 未知错误: {}", e.getMessage(), e);
+            throw new RuntimeException("保存Mermaid控制流图时发生未知错误: " + e.getMessage(), e);
         }
     }
     
@@ -384,7 +431,7 @@ public class Compiler {
      * 同时生成Mermaid和DOT两种格式的控制流图
      */
     protected static void saveCFGInBothFormats(String mermaidContent, String dotContent, String suffix) {
-        saveToEp20Res(mermaidContent, suffix);
+        saveMermaidControlFlowGraph(mermaidContent, suffix);
         saveDOTToFile(dotContent, suffix);
     }
 }

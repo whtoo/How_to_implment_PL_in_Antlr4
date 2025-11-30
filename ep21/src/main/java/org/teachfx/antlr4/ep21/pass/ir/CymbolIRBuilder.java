@@ -33,7 +33,7 @@ import java.util.Stack;
 
 
 public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
-    private static final Logger logger = LogManager.getLogger(CymbolIRBuilder.class);
+    private final Logger logger = LogManager.getLogger(CymbolIRBuilder.class);
     public Prog prog = null;
 
     private LinearIRBlock currentBlock = null;

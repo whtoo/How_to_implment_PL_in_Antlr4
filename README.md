@@ -636,7 +636,7 @@ open target/site/jacoco/index.html
 如有问题或建议：
 - 提交GitHub Issue
 - 查看[项目Wiki](https://github.com/whtoo/How_to_implment_PL_in_Antlr4/wiki)
-- 参与[讨论](https://github.com/whtoo/How_to_implement_PL_in_Antlr4/discussions)
+- 参与[讨论](https://github.com/whtoo/How_to_implment_PL_in_Antlr4/discussions)
 
 ## 致谢
 

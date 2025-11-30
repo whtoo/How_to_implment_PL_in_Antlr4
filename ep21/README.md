@@ -1,258 +1,695 @@
-# 静态分析基础
+# EP21 编译器项目 - 高级优化与现代化实现
 
-## 编译目标变化
-换成x86指令的寄存器机器，当然是化简的。
+[![Java](https://img.shields.io/badge/java-21+-blue)](https://www.oracle.com/java/technologies/downloads/)
+[![ANTLR4](https://img.shields.io/badge/ANTLR4-4.13.2-orange)](https://www.antlr.org/)
+[![JUnit5](https://img.shields.io/badge/JUnit5-5.10+-green)](https://junit.org/junit5/)
+[![Maven](https://img.shields.io/badge/maven-3.6+-brightgreen)](https://maven.apache.org/)
 
-## TAC
-本章重点是`三地址码`构造。
+## 📚 项目概述
 
-### TAC变换
+EP21是"How to implement PL in ANTLR4"系列教程的最终章节，实现了现代编译器的高级优化技术。本项目在EP20的基础上，引入了分层中间表示(MIR/LIR)、数据流分析框架、SSA形式转换等先进技术，为编译原理学习者和研究人员提供了一个完整的现代化编译器实现示例。
+
+### 核心贡献
+
+- **🏗️ 分层IR架构**：MIR/LIR分层中间表示体系，提供多层次优化空间
+- **📊 数据流分析框架**：统一的数据流分析接口，支持前向/后向分析
+- **🔄 SSA形式转换**：Φ函数自动生成和变量重命名机制
+- **🎯 完整编译管道**：从前端到后端的完整编译器实现
+- **🧪 严格测试标准**：全面的测试覆盖和质量保证
+
+## 🏗️ EP21编译器架构设计
+
+### 整体架构
 
 ```mermaid
----
-title: TAC变换
----
-graph LR
-    A[Src] --> B[RevisedAST]
-    B --> D[TAC]
-    D --> E[LIR]
+graph TB
+    subgraph "编译器前端 Frontend"
+        A[Cymbol源代码] --> B[词法分析 Lexer]
+        B --> C[语法分析 Parser]
+        C --> D[AST构建 AST Builder]
+        D --> E[语义分析 Semantic Analysis]
+        E --> F[符号表 Symbol Table]
+    end
+    
+    subgraph "编译器中端 Middle End"
+        F --> G[MIR生成 MIR Generation]
+        G --> H[MIR优化 MIR Optimization]
+        H --> I[LIR转换 LIR Conversion]
+        I --> J[控制流分析 Control Flow Analysis]
+        J --> K[数据流分析 Data Flow Analysis]
+        K --> L[SSA转换 SSA Conversion]
+        L --> M[优化Passes Optimization Passes]
+    end
+    
+    subgraph "编译器后端 Backend"
+        M --> N[代码生成 Code Generation]
+        N --> O[虚拟机字节码 VM Bytecode]
+    end
+    
+    subgraph "支持系统 Supporting Systems"
+        P[测试框架 Test Framework]
+        Q[调试器 Debugger]
+        R[可视化工具 Visualization]
+        S[错误处理 Error Handling]
+    end
+    
+    P -.-> O
+    Q -.-> A
+    R -.-> J
+    R -.-> L
+    S -.-> A
 ```
 
-## 控制流程图
+### 核心模块详解
+
+#### 1. 前端模块（Frontend）
+**位置**：`src/main/java/org/teachfx/antlr4/ep21/parser/`, `ast/`, `pass/ast/`
+
+```
+parser/                 # ANTLR4语法定义和解析
+├── Cymbol.g4          # Cymbol语言语法规则
+├── Cymbol.interp      # 语法解释器数据
+├── CymbolLexer        # 词法分析器
+└── Location.java      # 位置信息管理
+
+ast/                    # 抽象语法树
+├── expr/              # 表达式节点
+│   ├── BinaryExprNode     # 二元表达式
+│   ├── UnaryExprNode      # 一元表达式
+│   ├── CallFuncNode       # 函数调用
+│   └── LiteralNode        # 字面量（Int, Float, Bool, String）
+├── stmt/              # 语句节点
+│   ├── IfStmtNode         # if语句
+│   ├── WhileStmtNode      # while语句
+│   ├── AssignStmtNode     # 赋值语句
+│   └── ReturnStmtNode     # 返回语句
+└── decl/              # 声明节点
+    ├── FuncDeclNode       # 函数声明
+    ├── VarDeclNode        # 变量声明
+    └── VarDeclListNode    # 变量声明列表
+```
+
+**设计特点**：
+- 清晰的节点层次结构
+- 统一的访问者模式支持
+- 完整的源代码位置信息
+- 类型安全的节点操作
+
+#### 2. 分层中间表示（IR Layer）
+**位置**：`src/main/java/org/teachfx/antlr4/ep21/ir/`
+
+```
+ir/
+├── mir/               # 中层中间表示（Medium-level IR）
+│   ├── MIRNode.java      # MIR基类
+│   ├── MIRFunction.java  # 函数表示
+│   ├── MIRStmt.java      # 语句表示
+│   ├── MIRExpr.java      # 表达式表示
+│   └── MIRAssignStmt.java # 赋值语句
+└── lir/               # 低层中间表示（Low-level IR）
+    ├── LIRNode.java      # LIR基类
+    └── LIRAssign.java    # 基本赋值操作
+```
+
+**MIR设计原则**：
+- 保留高级控制流结构（if、while、函数调用）
+- 支持复杂表达式（嵌套二元运算）
+- 便于高层优化（循环优化、内联展开）
+- 清晰的类型系统
+
+**LIR设计原则**：
+- 接近三地址码形式
+- 每条指令最多一个操作
+- 易于转换为目标代码
+- 支持寄存器分配
+
+#### 3. 符号表系统（Symbol Table）
+**位置**：`src/main/java/org/teachfx/antlr4/ep21/symtab/`
+
+```
+symtab/
+├── scope/             # 作用域管理
+│   ├── BaseScope.java     # 基础作用域实现
+│   ├── GlobalScope.java   # 全局作用域
+│   ├── LocalScope.java    # 局部作用域
+│   └── Scope.java         # 作用域接口
+├── symbol/            # 符号定义
+│   ├── MethodSymbol.java  # 方法符号
+│   ├── VariableSymbol.java # 变量符号
+│   ├── ScopedSymbol.java  # 作用域符号
+│   └── Symbol.java        # 符号基类
+└── type/              # 类型系统
+    ├── BuiltInTypeSymbol.java # 内建类型
+    ├── OperatorType.java      # 操作符类型
+    ├── Type.java              # 类型基类
+    └── TypeTable.java         # 类型表
+```
+
+#### 4. 控制流分析模块（Control Flow Analysis）
+**位置**：`src/main/java/org/teachfx/antlr4/ep21/pass/cfg/`
+
+```
+cfg/
+├── BasicBlock.java       # 基本块定义
+├── CFG.java             # 控制流图
+├── CFGBuilder.java      # CFG构建器
+├── ControlFlowAnalysis.java # 控制流分析
+├── LivenessAnalysis.java # 活跃变量分析
+└── LinearIRBlock.java   # 线性IR块
+```
+
+**核心功能**：
+- **基本块划分**：将IR指令划分为顺序执行的基本块
+- **控制流边建立**：建立基本块之间的跳转关系
+- **活跃变量分析**：计算变量的活跃区间
+- **优化支持**：为优化Pass提供数据流信息
+
+#### 5. 数据流分析框架（Data Flow Analysis）
+**位置**：`src/main/java/org/teachfx/antlr4/ep21/analysis/dataflow/`
+
+```
+dataflow/
+├── DataFlowFramework.java    # 统一分析框架
+└── LiveVariableAnalyzer.java # 活跃变量分析器
+```
+
+**框架特点**：
+- **统一接口**：`DataFlowAnalysis<T>`支持所有分析算法
+- **迭代求解器**：自动求解数据流方程直至收敛
+- **方向支持**：前向分析（如到达定义）和后向分析（如活跃变量）
+- **Lattice理论**：基于格理论的正确性保证
+
+**关键接口**：
+```java
+public interface DataFlowAnalysis<T> {
+    // 分析方向：前向或后向
+    enum Direction { FORWARD, BACKWARD }
+    
+    // 基本块的转换函数
+    T transfer(BasicBlock block, T input);
+    
+    // 合并操作（meet/join）
+    T meet(T value1, T value2);
+    
+    // 初始值
+    T getInitialValue();
+    
+    // 偏序关系判断
+    boolean lessEqual(T value1, T value2);
+}
+```
+
+#### 6. SSA形式转换（SSA Form）
+**位置**：`src/main/java/org/teachfx/antlr4/ep21/analysis/ssa/`
+
+```
+ssa/
+└── SSAGraph.java         # SSA图构建和管理
+```
+
+**SSA转换流程**：
+1. **支配树构建**：计算支配关系树
+2. **支配边界计算**：确定Φ函数插入位置
+3. **Φ函数插入**：在合并点自动插入Φ函数
+4. **变量重命名**：将变量转换为静态单赋值形式
+
+**Φ函数语义示例**：
+```cymbol
+// 原始代码
+if (condition) {
+    x = 1;    // x1
+} else {
+    x = 2;    // x2
+}
+print(x);
+
+// SSA形式
+if (condition) {
+    x1 = 1;
+} else {
+    x2 = 2;
+}
+x3 = Φ(x1, x2)  // 根据控制流选择x1或x2的值
+print(x3);
+```
+
+## 🔄 完整编译流程
+
+### 编译管道架构
 
 ```mermaid
-graph TD
-    subgraph 基本块1
-    L1[标签 L1]
-    JMP[跳转指令]
+graph TB
+    subgraph "阶段1：前端处理 Frontend"
+        A["1.1 Cymbol源代码\n(.cym文件)"] --> B["1.2 词法分析\nANTLR4 Lexer"]
+        B --> C["1.3 记号流\nToken Stream"]
+        C --> D["1.4 语法分析\nANTLR4 Parser"]
+        D --> E["1.5 抽象语法树\nAST"]
+        E --> F["1.6 语义分析\nType Checker"]
+        F --> G["1.7 符号表\nSymbol Table"]
     end
-    subgraph 基本块2
-    CJMP[条件跳转]
+    
+    subgraph "阶段2：中端转换 Middle End"
+        G --> H["2.1 MIR生成\nAST → MIR"]
+        H --> I["2.2 MIR优化\n常量折叠、代数化简"]
+        I --> J["2.3 LIR转换\nMIR → LIR"]
+        J --> K["2.4 CFG构建\n基本块划分"]
+        K --> L["2.5 数据流分析\n活跃变量分析"]
+        L --> M["2.6 SSA转换\nΦ函数插入"]
+        M --> N["2.7 优化Pass\n死代码删除"]
     end
-    L1 --> JMP
-    JMP --> thenBlock
-    CJMP -->|条件真| then
-    CJMP -->|条件假| other
-  ```
-
-## 🆕 新增功能
-
-### 1. MIR/LIR体系
-
-EP21现在支持分层中间表示：
-- **MIR (Medium-level Intermediate Representation)**: 中层IR，更接近源代码抽象
-- **LIR (Low-level Intermediate Representation)**: 低层IR，更接近目标机器代码
-
-#### 核心类
-- `MIRNode`: MIR节点基类
-- `LIRNode`: LIR节点基类  
-- `MIRFunction`: MIR函数表示
-- `LIRAssign`: LIR赋值指令
-- `MIRStmt`: MIR语句基类
-- `MIRExpr`: MIR表达式基类
-
-#### 使用示例
-```java
-// 创建MIR函数
-MIRFunction func = new MIRFunction("testFunc");
-
-// 创建MIR赋值语句
-MIRExpr source = new MIRExpr() {...}; // 实现具体表达式
-MIRAssignStmt assign = new MIRAssignStmt("result", source);
-
-// 创建LIR赋值指令
-LIRAssign lirAssign = new LIRAssign(target, source, 
-    LIRAssign.RegisterType.REGISTER);
+    
+    subgraph "阶段3：后端生成 Backend"
+        N --> O["3.1 代码生成\nLIR → 字节码"]
+        O --> P["3.2 虚拟机执行\nStack VM"]
+    end
+    
+    style A fill:#d1ecf1
+    style E fill:#fff3cd
+    style G fill:#d4edda
+    style K fill:#e2e3e5
+    style M fill:#f8d7da
+    style P fill:#cfe2ff
 ```
 
-### 2. CFG可视化增强
+### 各阶段详细说明
 
-现在支持多种格式的控制流图输出：
-- **Mermaid格式**: 适合在Markdown中直接显示
-- **DOT格式**: 适合Graphviz等专业工具
+#### 阶段1：前端编译（Frontend Compilation）
+**输入**：Cymbol源代码文件（.cym）
+**输出**：带有符号表信息的抽象语法树（AST）
 
-#### 输出文件
-- `graph_X_origin.md`: 原始控制流图(Mermaid格式)
-- `graph_X_origin.dot`: 原始控制流图(DOT格式)  
-- `graph_X_optimized.md`: 优化后控制流图(Mermaid格式)
-- `graph_X_optimized.dot`: 优化后控制流图(DOT格式)
+**核心任务**：
+1. **词法分析**：识别标识符、关键字、字面量、操作符
+2. **语法分析**：构建符合Cymbol.g4文法的AST
+3. **语义分析**：类型检查、作用域验证、符号解析
 
-### 3. 数据流分析框架
+**关键组件**：
+- `CymbolLexer`：词法分析器
+- `CymbolParser`：语法分析器
+- `CymbolASTBuilder`：AST构建器
+- `TypeChecker`：类型检查器
+- `LocalDefine`：符号表管理
 
-基于`Loc`类实现了完整的数据流分析框架：
+#### 阶段2：中端转换（Middle-End Transformation）
+**输入**：AST和符号表
+**输出**：优化后的SSA形式LIR
 
-#### 核心类
-- `DataFlowFramework`: 数据流分析框架基类
-- `LiveVariableAnalyzer`: 活跃变量分析器
+**核心任务**：
+1. **MIR生成**：将AST转换为中层IR（保留控制流结构）
+2. **MIR优化**：常量折叠、简单代数化简
+3. **LIR转换**：将MIR转换为三地址码形式
+4. **CFG构建**：识别基本块，构建控制流图
+5. **数据流分析**：执行活跃变量分析
+6. **SSA转换**：构建支配树，插入Φ函数，重命名变量
+7. **优化Pass**：死代码删除、常量传播
 
-#### 功能特性
-- 活跃变量分析
-- 基本块的liveIn/liveOut集合计算
-- 指令级别的活跃性分析
+**关键组件**：
+- `CymbolIRBuilder`：IR生成器
+- `CFGBuilder`：控制流图构建器
+- `LiveVariableAnalyzer`：活跃变量分析器
+- `SSAGraph`：SSA转换器
+- `ControlFlowAnalysis`：控制流分析器
 
-#### 使用示例
-```java
-// 创建活跃变量分析器
-LiveVariableAnalyzer analyzer = new LiveVariableAnalyzer(cfg);
+#### 阶段3：后端生成（Backend Code Generation）
+**输入**：优化后的LIR（SSA形式）
+**输出**：虚拟机字节码
 
-// 执行分析
-analyzer.analyze();
+**核心任务**：
+1. **代码生成**：将LIR转换为目标指令
+2. **字节码优化**：寄存器分配、指令调度
+3. **汇编生成**：输出虚拟机字节码格式
 
-// 查看分析结果
-analyzer.printAnalysisResult();
+**关键组件**：
+- `CymbolAssembler`：代码生成器
+- `CymbolVMIOperatorEmitter`：操作符发射器
+
+## 🧪 测试设计标准
+
+### 测试架构
+
+```
+         集成测试 (10%)
+            ^
+            |
+      组件测试 (30%)
+            ^
+            |
+      单元测试 (60%) - 基础测试
 ```
 
-### 4. 理想图生成
+### 测试分类和覆盖率
 
-实现SSA(静态单赋值)形式的理想图生成：
+#### 1. 单元测试（Unit Tests）
+**测试粒度**：单个类或方法
+**覆盖率目标**：≥ 85%
+**框架**：JUnit 5 + AssertJ
 
-#### 核心类
-- `SSAGraph`: SSA图生成器
+**测试范围**：
+- **AST节点测试**：`ast/expr/`, `ast/stmt/`, `ast/decl/`
+  - 表达式节点：二元、一元、函数调用、字面量
+  - 语句节点：if、while、赋值、返回、变量声明
+  - 声明节点：函数声明、变量声明
 
-#### 主要功能
-- Φ函数自动插入
-- 变量重命名
-- SSA图的可视化输出
+- **IR模块测试**：`pass/ir/`, `ir/mir/`, `ir/lir/`
+  - MIR节点：函数、语句、表达式、赋值
+  - LIR节点：基本赋值操作
+  - IR构建器：AST到IR的转换
 
-#### 使用示例
+- **控制流测试**：`pass/cfg/`
+  - 基本块：块创建和边界检测
+  - CFG构建：控制流边建立
+  - 控制流分析：支配关系计算
+
+- **符号表测试**：`pass/symtab/`
+  - 作用域管理：全局、局部作用域
+  - 符号解析：变量、方法符号
+  - 类型系统：内建类型、操作符
+
+- **语义分析测试**：`pass/sematic/`
+  - 类型检查：类型兼容性验证
+  - 错误处理：类型错误检测
+  - 符号解析：作用域查找
+
+#### 2. 集成测试（Integration Tests）
+**测试粒度**：跨模块协作
+**验证目标**：完整的编译管道
+
+**测试场景**：
+- **完整编译流程测试**：从源代码到字节码
+- **CFG构建测试**：复杂控制流结构
+- **数据流分析测试**：活跃变量计算准确性
+- **代码生成测试**：IR到字节码转换
+
+#### 3. 性能测试
+**测试目标**：编译效率和执行性能
+**基准程序**：
+- 斐波那契数列计算
+- 矩阵乘法
+- 快速排序算法
+- 嵌套循环结构
+
+### 测试用例设计规范
+
+#### 测试命名规范
 ```java
-// 创建SSA图
-SSAGraph ssaGraph = new SSAGraph(cfg);
+// 功能测试
+@Test
+@DisplayName("应该正确处理简单的二元表达式")
+void testBinaryExprIRGeneration() {
+    // 测试代码
+}
 
-// 构建SSA图
-ssaGraph.buildSSA();
+@Test  
+@DisplayName("应该正确构建if-else语句的CFG")
+void testIfElseCFGConstruction() {
+    // 测试代码
+}
 
-// 生成可视化输出
-String mermaid = ssaGraph.toMermaid();
-String dot = ssaGraph.toDOT();
+// 边界条件测试
+@Test
+@DisplayName("应该处理空函数体的情况")
+void testEmptyFunctionBody_ShouldCreateBasicBlock() {
+    // 测试代码
+}
+
+@Test
+@DisplayName("应该正确处理嵌套作用域")
+void testNestedScope_SymbolResolution() {
+    // 测试代码
+}
 ```
 
-### 5. 测试验证
+#### 参数化测试
+```java
+@ParameterizedTest
+@MethodSource("expressionProvider")
+@DisplayName("表达式IR生成测试")
+void testExpressionIRGeneration(String expression, String expectedIR) {
+    // Arrange
+    ASTNode ast = parseExpression(expression);
+    
+    // Act
+    List<IRNode> ir = irBuilder.build(ast);
+    
+    // Assert
+    assertThat(ir.toString()).isEqualTo(expectedIR);
+}
 
-提供了完整的测试套件：
+static Stream<Arguments> expressionProvider() {
+    return Stream.of(
+        Arguments.of("1 + 2", "t0 = 1 + 2"),
+        Arguments.of("a * b", "t1 = a * b"),
+        Arguments.of("-x", "t2 = -x")
+    );
+}
+```
 
-#### 测试类
-- `SimpleTest`: 简化版测试类（无需JUnit）
+### 测试执行指南
 
-#### 运行测试
 ```bash
-# 编译项目
+# 运行所有测试
+mvn test
+
+# 运行特定模块测试
+mvn test -Dtest=*BasicBlockTest
+
+# 运行特定测试类
+mvn test -Dtest=CFGBuilderTest
+
+# 生成覆盖率报告
+mvn jacoco:report
+open target/site/jacoco/index.html
+
+# 运行性能测试
+mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.test.PerformanceTest"
+```
+
+### 测试质量标准
+
+**覆盖率要求**：
+- **整体覆盖率**：≥ 85%
+- **核心模块**（IR、CFG、SSA）：≥ 90%
+- **新功能模块**：100%
+
+**质量指标**：
+- 所有测试必须通过
+- 无编译警告
+- 代码符合CheckStyle规范
+- 通过SpotBugs静态检查
+
+## 🚀 快速开始
+
+### 环境要求
+- **Java 21** (必需)
+- **Maven 3.6+** (必需)
+- **ANTLR 4.13.2**
+
+### 构建和运行
+
+```bash
+# 克隆和构建
+git clone <repository-url>
+cd ep21
 mvn clean compile
 
 # 运行测试
-mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.test.SimpleTest"
+mvn test
+
+# 编译示例程序
+echo 'int x = 42; print(x);' > test.cymbol
+mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.Compiler" -Dexec.args="test.cymbol"
 ```
 
-## 代码结构
+### 示例程序
 
-### 新增目录
-```
-src/main/java/org/teachfx/antlr4/ep21/
-├── ir/
-│   ├── mir/           # MIR相关类
-│   │   ├── MIRNode.java
-│   │   ├── MIRFunction.java
-│   │   ├── MIRStmt.java
-│   │   └── MIRExpr.java
-│   └── lir/           # LIR相关类
-│       ├── LIRNode.java
-│       └── LIRAssign.java
-├── analysis/
-│   ├── dataflow/      # 数据流分析
-│   │   ├── DataFlowFramework.java
-│   │   └── LiveVariableAnalyzer.java
-│   └── ssa/           # SSA分析
-│       └── SSAGraph.java
-└── test/              # 测试代码
-    └── SimpleTest.java
+**基础示例**：
+```cymbol
+// 斐波那契数列
+int fib(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+int main() {
+    int result = fib(10);
+    print("fib(10) = ");
+    print(result);
+    return result;
+}
 ```
 
-## 编译流程
+**复杂控制流示例**：
+```cymbol
+// 多层嵌套和循环
+int complexFunction(int x) {
+    int sum = 0;
+    int i = 0;
+    
+    while (i < x) {
+        if (i % 2 == 0) {
+            sum = sum + i;
+        } else {
+            sum = sum - i;
+        }
+        i = i + 1;
+    }
+    
+    return sum;
+}
+```
 
-完整的编译流程现在包括：
+## 📊 可视化支持
 
-1. **语法分析** → 解析树
-2. **AST构建** → 抽象语法树
-3. **符号表分析** → 作用域和符号信息
-4. **IR生成** → 三地址码(TAC)
-5. **MIR/LIR转换** → 分层中间表示
-6. **基本块优化** → 优化TAC
-7. **CFG构建和分析** → 控制流程图
-8. **数据流分析** → 活跃变量分析
-9. **SSA转换** → 静态单赋值形式
-10. **代码生成** → 目标汇编代码
+### AST可视化
+```bash
+# 生成AST的文本表示
+mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.Compiler" \
+    -Dexec.args="--debug-ast program.cymbol"
+```
 
-## DONE
+### CFG可视化
+```bash
+# 生成控制流图的Mermaid表示
+mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.Compiler" \
+    -Dexec.args="--debug-cfg program.cymbol"
+```
 
-```mermaid
-graph TD
-subgraph L0
-Q0["t0 = @0;"]
-Q1["t1 =  1 ;"]
-Q2["t0 SUB t1;"]
-Q3["jmp L1;"]
-end
-subgraph L1
-Q4["ret;"]
-end
-subgraph L2
-Q5["t0 =  10 ;"]
-Q6["@0 = t0;"]
-Q7["jmp L4;"]
-end
-subgraph L4
-Q8["t0 = @0;"]
-Q9["t1 =  0 ;"]
-Q10["t0 GT t1;"]
-Q11["jmpIf t0,L5,L6;"]
-end
-subgraph L5
-Q12["t0 = @0;"]
-Q13["t1 =  5 ;"]
-Q14["t0 GT t1;"]
-Q15["jmpIf t0,L7,L8;"]
-end
-subgraph L7
-Q16["t0 = @0;"]
-Q17["call print(args:1);"]
-Q18["t0 = @0;"]
-Q19["t1 =  7 ;"]
-Q20["t0 EQ t1;"]
-Q21["jmpIf t0,L9,L10;"]
-end
-subgraph L9
-Q22["t0 =  7 ;"]
-Q23["jmp L3;"]
-end
-subgraph L10
-end
-subgraph L8
-Q24["t0 =  'break' ;"]
-Q25["call print(args:1);"]
-Q26["t0 = @0;"]
-Q27["call dec1(args:1);"]
-Q28["@0 = t0;"]
-Q29["jmp L4;"]
-end
-subgraph L6
-Q30["t0 =  0 ;"]
-Q31["jmp L3;"]
-end
-subgraph L3
-Q32["halt;"]
-end
+### 数据流分析结果
+```bash
+# 输出活跃变量分析结果
+mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.Compiler" \
+    -Dexec.args="--debug-liveness program.cymbol"
+```
 
-L0 --> L1
-L2 --> L4
-L4 --> L5
-L4 --> L6
-L5 --> L7
-L5 --> L8
-L7 --> L9
-L7 --> L10
-L9 --> L3
-L9 --> L10
-L10 --> L8
-L8 --> L4
-L8 --> L6
-L6 --> L3
+## 🎓 教学应用指南
+
+### 学习路径建议
+
+**第1-2周：基础理解**
+- 学习ANTLR4语法定义
+- 理解AST构建过程
+- 掌握访问者模式应用
+
+**第3-4周：中间表示**
+- 理解MIR/LIR设计思想
+- 学习控制流图构建
+- 掌握基本的优化概念
+
+**第5-6周：数据流分析**
+- 学习数据流分析框架
+- 理解活跃变量分析
+- 掌握迭代求解算法
+
+**第7-8周：SSA形式**
+- 学习SSA转换原理
+- 理解Φ函数语义
+- 掌握支配树算法
+
+### 实践作业建议
+
+1. **扩展语法支持**：添加新的语言特性
+2. **优化算法实现**：添加新的优化Pass
+3. **性能分析**：实现寄存器分配算法
+4. **可视化工具**：改进图形化输出
+
+## 🔧 开发指南
+
+### 项目构建
+
+```bash
+# 清理和编译
+mvn clean compile
+
+# 运行测试
+mvn test
+
+# 代码质量检查
+mvn checkstyle:check spotbugs:check
+
+# 生成文档
+mvn javadoc:javadoc
+
+# 打包
+mvn package
+```
+
+### 调试技巧
+
+**启用详细日志**：
+```xml
+<!-- src/main/resources/log4j2.xml -->
+<Logger name="org.teachfx.antlr4.ep21" level="DEBUG"/>
+```
+
+**断点调试**：
+- 在关键Pass入口设置断点
+- 检查AST、IR、CFG的状态转换
+- 验证数据流分析结果
+
+### 性能分析
+
+```bash
+# 编译时性能分析
+mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.Compiler" \
+    -Dexec.args="--profile program.cymbol"
+
+# 内存使用分析
+jvisualvm
+```
+
+## 📚 学习资源
+
+### 推荐阅读
+- **编译原理**：
+  - 《编译原理》（龙书）- Aho, Sethi, Ullman
+  - 《现代编译原理》（虎书）- Andrew Appel
+  - 《编译器设计》（鲸书）- Cooper & Torczon
+
+- **优化技术**：
+  - 《高级编译器设计与实现》- Steven Muchnick
+  - 《Optimizing Compilers for Modern Architectures》- Randy Allen
+
+### 在线资源
+- [ANTLR4官方文档](https://www.antlr.org/)
+- [LLVM编译器基础架构](https://llvm.org/)
+- [数据流分析理论](https://en.wikipedia.org/wiki/Data-flow_analysis)
+
+## 🤝 贡献指南
+
+### 贡献类型
+- 🐛 **Bug修复**：修复现有功能问题
+- ✨ **新功能**：添加新的语言特性或优化算法
+- 📚 **文档**：改进文档和教程
+- 🧪 **测试**：增加测试用例和改进测试质量
+
+### 贡献流程
+1. Fork项目并创建特性分支
+2. 遵循TDD原则：先写测试，再实现功能
+3. 确保所有测试通过和覆盖率达标
+4. 更新相关文档
+5. 提交Pull Request
+
+### 代码质量要求
+- 遵循Google Java Style Guide
+- Javadoc注释覆盖率≥80%
+- 测试覆盖率保持或提升
+- 通过所有CI检查
+
+## 📄 许可证
+
+本项目采用MIT许可证，详见[LICENSE](../LICENSE)文件。
+
+## ✨ 致谢
+
+感谢所有为这个项目做出贡献的开发者和研究人员：
+- ANTLR4开发团队提供的强大工具
+- 编译原理领域的理论贡献者
+- 开源社区的支持和反馈
+
+---
+
+**最后更新**：2025-11-30  
+**版本**：EP21 v1.0  
+**Java版本**：21  
+**ANTLR版本**：4.13.2

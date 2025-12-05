@@ -91,6 +91,14 @@ EP20代表了项目的完整编译器实现，具有以下核心特性：
 - [架构设计.md](架构设计.md) - 整体架构设计
 - [测试策略.md](测试策略.md) - 测试框架和策略
 
+### 课程改进建议
+- **[编译器构造课程改进建议.md](./编译器构造课程改进建议.md)** - 完整的项目改进建议和优化方案
+- **[course/syllabus.md](./course/syllabus.md)** - 详细的课程大纲和教学安排
+
+#### 实验指导材料 (course/labs/)
+- **[lab-template.md](./course/labs/lab-template.md)** - 实验指导模板
+- **[lab1-antlr4-basics.md](./course/labs/lab1-antlr4-basics.md)** - 实验1：ANTLR4基础语法
+
 ### EP20详细文档
 EP20阶段包含详细的文档说明：
 - [编译流程序列图](../ep20/docs/compilation-sequence.md) - 各阶段编译流程详解

@@ -32,30 +32,31 @@ public class BytecodeDefinition {
     public static final short INSTR_FADD = 16; // float add
     public static final short INSTR_FSUB = 17; // float subtract
     public static final short INSTR_FMUL = 18; // float mul
-    public static final short INSTR_FLT = 19; // float less than
-    public static final short INSTR_FEQ = 20;
-    public static final short INSTR_ITOF = 21;
-    public static final short INSTR_CALL = 22; // call
-    public static final short INSTR_RET = 23; // return
-    public static final short INSTR_BR = 24;
+    public static final short INSTR_FDIV = 19; // float divide
+    public static final short INSTR_FLT = 20; // float less than
+    public static final short INSTR_FEQ = 21;
+    public static final short INSTR_ITOF = 22;
+    public static final short INSTR_CALL = 23; // call
+    public static final short INSTR_RET = 24; // return
+    public static final short INSTR_BR = 25;
     // generate other cases for `instructions`
-    public static final short INSTR_BRT = 25;
-    public static final short INSTR_BRF = 26;
-    public static final short INSTR_CCONST = 27; // const
-    public static final short INSTR_ICONST = 28; // const
-    public static final short INSTR_FCONST = 29; // const
-    public static final short INSTR_SCONST = 30; // const
-    public static final short INSTR_LOAD = 31;
-    public static final short INSTR_GLOAD = 32;
-    public static final short INSTR_FLOAD = 33;
-    public static final short INSTR_STORE = 34;
-    public static final short INSTR_GSTORE = 35;
-    public static final short INSTR_FSTORE = 36;
-    public static final short INSTR_PRINT = 37;
-    public static final short INSTR_STRUCT = 38;
-    public static final short INSTR_NULL = 39;
-    public static final short INSTR_POP = 40;
-    public static final short INSTR_HALT = 41;
+    public static final short INSTR_BRT = 26;
+    public static final short INSTR_BRF = 27;
+    public static final short INSTR_CCONST = 28; // const
+    public static final short INSTR_ICONST = 29; // const
+    public static final short INSTR_FCONST = 30; // const
+    public static final short INSTR_SCONST = 31; // const
+    public static final short INSTR_LOAD = 32;
+    public static final short INSTR_GLOAD = 33;
+    public static final short INSTR_FLOAD = 34;
+    public static final short INSTR_STORE = 35;
+    public static final short INSTR_GSTORE = 36;
+    public static final short INSTR_FSTORE = 37;
+    public static final short INSTR_PRINT = 38;
+    public static final short INSTR_STRUCT = 39;
+    public static final short INSTR_NULL = 40;
+    public static final short INSTR_POP = 41;
+    public static final short INSTR_HALT = 42;
 
 
     // all instructions
@@ -79,8 +80,10 @@ public class BytecodeDefinition {
             new Instruction("fadd"),
             new Instruction("fsub"),
             new Instruction("fmul"),
+            new Instruction("fdiv"),
             new Instruction("flt"),
             new Instruction("feq"),
+            new Instruction("ixor"),
             new Instruction("itof"),
             new Instruction("call", FUNC),
             new Instruction("ret"),

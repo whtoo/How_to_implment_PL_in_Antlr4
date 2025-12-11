@@ -203,17 +203,23 @@ public class VMInterpreter {
                     p = (boolean)operands[sp--];
                     operands[++sp] = !p;
                     break;
-                case BytecodeDefinition.INSTR_IAND:
-                    p = (boolean) operands[sp - 1];
-                    q = (boolean) operands[sp];
+                case BytecodeDefinition.INSTR_IXOR:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = p && q;
+                    operands[++sp] = a ^ b;
+                    break;
+                case BytecodeDefinition.INSTR_IAND:
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
+                    sp -= 2;
+                    operands[++sp] = a & b;
                     break;
                 case BytecodeDefinition.INSTR_IOR:
-                    p = (boolean) operands[sp - 1];
-                    q = (boolean) operands[sp];
+                    a = (Integer) operands[sp - 1];
+                    b = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = p || q;
+                    operands[++sp] = a | b;
                     break;
                 case BytecodeDefinition.INSTR_FADD:
                     e = (Float) operands[sp - 1];
@@ -232,6 +238,15 @@ public class VMInterpreter {
                     f = (Float) operands[sp];
                     sp -= 2;
                     operands[++sp] = e * f;
+                    break;
+                case BytecodeDefinition.INSTR_FDIV:
+                    e = (Float) operands[sp - 1];
+                    f = (Float) operands[sp];
+                    sp -= 2;
+                    if (f == 0.0f) {
+                        throw new RuntimeException("Division by zero");
+                    }
+                    operands[++sp] = e / f;
                     break;
                 case BytecodeDefinition.INSTR_FLT:
                     e = (Float) operands[sp - 1];

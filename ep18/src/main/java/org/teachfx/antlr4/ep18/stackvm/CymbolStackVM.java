@@ -9,13 +9,14 @@ import java.util.Arrays;
 public class CymbolStackVM {
     // 虚拟机配置
     private final VMConfig config;
-    
+    private final VMStats stats;   // 性能统计
+
     // 运行时数据结构
     private int[] stack;           // 操作数栈
     private int stackPointer;      // 栈指针
     private int[] heap;            // 堆内存
     private int[] instructionCache; // 指令缓存
-    
+
     // 执行状态
     private boolean running;
     private int programCounter;    // 程序计数器
@@ -29,6 +30,7 @@ public class CymbolStackVM {
             throw new IllegalArgumentException("VMConfig cannot be null");
         }
         this.config = config;
+        this.stats = new VMStats();
         initializeVM();
     }
     
@@ -66,26 +68,44 @@ public class CymbolStackVM {
         if (bytecode == null || bytecode.length == 0) {
             throw new IllegalArgumentException("Bytecode cannot be null or empty");
         }
-        
+
+        long startTime = System.nanoTime();
+        long startMemory = getUsedMemory();
+
         // 加载字节码到指令缓存
         loadBytecode(bytecode);
-        
+
         // 开始执行
         this.running = true;
         this.programCounter = 0;
-        
+
         try {
             while (running && programCounter < instructionCache.length) {
                 // 获取当前指令
                 int instruction = instructionCache[programCounter++];
-                
+
                 // 执行指令
                 executeInstruction(instruction);
             }
-            
+
             // 返回栈顶值作为结果
-            return stackPointer > 0 ? stack[stackPointer - 1] : 0;
+            int result = stackPointer > 0 ? stack[stackPointer - 1] : 0;
+
+            // 记录性能统计
+            long endTime = System.nanoTime();
+            long endMemory = getUsedMemory();
+            stats.recordExecution(startTime);
+            stats.recordMemoryUsage(endMemory);
+
+            if (config.isDebugMode()) {
+                System.out.println("Execution completed successfully");
+            }
+
+            return result;
         } catch (Exception e) {
+            // 记录错误统计
+            stats.recordError(e);
+
             if (config.isVerboseErrors()) {
                 System.err.println("VM execution error at PC=" + (programCounter - 1) + ": " + e.getMessage());
             }
@@ -121,16 +141,180 @@ public class CymbolStackVM {
      * @throws Exception 执行异常
      */
     private void executeInstruction(int instruction) throws Exception {
-        // TODO: 实现具体的指令执行逻辑
-        // 这里需要根据VMAssembler.g4中定义的指令集来实现
-        
+        // 提取操作码（高8位）
+        int opcode = (instruction >> 24) & 0xFF;
+
         if (config.isTraceEnabled()) {
-            System.out.println("Executing instruction at PC=" + (programCounter - 1) + ": 0x" +
-                             Integer.toHexString(instruction));
+            System.out.println("Executing instruction at PC=" + (programCounter - 1) +
+                             ": opcode=0x" + Integer.toHexString(opcode) +
+                             ", instruction=0x" + Integer.toHexString(instruction));
         }
-        
-        // 临时实现：简单返回，实际应该根据指令操作码进行分发
-        throw new UnsupportedOperationException("Instruction execution not yet implemented");
+
+        // 根据操作码执行指令
+        switch (opcode) {
+            case BytecodeDefinition.INSTR_IADD:
+                executeIAdd();
+                break;
+            case BytecodeDefinition.INSTR_ISUB:
+                executeISub();
+                break;
+            case BytecodeDefinition.INSTR_IMUL:
+                executeIMul();
+                break;
+            case BytecodeDefinition.INSTR_IDIV:
+                executeIDiv();
+                break;
+            case BytecodeDefinition.INSTR_ILT:
+                executeILt();
+                break;
+            case BytecodeDefinition.INSTR_ILE:
+                executeILe();
+                break;
+            case BytecodeDefinition.INSTR_IGT:
+                executeIGt();
+                break;
+            case BytecodeDefinition.INSTR_IGE:
+                executeIGe();
+                break;
+            case BytecodeDefinition.INSTR_IEQ:
+                executeIEq();
+                break;
+            case BytecodeDefinition.INSTR_INE:
+                executeINe();
+                break;
+            case BytecodeDefinition.INSTR_INEG:
+                executeINeg();
+                break;
+            case BytecodeDefinition.INSTR_INOT:
+                executeINot();
+                break;
+            case BytecodeDefinition.INSTR_IAND:
+                executeIAnd();
+                break;
+            case BytecodeDefinition.INSTR_IOR:
+                executeIOr();
+                break;
+            case BytecodeDefinition.INSTR_IXOR:
+                executeIXor();
+                break;
+            case BytecodeDefinition.INSTR_ICONST:
+                executeIConst(instruction);
+                break;
+            case BytecodeDefinition.INSTR_HALT:
+                executeHalt();
+                break;
+            default:
+                throw new UnsupportedOperationException(
+                    "Unsupported opcode: 0x" + Integer.toHexString(opcode) +
+                    " at PC=" + (programCounter - 1));
+        }
+    }
+
+    // 指令执行方法实现
+
+    private void executeIAdd() {
+        int b = pop();
+        int a = pop();
+        push(a + b);
+    }
+
+    private void executeISub() {
+        int b = pop();
+        int a = pop();
+        push(a - b);
+    }
+
+    private void executeIMul() {
+        int b = pop();
+        int a = pop();
+        push(a * b);
+    }
+
+    private void executeIDiv() {
+        int b = pop();
+        int a = pop();
+        if (b == 0) {
+            throw new VMDivisionByZeroException(programCounter - 1, "IDIV");
+        }
+        push(a / b);
+    }
+
+    private void executeILt() {
+        int b = pop();
+        int a = pop();
+        push(a < b ? 1 : 0);
+    }
+
+    private void executeILe() {
+        int b = pop();
+        int a = pop();
+        push(a <= b ? 1 : 0);
+    }
+
+    private void executeIGt() {
+        int b = pop();
+        int a = pop();
+        push(a > b ? 1 : 0);
+    }
+
+    private void executeIGe() {
+        int b = pop();
+        int a = pop();
+        push(a >= b ? 1 : 0);
+    }
+
+    private void executeIEq() {
+        int b = pop();
+        int a = pop();
+        push(a == b ? 1 : 0);
+    }
+
+    private void executeINe() {
+        int b = pop();
+        int a = pop();
+        push(a != b ? 1 : 0);
+    }
+
+    private void executeINeg() {
+        int a = pop();
+        push(-a);
+    }
+
+    private void executeINot() {
+        int a = pop();
+        push(a == 0 ? 1 : 0);
+    }
+
+    private void executeIAnd() {
+        int b = pop();
+        int a = pop();
+        push(a & b);
+    }
+
+    private void executeIOr() {
+        int b = pop();
+        int a = pop();
+        push(a | b);
+    }
+
+    private void executeIXor() {
+        int b = pop();
+        int a = pop();
+        push(a ^ b);
+    }
+
+    private void executeIConst(int instruction) {
+        // 提取常量值（低24位）
+        int value = instruction & 0xFFFFFF;
+        // 处理符号扩展（如果最高位是1，则为负数）
+        if ((value & 0x800000) != 0) {
+            value |= 0xFF000000; // 符号扩展
+        }
+        push(value);
+    }
+
+    private void executeHalt() {
+        this.running = false;
     }
     
     /**
@@ -166,13 +350,6 @@ public class CymbolStackVM {
         return stack[stackPointer - 1];
     }
     
-    /**
-     * 获取虚拟机配置
-     * @return 配置
-     */
-    public VMConfig getConfig() {
-        return config;
-    }
     
     /**
      * 检查虚拟机是否正在运行
@@ -187,5 +364,46 @@ public class CymbolStackVM {
      */
     public void stop() {
         this.running = false;
+    }
+
+    /**
+     * 获取虚拟机统计信息
+     * @return 统计信息
+     */
+    public VMStats getStats() {
+        return stats;
+    }
+
+    /**
+     * 获取已使用的内存量
+     * @return 已使用的内存（字节）
+     */
+    private long getUsedMemory() {
+        Runtime runtime = Runtime.getRuntime();
+        return runtime.totalMemory() - runtime.freeMemory();
+    }
+
+    /**
+     * 获取栈深度
+     * @return 当前栈深度
+     */
+    public int getStackDepth() {
+        return stackPointer;
+    }
+
+    /**
+     * 检查栈是否为空
+     * @return 是否为空
+     */
+    public boolean isStackEmpty() {
+        return stackPointer <= 0;
+    }
+
+    /**
+     * 获取配置
+     * @return 配置对象
+     */
+    public VMConfig getConfig() {
+        return config;
     }
 }

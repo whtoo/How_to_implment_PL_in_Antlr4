@@ -55,7 +55,7 @@ public abstract class VMTestBase {
     protected byte[] createBytecode(int[] instructions) {
         byte[] bytecode = new byte[instructions.length * 4]; // 每个指令占4字节
         int index = 0;
-        
+
         for (int instr : instructions) {
             // 将整数转换为字节（大端序）
             bytecode[index++] = (byte) ((instr >> 24) & 0xFF);
@@ -63,8 +63,27 @@ public abstract class VMTestBase {
             bytecode[index++] = (byte) ((instr >> 8) & 0xFF);
             bytecode[index++] = (byte) (instr & 0xFF);
         }
-        
+
         return bytecode;
+    }
+
+    /**
+     * 编码指令
+     * @param opcode 操作码
+     * @param param 参数（可选）
+     * @return 编码后的指令
+     */
+    protected int encodeInstruction(int opcode, int param) {
+        return (opcode << 24) | (param & 0xFFFFFF);
+    }
+
+    /**
+     * 编码无参数指令
+     * @param opcode 操作码
+     * @return 编码后的指令
+     */
+    protected int encodeInstruction(int opcode) {
+        return opcode << 24;
     }
     
     /**

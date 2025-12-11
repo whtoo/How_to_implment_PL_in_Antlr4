@@ -183,9 +183,9 @@ public class VMInterpreterTest {
         String program = """
             .def main: args=0, locals=2
                 iconst 0
-                store 0  // i = 0
+                store 0  ; i = 0
                 iconst 0
-                store 1  // sum = 0
+                store 1  ; sum = 0
             loop_start:
                 load 0
                 iconst 10
@@ -194,11 +194,11 @@ public class VMInterpreterTest {
                 load 1
                 load 0
                 iadd
-                store 1  // sum += i
+                store 1  ; sum += i
                 load 0
                 iconst 1
                 iadd
-                store 0  // i++
+                store 0  ; i++
                 br loop_start
             loop_end:
                 load 1

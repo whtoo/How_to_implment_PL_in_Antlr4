@@ -119,168 +119,176 @@ public class VMInterpreter {
         StackFrame f = new StackFrame(mainFunction, -1);
         calls[++fp] = f;
         ip = mainFunction.address;
+        // 初始化所有局部变量为0
+        for (int i = 0; i < mainFunction.nlocals; i++) {
+            f.locals[i] = 0;
+        }
         cpu();
     }
 
     // simulation by software
     protected void cpu() {
-        Object v = null;
-        int a, b;
-        float e, f;
-        boolean p,q;
-        int addr = 0;
-        short opcode = code[ip];
-        while (opcode != BytecodeDefinition.INSTR_HALT && ip < codeSize) {
-            if (trace)
+        int addr = 0; // Declare addr here for branch instructions
+        while (ip < codeSize) {
+            short opcode = code[ip];
+
+            if (trace) {
                 trace();
-            ip++;
+            }
+
+            ip++; // Advance to next byte position after opcode
+
             switch (opcode) {
                 case BytecodeDefinition.INSTR_IADD:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int a1 = (Integer) operands[sp - 1];
+                    int a2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a + b;
+                    operands[++sp] = a1 + a2;
                     break;
                 case BytecodeDefinition.INSTR_ISUB:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int b1 = (Integer) operands[sp - 1];
+                    int b2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a - b;
+                    operands[++sp] = b1 - b2;
                     break;
                 case BytecodeDefinition.INSTR_IMUL:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int c1 = (Integer) operands[sp - 1];
+                    int c2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a * b;
+                    operands[++sp] = c1 * c2;
                     break;
                 case BytecodeDefinition.INSTR_ILT:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int d1 = (Integer) operands[sp - 1];
+                    int d2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a < b;
+                    operands[++sp] = d1 < d2;
                     break;
                 case BytecodeDefinition.INSTR_IGT:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int e1 = (Integer) operands[sp - 1];
+                    int e2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a > b;
+                    operands[++sp] = e1 > e2;
                     break;
                 case BytecodeDefinition.INSTR_IDIV:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int f1 = (Integer) operands[sp - 1];
+                    int f2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a / b;
+                    if (f2 == 0) {
+                        throw new RuntimeException("Division by zero at PC=" + (ip - 1) + " (instruction=IDIV)");
+                    }
+                    operands[++sp] = f1 / f2;
                     break;
                 case BytecodeDefinition.INSTR_INEG:
-                    a = (Integer) operands[sp--];
-                    operands[++sp] = -a;
+                    int g = (Integer) operands[sp--];
+                    operands[++sp] = -g;
                     break;
                 case BytecodeDefinition.INSTR_IEQ:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int h1 = (Integer) operands[sp - 1];
+                    int h2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a == b;
+                    operands[++sp] = h1 == h2;
                     break;
                 case BytecodeDefinition.INSTR_ILE:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int i1 = (Integer) operands[sp - 1];
+                    int i2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a <= b;
+                    operands[++sp] = i1 <= i2;
                     break;
                 case BytecodeDefinition.INSTR_IGE:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int j1 = (Integer) operands[sp - 1];
+                    int j2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = (a >= b);
+                    operands[++sp] = j1 >= j2;
                     break;
                 case BytecodeDefinition.INSTR_INE:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int k1 = (Integer) operands[sp - 1];
+                    int k2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a != b;
+                    operands[++sp] = k1 != k2;
                     break;
                 case BytecodeDefinition.INSTR_INOT:
-                    p = (boolean)operands[sp--];
-                    operands[++sp] = !p;
+                    boolean l = (Boolean) operands[sp--];
+                    operands[++sp] = !l;
                     break;
                 case BytecodeDefinition.INSTR_IXOR:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int m1 = (Integer) operands[sp - 1];
+                    int m2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a ^ b;
+                    operands[++sp] = m1 ^ m2;
                     break;
                 case BytecodeDefinition.INSTR_IAND:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int n1 = (Integer) operands[sp - 1];
+                    int n2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a & b;
+                    operands[++sp] = n1 & n2;
                     break;
                 case BytecodeDefinition.INSTR_IOR:
-                    a = (Integer) operands[sp - 1];
-                    b = (Integer) operands[sp];
+                    int o1 = (Integer) operands[sp - 1];
+                    int o2 = (Integer) operands[sp];
                     sp -= 2;
-                    operands[++sp] = a | b;
+                    operands[++sp] = o1 | o2;
                     break;
                 case BytecodeDefinition.INSTR_FADD:
-                    e = (Float) operands[sp - 1];
-                    f = (Float) operands[sp];
+                    float p1 = (Float) operands[sp - 1];
+                    float p2 = (Float) operands[sp];
                     sp -= 2;
-                    operands[++sp] = e + f;
+                    operands[++sp] = p1 + p2;
                     break;
                 case BytecodeDefinition.INSTR_FSUB:
-                    e = (Float) operands[sp - 1];
-                    f = (Float) operands[sp];
+                    float q1 = (Float) operands[sp - 1];
+                    float q2 = (Float) operands[sp];
                     sp -= 2;
-                    operands[++sp] = e - f;
+                    operands[++sp] = q1 - q2;
                     break;
                 case BytecodeDefinition.INSTR_FMUL:
-                    e = (Float) operands[sp - 1];
-                    f = (Float) operands[sp];
+                    float r1 = (Float) operands[sp - 1];
+                    float r2 = (Float) operands[sp];
                     sp -= 2;
-                    operands[++sp] = e * f;
+                    operands[++sp] = r1 * r2;
                     break;
                 case BytecodeDefinition.INSTR_FDIV:
-                    e = (Float) operands[sp - 1];
-                    f = (Float) operands[sp];
+                    float s1 = (Float) operands[sp - 1];
+                    float s2 = (Float) operands[sp];
                     sp -= 2;
-                    if (f == 0.0f) {
+                    if (s2 == 0.0f) {
                         throw new RuntimeException("Division by zero");
                     }
-                    operands[++sp] = e / f;
+                    operands[++sp] = s1 / s2;
                     break;
                 case BytecodeDefinition.INSTR_FLT:
-                    e = (Float) operands[sp - 1];
-                    f = (Float) operands[sp];
+                    float t1 = (Float) operands[sp - 1];
+                    float t2 = (Float) operands[sp];
                     sp -= 2;
-                    operands[++sp] = e < f;
+                    operands[++sp] = t1 < t2;
                     break;
                 case BytecodeDefinition.INSTR_FEQ:
-                    e = (Float) operands[sp - 1];
-                    f = (Float) operands[sp];
+                    float u1 = (Float) operands[sp - 1];
+                    float u2 = (Float) operands[sp];
                     sp -= 2;
-                    operands[++sp] = e == f;
+                    operands[++sp] = u1 == u2;
                     break;
                 case BytecodeDefinition.INSTR_ITOF:
-                    a = (Integer) operands[sp--];
-                    operands[++sp] = (float) a;
+                    int v = (Integer) operands[sp--];
+                    operands[++sp] = (float) v;
                     break;
                 case BytecodeDefinition.INSTR_RET:
                     StackFrame fr = calls[fp--];
                     ip = fr.returnAddress;
                     break;
-
                 case BytecodeDefinition.INSTR_BR:
                     ip = getIntOperand();
                     break;
                 case BytecodeDefinition.INSTR_BRT:
                     addr = getIntOperand();
-                    if (operands[sp--].equals(true))
+                    if ((Boolean) operands[sp--]) {
                         ip = addr;
+                    }
                     break;
                 case BytecodeDefinition.INSTR_BRF:
                     addr = getIntOperand();
-                    if (operands[sp--].equals(false))
+                    if (!(Boolean) operands[sp--]) {
                         ip = addr;
+                    }
                     break;
                 case BytecodeDefinition.INSTR_CALL:
                     int functionConstPoolIndex = getIntOperand();
@@ -290,27 +298,24 @@ public class VMInterpreter {
                     operands[++sp] = (char) getIntOperand();
                     break;
                 case BytecodeDefinition.INSTR_ICONST:
-                    operands[++sp] = getIntOperand(); // push operand
+                    operands[++sp] = getIntOperand();
                     break;
                 case BytecodeDefinition.INSTR_FCONST:
                 case BytecodeDefinition.INSTR_SCONST:
                     int constPoolIndex = getIntOperand();
                     operands[++sp] = constPool[constPoolIndex];
                     break;
-
-                case BytecodeDefinition.INSTR_LOAD: // load from call stack
-                    addr = getIntOperand();
-                    operands[++sp] = calls[fp].locals[addr];
+                case BytecodeDefinition.INSTR_LOAD:
+                    int loadAddr = getIntOperand();
+                    operands[++sp] = calls[fp].locals[loadAddr];
                     break;
-
                 case BytecodeDefinition.INSTR_STORE:
-                    addr = getIntOperand();
-                    calls[fp].locals[addr] = operands[sp--];
+                    int storeAddr = getIntOperand();
+                    calls[fp].locals[storeAddr] = operands[sp--];
                     break;
-
-                case BytecodeDefinition.INSTR_GLOAD:// load from global memory
-                    addr = getIntOperand();
-                    operands[++sp] = globals[addr];
+                case BytecodeDefinition.INSTR_GLOAD:
+                    int gloadAddr = getIntOperand();
+                    operands[++sp] = globals[gloadAddr];
                     break;
                 case BytecodeDefinition.INSTR_FLOAD:
                     StructSpace struct = (StructSpace) operands[sp--];
@@ -318,14 +323,14 @@ public class VMInterpreter {
                     operands[++sp] = struct.fields[fieldOffset];
                     break;
                 case BytecodeDefinition.INSTR_GSTORE:
-                    addr = getIntOperand();
-                    globals[addr] = operands[sp--];
+                    int gstoreAddr = getIntOperand();
+                    globals[gstoreAddr] = operands[sp--];
                     break;
                 case BytecodeDefinition.INSTR_FSTORE:
                     struct = (StructSpace) operands[sp--];
-                    v = operands[sp--];
+                    Object val = operands[sp--];
                     fieldOffset = getIntOperand();
-                    struct.fields[fieldOffset] = v;
+                    struct.fields[fieldOffset] = val;
                     break;
                 case BytecodeDefinition.INSTR_PRINT:
                     System.out.println(operands[sp--]);
@@ -340,16 +345,12 @@ public class VMInterpreter {
                 case BytecodeDefinition.INSTR_POP:
                     --sp;
                     break;
+                case BytecodeDefinition.INSTR_HALT:
+                    return;
                 default:
                     throw new Error("invalid opcode: " + opcode + " at ip=" + (ip - 1));
             }
-            if (ip < codeSize) {
-                opcode = code[ip];
-            } else {
-                break;
-            }
         }
-
     }
 
     protected void call(int functionConstPoolIndex) {

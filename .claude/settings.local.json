@@ -4,7 +4,10 @@
       "Bash(mvn clean:*)",
       "Bash(mvn test:*)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(mvn compile exec:java:*)",
+      "Bash(java:*)",
+      "Bash(target/test-classes:*)"
     ]
   }
 }

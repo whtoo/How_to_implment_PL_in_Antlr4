@@ -5,8 +5,10 @@ import org.teachfx.antlr4.ep18.parser.VMAssemblerBaseListener;
 import org.teachfx.antlr4.ep18.parser.VMAssemblerParser;
 import org.teachfx.antlr4.ep18.parser.VMAssemblerParser.FunctionDeclarationContext;
 import org.teachfx.antlr4.ep18.parser.VMAssemblerParser.GlobalsContext;
+import org.teachfx.antlr4.ep18.parser.VMAssemblerParser.GlobalVariableContext;
 import org.teachfx.antlr4.ep18.parser.VMAssemblerParser.InstrContext;
 import org.teachfx.antlr4.ep18.parser.VMAssemblerParser.LabelContext;
+import org.teachfx.antlr4.ep18.parser.VMAssemblerParser.TempContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +31,9 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
     protected List<Object> constPool = new ArrayList<Object>();
     protected Map<String, Integer> instructionOpcodeMapping = new HashMap<String, Integer>();
     protected Map<String, LabelSymbol> labels = new HashMap<String, LabelSymbol>();
+    protected Map<String, Integer> globalVariables = new HashMap<String, Integer>(); // Map of global variable names to addresses
     private byte[] code = new byte[INITIAL_CODE_SIZE];
+    protected boolean hasErrors = false;
 
 
     public ByteCodeAssembler(BytecodeDefinition.Instruction[] instructions) {
@@ -55,7 +59,10 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
     }
 
     public byte[] getMachineCode() {
-        return code;
+        // Return a properly-sized array instead of the potentially oversized internal buffer
+        byte[] result = new byte[ip];
+        System.arraycopy(code, 0, result, 0, ip);
+        return result;
     }
 
     public int getCodeMemorySize() {
@@ -75,6 +82,7 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
         Integer opCodeI = instructionOpcodeMapping.get(instructionName);
         if (opCodeI == null) {
             System.err.println("line " + instrToken.getLine() + ": Unknown instruction: " + instructionName);
+            hasErrors = true;
             return;
         }
 
@@ -119,7 +127,14 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
                 v = getConstantPoolIndex(String.valueOf(text));
                 break;
             case ID:
-                v = getLabelAddress(text);
+                // First check if it's a global variable
+                Integer globalAddr = globalVariables.get(text);
+                if (globalAddr != null) {
+                    v = globalAddr;
+                } else {
+                    // Otherwise treat it as a label
+                    v = getLabelAddress(text);
+                }
                 break;
             case FUNC:
                 v = getFunctionIndex(text);
@@ -141,6 +156,15 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
 
     public Object[] getConstantPool() {
         return constPool.toArray();
+    }
+
+    public Map<String, Integer> getGlobalVariables() {
+        return new HashMap<>(globalVariables);
+    }
+
+    public boolean hasErrors() {
+        checkForUnresolvedReferences();
+        return hasErrors;
     }
 
     protected int getRegisterNumber(Token rToken) {
@@ -184,7 +208,11 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
     protected void defineFunction(Token idToken, int args, int locals) {
         String name = idToken.getText();
         FunctionSymbol f = new FunctionSymbol(name, args, locals, ip);
-        if (name.equals("main")) mainFunction = f;
+
+        // Set mainFunction as soon as we encounter main
+        if (name.equals("main")) {
+            mainFunction = f;
+        }
 
         if (constPool.contains(f)) constPool.set(constPool.indexOf(f), f);
         else getConstantPoolIndex(f);
@@ -230,27 +258,36 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
     }
 
     @Override
+    public void exitGlobalVariable(GlobalVariableContext ctx) {
+        // Allocate space for global variable
+        String varName = ctx.name.getText();
+        globalVariables.put(varName, dataSize++);
+    }
+
+    @Override
     public void exitFunctionDeclaration(FunctionDeclarationContext ctx) {
         defineFunction(ctx.name, Integer.valueOf(ctx.a.getText()), Integer.valueOf(ctx.lo.getText()));
     }
 
     @Override
     public void exitInstr(InstrContext ctx) {
-        switch (ctx.children.size()) {
-            case 2:
+        if (ctx.op == null) return;
+
+        List<TempContext> temps = ctx.temp();
+        switch (temps.size()) {
+            case 0:
                 gen(ctx.op);
                 break;
+            case 1:
+                gen(ctx.op, temps.get(0).start);
+                break;
+            case 2:
+                gen(ctx.op, temps.get(0).start, temps.get(1).start);
+                break;
             case 3:
-                gen(ctx.op, ctx.a.start);
-                break;
-            case 4:
-                gen(ctx.op, ctx.a.start, ctx.b.start);
-                break;
-            case 5:
-                gen(ctx.op, ctx.a.start, ctx.b.start, ctx.c.start);
+                gen(ctx.op, temps.get(0).start, temps.get(1).start, temps.get(2).start);
                 break;
         }
-
     }
 
     @Override

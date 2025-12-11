@@ -35,7 +35,7 @@ public class VMInterpreterTest {
         boolean hasErrors = VMInterpreter.load(interpreter, input);
         assertThat(hasErrors).isFalse();
 
-        // 执行程序
+        // Execute program
         interpreter.exec();
 
         // 验证结果（栈顶应该包含30）
@@ -212,6 +212,7 @@ public class VMInterpreterTest {
         interpreter.exec();
 
         // sum(0..9) = 45
+        assertThat(interpreter.sp).isGreaterThanOrEqualTo(0);
         assertThat(interpreter.operands[interpreter.sp]).isEqualTo(45);
     }
 

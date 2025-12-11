@@ -43,6 +43,18 @@ public class VMAssemblerBaseListener implements VMAssemblerListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterGlobalVariable(VMAssemblerParser.GlobalVariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitGlobalVariable(VMAssemblerParser.GlobalVariableContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterFunctionDeclaration(VMAssemblerParser.FunctionDeclarationContext ctx) { }
 	/**
 	 * {@inheritDoc}

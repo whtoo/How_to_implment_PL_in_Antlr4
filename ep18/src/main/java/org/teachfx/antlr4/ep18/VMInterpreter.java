@@ -103,7 +103,7 @@ public class VMInterpreter {
             interp.globals = new Object[assembler.getDataSize()];
             interp.disasm = new DisAssembler(interp.code, interp.codeSize, interp.constPool);
 
-            hasErrors = parser.getNumberOfSyntaxErrors() > 0;
+            hasErrors = parser.getNumberOfSyntaxErrors() > 0 || assembler.hasErrors();
         }
         return hasErrors;
     }
@@ -343,7 +343,11 @@ public class VMInterpreter {
                 default:
                     throw new Error("invalid opcode: " + opcode + " at ip=" + (ip - 1));
             }
-            opcode = code[ip];
+            if (ip < codeSize) {
+                opcode = code[ip];
+            } else {
+                break;
+            }
         }
 
     }

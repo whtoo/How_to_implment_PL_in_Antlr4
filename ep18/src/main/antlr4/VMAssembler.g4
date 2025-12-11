@@ -4,14 +4,17 @@ grammar VMAssembler;
 package org.teachfx.antlr4.ep18.parser;
 }
 program
-    :   globals?
+    :   ( globalVariable | globals )?
         ( functionDeclaration | instr | label | NEWLINE )+
     ;
-   
+
 // how much data space
 // START: data
 globals : NEWLINE* '.globals' intVal=INT NEWLINE ;
 // END: data
+
+// global variable declaration: .global int g_var
+globalVariable : '.global' type=ID name=ID NEWLINE;
 
 //  .def fact: args=1, locals=0
 // START: func

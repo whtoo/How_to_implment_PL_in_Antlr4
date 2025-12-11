@@ -25,6 +25,12 @@ public interface VMAssemblerVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitGlobals(VMAssemblerParser.GlobalsContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link VMAssemblerParser#globalVariable}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGlobalVariable(VMAssemblerParser.GlobalVariableContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link VMAssemblerParser#functionDeclaration}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

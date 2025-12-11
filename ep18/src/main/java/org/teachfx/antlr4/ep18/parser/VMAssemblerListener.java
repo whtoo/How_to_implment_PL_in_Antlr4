@@ -30,6 +30,16 @@ public interface VMAssemblerListener extends ParseTreeListener {
 	 */
 	void exitGlobals(VMAssemblerParser.GlobalsContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link VMAssemblerParser#globalVariable}.
+	 * @param ctx the parse tree
+	 */
+	void enterGlobalVariable(VMAssemblerParser.GlobalVariableContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link VMAssemblerParser#globalVariable}.
+	 * @param ctx the parse tree
+	 */
+	void exitGlobalVariable(VMAssemblerParser.GlobalVariableContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link VMAssemblerParser#functionDeclaration}.
 	 * @param ctx the parse tree
 	 */

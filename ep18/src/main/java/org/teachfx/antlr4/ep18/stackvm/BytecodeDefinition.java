@@ -61,50 +61,49 @@ public class BytecodeDefinition {
 
     // all instructions
     public static Instruction[] instructions = new Instruction[]{
-            null, // <INVALID>
-            new Instruction("iadd"), // index is the opcode
-            new Instruction("isub"),
-            new Instruction("imul"),
-            new Instruction("idiv"),
-            new Instruction("ilt"),
-            new Instruction("ile"),
-            new Instruction("igt"),
-            new Instruction("ige"),
-            new Instruction("ieq"),
-            new Instruction("ine"),
-            new Instruction("ineg"),
-            new Instruction("inot"),
-            new Instruction("iand"),
-            new Instruction("ior"),
-            new Instruction("ixor"),
-            new Instruction("fadd"),
-            new Instruction("fsub"),
-            new Instruction("fmul"),
-            new Instruction("fdiv"),
-            new Instruction("flt"),
-            new Instruction("feq"),
-            new Instruction("ixor"),
-            new Instruction("itof"),
-            new Instruction("call", FUNC),
-            new Instruction("ret"),
-            new Instruction("br", INT),
-            new Instruction("brt", INT),
-            new Instruction("brf", INT),
-            new Instruction("cconst", INT),
-            new Instruction("iconst", INT),
-            new Instruction("fconst", POOL),
-            new Instruction("sconst", POOL),
-            new Instruction("load", INT),
-            new Instruction("gload", INT),
-            new Instruction("fload", INT),
-            new Instruction("store", INT),
-            new Instruction("gstore", INT),
-            new Instruction("fstore", INT),
-            new Instruction("print"),
-            new Instruction("struct", INT),
-            new Instruction("null"),
-            new Instruction("pop"),
-            new Instruction("halt"),
+            null, // <INVALID> - index 0
+            new Instruction("iadd"), // index 1
+            new Instruction("isub"), // index 2
+            new Instruction("imul"), // index 3
+            new Instruction("idiv"), // index 4
+            new Instruction("ilt"), // index 5
+            new Instruction("ile"), // index 6
+            new Instruction("igt"), // index 7
+            new Instruction("ige"), // index 8
+            new Instruction("ieq"), // index 9
+            new Instruction("ine"), // index 10
+            new Instruction("ineg"), // index 11
+            new Instruction("inot"), // index 12
+            new Instruction("iand"), // index 13
+            new Instruction("ior"), // index 14
+            new Instruction("ixor"), // index 15
+            new Instruction("fadd"), // index 16
+            new Instruction("fsub"), // index 17
+            new Instruction("fmul"), // index 18
+            new Instruction("fdiv"), // index 19
+            new Instruction("flt"), // index 20
+            new Instruction("feq"), // index 21
+            new Instruction("itof"), // index 22 - FIXED: was "ixor"
+            new Instruction("call", FUNC), // index 23
+            new Instruction("ret"), // index 24
+            new Instruction("br", INT), // index 25
+            new Instruction("brt", INT), // index 26
+            new Instruction("brf", INT), // index 27
+            new Instruction("cconst", INT), // index 28
+            new Instruction("iconst", INT), // index 29
+            new Instruction("fconst", POOL), // index 30
+            new Instruction("sconst", POOL), // index 31
+            new Instruction("load", INT), // index 32
+            new Instruction("gload", INT), // index 33
+            new Instruction("fload", INT), // index 34
+            new Instruction("store", INT), // index 35
+            new Instruction("gstore", INT), // index 36
+            new Instruction("fstore", INT), // index 37
+            new Instruction("print"), // index 38
+            new Instruction("struct", INT), // index 39
+            new Instruction("null"), // index 40
+            new Instruction("pop"), // index 41
+            new Instruction("halt"), // index 42
     };
 
     public static class Instruction {

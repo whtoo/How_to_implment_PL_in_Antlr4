@@ -25,6 +25,13 @@ public class CymbolStackVM {
     private boolean stepMode;                   // 单步执行模式
     private boolean waitingForStep;             // 等待单步执行
 
+    // 堆分配指针
+    private int heapAllocPointer;  // 下一个可用堆地址
+
+    // 结构体管理（统一表示适配层）
+    private java.util.List<StructValue> structTable;  // 结构体实例表
+    private int nextStructId;  // 下一个结构体ID（0保留给null）
+
     // 执行状态
     private boolean running;
     private int programCounter;    // 程序计数器
@@ -48,6 +55,11 @@ public class CymbolStackVM {
     private void initializeVM() {
         // 初始化堆内存
         this.heap = new int[config.getHeapSize()];
+        this.heapAllocPointer = 0;
+
+        // 初始化结构体管理
+        this.structTable = new java.util.ArrayList<>();
+        this.nextStructId = 1; // 0保留给null引用
 
         // 初始化操作数栈
         this.stack = new int[config.getStackSize()];
@@ -183,6 +195,31 @@ public class CymbolStackVM {
     }
 
     /**
+     * 将int值转换为Object（用于StructValue字段存储）
+     * @param value int值
+     * @return Object值（Integer或null）
+     */
+    private Object intToValue(int value) {
+        return value; // int自动装箱为Integer
+    }
+
+    /**
+     * 将Object值转换为int（用于从StructValue字段加载）
+     * @param obj Object值
+     * @return int值
+     * @throws ClassCastException 如果obj不是Integer
+     */
+    private int valueToInt(Object obj) {
+        if (obj == null) {
+            return 0; // null视为0
+        }
+        if (obj instanceof Integer) {
+            return (Integer) obj;
+        }
+        throw new ClassCastException("Expected Integer but got: " + obj.getClass());
+    }
+
+    /**
      * 执行单条指令
      * @param instruction 指令
      * @throws Exception 执行异常
@@ -304,6 +341,18 @@ public class CymbolStackVM {
             case BytecodeDefinition.INSTR_RET:
                 executeRet();
                 break;
+            case BytecodeDefinition.INSTR_STRUCT:
+                executeStruct(instruction);
+                break;
+            case BytecodeDefinition.INSTR_NULL:
+                executeNull();
+                break;
+            case BytecodeDefinition.INSTR_POP:
+                executePop();
+                break;
+            case BytecodeDefinition.INSTR_PRINT:
+                executePrint();
+                break;
             default:
                 throw new UnsupportedOperationException(
                     "Unsupported opcode: 0x" + Integer.toHexString(opcode) +
@@ -312,6 +361,41 @@ public class CymbolStackVM {
     }
 
     // 指令执行方法实现
+
+    private void executeStruct(int instruction) {
+        int nfields = extractOperand(instruction);
+        // 保持向后兼容性：检查堆空间是否足够（模拟原有行为）
+        if (heapAllocPointer + nfields > heap.length) {
+            throw new OutOfMemoryError("Not enough heap space for struct with " + nfields + " fields");
+        }
+        // 创建StructValue实例
+        StructValue struct = new StructValue(nfields);
+        // 初始化字段为0（Integer）
+        for (int i = 0; i < nfields; i++) {
+            struct.setField(i, 0); // int自动装箱为Integer
+        }
+        // 添加到结构体表并分配ID
+        structTable.add(struct);
+        int structId = nextStructId++;
+        // 压入结构体ID（兼容现有代码）
+        push(structId);
+        // 更新堆分配指针以模拟堆分配（保持兼容性）
+        heapAllocPointer += nfields;
+    }
+
+    private void executeNull() {
+        // 将0作为null引用压入栈
+        push(0);
+    }
+
+    private void executePop() {
+        pop(); // 直接弹出，忽略值
+    }
+
+    private void executePrint() {
+        int value = pop();
+        System.out.println(value);
+    }
 
     private void executeIAdd() {
         int b = pop();
@@ -474,15 +558,34 @@ public class CymbolStackVM {
     private void executeFload(int instruction) {
         // FLOAD: 从结构体加载字段
         // 操作数：字段偏移量
-        // 栈顶：结构体引用（这里简化为整数索引）
+        // 栈顶：结构体引用（可能是ID或堆地址）
         int fieldOffset = extractOperand(instruction);
-        int structRef = pop(); // 结构体引用（假设为堆中的起始地址）
-        // 简化实现：将结构体视为堆中的连续整数数组
-        int actualAddress = structRef + fieldOffset;
-        if (actualAddress < 0 || actualAddress >= heap.length) {
-            throw new IndexOutOfBoundsException("Struct field address out of bounds: " + actualAddress);
+        int structRef = pop(); // 结构体引用
+
+        // 检查null引用（0表示null）
+        if (structRef == 0) {
+            throw new NullPointerException("Null struct reference in FLOAD");
         }
-        push(heap[actualAddress]);
+
+        // 判断structRef是结构体ID还是堆地址
+        // 结构体ID从1开始，且ID-1必须在structTable范围内
+        int structIndex = structRef - 1;
+        if (structIndex >= 0 && structIndex < structTable.size()) {
+            // 有效的结构体ID：使用StructValue
+            StructValue struct = structTable.get(structIndex);
+            Object fieldValue = struct.getField(fieldOffset);
+            int intValue = valueToInt(fieldValue);
+            push(intValue);
+        } else if (structRef >= 0 && structRef < heap.length) {
+            // 堆地址：回退到原有堆访问逻辑（保持兼容性）
+            int actualAddress = structRef + fieldOffset;
+            if (actualAddress < 0 || actualAddress >= heap.length) {
+                throw new IndexOutOfBoundsException("Struct field address out of bounds: " + actualAddress);
+            }
+            push(heap[actualAddress]);
+        } else {
+            throw new IndexOutOfBoundsException("Invalid struct reference: " + structRef);
+        }
     }
 
     private void executeFstore(int instruction) {
@@ -492,11 +595,30 @@ public class CymbolStackVM {
         int fieldOffset = extractOperand(instruction);
         int value = pop();
         int structRef = pop();
-        int actualAddress = structRef + fieldOffset;
-        if (actualAddress < 0 || actualAddress >= heap.length) {
-            throw new IndexOutOfBoundsException("Struct field address out of bounds: " + actualAddress);
+
+        // 检查null引用（0表示null）
+        if (structRef == 0) {
+            throw new NullPointerException("Null struct reference in FSTORE");
         }
-        heap[actualAddress] = value;
+
+        // 判断structRef是结构体ID还是堆地址
+        // 结构体ID从1开始，且ID-1必须在structTable范围内
+        int structIndex = structRef - 1;
+        if (structIndex >= 0 && structIndex < structTable.size()) {
+            // 有效的结构体ID：使用StructValue
+            StructValue struct = structTable.get(structIndex);
+            Object fieldValue = intToValue(value);
+            struct.setField(fieldOffset, fieldValue);
+        } else if (structRef >= 0 && structRef < heap.length) {
+            // 堆地址：回退到原有堆访问逻辑（保持兼容性）
+            int actualAddress = structRef + fieldOffset;
+            if (actualAddress < 0 || actualAddress >= heap.length) {
+                throw new IndexOutOfBoundsException("Struct field address out of bounds: " + actualAddress);
+            }
+            heap[actualAddress] = value;
+        } else {
+            throw new IndexOutOfBoundsException("Invalid struct reference: " + structRef);
+        }
     }
 
     private void executeCall(int instruction) {

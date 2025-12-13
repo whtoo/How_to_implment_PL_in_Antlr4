@@ -2,6 +2,7 @@ package org.teachfx.antlr4.ep18;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Disabled;
 import org.teachfx.antlr4.ep18.stackvm.ByteCodeAssembler;
 import org.teachfx.antlr4.ep18.stackvm.BytecodeDefinition;
 
@@ -377,5 +378,96 @@ public class VMInterpreterTest {
 
         // 转储不应该抛出异常
         assertDoesNotThrow(() -> interpreter.coredump());
+    }
+
+    @Test
+    @DisplayName("应该正确执行结构体创建和字段访问")
+    void testStructCreationAndFieldAccess() throws Exception {
+        String program = """
+            .def main: args=0, locals=1
+                struct 2          ; 创建2字段的结构体
+                store 0           ; 保存到局部变量0
+                load 0
+                iconst 42
+                fstore 0          ; 存储到字段0
+                load 0
+                iconst 100
+                fstore 1          ; 存储到字段1
+                load 0
+                fload 0           ; 加载字段0
+                load 0
+                fload 1           ; 加载字段1
+                iadd              ; 42 + 100 = 142
+                halt
+            """;
+
+        VMInterpreter interpreter = new VMInterpreter();
+        InputStream input = new ByteArrayInputStream(program.getBytes());
+
+        VMInterpreter.load(interpreter, input);
+        interpreter.exec();
+
+        // 栈顶应该是142
+        assertThat(interpreter.operands[interpreter.sp]).isEqualTo(142);
+    }
+
+    @Test
+    @DisplayName("应该正确处理空引用")
+    void testNullInstruction() throws Exception {
+        String program = """
+            .def main: args=0, locals=0
+                null
+                halt
+            """;
+
+        VMInterpreter interpreter = new VMInterpreter();
+        InputStream input = new ByteArrayInputStream(program.getBytes());
+
+        VMInterpreter.load(interpreter, input);
+        interpreter.exec();
+
+        // 栈顶应该是null
+        assertThat(interpreter.operands[interpreter.sp]).isNull();
+    }
+
+    @Test
+    @DisplayName("应该正确执行弹出指令")
+    void testPopInstruction() throws Exception {
+        String program = """
+            .def main: args=0, locals=0
+                iconst 5
+                iconst 10
+                pop
+                halt
+            """;
+
+        VMInterpreter interpreter = new VMInterpreter();
+        InputStream input = new ByteArrayInputStream(program.getBytes());
+
+        VMInterpreter.load(interpreter, input);
+        interpreter.exec();
+
+        // 栈顶应该是5（10被弹出）
+        assertThat(interpreter.operands[interpreter.sp]).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("应该正确执行打印指令")
+    void testPrintInstruction() throws Exception {
+        String program = """
+            .def main: args=0, locals=0
+                iconst 123
+                print
+                halt
+            """;
+
+        VMInterpreter interpreter = new VMInterpreter();
+        InputStream input = new ByteArrayInputStream(program.getBytes());
+
+        VMInterpreter.load(interpreter, input);
+        interpreter.exec();
+
+        // 打印指令执行后栈应为空
+        assertThat(interpreter.sp).isEqualTo(-1);
     }
 }

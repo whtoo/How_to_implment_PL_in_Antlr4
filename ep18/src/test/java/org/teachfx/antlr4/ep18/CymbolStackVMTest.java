@@ -726,4 +726,106 @@ public class CymbolStackVMTest extends VMTestBase {
         // 注意：由于断点检查仅打印信息，我们无法在测试中验证输出
         // 但至少验证程序执行没有因断点而失败
     }
+
+    @Test
+    @DisplayName("应该正确执行结构体创建和字段访问指令")
+    void testStructCreationAndFieldAccess() throws Exception {
+        // 测试STRUCT、FSTORE、FLOAD指令
+        // 使用局部变量0保存结构体地址
+        // 字节码布局：
+        // 0: STRUCT 2          // 创建2字段的结构体，返回地址addr
+        // 1: STORE 0           // 存储地址到局部变量0
+        // 2: LOAD 0            // 加载地址
+        // 3: ICONST 42         // 值42
+        // 4: FSTORE 0          // 存储到字段0 (地址addr+0)
+        // 5: LOAD 0            // 加载地址
+        // 6: ICONST 100        // 值100
+        // 7: FSTORE 1          // 存储到字段1 (地址addr+1)
+        // 8: LOAD 0            // 加载地址
+        // 9: FLOAD 0           // 从字段0加载 (42)
+        //10: LOAD 0            // 加载地址
+        //11: FLOAD 1           // 从字段1加载 (100)
+        //12: IADD              // 42 + 100 = 142
+        //13: HALT
+        byte[] bytecode = createBytecode(new int[]{
+            encodeInstruction(BytecodeDefinition.INSTR_STRUCT, 2),
+            encodeInstruction(BytecodeDefinition.INSTR_STORE, 0),
+            encodeInstruction(BytecodeDefinition.INSTR_LOAD, 0),
+            encodeInstruction(BytecodeDefinition.INSTR_ICONST, 42),
+            encodeInstruction(BytecodeDefinition.INSTR_FSTORE, 0),
+            encodeInstruction(BytecodeDefinition.INSTR_LOAD, 0),
+            encodeInstruction(BytecodeDefinition.INSTR_ICONST, 100),
+            encodeInstruction(BytecodeDefinition.INSTR_FSTORE, 1),
+            encodeInstruction(BytecodeDefinition.INSTR_LOAD, 0),
+            encodeInstruction(BytecodeDefinition.INSTR_FLOAD, 0),
+            encodeInstruction(BytecodeDefinition.INSTR_LOAD, 0),
+            encodeInstruction(BytecodeDefinition.INSTR_FLOAD, 1),
+            encodeInstruction(BytecodeDefinition.INSTR_IADD),
+            encodeInstruction(BytecodeDefinition.INSTR_HALT)
+        });
+
+        int result = execute(bytecode);
+        // 应该得到 42 + 100 = 142
+        assertThat(result).isEqualTo(142);
+    }
+
+    @Test
+    @DisplayName("应该正确处理空引用指令")
+    void testNullInstruction() throws Exception {
+        // 测试NULL指令
+        byte[] bytecode = createBytecode(new int[]{
+            encodeInstruction(BytecodeDefinition.INSTR_NULL),
+            encodeInstruction(BytecodeDefinition.INSTR_HALT)
+        });
+
+        int result = execute(bytecode);
+        // NULL指令应该压入0
+        assertThat(result).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("应该正确执行弹出指令")
+    void testPopInstruction() throws Exception {
+        // 测试POP指令
+        byte[] bytecode = createBytecode(new int[]{
+            encodeInstruction(BytecodeDefinition.INSTR_ICONST, 5),
+            encodeInstruction(BytecodeDefinition.INSTR_ICONST, 10),
+            encodeInstruction(BytecodeDefinition.INSTR_POP),
+            encodeInstruction(BytecodeDefinition.INSTR_HALT)
+        });
+
+        int result = execute(bytecode);
+        // 栈顶应该是5（10被弹出）
+        assertThat(result).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("应该正确执行打印指令")
+    void testPrintInstruction() throws Exception {
+        // 测试PRINT指令（由于输出到控制台，我们只验证不抛出异常）
+        byte[] bytecode = createBytecode(new int[]{
+            encodeInstruction(BytecodeDefinition.INSTR_ICONST, 123),
+            encodeInstruction(BytecodeDefinition.INSTR_PRINT),
+            encodeInstruction(BytecodeDefinition.INSTR_HALT)
+        });
+
+        // 执行应该成功，不抛出异常
+        assertDoesNotThrow(() -> execute(bytecode));
+    }
+
+    @Test
+    @DisplayName("应该处理结构体内存不足错误")
+    void testStructOutOfMemory() {
+        // 测试STRUCT指令在堆空间不足时抛出OutOfMemoryError
+        // 堆大小为1MB（1024*1024个整数），使用更大的字段数
+        int hugeFields = 2000000; // 超过堆大小
+        byte[] bytecode = createBytecode(new int[]{
+            encodeInstruction(BytecodeDefinition.INSTR_STRUCT, hugeFields),
+            encodeInstruction(BytecodeDefinition.INSTR_HALT)
+        });
+
+        // 应该抛出OutOfMemoryError
+        assertThatThrownBy(() -> execute(bytecode))
+            .isInstanceOf(OutOfMemoryError.class);
+    }
 }

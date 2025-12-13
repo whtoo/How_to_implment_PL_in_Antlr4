@@ -9,7 +9,10 @@
       "Bash(java:*)",
       "Bash(target/test-classes:*)",
       "Bash(printenv:*)",
-      "Bash(mvn compile:*)"
+      "Bash(mvn compile:*)",
+      "Bash(xargs:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)"
     ]
   }
 }

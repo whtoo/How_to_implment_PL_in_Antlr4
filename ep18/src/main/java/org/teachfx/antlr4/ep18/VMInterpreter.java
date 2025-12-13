@@ -318,26 +318,36 @@ public class VMInterpreter {
                     operands[++sp] = globals[gloadAddr];
                     break;
                 case BytecodeDefinition.INSTR_FLOAD:
-                    StructSpace struct = (StructSpace) operands[sp--];
+                    Object obj = operands[sp--];
+                    if (!(obj instanceof StructValue)) {
+                        throw new ClassCastException("Expected StructValue but got " + (obj == null ? "null" : obj.getClass()) + " value: " + obj);
+                    }
+                    StructValue structVal = (StructValue) obj;
                     int fieldOffset = getIntOperand();
-                    operands[++sp] = struct.fields[fieldOffset];
+                    operands[++sp] = structVal.getField(fieldOffset);
                     break;
                 case BytecodeDefinition.INSTR_GSTORE:
                     int gstoreAddr = getIntOperand();
                     globals[gstoreAddr] = operands[sp--];
                     break;
                 case BytecodeDefinition.INSTR_FSTORE:
-                    struct = (StructSpace) operands[sp--];
-                    Object val = operands[sp--];
-                    fieldOffset = getIntOperand();
-                    struct.fields[fieldOffset] = val;
+                    Object val = operands[sp--];  // 先弹出值
+                    Object obj2 = operands[sp--];  // 再弹出结构体引用
+                    if (!(obj2 instanceof StructValue)) {
+                        throw new ClassCastException("Expected StructValue but got " + (obj2 == null ? "null" : obj2.getClass()) + " value: " + obj2);
+                    }
+                    StructValue struct2 = (StructValue) obj2;
+                    int fieldOffset2 = getIntOperand();
+                    struct2.setField(fieldOffset2, val);
                     break;
                 case BytecodeDefinition.INSTR_PRINT:
                     System.out.println(operands[sp--]);
                     break;
                 case BytecodeDefinition.INSTR_STRUCT:
                     int nfields = getIntOperand();
-                    operands[++sp] = new StructSpace(nfields);
+                    StructValue struct = new StructValue(nfields);
+                    operands[++sp] = struct;
+                    if (trace) System.out.println("STRUCT: created " + struct + " at operands[" + sp + "]");
                     break;
                 case BytecodeDefinition.INSTR_NULL:
                     operands[++sp] = null;

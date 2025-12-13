@@ -16,6 +16,14 @@ public class CymbolStackVM {
     private int stackPointer;      // 栈指针
     private int[] heap;            // 堆内存
     private int[] instructionCache; // 指令缓存
+    private int[] locals;          // 局部变量数组
+    private StackFrame[] callStack; // 调用栈
+    private int framePointer;      // 当前帧指针
+
+    // 调试支持
+    private java.util.Set<Integer> breakpoints; // 断点集合
+    private boolean stepMode;                   // 单步执行模式
+    private boolean waitingForStep;             // 等待单步执行
 
     // 执行状态
     private boolean running;
@@ -40,18 +48,30 @@ public class CymbolStackVM {
     private void initializeVM() {
         // 初始化堆内存
         this.heap = new int[config.getHeapSize()];
-        
+
         // 初始化操作数栈
         this.stack = new int[config.getStackSize()];
         this.stackPointer = 0;
-        
+
         // 初始化指令缓存
         this.instructionCache = new int[config.getInstructionCacheSize()];
-        
+
+        // 初始化局部变量数组（使用栈大小）
+        this.locals = new int[config.getStackSize()];
+
+        // 初始化调用栈
+        this.callStack = new StackFrame[config.getMaxFrameCount()];
+        this.framePointer = -1;
+
+        // 初始化调试支持
+        this.breakpoints = new java.util.HashSet<>();
+        this.stepMode = false;
+        this.waitingForStep = false;
+
         // 初始化执行状态
         this.running = false;
         this.programCounter = 0;
-        
+
         // 如果是调试模式，输出初始化信息
         if (config.isDebugMode()) {
             System.out.println("VM initialized with config: " + config);
@@ -81,11 +101,24 @@ public class CymbolStackVM {
 
         try {
             while (running && programCounter < instructionCache.length) {
+                // 调试支持：检查断点
+                if (breakpoints.contains(programCounter)) {
+                    System.out.println("[BREAKPOINT] Hit breakpoint at PC=" + programCounter);
+                    // 在实际调试器中，这里会暂停并等待用户输入
+                    // 简化实现：仅打印信息并继续
+                }
+
                 // 获取当前指令
                 int instruction = instructionCache[programCounter++];
 
                 // 执行指令
                 executeInstruction(instruction);
+
+                // 调试支持：单步执行模式
+                if (stepMode) {
+                    System.out.println("[STEP] Executed instruction at PC=" + (programCounter - 1));
+                    stepMode = false; // 执行一步后退出单步模式
+                }
             }
 
             // 返回栈顶值作为结果
@@ -135,6 +168,20 @@ public class CymbolStackVM {
         }
     }
     
+    /**
+     * 从指令中提取操作数（低24位，有符号扩展）
+     * @param instruction 指令
+     * @return 操作数值
+     */
+    private int extractOperand(int instruction) {
+        int value = instruction & 0xFFFFFF;
+        // 处理符号扩展（如果最高位是1，则为负数）
+        if ((value & 0x800000) != 0) {
+            value |= 0xFF000000; // 符号扩展
+        }
+        return value;
+    }
+
     /**
      * 执行单条指令
      * @param instruction 指令
@@ -202,6 +249,60 @@ public class CymbolStackVM {
                 break;
             case BytecodeDefinition.INSTR_HALT:
                 executeHalt();
+                break;
+            case BytecodeDefinition.INSTR_BR:
+                executeBr(instruction);
+                break;
+            case BytecodeDefinition.INSTR_BRT:
+                executeBrt(instruction);
+                break;
+            case BytecodeDefinition.INSTR_BRF:
+                executeBrf(instruction);
+                break;
+            case BytecodeDefinition.INSTR_LOAD:
+                executeLoad(instruction);
+                break;
+            case BytecodeDefinition.INSTR_STORE:
+                executeStore(instruction);
+                break;
+            case BytecodeDefinition.INSTR_GLOAD:
+                executeGload(instruction);
+                break;
+            case BytecodeDefinition.INSTR_GSTORE:
+                executeGstore(instruction);
+                break;
+            case BytecodeDefinition.INSTR_FLOAD:
+                executeFload(instruction);
+                break;
+            case BytecodeDefinition.INSTR_FSTORE:
+                executeFstore(instruction);
+                break;
+            case BytecodeDefinition.INSTR_FADD:
+                executeFadd();
+                break;
+            case BytecodeDefinition.INSTR_FSUB:
+                executeFsub();
+                break;
+            case BytecodeDefinition.INSTR_FMUL:
+                executeFmul();
+                break;
+            case BytecodeDefinition.INSTR_FDIV:
+                executeFdiv();
+                break;
+            case BytecodeDefinition.INSTR_FLT:
+                executeFlt();
+                break;
+            case BytecodeDefinition.INSTR_FEQ:
+                executeFeq();
+                break;
+            case BytecodeDefinition.INSTR_ITOF:
+                executeItof();
+                break;
+            case BytecodeDefinition.INSTR_CALL:
+                executeCall(instruction);
+                break;
+            case BytecodeDefinition.INSTR_RET:
+                executeRet();
                 break;
             default:
                 throw new UnsupportedOperationException(
@@ -304,17 +405,185 @@ public class CymbolStackVM {
     }
 
     private void executeIConst(int instruction) {
-        // 提取常量值（低24位）
-        int value = instruction & 0xFFFFFF;
-        // 处理符号扩展（如果最高位是1，则为负数）
-        if ((value & 0x800000) != 0) {
-            value |= 0xFF000000; // 符号扩展
-        }
+        int value = extractOperand(instruction);
         push(value);
     }
 
     private void executeHalt() {
         this.running = false;
+    }
+
+    private void executeBr(int instruction) {
+        int address = extractOperand(instruction);
+        // 跳转到指定地址（地址以指令为单位，需要乘以4转换为字节索引？）
+        // 在CymbolStackVM中，instructionCache是int数组，每个元素是一条指令
+        // programCounter指向instructionCache的索引，所以address直接作为索引
+        programCounter = address;
+    }
+
+    private void executeBrt(int instruction) {
+        int address = extractOperand(instruction);
+        int condition = pop();
+        if (condition != 0) {
+            programCounter = address;
+        }
+    }
+
+    private void executeBrf(int instruction) {
+        int address = extractOperand(instruction);
+        int condition = pop();
+        if (condition == 0) {
+            programCounter = address;
+        }
+    }
+
+    private void executeLoad(int instruction) {
+        int index = extractOperand(instruction);
+        if (index < 0 || index >= locals.length) {
+            throw new IndexOutOfBoundsException("Local variable index out of bounds: " + index);
+        }
+        push(locals[index]);
+    }
+
+    private void executeStore(int instruction) {
+        int index = extractOperand(instruction);
+        if (index < 0 || index >= locals.length) {
+            throw new IndexOutOfBoundsException("Local variable index out of bounds: " + index);
+        }
+        int value = pop();
+        locals[index] = value;
+    }
+
+    private void executeGload(int instruction) {
+        int address = extractOperand(instruction);
+        if (address < 0 || address >= heap.length) {
+            throw new IndexOutOfBoundsException("Global memory address out of bounds: " + address);
+        }
+        push(heap[address]);
+    }
+
+    private void executeGstore(int instruction) {
+        int address = extractOperand(instruction);
+        if (address < 0 || address >= heap.length) {
+            throw new IndexOutOfBoundsException("Global memory address out of bounds: " + address);
+        }
+        int value = pop();
+        heap[address] = value;
+    }
+
+    private void executeFload(int instruction) {
+        // FLOAD: 从结构体加载字段
+        // 操作数：字段偏移量
+        // 栈顶：结构体引用（这里简化为整数索引）
+        int fieldOffset = extractOperand(instruction);
+        int structRef = pop(); // 结构体引用（假设为堆中的起始地址）
+        // 简化实现：将结构体视为堆中的连续整数数组
+        int actualAddress = structRef + fieldOffset;
+        if (actualAddress < 0 || actualAddress >= heap.length) {
+            throw new IndexOutOfBoundsException("Struct field address out of bounds: " + actualAddress);
+        }
+        push(heap[actualAddress]);
+    }
+
+    private void executeFstore(int instruction) {
+        // FSTORE: 存储值到结构体字段
+        // 操作数：字段偏移量
+        // 栈顶：值，下一个：结构体引用
+        int fieldOffset = extractOperand(instruction);
+        int value = pop();
+        int structRef = pop();
+        int actualAddress = structRef + fieldOffset;
+        if (actualAddress < 0 || actualAddress >= heap.length) {
+            throw new IndexOutOfBoundsException("Struct field address out of bounds: " + actualAddress);
+        }
+        heap[actualAddress] = value;
+    }
+
+    private void executeCall(int instruction) {
+        // CALL指令：操作数为目标地址（简化）
+        int targetAddress = extractOperand(instruction);
+        // 保存返回地址（当前programCounter，指向下一条指令）
+        int returnAddress = programCounter;
+        // 创建虚拟FunctionSymbol用于栈帧
+        FunctionSymbol dummySymbol = new FunctionSymbol("dummy", 0, 0, targetAddress);
+        // 创建栈帧
+        StackFrame frame = new StackFrame(dummySymbol, returnAddress);
+        // 保存当前局部变量状态？简化处理
+        callStack[++framePointer] = frame;
+        // 跳转到目标地址
+        programCounter = targetAddress;
+    }
+
+    private void executeRet() {
+        // RET指令：从栈帧恢复返回地址
+        if (framePointer < 0) {
+            throw new IllegalStateException("RET called without active frame");
+        }
+        StackFrame frame = callStack[framePointer--];
+        programCounter = frame.returnAddress;
+    }
+
+    // 浮点指令实现
+
+    private void executeFadd() {
+        int bBits = pop();
+        int aBits = pop();
+        float a = Float.intBitsToFloat(aBits);
+        float b = Float.intBitsToFloat(bBits);
+        float result = a + b;
+        push(Float.floatToIntBits(result));
+    }
+
+    private void executeFsub() {
+        int bBits = pop();
+        int aBits = pop();
+        float a = Float.intBitsToFloat(aBits);
+        float b = Float.intBitsToFloat(bBits);
+        float result = a - b;
+        push(Float.floatToIntBits(result));
+    }
+
+    private void executeFmul() {
+        int bBits = pop();
+        int aBits = pop();
+        float a = Float.intBitsToFloat(aBits);
+        float b = Float.intBitsToFloat(bBits);
+        float result = a * b;
+        push(Float.floatToIntBits(result));
+    }
+
+    private void executeFdiv() {
+        int bBits = pop();
+        int aBits = pop();
+        float a = Float.intBitsToFloat(aBits);
+        float b = Float.intBitsToFloat(bBits);
+        if (b == 0.0f) {
+            throw new VMDivisionByZeroException(programCounter - 1, "FDIV");
+        }
+        float result = a / b;
+        push(Float.floatToIntBits(result));
+    }
+
+    private void executeFlt() {
+        int bBits = pop();
+        int aBits = pop();
+        float a = Float.intBitsToFloat(aBits);
+        float b = Float.intBitsToFloat(bBits);
+        push(a < b ? 1 : 0);
+    }
+
+    private void executeFeq() {
+        int bBits = pop();
+        int aBits = pop();
+        float a = Float.intBitsToFloat(aBits);
+        float b = Float.intBitsToFloat(bBits);
+        push(a == b ? 1 : 0);
+    }
+
+    private void executeItof() {
+        int a = pop();
+        float result = (float) a;
+        push(Float.floatToIntBits(result));
     }
     
     /**
@@ -405,5 +674,60 @@ public class CymbolStackVM {
      */
     public VMConfig getConfig() {
         return config;
+    }
+
+    // 调试功能
+
+    /**
+     * 设置断点
+     * @param address 指令地址（programCounter值）
+     */
+    public void setBreakpoint(int address) {
+        if (address < 0 || address >= instructionCache.length) {
+            throw new IllegalArgumentException("Breakpoint address out of range: " + address);
+        }
+        breakpoints.add(address);
+        if (config.isDebugMode()) {
+            System.out.println("[DEBUG] Breakpoint set at PC=" + address);
+        }
+    }
+
+    /**
+     * 清除断点
+     * @param address 指令地址
+     */
+    public void clearBreakpoint(int address) {
+        breakpoints.remove(address);
+        if (config.isDebugMode()) {
+            System.out.println("[DEBUG] Breakpoint cleared at PC=" + address);
+        }
+    }
+
+    /**
+     * 清除所有断点
+     */
+    public void clearAllBreakpoints() {
+        breakpoints.clear();
+        if (config.isDebugMode()) {
+            System.out.println("[DEBUG] All breakpoints cleared");
+        }
+    }
+
+    /**
+     * 启用单步执行模式（下一步指令执行后暂停）
+     */
+    public void step() {
+        this.stepMode = true;
+        if (config.isDebugMode()) {
+            System.out.println("[DEBUG] Step mode enabled");
+        }
+    }
+
+    /**
+     * 获取当前断点集合
+     * @return 断点地址集合
+     */
+    public java.util.Set<Integer> getBreakpoints() {
+        return new java.util.HashSet<>(breakpoints);
     }
 }

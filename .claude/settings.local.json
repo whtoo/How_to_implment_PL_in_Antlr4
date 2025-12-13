@@ -7,7 +7,9 @@
       "Bash(grep:*)",
       "Bash(mvn compile exec:java:*)",
       "Bash(java:*)",
-      "Bash(target/test-classes:*)"
+      "Bash(target/test-classes:*)",
+      "Bash(printenv:*)",
+      "Bash(mvn compile:*)"
     ]
   }
 }

@@ -34,6 +34,8 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
     protected Map<String, Integer> globalVariables = new HashMap<String, Integer>(); // Map of global variable names to addresses
     private byte[] code = new byte[INITIAL_CODE_SIZE];
     protected boolean hasErrors = false;
+    private String currentInstruction;
+    private boolean processingOperands = false;
 
 
     public ByteCodeAssembler(BytecodeDefinition.Instruction[] instructions) {
@@ -79,31 +81,48 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
 
     protected void gen(Token instrToken) {
         String instructionName = instrToken.getText();
+        currentInstruction = instructionName;
         Integer opCodeI = instructionOpcodeMapping.get(instructionName);
         if (opCodeI == null) {
             System.err.println("line " + instrToken.getLine() + ": Unknown instruction: " + instructionName);
             hasErrors = true;
+            currentInstruction = null;
             return;
         }
 
         int opcode = opCodeI.intValue();
         ensureCapacity(ip + 1);
         code[ip++] = (byte) (opcode & 0xff);
+        if (!processingOperands) {
+            currentInstruction = null;
+        }
     }
 
     protected void gen(Token instrToken, Token operandToken) {
+        processingOperands = true;
         gen(instrToken);
         genOperand(operandToken);
+        processingOperands = false;
+        currentInstruction = null;
     }
 
     protected void gen(Token instrToken, Token oToken1, Token oToken2) {
-        gen(instrToken, oToken1);
+        processingOperands = true;
+        gen(instrToken);
+        genOperand(oToken1);
         genOperand(oToken2);
+        processingOperands = false;
+        currentInstruction = null;
     }
 
     protected void gen(Token instrToken, Token oToken1, Token oToken2, Token oToken3) {
-        gen(instrToken, oToken1, oToken2);
+        processingOperands = true;
+        gen(instrToken);
+        genOperand(oToken1);
+        genOperand(oToken2);
         genOperand(oToken3);
+        processingOperands = false;
+        currentInstruction = null;
     }
 
     public void genOperand(Token operandToken) {
@@ -127,6 +146,11 @@ public class ByteCodeAssembler extends VMAssemblerBaseListener {
                 v = getConstantPoolIndex(String.valueOf(text));
                 break;
             case ID:
+                // If current instruction is "call", treat as function reference
+                if (currentInstruction != null && currentInstruction.equals("call")) {
+                    v = getFunctionIndex(text);
+                    break;
+                }
                 // First check if it's a global variable
                 Integer globalAddr = globalVariables.get(text);
                 if (globalAddr != null) {

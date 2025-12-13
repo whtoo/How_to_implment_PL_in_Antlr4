@@ -1,22 +1,19 @@
-// Generated from java-escape by ANTLR 4.11.0-SNAPSHOT
+// Generated from Cymbol.g4 by ANTLR 4.13.2
 
 package org.teachfx.antlr4.ep17.parser;
 
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.ATN;
-import org.antlr.v4.runtime.atn.ATNDeserializer;
-import org.antlr.v4.runtime.atn.ParserATNSimulator;
-import org.antlr.v4.runtime.atn.PredictionContextCache;
+import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.tree.ParseTreeListener;
-import org.antlr.v4.runtime.tree.ParseTreeVisitor;
-import org.antlr.v4.runtime.tree.TerminalNode;
-
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.*;
+import org.antlr.v4.runtime.tree.*;
 import java.util.List;
+import java.util.Iterator;
+import java.util.ArrayList;
 
-@SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue"})
+@SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue", "this-escape"})
 public class CymbolParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.11.0-SNAPSHOT", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.13.2", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -91,7 +88,7 @@ public class CymbolParser extends Parser {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "java-escape"; }
+	public String getGrammarFileName() { return "Cymbol.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
@@ -194,7 +191,7 @@ public class CymbolParser extends Parser {
 				setState(27); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( ((_la) & ~0x3f) == 0 && ((1L << _la) & 14696962680L) != 0 );
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & 14696962680L) != 0) );
 			}
 		}
 		catch (RecognitionException re) {
@@ -367,7 +364,7 @@ public class CymbolParser extends Parser {
 			{
 			setState(41);
 			_la = _input.LA(1);
-			if ( !(((_la) & ~0x3f) == 0 && ((1L << _la) & 56L) != 0) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 56L) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -439,7 +436,7 @@ public class CymbolParser extends Parser {
 			setState(47);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if (((_la) & ~0x3f) == 0 && ((1L << _la) & 67108920L) != 0) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 67108920L) != 0)) {
 				{
 				setState(46);
 				((FunctionDeclContext)_localctx).params = formalParameters();
@@ -615,7 +612,7 @@ public class CymbolParser extends Parser {
 			setState(67);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while (((_la) & ~0x3f) == 0 && ((1L << _la) & 14696962680L) != 0) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 14696962680L) != 0)) {
 				{
 				{
 				setState(64);
@@ -844,7 +841,7 @@ public class CymbolParser extends Parser {
 				setState(76);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if (((_la) & ~0x3f) == 0 && ((1L << _la) & 14696939584L) != 0) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 14696939584L) != 0)) {
 					{
 					setState(75);
 					varSlot(0);
@@ -1089,7 +1086,7 @@ public class CymbolParser extends Parser {
 				setState(115);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if (((_la) & ~0x3f) == 0 && ((1L << _la) & 14696939584L) != 0) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 14696939584L) != 0)) {
 					{
 					setState(107);
 					varSlot(0);
@@ -1224,7 +1221,7 @@ public class CymbolParser extends Parser {
 						setState(136);
 						((ExprBinaryContext)_localctx).o = _input.LT(1);
 						_la = _input.LA(1);
-						if ( !(((_la) & ~0x3f) == 0 && ((1L << _la) & 66060288L) != 0) ) {
+						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 66060288L) != 0)) ) {
 							((ExprBinaryContext)_localctx).o = (Token)_errHandler.recoverInline(this);
 						}
 						else {

@@ -1,4 +1,4 @@
-// Generated from java-escape by ANTLR 4.11.0-SNAPSHOT
+// Generated from VMAssembler.g4 by ANTLR 4.13.2
 
 package org.teachfx.antlr4.ep18.parser;
 
@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
 
-@SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue"})
+@SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue", "this-escape"})
 public class VMAssemblerParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.11.0-SNAPSHOT", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.13.2", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -81,7 +81,7 @@ public class VMAssemblerParser extends Parser {
 	}
 
 	@Override
-	public String getGrammarFileName() { return "java-escape"; }
+	public String getGrammarFileName() { return "VMAssembler.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
@@ -206,7 +206,7 @@ public class VMAssemblerParser extends Parser {
 				setState(24); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( ((_la) & ~0x3f) == 0 && ((1L << _la) & 263176L) != 0 );
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & 263176L) != 0) );
 			}
 		}
 		catch (RecognitionException re) {
@@ -558,7 +558,7 @@ public class VMAssemblerParser extends Parser {
 			{
 			setState(75);
 			_la = _input.LA(1);
-			if ( !(((_la) & ~0x3f) == 0 && ((1L << _la) & 130560L) != 0) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 130560L) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {

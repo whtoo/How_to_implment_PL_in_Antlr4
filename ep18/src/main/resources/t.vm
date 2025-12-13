@@ -30,7 +30,7 @@ L8:
     sconst "break"
     print
     load 0
-    call dec1()
+    call dec1
     store 0
     br L4
 L6:

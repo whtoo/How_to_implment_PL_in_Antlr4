@@ -2,7 +2,7 @@
 ; print f(10,20)
     iconst 10   ; push first param
     iconst 20   ; push second param
-    call f()
+    call f
     print
     halt
 
@@ -12,7 +12,7 @@
     load 1
     ; pop two params and add them
     ; z = ck(x,y)
-    call ck()
+    call ck
     ret
 
 .def ck: args=2, locals=0

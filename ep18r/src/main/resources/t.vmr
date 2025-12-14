@@ -1,0 +1,31 @@
+.def dec1: args=1 ,locals=1
+    li r2, 1
+    sub r1, r1, r2
+    ret
+.def main: args=0 ,locals=1
+    li r1, 10
+L4:
+    li r2, 0
+    sgt r3, r1, r2
+    jf r3, L6
+L5:
+    li r4, 5
+    sgt r5, r1, r4
+    jf r5, L8
+L7:
+    print r1
+    li r6, 7
+    seq r7, r1, r6
+    jf r7, L8
+L9:
+    li r8, 7
+    j L3
+L8:
+    ls r9, "break"
+    print r9
+    call dec1
+    j L4
+L6:
+    li r10, 0
+L3:
+    halt

@@ -188,6 +188,121 @@ java -jar antlr-4.13.2-complete.jar -visitor -no-listener Cymbol.g4
 3. Check AST visualization tools in ep19/ep20
 4. Use CFG visualization for control flow issues
 
+## Claude Code Skills
+
+### Compiler Development Skill
+
+This project includes a specialized **Compiler Development** skill that provides comprehensive guidance for working with the Cymbol language compiler implementation. The skill is located at `.claude/skills/compiler-development/SKILL.md`.
+
+#### Skill Overview
+
+The Compiler Development skill is a Claude Code skill that activates automatically when users ask about compiler-related topics. It provides expertise across the complete compiler pipeline implemented in this 21-episode educational project.
+
+#### Skill Capabilities
+
+The Compiler Development skill can assist with:
+
+1. **ANTLR4 Grammar Design and Analysis**
+   - Explain Cymbol language syntax and grammar rules
+   - Debug parsing errors, ambiguities, and grammar conflicts
+   - Guide grammar modifications, extensions, and best practices
+
+2. **Abstract Syntax Tree (AST) Development**
+   - Explain AST node types, hierarchy, and design patterns
+   - Help traverse, analyze, and manipulate AST structures
+   - Guide AST transformation and visitor pattern implementation
+
+3. **Type System and Symbol Table Implementation**
+   - Explain type checking, type inference, and type safety
+   - Debug type-related errors and type conversion issues
+   - Guide symbol table construction, scope management, and name resolution
+
+4. **Intermediate Representation and Optimization**
+   - Explain three-address code generation and IR design
+   - Analyze control flow graphs (CFG) and basic blocks
+   - Guide IR optimization techniques and dataflow analysis
+   - Explain SSA form construction and optimization passes
+
+5. **Code Generation and Virtual Machine**
+   - Explain bytecode generation for stack-based virtual machine
+   - Debug code generation issues and register allocation
+   - Guide VM implementation, execution, and memory management
+   - Explain garbage collection and runtime system design
+
+6. **Project Navigation and Development Workflow**
+   - Navigate the 21-episode progressive structure (EP1-EP21)
+   - Explain module dependencies, interactions, and build system
+   - Guide testing strategies, coverage requirements, and TDD practices
+   - Provide development scripts and multi-platform support
+
+#### When to Use the Skill
+
+The Compiler Development skill activates when users ask about:
+- ANTLR4 grammar design, parsing, and debugging
+- Cymbol language syntax, semantics, and language design
+- Compiler construction concepts, phases, and implementation
+- Type systems, symbol tables, semantic analysis, and name resolution
+- Intermediate representation, control flow, optimization, and code generation
+- Virtual machine design, bytecode execution, and runtime systems
+- Project-specific module navigation, testing, and development workflows
+
+#### Usage Examples
+
+```bash
+# Example: Debug a complex parsing issue
+User: My Cymbol program with nested structs fails to parse with "mismatched input"
+
+Compiler Development: This is likely a grammar ambiguity issue. Let me analyze...
+The problem may be in the structMember rule conflicting with varDecl.
+Try adding syntactic predicates or restructuring the grammar rules.
+
+# Example: Understand the compilation pipeline
+User: How does type information flow through the compiler phases?
+
+Compiler Development: Type information flows through these phases:
+1. Lexing/Parsing: Token streams → Parse trees
+2. AST Construction: Parse trees → AST with type placeholders
+3. Symbol Collection: AST → Symbol table with type declarations
+4. Type Checking: AST + Symbol table → Fully typed AST
+5. IR Generation: Typed AST → Typed intermediate representation
+Check TypeChecker.java and SymbolTable.java in ep20 for details.
+```
+
+#### Skill Location and Activation
+
+- **Skill Directory**: `.claude/skills/compiler-development/`
+- **Skill File**: `SKILL.md` (with YAML frontmatter)
+- **Activation**: Automatic based on skill description matching compiler-related topics
+- **Scope**: Project-specific knowledge of the complete Cymbol compiler implementation
+- **Allowed Tools**: Read, Grep, Glob (for code exploration and analysis)
+
+#### Skill Structure
+
+The skill follows Claude Code's skill format:
+- **YAML Frontmatter**: Defines skill name, description, and allowed tools
+- **Project Overview**: Context about the 21-episode compiler project
+- **Core Development Flow**: Detailed guidance for each compiler phase
+- **Project Navigation**: Key file locations and testing strategies
+- **Development Workflows**: Common tasks and best practices
+- **Troubleshooting**: Solutions for common compiler development issues
+
+#### Extending the Skill
+
+To extend or modify the Compiler Development skill:
+1. Edit `.claude/skills/compiler-development/SKILL.md`
+2. Update the YAML frontmatter description if adding new capabilities
+3. Add new sections for additional compiler topics or features
+4. Update this section in CLAUDE.md to reflect changes
+5. Test the skill with compiler-related queries to ensure proper activation
+
+#### Integration with Development Environment
+
+The skill integrates with the project's development tools:
+- **Maven Build System**: Module-specific build and test commands
+- **Multi-platform Scripts**: `scripts/` directory for Linux, macOS, and Windows
+- **Testing Framework**: JUnit 5 with coverage requirements (≥85% overall)
+- **Documentation**: `.qoder/repowiki/` with 232+ technical documentation files
+
 ## Notes for Future Claude Code Instances
 
 - This is an **educational project** focused on compiler construction

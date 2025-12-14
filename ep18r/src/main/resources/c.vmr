@@ -1,0 +1,21 @@
+.def main: args=0, locals=0
+; print f(10,20)
+    li r1, 10   ; first param
+    li r2, 20   ; second param
+    call f
+    print r1
+    halt
+
+; f(x,y) { return ck(x, y); }
+.def f: args=2, locals=1
+    call ck
+    ret
+
+.def ck: args=2, locals=0
+    li r3, 2
+    mul r4, r1, r3   ; 2*x
+    li r5, 3
+    add r6, r2, r5   ; y+3
+    add r7, r4, r6   ; 2*x + (y+3)
+    mov r1, r7       ; return value
+    ret

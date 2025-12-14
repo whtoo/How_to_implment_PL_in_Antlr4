@@ -12,7 +12,11 @@
       "Bash(mvn compile:*)",
       "Bash(xargs:*)",
       "Bash(tree:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(/usr/local/bin/mvn clean:*)",
+      "Bash(/usr/local/bin/mvn compile:*)",
+      "Bash(/usr/local/bin/mvn test:*)",
+      "Bash(/usr/local/bin/mvn exec:java:*)"
     ]
   }
 }

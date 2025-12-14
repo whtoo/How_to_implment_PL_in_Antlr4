@@ -1,0 +1,39 @@
+.def dec1: args=1 ,locals=1
+    load 0
+    iconst 1
+    isub
+    ret
+.def main: args=0 ,locals=1
+    iconst 10
+    store 0
+L4:
+    load 0
+    iconst 0
+    igt
+    brf L6
+L5:
+    load 0
+    iconst 5
+    igt
+    brf L8
+L7:
+    load 0
+    print
+    load 0
+    iconst 7
+    ieq
+    brf L8
+L9:
+    iconst 7
+    br L3
+L8:
+    sconst "break"
+    print
+    load 0
+    call dec1
+    store 0
+    br L4
+L6:
+    iconst 0
+L3:
+    halt

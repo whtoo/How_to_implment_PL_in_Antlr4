@@ -12,7 +12,8 @@
       "Bash(mvn compile:*)",
       "Bash(xargs:*)",
       "Bash(tree:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

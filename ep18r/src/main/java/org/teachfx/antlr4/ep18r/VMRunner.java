@@ -18,7 +18,7 @@ import java.io.InputStream;
 public class VMRunner {
 
     public static void main(String[] args) throws Exception {
-        String fileName = "t.vm";
+        String fileName = "t.vmr";
         if (args.length > 0) {
             fileName = args[0];
         }

@@ -87,9 +87,9 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
 
     protected void gen(Token instrToken) {
         String instructionName = instrToken.getText();
-        currentInstruction = instructionName;
         // 转换为小写查找
         String key = instructionName.toLowerCase();
+        currentInstruction = key;
         Integer opCodeI = instructionOpcodeMapping.get(key);
         if (opCodeI == null) {
             System.err.println("line " + instrToken.getLine() + ": Unknown instruction: " + instructionName);

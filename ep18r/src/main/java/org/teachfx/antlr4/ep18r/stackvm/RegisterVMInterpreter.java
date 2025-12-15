@@ -22,6 +22,9 @@ public class RegisterVMInterpreter {
     private byte[] code;
     private int codeSize;
     private Object[] globals;
+    private int[] heap = new int[1024 * 1024]; // 1MB 堆内存
+    private int[] locals = new int[1024];      // 局部变量数组
+    private int heapAllocPointer = 0;          // 堆分配指针
     private StackFrame[] callStack = new StackFrame[1024];
     private int framePointer = -1;
     private FunctionSymbol mainFunction;
@@ -115,6 +118,40 @@ public class RegisterVMInterpreter {
     }
 
     /**
+     * 从操作数中提取寄存器编号（5位字段）
+     * 假设操作数编码：rd在bits 21-25, rs1在bits 16-20, rs2在bits 11-15, 立即数在低16位
+     */
+    private int extractRd(int operand) {
+        return (operand >> 21) & 0x1F;
+    }
+
+    private int extractRs1(int operand) {
+        return (operand >> 16) & 0x1F;
+    }
+
+    private int extractRs2(int operand) {
+        return (operand >> 11) & 0x1F;
+    }
+
+    private int extractImm16(int operand) {
+        int imm = operand & 0xFFFF;
+        // 符号扩展
+        if ((imm & 0x8000) != 0) {
+            imm |= 0xFFFF0000;
+        }
+        return imm;
+    }
+
+    private int extractImm26(int operand) {
+        int imm = operand & 0x3FFFFFF;
+        // 符号扩展
+        if ((imm & 0x2000000) != 0) {
+            imm |= 0xFC000000;
+        }
+        return imm;
+    }
+
+    /**
      * 执行单条指令
      */
     private void executeInstruction(int opcode, int operand) throws Exception {
@@ -122,32 +159,171 @@ public class RegisterVMInterpreter {
         // 基于RegisterBytecodeDefinition中的指令定义
         // 需要处理R类型、I类型、J类型指令格式
         switch (opcode) {
-            case RegisterBytecodeDefinition.INSTR_ADD:
+            case RegisterBytecodeDefinition.INSTR_ADD: {
                 // add rd, rs1, rs2
-                // 需要从指令中提取寄存器编号
-                // 暂时未实现
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                int val1 = getRegister(rs1);
+                int val2 = getRegister(rs2);
+                setRegister(rd, val1 + val2);
                 break;
-            case RegisterBytecodeDefinition.INSTR_SUB:
+            }
+            case RegisterBytecodeDefinition.INSTR_SUB: {
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) - getRegister(rs2));
                 break;
-            case RegisterBytecodeDefinition.INSTR_MUL:
+            }
+            case RegisterBytecodeDefinition.INSTR_MUL: {
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) * getRegister(rs2));
                 break;
-            case RegisterBytecodeDefinition.INSTR_DIV:
+            }
+            case RegisterBytecodeDefinition.INSTR_DIV: {
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                int divisor = getRegister(rs2);
+                if (divisor == 0) {
+                    throw new ArithmeticException("Division by zero");
+                }
+                setRegister(rd, getRegister(rs1) / divisor);
                 break;
-            case RegisterBytecodeDefinition.INSTR_LI:
+            }
+            case RegisterBytecodeDefinition.INSTR_LI: {
                 // li rd, immediate
+                int rd = extractRd(operand);
+                int imm = extractImm16(operand);
+                setRegister(rd, imm);
                 break;
-            case RegisterBytecodeDefinition.INSTR_CALL:
+            }
+            case RegisterBytecodeDefinition.INSTR_CALL: {
+                // call target: 保存返回地址到LR (r15)，跳转到目标地址
+                int target = extractImm26(operand);
+                // 保存返回地址（下一条指令地址）
+                setRegister(RegisterBytecodeDefinition.R15, programCounter + 5);
+                // 跳转
+                programCounter = target - 5; // 因为cpu()循环会加5，所以需要调整
                 break;
-            case RegisterBytecodeDefinition.INSTR_RET:
+            }
+            case RegisterBytecodeDefinition.INSTR_RET: {
+                // ret: 从LR恢复PC
+                int returnAddr = getRegister(RegisterBytecodeDefinition.R15);
+                programCounter = returnAddr - 5; // 调整
                 break;
-            case RegisterBytecodeDefinition.INSTR_J:
+            }
+            case RegisterBytecodeDefinition.INSTR_J: {
+                // j target: 无条件跳转
+                int target = extractImm26(operand);
+                programCounter = target - 5;
                 break;
-            case RegisterBytecodeDefinition.INSTR_JT:
+            }
+            case RegisterBytecodeDefinition.INSTR_JT: {
+                // jt rs1, target: 条件为真跳转
+                int rs1 = extractRs1(operand);
+                int target = extractImm16(operand);
+                if (getRegister(rs1) != 0) {
+                    programCounter = target - 5;
+                }
                 break;
-            case RegisterBytecodeDefinition.INSTR_JF:
+            }
+            case RegisterBytecodeDefinition.INSTR_JF: {
+                // jf rs1, target: 条件为假跳转
+                int rs1 = extractRs1(operand);
+                int target = extractImm16(operand);
+                if (getRegister(rs1) == 0) {
+                    programCounter = target - 5;
+                }
                 break;
-            case RegisterBytecodeDefinition.INSTR_PRINT:
+            }
+            case RegisterBytecodeDefinition.INSTR_PRINT: {
+                // print rs: 打印寄存器值
+                int rs = extractRs1(operand);
+                System.out.println(getRegister(rs));
                 break;
+            }
+            case RegisterBytecodeDefinition.INSTR_LW: {
+                // lw rd, base, offset: 从内存加载字
+                int rd = extractRd(operand);
+                int base = extractRs1(operand);
+                int offset = extractImm16(operand);
+                int address = getRegister(base) + offset;
+                if (address < 0 || address >= heap.length) {
+                    throw new IndexOutOfBoundsException("Memory address out of bounds: " + address);
+                }
+                setRegister(rd, heap[address]);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_SW: {
+                // sw rs, base, offset: 存储字到内存
+                int rs = extractRd(operand); // rs 在 rd 字段位置
+                int base = extractRs1(operand);
+                int offset = extractImm16(operand);
+                int address = getRegister(base) + offset;
+                if (address < 0 || address >= heap.length) {
+                    throw new IndexOutOfBoundsException("Memory address out of bounds: " + address);
+                }
+                heap[address] = getRegister(rs);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_LW_G: {
+                // lw_g rd, offset: 全局加载，假设使用固定的全局基址（如寄存器0?）
+                // 简化：假设offset直接作为heap数组索引
+                int rd = extractRd(operand);
+                int offset = extractImm16(operand);
+                if (offset < 0 || offset >= heap.length) {
+                    throw new IndexOutOfBoundsException("Global memory address out of bounds: " + offset);
+                }
+                setRegister(rd, heap[offset]);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_SW_G: {
+                // sw_g rs, offset: 全局存储
+                int rs = extractRd(operand);
+                int offset = extractImm16(operand);
+                if (offset < 0 || offset >= heap.length) {
+                    throw new IndexOutOfBoundsException("Global memory address out of bounds: " + offset);
+                }
+                heap[offset] = getRegister(rs);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_LW_F: {
+                // lw_f rd, offset: 字段加载，base=对象指针（假设在rs1寄存器）
+                // 简化：对象指针是heap中的地址
+                int rd = extractRd(operand);
+                int objPtrReg = extractRs1(operand); // 对象指针寄存器
+                int offset = extractImm16(operand);
+                int objPtr = getRegister(objPtrReg);
+                if (objPtr < 0 || objPtr >= heap.length) {
+                    throw new IndexOutOfBoundsException("Object pointer out of bounds: " + objPtr);
+                }
+                int fieldAddress = objPtr + offset;
+                if (fieldAddress < 0 || fieldAddress >= heap.length) {
+                    throw new IndexOutOfBoundsException("Field address out of bounds: " + fieldAddress);
+                }
+                setRegister(rd, heap[fieldAddress]);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_SW_F: {
+                // sw_f rs, offset: 字段存储
+                int rs = extractRd(operand);
+                int objPtrReg = extractRs1(operand);
+                int offset = extractImm16(operand);
+                int objPtr = getRegister(objPtrReg);
+                if (objPtr < 0 || objPtr >= heap.length) {
+                    throw new IndexOutOfBoundsException("Object pointer out of bounds: " + objPtr);
+                }
+                int fieldAddress = objPtr + offset;
+                if (fieldAddress < 0 || fieldAddress >= heap.length) {
+                    throw new IndexOutOfBoundsException("Field address out of bounds: " + fieldAddress);
+                }
+                heap[fieldAddress] = getRegister(rs);
+                break;
+            }
             case RegisterBytecodeDefinition.INSTR_HALT:
                 running = false;
                 break;

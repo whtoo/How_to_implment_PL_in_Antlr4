@@ -92,19 +92,25 @@ public class RegisterVMInterpreter {
      */
     private void cpu() throws Exception {
         while (running && programCounter < codeSize) {
-            // 提取指令（假设每条指令5字节：1字节操作码 + 4字节操作数）
-            // 实际指令格式可能不同，这里需要根据RegisterBytecodeDefinition调整
-            int opcode = code[programCounter] & 0xFF;
-            int operand = 0;
-            if (programCounter + 4 < codeSize) {
-                operand = ((code[programCounter + 1] & 0xFF) << 24) |
-                          ((code[programCounter + 2] & 0xFF) << 16) |
-                          ((code[programCounter + 3] & 0xFF) << 8) |
-                          (code[programCounter + 4] & 0xFF);
+            // 提取32位固定长度指令
+            if (programCounter + 4 > codeSize) {
+                throw new Exception("Incomplete instruction at PC=" + programCounter);
             }
 
+            // 读取32位指令字（大端序）
+            int instructionWord = ((code[programCounter] & 0xFF) << 24) |
+                                  ((code[programCounter + 1] & 0xFF) << 16) |
+                                  ((code[programCounter + 2] & 0xFF) << 8) |
+                                  (code[programCounter + 3] & 0xFF);
+
+            // 提取操作码（bits 31-26）
+            int opcode = (instructionWord >> 26) & 0x3F;
+            // 整个指令字作为操作数传递给执行逻辑
+            int operand = instructionWord;
+            System.out.println("[VM DEBUG] PC=" + programCounter + " instructionWord=" + Integer.toHexString(instructionWord) + " opcode=" + opcode);
+
             if (trace) {
-                System.out.printf("PC=%04d: opcode=%02x operand=%08x ", programCounter, opcode, operand);
+                System.out.printf("PC=%04d: instruction=%08x opcode=%02x ", programCounter, instructionWord, opcode);
                 // 反汇编显示
                 disassembleInstruction(opcode, operand);
             }
@@ -112,8 +118,8 @@ public class RegisterVMInterpreter {
             // 根据操作码执行指令
             executeInstruction(opcode, operand);
 
-            // 更新程序计数器（假设每条指令5字节）
-            programCounter += 5;
+            // 更新程序计数器（每条指令4字节）
+            programCounter += 4;
         }
     }
 
@@ -205,21 +211,21 @@ public class RegisterVMInterpreter {
                 // call target: 保存返回地址到LR (r15)，跳转到目标地址
                 int target = extractImm26(operand);
                 // 保存返回地址（下一条指令地址）
-                setRegister(RegisterBytecodeDefinition.R15, programCounter + 5);
+                setRegister(RegisterBytecodeDefinition.R15, programCounter + 4);
                 // 跳转
-                programCounter = target - 5; // 因为cpu()循环会加5，所以需要调整
+                programCounter = target - 4; // 因为cpu()循环会加4，所以需要调整
                 break;
             }
             case RegisterBytecodeDefinition.INSTR_RET: {
                 // ret: 从LR恢复PC
                 int returnAddr = getRegister(RegisterBytecodeDefinition.R15);
-                programCounter = returnAddr - 5; // 调整
+                programCounter = returnAddr - 4; // 调整
                 break;
             }
             case RegisterBytecodeDefinition.INSTR_J: {
                 // j target: 无条件跳转
                 int target = extractImm26(operand);
-                programCounter = target - 5;
+                programCounter = target - 4; // 因为cpu循环会加4
                 break;
             }
             case RegisterBytecodeDefinition.INSTR_JT: {
@@ -227,7 +233,7 @@ public class RegisterVMInterpreter {
                 int rs1 = extractRs1(operand);
                 int target = extractImm16(operand);
                 if (getRegister(rs1) != 0) {
-                    programCounter = target - 5;
+                    programCounter = target - 4; // 因为cpu循环会加4
                 }
                 break;
             }
@@ -236,7 +242,7 @@ public class RegisterVMInterpreter {
                 int rs1 = extractRs1(operand);
                 int target = extractImm16(operand);
                 if (getRegister(rs1) == 0) {
-                    programCounter = target - 5;
+                    programCounter = target - 4; // 因为cpu循环会加4
                 }
                 break;
             }

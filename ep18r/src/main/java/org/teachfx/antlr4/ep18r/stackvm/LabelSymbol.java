@@ -40,7 +40,16 @@ public class LabelSymbol {
         isForwardRef = false;
         Vector<Integer> operandsToPath = forwardRefs;
         for (int addrToPath : operandsToPath) {
-            ByteCodeAssembler.writeInt(code, addrToPath, address);
+            // 只修补低16位立即数字段（假设I类型指令）
+            // 立即数在指令字的低16位（bits 15-0），对应字节addrToPath+2和addrToPath+3
+            if (addrToPath + 3 < code.length) {
+                // 写入地址的低16位（大端序）
+                code[addrToPath + 2] = (byte) ((address >> 8) & 0xFF);
+                code[addrToPath + 3] = (byte) (address & 0xFF);
+                // 保持高16位不变（操作码和寄存器字段）
+            } else {
+                System.err.println("Error: patch address out of bounds: " + addrToPath);
+            }
         }
     }
 

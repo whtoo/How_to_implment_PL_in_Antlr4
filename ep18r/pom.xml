@@ -47,6 +47,7 @@
                 <targetPath>${project.build.directory}/classes</targetPath>
                 <includes>
                     <include>**/*.vm</include> <!-- 要包含的资源文件的模式 -->
+                    <include>**/*.vmr</include> <!-- 包含.vmr文件 -->
                 </includes>
             </resource>
         </resources>

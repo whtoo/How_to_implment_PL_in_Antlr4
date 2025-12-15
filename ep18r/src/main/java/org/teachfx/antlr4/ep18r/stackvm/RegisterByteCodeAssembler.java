@@ -37,6 +37,12 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
     private String currentInstruction;
     private boolean processingOperands = false;
 
+    // 用于32位固定长度指令编码
+    private int currentOpcode = 0;
+    private int currentInstructionWord = 0;
+    private int currentOperandIndex = 0;
+    private RegisterBytecodeDefinition.Instruction currentInstructionDef = null;
+
 
     public RegisterByteCodeAssembler(RegisterBytecodeDefinition.Instruction[] instructions) {
         for (int i = 1; i < instructions.length; ++i) {
@@ -85,9 +91,10 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
         return mainFunction;
     }
 
-    protected void gen(Token instrToken) {
-        String instructionName = instrToken.getText();
-        // 转换为小写查找
+    /**
+     * 开始新指令编码
+     */
+    private void startNewInstruction(String instructionName, Token instrToken) {
         String key = instructionName.toLowerCase();
         currentInstruction = key;
         Integer opCodeI = instructionOpcodeMapping.get(key);
@@ -96,14 +103,121 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
             System.err.println("  Available instructions: " + instructionOpcodeMapping.keySet());
             hasErrors = true;
             currentInstruction = null;
+            currentInstructionDef = null;
             return;
         }
 
-        int opcode = opCodeI.intValue();
-        ensureCapacity(ip + 1);
-        code[ip++] = (byte) (opcode & 0xff);
-        if (!processingOperands) {
-            currentInstruction = null;
+        currentOpcode = opCodeI.intValue();
+        currentInstructionDef = RegisterBytecodeDefinition.instructions[currentOpcode];
+        currentInstructionWord = 0;
+        currentOperandIndex = 0;
+
+        // 将操作码放入bits 31-26 (6位)
+        currentInstructionWord |= (currentOpcode << 26) & 0xFC000000;
+        System.out.println("[DEBUG] startNewInstruction: " + instructionName + " -> opcode=" + currentOpcode + " instructionWord=" + Integer.toHexString(currentInstructionWord));
+    }
+
+    /**
+     * 完成当前指令编码并写入代码内存
+     */
+    private void completeCurrentInstruction() {
+        if (currentInstructionDef == null || hasErrors) {
+            return;
+        }
+
+        ensureCapacity(ip + 4);
+        // 写入32位指令字（大端序）
+        code[ip] = (byte) ((currentInstructionWord >> 24) & 0xFF);
+        code[ip + 1] = (byte) ((currentInstructionWord >> 16) & 0xFF);
+        code[ip + 2] = (byte) ((currentInstructionWord >> 8) & 0xFF);
+        code[ip + 3] = (byte) (currentInstructionWord & 0xFF);
+        System.out.println("[DEBUG] completeCurrentInstruction: ip=" + ip + " instructionWord=" + Integer.toHexString(currentInstructionWord) + " bytes=" +
+            String.format("%02x %02x %02x %02x", code[ip] & 0xFF, code[ip+1] & 0xFF, code[ip+2] & 0xFF, code[ip+3] & 0xFF));
+        ip += 4;
+
+        // 重置状态
+        currentInstruction = null;
+        currentInstructionDef = null;
+        currentOpcode = 0;
+        currentInstructionWord = 0;
+        currentOperandIndex = 0;
+    }
+
+    /**
+     * 添加操作数到当前指令
+     */
+    private void addOperand(int value, Token operandToken) {
+        if (currentInstructionDef == null || hasErrors) {
+            return;
+        }
+
+        if (currentOperandIndex >= currentInstructionDef.n) {
+            System.err.println("line " + operandToken.getLine() +
+                ": Too many operands for instruction " + currentInstruction);
+            hasErrors = true;
+            return;
+        }
+
+        int format = currentInstructionDef.getFormat();
+        int operandType = currentInstructionDef.getOperandType(currentOperandIndex);
+
+        // 根据指令格式和操作数位置设置字段
+        if (format == RegisterBytecodeDefinition.FORMAT_R) {
+            // R类型: op rd, rs1, rs2
+            // 字段位置: rd在bits 25-21, rs1在20-16, rs2在15-11
+            if (currentOperandIndex == 0) {
+                // rd: bits 25-21
+                currentInstructionWord |= (value & 0x1F) << 21;
+            } else if (currentOperandIndex == 1) {
+                // rs1: bits 20-16
+                currentInstructionWord |= (value & 0x1F) << 16;
+            } else if (currentOperandIndex == 2) {
+                // rs2: bits 15-11
+                currentInstructionWord |= (value & 0x1F) << 11;
+            }
+        } else if (format == RegisterBytecodeDefinition.FORMAT_I) {
+            // I类型: op rd, rs1, imm
+            // 字段位置: rd在25-21, rs1在20-16, imm在15-0
+            if (currentOperandIndex == 0) {
+                // rd: bits 25-21
+                currentInstructionWord |= (value & 0x1F) << 21;
+            } else if (currentOperandIndex == 1) {
+                // 第二个操作数：可能是rs1或立即数
+                if (operandType == RegisterBytecodeDefinition.REG) {
+                    // rs1: bits 20-16
+                    currentInstructionWord |= (value & 0x1F) << 16;
+                } else {
+                    // 立即数: bits 15-0 (如LI指令)
+                    currentInstructionWord |= (value & 0xFFFF) << 0;
+                }
+            } else if (currentOperandIndex == 2) {
+                // 第三个操作数：立即数（对于lw/sw等）
+                currentInstructionWord |= (value & 0xFFFF) << 0;
+            }
+        } else if (format == RegisterBytecodeDefinition.FORMAT_J) {
+            // J类型: op imm
+            // 字段位置: imm在25-0
+            if (currentOperandIndex == 0) {
+                currentInstructionWord |= (value & 0x3FFFFFF) << 0;
+            }
+        }
+
+        currentOperandIndex++;
+
+        // 检查是否所有操作数都已添加
+        if (currentInstructionDef != null && currentOperandIndex == currentInstructionDef.n) {
+            completeCurrentInstruction();
+        }
+    }
+
+    protected void gen(Token instrToken) {
+        startNewInstruction(instrToken.getText(), instrToken);
+        if (hasErrors) {
+            return;
+        }
+        // 无操作数指令，直接完成
+        if (currentInstructionDef != null && currentInstructionDef.n == 0) {
+            completeCurrentInstruction();
         }
     }
 
@@ -137,7 +251,6 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
     public void genOperand(Token operandToken) {
         String text = operandToken.getText();
         int v = 0;
-        boolean p = false;
         switch (operandToken.getType()) {
             case INT:
                 v = Integer.valueOf(text);
@@ -176,9 +289,7 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
                 v = getRegisterNumber(operandToken);
                 break;
         }
-        ensureCapacity(ip + 4);
-        writeInt(code, ip, v);
-        ip += 4;
+        addOperand(v, operandToken);
     }
 
     protected int getConstantPoolIndex(Object o) {

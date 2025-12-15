@@ -1,5 +1,12 @@
 # CLAUDE.md
 
+## MCP Servers
+
+### tree-sitter-mcp
+- **Installation**: `@nendo/tree-sitter-mcp`
+- **Command**: `npx @nendo/tree-sitter-mcp --mcp`
+- **Description**: 语义代码搜索和分析
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview

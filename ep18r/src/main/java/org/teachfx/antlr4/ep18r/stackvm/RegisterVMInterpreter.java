@@ -324,6 +324,241 @@ public class RegisterVMInterpreter {
                 heap[fieldAddress] = getRegister(rs);
                 break;
             }
+            case RegisterBytecodeDefinition.INSTR_SLT: {
+                // slt rd, rs1, rs2: set less than
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) < getRegister(rs2) ? 1 : 0);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_SLE: {
+                // sle rd, rs1, rs2: set less or equal
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) <= getRegister(rs2) ? 1 : 0);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_SGT: {
+                // sgt rd, rs1, rs2: set greater than
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) > getRegister(rs2) ? 1 : 0);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_SGE: {
+                // sge rd, rs1, rs2: set greater or equal
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) >= getRegister(rs2) ? 1 : 0);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_SEQ: {
+                // seq rd, rs1, rs2: set equal
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) == getRegister(rs2) ? 1 : 0);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_SNE: {
+                // sne rd, rs1, rs2: set not equal
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) != getRegister(rs2) ? 1 : 0);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_NEG: {
+                // neg rd, rs1: negate
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                setRegister(rd, -getRegister(rs1));
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_NOT: {
+                // not rd, rs1: logical not
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                setRegister(rd, getRegister(rs1) == 0 ? 1 : 0);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_AND: {
+                // and rd, rs1, rs2: bitwise and
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) & getRegister(rs2));
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_OR: {
+                // or rd, rs1, rs2: bitwise or
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) | getRegister(rs2));
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_XOR: {
+                // xor rd, rs1, rs2: bitwise xor
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                setRegister(rd, getRegister(rs1) ^ getRegister(rs2));
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_FADD: {
+                // fadd rd, rs1, rs2: floating add
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                float a = Float.intBitsToFloat(getRegister(rs1));
+                float b = Float.intBitsToFloat(getRegister(rs2));
+                setRegister(rd, Float.floatToIntBits(a + b));
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_FSUB: {
+                // fsub rd, rs1, rs2: floating subtract
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                float a = Float.intBitsToFloat(getRegister(rs1));
+                float b = Float.intBitsToFloat(getRegister(rs2));
+                setRegister(rd, Float.floatToIntBits(a - b));
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_FMUL: {
+                // fmul rd, rs1, rs2: floating multiply
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                float a = Float.intBitsToFloat(getRegister(rs1));
+                float b = Float.intBitsToFloat(getRegister(rs2));
+                setRegister(rd, Float.floatToIntBits(a * b));
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_FDIV: {
+                // fdiv rd, rs1, rs2: floating divide
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                float a = Float.intBitsToFloat(getRegister(rs1));
+                float b = Float.intBitsToFloat(getRegister(rs2));
+                if (b == 0.0f) {
+                    throw new ArithmeticException("Floating division by zero");
+                }
+                setRegister(rd, Float.floatToIntBits(a / b));
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_FLT: {
+                // flt rd, rs1, rs2: floating less than
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                float a = Float.intBitsToFloat(getRegister(rs1));
+                float b = Float.intBitsToFloat(getRegister(rs2));
+                setRegister(rd, a < b ? 1 : 0);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_FEQ: {
+                // feq rd, rs1, rs2: floating equal
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                int rs2 = extractRs2(operand);
+                float a = Float.intBitsToFloat(getRegister(rs1));
+                float b = Float.intBitsToFloat(getRegister(rs2));
+                setRegister(rd, a == b ? 1 : 0);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_ITOF: {
+                // itof rd, rs1: integer to float
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                float result = (float) getRegister(rs1);
+                setRegister(rd, Float.floatToIntBits(result));
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_LC: {
+                // lc rd, immediate: load character
+                int rd = extractRd(operand);
+                int imm = extractImm16(operand);
+                setRegister(rd, imm & 0xFFFF); // 字符是16位
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_LF: {
+                // lf rd, pool_index: load float from constant pool
+                int rd = extractRd(operand);
+                int poolIndex = extractImm16(operand);
+                if (poolIndex < 0 || poolIndex >= constPool.length) {
+                    throw new IndexOutOfBoundsException("Constant pool index out of bounds: " + poolIndex);
+                }
+                Object constant = constPool[poolIndex];
+                if (constant instanceof Float) {
+                    setRegister(rd, Float.floatToIntBits((Float) constant));
+                } else {
+                    throw new ClassCastException("Expected Float constant at pool index " + poolIndex);
+                }
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_LS: {
+                // ls rd, pool_index: load string from constant pool (returns address in heap)
+                // 简化：将字符串复制到堆中，返回地址
+                int rd = extractRd(operand);
+                int poolIndex = extractImm16(operand);
+                if (poolIndex < 0 || poolIndex >= constPool.length) {
+                    throw new IndexOutOfBoundsException("Constant pool index out of bounds: " + poolIndex);
+                }
+                Object constant = constPool[poolIndex];
+                if (constant instanceof String) {
+                    String str = (String) constant;
+                    // 将字符串存储到堆中（简化：每个字符一个字）
+                    int address = heapAllocPointer;
+                    if (address + str.length() > heap.length) {
+                        throw new OutOfMemoryError("Not enough heap space for string");
+                    }
+                    for (int i = 0; i < str.length(); i++) {
+                        heap[address + i] = str.charAt(i);
+                    }
+                    heapAllocPointer += str.length();
+                    setRegister(rd, address);
+                } else {
+                    throw new ClassCastException("Expected String constant at pool index " + poolIndex);
+                }
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_STRUCT: {
+                // struct rd, size: allocate struct with given number of fields
+                int rd = extractRd(operand);
+                int size = extractImm16(operand);
+                // 在堆中分配空间
+                int address = heapAllocPointer;
+                if (address + size > heap.length) {
+                    throw new OutOfMemoryError("Not enough heap space for struct");
+                }
+                // 初始化为0
+                for (int i = 0; i < size; i++) {
+                    heap[address + i] = 0;
+                }
+                heapAllocPointer += size;
+                setRegister(rd, address);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_NULL: {
+                // null rd: load null pointer (0)
+                int rd = extractRd(operand);
+                setRegister(rd, 0);
+                break;
+            }
+            case RegisterBytecodeDefinition.INSTR_MOV: {
+                // mov rd, rs1: move register
+                int rd = extractRd(operand);
+                int rs1 = extractRs1(operand);
+                setRegister(rd, getRegister(rs1));
+                break;
+            }
             case RegisterBytecodeDefinition.INSTR_HALT:
                 running = false;
                 break;

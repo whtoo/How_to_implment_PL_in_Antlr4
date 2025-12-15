@@ -5,7 +5,7 @@ import java.util.Arrays;
 /**
  * CymbolRegisterVM - 基于寄存器的虚拟机实现
  * 执行寄存器字节码指令，管理寄存器和内存
- * 与CymbolStackVM语义等价，但使用寄存器架构
+ * 独立的寄存器架构虚拟机，专注于寄存器优化
  */
 public class CymbolRegisterVM {
     // 虚拟机配置

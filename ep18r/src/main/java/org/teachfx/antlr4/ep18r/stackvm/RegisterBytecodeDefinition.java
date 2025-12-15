@@ -4,7 +4,7 @@ import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser;
 
 /**
  * 寄存器虚拟机字节码定义
- * 基于寄存器架构的指令集，与栈式虚拟机语义等价
+ * 基于寄存器架构的独立指令集，专注于寄存器优化
  */
 public class RegisterBytecodeDefinition {
 

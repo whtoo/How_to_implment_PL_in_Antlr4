@@ -1,0 +1,6 @@
+.def main: args=0, locals=0
+    li r1, 42
+    mov r2, r1
+    print r1
+    print r2
+    halt

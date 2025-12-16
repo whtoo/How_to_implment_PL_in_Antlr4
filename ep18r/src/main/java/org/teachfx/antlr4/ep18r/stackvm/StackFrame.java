@@ -8,6 +8,10 @@ public class StackFrame {
     public StackFrame(FunctionSymbol symbol, int returnAddress) {
         this.symbol = symbol;
         this.returnAddress = returnAddress;
-        locals = new Object[symbol.nargs + symbol.nlocals];
+        if (symbol != null) {
+            locals = new Object[symbol.nargs + symbol.nlocals];
+        } else {
+            locals = new Object[0];
+        }
     }
 }

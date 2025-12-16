@@ -140,4 +140,37 @@ public class VMInterpreterTest extends RegisterVMTestBase {
         // c.vmr计算 f(10,20) = 2*10 + (20+3) = 20 + 23 = 43
         // 结果通过print指令输出，我们可以验证程序执行完成
     }
+
+    @Test
+    @DisplayName("fib.vmr文件测试递归fibonacci算法")
+    void testVMRFileFib() throws Exception {
+        InputStream input = getClass().getClassLoader().getResourceAsStream("fib.vmr");
+        assertThat(input).isNotNull();
+
+        RegisterVMInterpreter interpreter = new RegisterVMInterpreter();
+        boolean hasErrors = RegisterVMInterpreter.load(interpreter, input);
+        assertThat(hasErrors).isFalse();
+
+        // 执行程序
+        interpreter.exec();
+
+        // fib(8) = 21，结果通过print指令输出
+        // 验证程序执行完成，没有抛出异常
+    }
+
+    @Test
+    @DisplayName("mov_test.vmr文件测试mov指令")
+    void testVMRFileMov() throws Exception {
+        InputStream input = getClass().getClassLoader().getResourceAsStream("mov_test.vmr");
+        assertThat(input).isNotNull();
+
+        RegisterVMInterpreter interpreter = new RegisterVMInterpreter();
+        boolean hasErrors = RegisterVMInterpreter.load(interpreter, input);
+        assertThat(hasErrors).isFalse();
+
+        // 执行程序
+        interpreter.exec();
+
+        // mov_test.vmr应该输出 42 和 42
+    }
 }

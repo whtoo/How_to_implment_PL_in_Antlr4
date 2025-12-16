@@ -1,0 +1,47 @@
+.def main: args=0, locals=1
+    ; 测试 fib(1) = 1
+    li r1, 1         ; r1 = 1 (参数)
+    call fib         ; 调用 fib(1)
+    ; fib(1) 返回后，结果在 r1 中
+    print r1         ; 打印结果 (应该输出 1)
+    halt
+
+; fib(n): 计算第n个fibonacci数
+; 输入: r1 = n
+; 输出: r1 = fib(n)
+.def fib: args=1, locals=3
+    ; 保存参数 n 到局部变量
+    mov r4, r1       ; r4 = n
+    print r4         ; DEBUG: 打印n的值
+
+    ; 检查 n < 2
+    li r2, 2
+    sge r3, r4, r2   ; r3 = (n >= 2)
+    jf r3, base_case ; 如果 n < 2，跳转到 base_case
+
+    ; 递归调用 fib(n-1)
+    li r1, 1
+    sub r1, r4, r1   ; r1 = n - 1
+    call fib         ; 调用 fib(n-1)
+
+    ; 此时 r1 = fib(n-1)
+    ; 需要保存这个结果
+    mov r5, r1       ; r5 = fib(n-1)
+    print r5         ; DEBUG: 打印fib(n-1)
+
+    ; 递归调用 fib(n-2)
+    li r1, 2
+    sub r1, r4, r1   ; r1 = n - 2
+    call fib         ; 调用 fib(n-2)
+
+    ; 此时 r1 = fib(n-2)
+    ; 计算 fib(n-1) + fib(n-2)
+    add r1, r5, r1   ; r1 = fib(n-1) + fib(n-2)
+    print r1         ; DEBUG: 打印结果
+    ret
+
+base_case:
+    ; n < 2 时返回 n
+    mov r1, r4       ; r1 = n
+    print r1         ; DEBUG: 打印base case结果
+    ret

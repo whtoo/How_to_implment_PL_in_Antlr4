@@ -8,16 +8,6 @@
         "--mcp"
       ],
       "cwd": "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4"
-    },
-    "filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep18",
-        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep20",
-        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep21"
-      ]
     }
   }
 }

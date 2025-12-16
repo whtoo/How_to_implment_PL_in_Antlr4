@@ -20,7 +20,11 @@
       "Bash(/usr/local/bin/mvn exec:java:*)",
       "Skill(compiler-development)",
       "Skill(antlr4-compiler-development)",
-      "Skill(compiler-ecosystem)"
+      "Skill(compiler-ecosystem)",
+      "mcp__tree-sitter__search_code",
+      "Bash(cat:*)",
+      "Bash(mvn:*)",
+      "Bash(wc:*)"
     ]
   },
   "enabledMcpjsonServers": [

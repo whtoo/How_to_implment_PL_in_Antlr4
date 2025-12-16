@@ -115,7 +115,7 @@ public class RegisterBytecodeDefinition {
             new Instruction("flt", REG, REG, REG),  // index 20
             new Instruction("feq", REG, REG, REG),  // index 21
             new Instruction("itof", REG, REG),      // index 22
-            new Instruction("call", REG, INT),      // index 23 (rd=LR保存返回地址, immediate=目标地址)
+            new Instruction("call", INT),            // index 23 (跳转到函数地址，J类型)
             new Instruction("ret"),                 // index 24
             new Instruction("j", INT),              // index 25
             new Instruction("jt", REG, INT),        // index 26
@@ -130,12 +130,19 @@ public class RegisterBytecodeDefinition {
             new Instruction("sw_g", REG, INT),      // index 35
             new Instruction("lw_f", REG, INT),      // index 36 (字段加载: base=对象指针在rs1? 需要调整)
             new Instruction("sw_f", REG, INT),      // index 37 (字段存储)
-            new Instruction("print", REG),          // index 38
+            new Instruction("print", REG),          // index 38 (I类型: rd=寄存器)
             new Instruction("struct", REG, INT),    // index 39
-            new Instruction("null", REG),           // index 40
+            new Instruction("null", REG),           // index 40 (I类型: rd=寄存器)
             new Instruction("mov", REG, REG),       // index 41
             new Instruction("halt"),                // index 42
     };
+
+    // 静态初始化块：修正指令格式
+    static {
+        // print和null是单操作数I类型指令（寄存器操作数）
+        instructions[RegisterBytecodeDefinition.INSTR_PRINT].setFormat(RegisterBytecodeDefinition.FORMAT_I);
+        instructions[RegisterBytecodeDefinition.INSTR_NULL].setFormat(RegisterBytecodeDefinition.FORMAT_I);
+    }
 
     // 指令格式常量
     public static final int FORMAT_R = 0;  // R类型: op rd, rs1, rs2
@@ -159,6 +166,10 @@ public class RegisterBytecodeDefinition {
             this(name, a, 0, 0);
             n = 1;
             format = FORMAT_J; // 单操作数（立即数）为J类型
+        }
+
+        public void setFormat(int format) {
+            this.format = format;
         }
 
         public Instruction(String name, int a, int b) {

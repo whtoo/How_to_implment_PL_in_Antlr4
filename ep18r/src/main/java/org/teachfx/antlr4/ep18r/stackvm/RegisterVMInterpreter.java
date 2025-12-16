@@ -226,31 +226,50 @@ public class RegisterVMInterpreter {
                 break;
             }
             case RegisterBytecodeDefinition.INSTR_CALL: {
-                // call target: 保存返回地址到LR (r15)，跳转到目标地址
+                // call target: 保存返回地址到调用栈，跳转到目标地址
                 int target = extractImm26(operand);
-                
+
                 // 验证跳转目标
                 if (target < 0 || target >= codeSize || target % 4 != 0) {
                     throw new IllegalArgumentException("Invalid call target: " + target + " at PC=" + programCounter);
                 }
-                
-                // 保存返回地址（下一条指令地址）
-                setRegister(RegisterBytecodeDefinition.R15, programCounter + 4);
-                // 跳转 - 直接设置目标地址，不再需要调整
+
+                // 保存返回地址到调用栈（而不是只保存到r15）
+                int returnAddr = programCounter + 4;
+                if (framePointer + 1 >= callStack.length) {
+                    throw new StackOverflowError("Call stack overflow");
+                }
+                StackFrame newFrame = new StackFrame(null, returnAddr);
+                callStack[++framePointer] = newFrame;
+
+                // 同时保存到 LR(r15) 以保持兼容性
+                setRegister(RegisterBytecodeDefinition.R15, returnAddr);
+
+                // 跳转
                 programCounter = target;
                 didJump = true;
                 break;
             }
             case RegisterBytecodeDefinition.INSTR_RET: {
-                // ret: 从LR恢复PC
-                int returnAddr = getRegister(RegisterBytecodeDefinition.R15);
-                
-                // 验证返回地址
-                if (returnAddr < 0 || returnAddr >= codeSize || returnAddr % 4 != 0) {
-                    throw new IllegalArgumentException("Invalid return address: " + returnAddr + " at PC=" + programCounter);
+                // ret: 从调用栈恢复返回地址
+                if (framePointer < 0) {
+                    // 没有调用栈帧，尝试使用 r15（兼容旧代码）
+                    int returnAddr = getRegister(RegisterBytecodeDefinition.R15);
+                    if (returnAddr < 0 || returnAddr >= codeSize || returnAddr % 4 != 0) {
+                        throw new IllegalArgumentException("Invalid return address: " + returnAddr + " at PC=" + programCounter);
+                    }
+                    programCounter = returnAddr;
+                } else {
+                    // 从调用栈弹出返回地址
+                    StackFrame frame = callStack[framePointer--];
+                    int returnAddr = frame.returnAddress;
+
+                    if (returnAddr < 0 || returnAddr >= codeSize || returnAddr % 4 != 0) {
+                        throw new IllegalArgumentException("Invalid return address from stack: " + returnAddr + " at PC=" + programCounter);
+                    }
+
+                    programCounter = returnAddr;
                 }
-                
-                programCounter = returnAddr;
                 didJump = true;
                 break;
             }

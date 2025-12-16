@@ -44,6 +44,9 @@ public class RegisterVMInterpreter {
     // 跳转标志：指示是否发生了跳转
     private boolean didJump = false;
 
+    // 指令映射器（策略模式）
+    private final InstructionMapper instructionMapper = new InstructionMapper();
+
     // 特殊用途寄存器别名
     private static final int SP = RegisterBytecodeDefinition.R13; // 栈指针
     private static final int FP = RegisterBytecodeDefinition.R14; // 帧指针
@@ -205,55 +208,14 @@ public class RegisterVMInterpreter {
     }
 
     /**
-     * 执行单条指令
+     * 执行单条指令（使用策略模式）
+     *
+     * 大部分指令通过InstructionMapper委托给相应的执行器处理，
+     * 特殊指令（CALL, RET, HALT, J, JT, JF）由于需要访问VM内部状态（如codeSize），在此处直接处理。
      */
     private void executeInstruction(int opcode, int operand) throws Exception {
-        // TODO: 实现寄存器指令集执行逻辑
-        // 基于RegisterBytecodeDefinition中的指令定义
-        // 需要处理R类型、I类型、J类型指令格式
+        // 特殊指令：需要访问VM调用栈、codeSize或控制running状态
         switch (opcode) {
-            case RegisterBytecodeDefinition.INSTR_ADD: {
-                // add rd, rs1, rs2
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                int val1 = getRegister(rs1);
-                int val2 = getRegister(rs2);
-                setRegister(rd, val1 + val2);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_SUB: {
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) - getRegister(rs2));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_MUL: {
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) * getRegister(rs2));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_DIV: {
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                int divisor = getRegister(rs2);
-                if (divisor == 0) {
-                    throw new ArithmeticException("Division by zero");
-                }
-                setRegister(rd, getRegister(rs1) / divisor);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_LI: {
-                // li rd, immediate
-                int rd = extractRd(operand);
-                int imm = extractImm16(operand);
-                setRegister(rd, imm);
-                break;
-            }
             case RegisterBytecodeDefinition.INSTR_CALL: {
                 // call target: 保存返回地址到调用栈，跳转到目标地址
                 int target = extractImm26(operand);
@@ -263,7 +225,7 @@ public class RegisterVMInterpreter {
                     throw new IllegalArgumentException("Invalid call target: " + target + " at PC=" + programCounter);
                 }
 
-                // 保存返回地址到调用栈（而不是只保存到r15）
+                // 保存返回地址到调用栈
                 int returnAddr = programCounter + 4;
                 if (framePointer + 1 >= callStack.length) {
                     throw new StackOverflowError("Call stack overflow");
@@ -277,7 +239,7 @@ public class RegisterVMInterpreter {
                 // 跳转
                 programCounter = target;
                 didJump = true;
-                break;
+                return;
             }
             case RegisterBytecodeDefinition.INSTR_RET: {
                 // ret: 从调用栈恢复返回地址
@@ -300,303 +262,58 @@ public class RegisterVMInterpreter {
                     programCounter = returnAddr;
                 }
                 didJump = true;
-                break;
+                return;
             }
             case RegisterBytecodeDefinition.INSTR_J: {
                 // j target: 无条件跳转
                 int target = extractImm26(operand);
-                
+
                 // 验证跳转目标
                 if (target < 0 || target >= codeSize || target % 4 != 0) {
                     throw new IllegalArgumentException("Invalid jump target: " + target + " at PC=" + programCounter);
                 }
-                
+
                 programCounter = target;
                 didJump = true;
-                break;
+                return;
             }
             case RegisterBytecodeDefinition.INSTR_JT: {
                 // jt rs1, target: 条件为真跳转
                 int rs1 = extractRs1(operand);
                 int target = extractImm16(operand);
-                
+
                 if (getRegister(rs1) != 0) {
                     // 验证跳转目标
                     if (target < 0 || target >= codeSize || target % 4 != 0) {
                         throw new IllegalArgumentException("Invalid conditional jump target: " + target + " at PC=" + programCounter);
                     }
-                    
+
                     programCounter = target;
                     didJump = true;
                 }
-                break;
+                return;
             }
             case RegisterBytecodeDefinition.INSTR_JF: {
                 // jf rs1, target: 条件为假跳转
                 int rs1 = extractRs1(operand);
                 int target = extractImm16(operand);
-                
+
                 if (getRegister(rs1) == 0) {
                     // 验证跳转目标
                     if (target < 0 || target >= codeSize || target % 4 != 0) {
                         throw new IllegalArgumentException("Invalid conditional jump target: " + target + " at PC=" + programCounter);
                     }
-                    
+
                     programCounter = target;
                     didJump = true;
                 }
-                break;
+                return;
             }
-            case RegisterBytecodeDefinition.INSTR_PRINT: {
-                // print rs: 打印寄存器值
-                int rs = extractRs1(operand);
-                System.out.println(getRegister(rs));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_LW: {
-                // lw rd, base, offset: 从内存加载字
-                int rd = extractRd(operand);
-                int base = extractRs1(operand);
-                int offset = extractImm16(operand);
-                int address = getRegister(base) + offset;
-                if (address < 0 || address >= heap.length) {
-                    throw new IndexOutOfBoundsException("Memory address out of bounds: " + address);
-                }
-                setRegister(rd, heap[address]);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_SW: {
-                // sw rs, base, offset: 存储字到内存
-                int rs = extractRd(operand); // rs 在 rd 字段位置
-                int base = extractRs1(operand);
-                int offset = extractImm16(operand);
-                int address = getRegister(base) + offset;
-                if (address < 0 || address >= heap.length) {
-                    throw new IndexOutOfBoundsException("Memory address out of bounds: " + address);
-                }
-                heap[address] = getRegister(rs);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_LW_G: {
-                // lw_g rd, offset: 全局加载，假设使用固定的全局基址（如寄存器0?）
-                // 简化：假设offset直接作为heap数组索引
-                int rd = extractRd(operand);
-                int offset = extractImm16(operand);
-                if (offset < 0 || offset >= heap.length) {
-                    throw new IndexOutOfBoundsException("Global memory address out of bounds: " + offset);
-                }
-                setRegister(rd, heap[offset]);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_SW_G: {
-                // sw_g rs, offset: 全局存储
-                int rs = extractRd(operand);
-                int offset = extractImm16(operand);
-                if (offset < 0 || offset >= heap.length) {
-                    throw new IndexOutOfBoundsException("Global memory address out of bounds: " + offset);
-                }
-                heap[offset] = getRegister(rs);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_LW_F: {
-                // lw_f rd, offset: 字段加载，base=对象指针（假设在rs1寄存器）
-                // 简化：对象指针是heap中的地址
-                int rd = extractRd(operand);
-                int objPtrReg = extractRs1(operand); // 对象指针寄存器
-                int offset = extractImm16(operand);
-                int objPtr = getRegister(objPtrReg);
-                if (objPtr < 0 || objPtr >= heap.length) {
-                    throw new IndexOutOfBoundsException("Object pointer out of bounds: " + objPtr);
-                }
-                int fieldAddress = objPtr + offset;
-                if (fieldAddress < 0 || fieldAddress >= heap.length) {
-                    throw new IndexOutOfBoundsException("Field address out of bounds: " + fieldAddress);
-                }
-                setRegister(rd, heap[fieldAddress]);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_SW_F: {
-                // sw_f rs, offset: 字段存储
-                int rs = extractRd(operand);
-                int objPtrReg = extractRs1(operand);
-                int offset = extractImm16(operand);
-                int objPtr = getRegister(objPtrReg);
-                if (objPtr < 0 || objPtr >= heap.length) {
-                    throw new IndexOutOfBoundsException("Object pointer out of bounds: " + objPtr);
-                }
-                int fieldAddress = objPtr + offset;
-                if (fieldAddress < 0 || fieldAddress >= heap.length) {
-                    throw new IndexOutOfBoundsException("Field address out of bounds: " + fieldAddress);
-                }
-                heap[fieldAddress] = getRegister(rs);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_SLT: {
-                // slt rd, rs1, rs2: set less than
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) < getRegister(rs2) ? 1 : 0);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_SLE: {
-                // sle rd, rs1, rs2: set less or equal
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) <= getRegister(rs2) ? 1 : 0);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_SGT: {
-                // sgt rd, rs1, rs2: set greater than
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) > getRegister(rs2) ? 1 : 0);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_SGE: {
-                // sge rd, rs1, rs2: set greater or equal
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) >= getRegister(rs2) ? 1 : 0);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_SEQ: {
-                // seq rd, rs1, rs2: set equal
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) == getRegister(rs2) ? 1 : 0);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_SNE: {
-                // sne rd, rs1, rs2: set not equal
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) != getRegister(rs2) ? 1 : 0);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_NEG: {
-                // neg rd, rs1: negate
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                setRegister(rd, -getRegister(rs1));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_NOT: {
-                // not rd, rs1: logical not
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                setRegister(rd, getRegister(rs1) == 0 ? 1 : 0);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_AND: {
-                // and rd, rs1, rs2: bitwise and
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) & getRegister(rs2));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_OR: {
-                // or rd, rs1, rs2: bitwise or
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) | getRegister(rs2));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_XOR: {
-                // xor rd, rs1, rs2: bitwise xor
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                setRegister(rd, getRegister(rs1) ^ getRegister(rs2));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_FADD: {
-                // fadd rd, rs1, rs2: floating add
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                float a = Float.intBitsToFloat(getRegister(rs1));
-                float b = Float.intBitsToFloat(getRegister(rs2));
-                setRegister(rd, Float.floatToIntBits(a + b));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_FSUB: {
-                // fsub rd, rs1, rs2: floating subtract
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                float a = Float.intBitsToFloat(getRegister(rs1));
-                float b = Float.intBitsToFloat(getRegister(rs2));
-                setRegister(rd, Float.floatToIntBits(a - b));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_FMUL: {
-                // fmul rd, rs1, rs2: floating multiply
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                float a = Float.intBitsToFloat(getRegister(rs1));
-                float b = Float.intBitsToFloat(getRegister(rs2));
-                setRegister(rd, Float.floatToIntBits(a * b));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_FDIV: {
-                // fdiv rd, rs1, rs2: floating divide
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                float a = Float.intBitsToFloat(getRegister(rs1));
-                float b = Float.intBitsToFloat(getRegister(rs2));
-                if (b == 0.0f) {
-                    throw new ArithmeticException("Floating division by zero");
-                }
-                setRegister(rd, Float.floatToIntBits(a / b));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_FLT: {
-                // flt rd, rs1, rs2: floating less than
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                float a = Float.intBitsToFloat(getRegister(rs1));
-                float b = Float.intBitsToFloat(getRegister(rs2));
-                setRegister(rd, a < b ? 1 : 0);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_FEQ: {
-                // feq rd, rs1, rs2: floating equal
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                int rs2 = extractRs2(operand);
-                float a = Float.intBitsToFloat(getRegister(rs1));
-                float b = Float.intBitsToFloat(getRegister(rs2));
-                setRegister(rd, a == b ? 1 : 0);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_ITOF: {
-                // itof rd, rs1: integer to float
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                float result = (float) getRegister(rs1);
-                setRegister(rd, Float.floatToIntBits(result));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_LC: {
-                // lc rd, immediate: load character
-                int rd = extractRd(operand);
-                int imm = extractImm16(operand);
-                setRegister(rd, imm & 0xFFFF); // 字符是16位
-                break;
-            }
+            case RegisterBytecodeDefinition.INSTR_HALT:
+                running = false;
+                return;
             case RegisterBytecodeDefinition.INSTR_LF: {
-                // lf rd, pool_index: load float from constant pool
+                // lf rd, pool_index: 需要访问constPool
                 int rd = extractRd(operand);
                 int poolIndex = extractImm16(operand);
                 if (poolIndex < 0 || poolIndex >= constPool.length) {
@@ -608,11 +325,10 @@ public class RegisterVMInterpreter {
                 } else {
                     throw new ClassCastException("Expected Float constant at pool index " + poolIndex);
                 }
-                break;
+                return;
             }
             case RegisterBytecodeDefinition.INSTR_LS: {
-                // ls rd, pool_index: load string from constant pool (returns address in heap)
-                // 简化：将字符串复制到堆中，返回地址
+                // ls rd, pool_index: 需要访问constPool和heap分配
                 int rd = extractRd(operand);
                 int poolIndex = extractImm16(operand);
                 if (poolIndex < 0 || poolIndex >= constPool.length) {
@@ -621,7 +337,6 @@ public class RegisterVMInterpreter {
                 Object constant = constPool[poolIndex];
                 if (constant instanceof String) {
                     String str = (String) constant;
-                    // 将字符串存储到堆中（简化：每个字符一个字）
                     int address = heapAllocPointer;
                     if (address + str.length() > heap.length) {
                         throw new OutOfMemoryError("Not enough heap space for string");
@@ -634,43 +349,33 @@ public class RegisterVMInterpreter {
                 } else {
                     throw new ClassCastException("Expected String constant at pool index " + poolIndex);
                 }
-                break;
+                return;
             }
             case RegisterBytecodeDefinition.INSTR_STRUCT: {
-                // struct rd, size: allocate struct with given number of fields
+                // struct rd, size: 需要堆分配
                 int rd = extractRd(operand);
                 int size = extractImm16(operand);
-                // 在堆中分配空间
                 int address = heapAllocPointer;
                 if (address + size > heap.length) {
                     throw new OutOfMemoryError("Not enough heap space for struct");
                 }
-                // 初始化为0
                 for (int i = 0; i < size; i++) {
                     heap[address + i] = 0;
                 }
                 heapAllocPointer += size;
                 setRegister(rd, address);
-                break;
+                return;
             }
-            case RegisterBytecodeDefinition.INSTR_NULL: {
-                // null rd: load null pointer (0)
-                int rd = extractRd(operand);
-                setRegister(rd, 0);
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_MOV: {
-                // mov rd, rs1: move register
-                int rd = extractRd(operand);
-                int rs1 = extractRs1(operand);
-                setRegister(rd, getRegister(rs1));
-                break;
-            }
-            case RegisterBytecodeDefinition.INSTR_HALT:
-                running = false;
-                break;
-            default:
-                throw new UnsupportedOperationException("Unsupported opcode: " + opcode);
+        }
+
+        // 使用策略模式执行其他指令
+        ExecutionContext context = new ExecutionContext(this, programCounter);
+        InstructionExecutor executor = instructionMapper.getExecutor(opcode);
+
+        if (executor != null) {
+            executor.execute(operand, context);
+        } else {
+            throw new UnsupportedOperationException("Unsupported opcode: " + opcode);
         }
     }
 

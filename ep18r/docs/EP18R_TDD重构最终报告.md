@@ -1,6 +1,6 @@
 # EP18R TDD重构最终报告
 
-**执行时间**: 2025-12-16 23:00 - 23:20
+**执行时间**: 2025-12-16 23:00 - 2025-12-17 00:00
 **执行者**: Claude Code
 **状态**: ✅ 完成
 
@@ -26,6 +26,10 @@
      - 创建了`InstructionExecutor`接口
      - 创建了`ExecutionContext`类
      - 创建了`ArithmeticExecutors`类，拆分算术指令执行逻辑
+     - 创建了`ComparisonExecutors`类，拆分比较和浮点指令
+     - 创建了`MemoryExecutors`类，拆分内存访问指令
+     - 创建了`ControlFlowExecutors`类，拆分控制流指令
+     - 创建了`InstructionMapper`类，统一指令映射
    - ✅ 阶段2: 异常体系统一
      - 创建了`ErrorCode`枚举
      - 现有的`VMException`基类已足够完善
@@ -33,6 +37,11 @@
 4. **删除deprecated文件**
    - 根据用户要求，完全删除了deprecated目录及其内容
    - 修复了相关的测试用例
+
+5. **策略模式完整重构**
+   - 更新RegisterVMInterpreter使用InstructionMapper
+   - 42条指令中约30条已迁移到策略模式执行器
+   - 特殊指令（CALL, RET, J, JT, JF, HALT, LF, LS, STRUCT）保留在主循环处理
 
 ---
 
@@ -65,11 +74,15 @@ public RegisterVMInterpreter(VMConfig config) {
 }
 ```
 
-#### 2. 指令执行抽象化
+#### 2. 指令执行抽象化（完整策略模式）
 创建了策略模式的指令执行架构:
-- `InstructionExecutor` - 指令执行器接口
+- `InstructionExecutor` - 指令执行器接口（函数式接口）
 - `ExecutionContext` - 执行上下文，封装寄存器、内存访问
-- `ArithmeticExecutors` - 算术指令执行器集合
+- `ArithmeticExecutors` - 算术指令执行器集合（ADD, SUB, MUL, DIV, AND, OR, XOR等）
+- `ComparisonExecutors` - 比较指令执行器集合（NEG, NOT, FADD, FSUB, FMUL, FDIV, FLT, FEQ, ITOF）
+- `MemoryExecutors` - 内存访问指令执行器集合（LI, LC, LW, SW, LW_G, SW_G, LW_F, SW_F等）
+- `ControlFlowExecutors` - 控制流指令执行器集合（作为备用，主要指令保留在主循环）
+- `InstructionMapper` - HashMap统一指令映射
 
 #### 3. 异常体系完善
 - `ErrorCode` - 错误代码枚举，定义了16种错误类型

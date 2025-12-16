@@ -19,22 +19,6 @@
       "args": [
         "context7-mcp-server"
       ]
-    },
-    "filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4"
-      ]
-    },
-    "git": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-git"
-      ],
-      "workingDirectory": "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4"
     }
   }
 }

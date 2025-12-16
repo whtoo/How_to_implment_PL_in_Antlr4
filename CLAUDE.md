@@ -22,10 +22,13 @@ This project supports global MCP installation for enhanced code analysis.
 
 **Using npm (npx):**
 ```bash
-# Install useful MCP servers globally  
+# Install MCP servers globally (used in current configuration)
+npm install -g @modelcontextprotocol/server-memory
 npm install -g @modelcontextprotocol/server-filesystem
 npm install -g @modelcontextprotocol/server-git
-npm install -g @modelcontextprotocol/server-postgres
+
+# Optional: PostgreSQL server (not currently configured)
+# npm install -g @modelcontextprotocol/server-postgres
 ```
 
 **Using uv (Python package manager):**
@@ -33,27 +36,46 @@ npm install -g @modelcontextprotocol/server-postgres
 # Install Context7 MCP server
 uvx context7-mcp-server
 
-# Install other Python-based MCP servers
-uvx postgres-mcp-server
-uvx filesystem-mcp-server
-
 # Install tree-sitter MCP server (Python version)
 pip install mcp-server-tree-sitter
+
+# Optional: Other Python-based MCP servers (not currently configured)
+# uvx postgres-mcp-server
+# uvx filesystem-mcp-server
 ```
 
 #### Configuration
-The project's MCP configuration is located in `.roo/mcp.json` and includes:
-- **tree-sitter**: `python -m mcp_server_tree_sitter.server`
-- **context7**: `uvx context7-mcp-server`
-- **filesystem**: `@modelcontextprotocol/server-filesystem`
-- **git**: `@modelcontextprotocol/server-git`
+The project's MCP configuration is located in `.mcp.json` and includes five servers:
+
+1. **memory**
+   - Command: `npx -y @modelcontextprotocol/server-memory`
+   - Description: Provides memory-based storage and retrieval capabilities
+
+2. **tree-sitter**
+   - Command: `python -m mcp_server_tree_sitter.server`
+   - Description: Python-based Tree-sitter code analysis server supporting multiple languages
+
+3. **context7**
+   - Command: `uvx context7-mcp-server`
+   - Description: Context-aware development assistance server
+
+4. **filesystem**
+   - Command: `npx -y @modelcontextprotocol/server-filesystem`
+   - Args: `/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4`
+   - Description: File system navigation server with project root path
+
+5. **git**
+   - Command: `npx -y @modelcontextprotocol/server-git`
+   - Working Directory: `/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4`
+   - Description: Git integration server for version control operations
 
 #### Usage in Claude Code
 When using Claude Code with this repository, the MCP servers will be automatically available for:
-- Code analysis and semantic search
-- File system navigation and git integration
-- Database connectivity (PostgreSQL)
-- Context-aware development assistance
+- **Code analysis and semantic search**: Tree-sitter server provides AST-based code understanding
+- **File system navigation**: Filesystem server enables browsing and reading project files
+- **Version control**: Git server supports commit history, diff viewing, and branch operations
+- **Context-aware assistance**: Context7 server offers development guidance
+- **Memory and storage**: Memory server provides temporary storage capabilities
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 

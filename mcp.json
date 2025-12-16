@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "tree-sitter": {
+      "command": "npx",
+      "args": ["-y", "@nendo/tree-sitter-mcp", "--mcp"],
+      "cwd": "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep18",
+        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep20",
+        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep21"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y", 
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "context7": {
+      "command": "uvx",
+      "args": [
+        "context7-mcp-server"
+      ]
+    }
+  }
+}

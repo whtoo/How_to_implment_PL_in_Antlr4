@@ -42,32 +42,63 @@ public abstract class RegisterVMTestBase {
     /**
      * 编码R类型指令：op rd, rs1, rs2
      * 32位编码：opcode(6) | rd(5) | rs1(5) | rs2(5) | unused(11)
-     * 简化为：opcode(8) | rd(5) | rs1(5) | rs2(5) | unused(9)
+     * 与RegisterVMInterpreter的解码逻辑一致：
+     *   - opcode在bits 31-26
+     *   - rd在bits 21-25
+     *   - rs1在bits 16-20
+     *   - rs2在bits 11-15
+     *   - bits 0-10未使用
      */
     protected int encodeRType(int opcode, int rd, int rs1, int rs2) {
-        // 使用8位操作码（与RegisterVMInterpreter的executeInstruction一致）
-        // RegisterVMInterpreter使用1字节操作码，所以这里需要调整
-        // 先简单实现：高8位操作码，然后是寄存器字段
-        return (opcode << 24) | (rd << 19) | (rs1 << 14) | (rs2 << 9);
+        // 确保操作码是6位（0-63）
+        if (opcode < 0 || opcode > 0x3F) {
+            throw new IllegalArgumentException("Opcode must be 6-bit (0-63): " + opcode);
+        }
+        // 确保寄存器编号是5位（0-31）
+        if (rd < 0 || rd > 0x1F || rs1 < 0 || rs1 > 0x1F || rs2 < 0 || rs2 > 0x1F) {
+            throw new IllegalArgumentException("Register numbers must be 5-bit (0-31)");
+        }
+        return (opcode << 26) | (rd << 21) | (rs1 << 16) | (rs2 << 11);
     }
 
     /**
      * 编码I类型指令：op rd, rs1, imm
      * 32位编码：opcode(6) | rd(5) | rs1(5) | immediate(16)
+     * 与RegisterVMInterpreter的解码逻辑一致：
+     *   - opcode在bits 31-26
+     *   - rd在bits 21-25
+     *   - rs1在bits 16-20
+     *   - imm在bits 0-15（有符号16位立即数）
      */
     protected int encodeIType(int opcode, int rd, int rs1, int imm) {
-        // 符号扩展立即数到16位
+        // 确保操作码是6位（0-63）
+        if (opcode < 0 || opcode > 0x3F) {
+            throw new IllegalArgumentException("Opcode must be 6-bit (0-63): " + opcode);
+        }
+        // 确保寄存器编号是5位（0-31）
+        if (rd < 0 || rd > 0x1F || rs1 < 0 || rs1 > 0x1F) {
+            throw new IllegalArgumentException("Register numbers must be 5-bit (0-31)");
+        }
+        // 立即数截断为16位（有符号）
         imm = imm & 0xFFFF;
-        return (opcode << 24) | (rd << 19) | (rs1 << 14) | (imm);
+        return (opcode << 26) | (rd << 21) | (rs1 << 16) | imm;
     }
 
     /**
      * 编码J类型指令：op imm
      * 32位编码：opcode(6) | address(26)
+     * 与RegisterVMInterpreter的解码逻辑一致：
+     *   - opcode在bits 31-26
+     *   - address在bits 0-25（有符号26位立即数）
      */
     protected int encodeJType(int opcode, int address) {
+        // 确保操作码是6位（0-63）
+        if (opcode < 0 || opcode > 0x3F) {
+            throw new IllegalArgumentException("Opcode must be 6-bit (0-63): " + opcode);
+        }
+        // 地址截断为26位（有符号）
         address = address & 0x3FFFFFF;
-        return (opcode << 24) | address;
+        return (opcode << 26) | address;
     }
 
     /**
@@ -106,33 +137,28 @@ public abstract class RegisterVMTestBase {
      * 编码HALT指令
      */
     protected int encodeHALT() {
-        return org.teachfx.antlr4.ep18r.stackvm.RegisterBytecodeDefinition.INSTR_HALT << 24;
+        return encodeJType(
+            org.teachfx.antlr4.ep18r.stackvm.RegisterBytecodeDefinition.INSTR_HALT,
+            0
+        );
     }
 
     /**
      * 创建寄存器字节码
      * @param instructions 指令数组（已编码的32位指令）
-     * @return 字节码数组（每条指令5字节：1字节操作码 + 4字节操作数）
+     * @return 字节码数组（每条指令4字节：32位指令字）
      */
     protected byte[] createRegisterBytecode(int[] instructions) {
-        // RegisterVMInterpreter使用5字节指令：1字节操作码 + 4字节操作数
-        byte[] bytecode = new byte[instructions.length * 5];
+        // RegisterVMInterpreter使用4字节指令字（32位）
+        byte[] bytecode = new byte[instructions.length * 4];
         int index = 0;
 
         for (int instr : instructions) {
-            // 提取操作码（高8位）
-            int opcode = (instr >> 24) & 0xFF;
-            // 操作数（低24位）
-            int operand = instr & 0xFFFFFF;
-
-            // 第1字节：操作码
-            bytecode[index++] = (byte) opcode;
-
-            // 第2-5字节：操作数（大端序）
-            bytecode[index++] = (byte) ((operand >> 24) & 0xFF);
-            bytecode[index++] = (byte) ((operand >> 16) & 0xFF);
-            bytecode[index++] = (byte) ((operand >> 8) & 0xFF);
-            bytecode[index++] = (byte) (operand & 0xFF);
+            // 将32位指令字转换为4字节（大端序）
+            bytecode[index++] = (byte) ((instr >> 24) & 0xFF);
+            bytecode[index++] = (byte) ((instr >> 16) & 0xFF);
+            bytecode[index++] = (byte) ((instr >> 8) & 0xFF);
+            bytecode[index++] = (byte) (instr & 0xFF);
         }
 
         return bytecode;

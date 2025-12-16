@@ -33,6 +33,10 @@ public class RegisterVMInterpreter {
     private int programCounter;
     private boolean running;
     private boolean trace = false;
+    
+    // 循环检测和安全机制
+    private static final int MAX_EXECUTION_STEPS = 1000000; // 最大执行步数
+    private int executionSteps = 0;
 
     // 特殊用途寄存器别名
     private static final int SP = RegisterBytecodeDefinition.R13; // 栈指针
@@ -91,10 +95,17 @@ public class RegisterVMInterpreter {
      * 主执行循环 - 解码并执行寄存器指令
      */
     private void cpu() throws Exception {
+        executionSteps = 0; // 重置执行步数计数器
+        
         while (running && programCounter < codeSize) {
+            // 循环检测 - 防止无限循环
+            if (executionSteps++ > MAX_EXECUTION_STEPS) {
+                throw new RuntimeException("Maximum execution steps exceeded. Possible infinite loop detected at PC=" + programCounter);
+            }
+
             // 提取32位固定长度指令
-            if (programCounter + 4 > codeSize) {
-                throw new Exception("Incomplete instruction at PC=" + programCounter);
+            if (programCounter < 0 || programCounter + 4 > codeSize) {
+                throw new Exception("Instruction access out of bounds at PC=" + programCounter + ", codeSize=" + codeSize);
             }
 
             // 读取32位指令字（大端序）
@@ -105,23 +116,30 @@ public class RegisterVMInterpreter {
 
             // 提取操作码（bits 31-26）
             int opcode = (instructionWord >> 26) & 0x3F;
+            
+            // 验证操作码范围
+            if (opcode < 0 || opcode >= RegisterBytecodeDefinition.instructions.length) {
+                throw new IllegalArgumentException("Invalid opcode: " + opcode + " at PC=" + programCounter);
+            }
+            
             // 整个指令字作为操作数传递给执行逻辑
             int operand = instructionWord;
-            System.out.println("[VM DEBUG] PC=" + programCounter + " instructionWord=" + Integer.toHexString(instructionWord) + " opcode=" + opcode);
-
-            if (trace) {
-                System.out.printf("PC=%04d: instruction=%08x opcode=%02x ", programCounter, instructionWord, opcode);
-                // 反汇编显示
-                disassembleInstruction(opcode, operand);
-            }
 
             // 根据操作码执行指令
             executeInstruction(opcode, operand);
 
             // 更新程序计数器（每条指令4字节）
-            programCounter += 4;
+            // 注意：只有在没有跳转的情况下才自动增加PC
+            // 跳转指令会在executeInstruction中直接设置PC
+            if (!didJump) {
+                programCounter += 4;
+            }
+            didJump = false; // 重置跳转标志
         }
     }
+    
+    // 标志位：指示是否发生了跳转
+    private boolean didJump = false;
 
     /**
      * 从操作数中提取寄存器编号（5位字段）
@@ -141,7 +159,7 @@ public class RegisterVMInterpreter {
 
     private int extractImm16(int operand) {
         int imm = operand & 0xFFFF;
-        // 符号扩展
+        // 符号扩展：如果最高位为1，则扩展为负数
         if ((imm & 0x8000) != 0) {
             imm |= 0xFFFF0000;
         }
@@ -150,7 +168,7 @@ public class RegisterVMInterpreter {
 
     private int extractImm26(int operand) {
         int imm = operand & 0x3FFFFFF;
-        // 符号扩展
+        // 符号扩展：如果最高位为1，则扩展为负数
         if ((imm & 0x2000000) != 0) {
             imm |= 0xFC000000;
         }
@@ -210,30 +228,58 @@ public class RegisterVMInterpreter {
             case RegisterBytecodeDefinition.INSTR_CALL: {
                 // call target: 保存返回地址到LR (r15)，跳转到目标地址
                 int target = extractImm26(operand);
+                
+                // 验证跳转目标
+                if (target < 0 || target >= codeSize || target % 4 != 0) {
+                    throw new IllegalArgumentException("Invalid call target: " + target + " at PC=" + programCounter);
+                }
+                
                 // 保存返回地址（下一条指令地址）
                 setRegister(RegisterBytecodeDefinition.R15, programCounter + 4);
-                // 跳转
-                programCounter = target - 4; // 因为cpu()循环会加4，所以需要调整
+                // 跳转 - 直接设置目标地址，不再需要调整
+                programCounter = target;
+                didJump = true;
                 break;
             }
             case RegisterBytecodeDefinition.INSTR_RET: {
                 // ret: 从LR恢复PC
                 int returnAddr = getRegister(RegisterBytecodeDefinition.R15);
-                programCounter = returnAddr - 4; // 调整
+                
+                // 验证返回地址
+                if (returnAddr < 0 || returnAddr >= codeSize || returnAddr % 4 != 0) {
+                    throw new IllegalArgumentException("Invalid return address: " + returnAddr + " at PC=" + programCounter);
+                }
+                
+                programCounter = returnAddr;
+                didJump = true;
                 break;
             }
             case RegisterBytecodeDefinition.INSTR_J: {
                 // j target: 无条件跳转
                 int target = extractImm26(operand);
-                programCounter = target - 4; // 因为cpu循环会加4
+                
+                // 验证跳转目标
+                if (target < 0 || target >= codeSize || target % 4 != 0) {
+                    throw new IllegalArgumentException("Invalid jump target: " + target + " at PC=" + programCounter);
+                }
+                
+                programCounter = target;
+                didJump = true;
                 break;
             }
             case RegisterBytecodeDefinition.INSTR_JT: {
                 // jt rs1, target: 条件为真跳转
                 int rs1 = extractRs1(operand);
                 int target = extractImm16(operand);
+                
                 if (getRegister(rs1) != 0) {
-                    programCounter = target - 4; // 因为cpu循环会加4
+                    // 验证跳转目标
+                    if (target < 0 || target >= codeSize || target % 4 != 0) {
+                        throw new IllegalArgumentException("Invalid conditional jump target: " + target + " at PC=" + programCounter);
+                    }
+                    
+                    programCounter = target;
+                    didJump = true;
                 }
                 break;
             }
@@ -241,8 +287,15 @@ public class RegisterVMInterpreter {
                 // jf rs1, target: 条件为假跳转
                 int rs1 = extractRs1(operand);
                 int target = extractImm16(operand);
+                
                 if (getRegister(rs1) == 0) {
-                    programCounter = target - 4; // 因为cpu循环会加4
+                    // 验证跳转目标
+                    if (target < 0 || target >= codeSize || target % 4 != 0) {
+                        throw new IllegalArgumentException("Invalid conditional jump target: " + target + " at PC=" + programCounter);
+                    }
+                    
+                    programCounter = target;
+                    didJump = true;
                 }
                 break;
             }

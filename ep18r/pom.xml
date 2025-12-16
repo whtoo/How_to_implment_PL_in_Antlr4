@@ -16,7 +16,7 @@
     <properties>
         <!-- 这里为包含g4文件的文件夹-->
         <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep18r/stackvm/parser</parser.g4.dir>
-        <run.main.entry>org.teachfx.antlr4.ep18r.VMInterpreter</run.main.entry>
+        <run.main.entry>org.teachfx.antlr4.ep18r.stackvm.RegisterVMInterpreter</run.main.entry>
     </properties>
     <!-- 添加ANTLR4插件 -->
     <build>

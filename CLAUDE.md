@@ -2,10 +2,17 @@
 
 ## MCP Servers
 
-### tree-sitter-mcp
-- **Installation**: `@nendo/tree-sitter-mcp`
-- **Command**: `npx @nendo/tree-sitter-mcp --mcp`
-- **Description**: 语义代码搜索和分析
+### mcp-server-tree-sitter (Python)
+- **Installation**: `pip install mcp-server-tree-sitter`
+- **Command**: `python -m mcp_server_tree_sitter.server`
+- **Description**: 基于Python的Tree-sitter代码分析服务器，支持多种语言（Python、JavaScript、TypeScript、Go、Rust、C/C++、Swift、Java、Kotlin、Julia、APL）
+- **Features**:
+  - 灵活的代码探索：多粒度代码检查
+  - AST理解和基于光标的高效遍历
+  - 符号提取和依赖分析
+  - 解析树缓存和状态持久化
+- **Configuration**: 可通过YAML配置缓存、安全边界、语言偏好和日志级别
+- **Source**: [wrale/mcp-server-tree-sitter](https://github.com/wrale/mcp-server-tree-sitter)
 
 ### Context7 and Tree-sitter (Global MCP)
 
@@ -15,10 +22,7 @@ This project supports global MCP installation for enhanced code analysis.
 
 **Using npm (npx):**
 ```bash
-# Install tree-sitter MCP globally
-npm install -g @nendo/tree-sitter-mcp
-
-# Install other useful MCP servers globally  
+# Install useful MCP servers globally  
 npm install -g @modelcontextprotocol/server-filesystem
 npm install -g @modelcontextprotocol/server-git
 npm install -g @modelcontextprotocol/server-postgres
@@ -32,12 +36,15 @@ uvx context7-mcp-server
 # Install other Python-based MCP servers
 uvx postgres-mcp-server
 uvx filesystem-mcp-server
+
+# Install tree-sitter MCP server (Python version)
+pip install mcp-server-tree-sitter
 ```
 
 #### Configuration
 The project's MCP configuration is located in `.roo/mcp.json` and includes:
-- **tree-sitter**: `npx -y @nendo/tree-sitter-mcp`
-- **context7**: `uvx context7-mcp-server` 
+- **tree-sitter**: `python -m mcp_server_tree_sitter.server`
+- **context7**: `uvx context7-mcp-server`
 - **filesystem**: `@modelcontextprotocol/server-filesystem`
 - **git**: `@modelcontextprotocol/server-git`
 

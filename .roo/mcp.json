@@ -8,10 +8,10 @@
       ]
     },
     "tree-sitter": {
-      "command": "npx",
+      "command": "python",
       "args": [
-        "-y",
-        "@nendo/tree-sitter-mcp"
+        "-m",
+        "mcp_server_tree_sitter.server"
       ]
     },
     "context7": {

@@ -24,7 +24,8 @@
       "mcp__tree-sitter__search_code",
       "Bash(cat:*)",
       "Bash(mvn:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(git checkout:*)"
     ]
   },
   "enabledMcpjsonServers": [

@@ -17,7 +17,7 @@ allowed-tools: Read, Grep, Glob, Bash, Edit, Write
 - **开发工具**: 项目管理和环境检查工具
 
 ### 项目架构
-```
+
 How to implement PL in ANTLR4/
 ├── .claude/skills/
 │   ├── compiler-development/        # 原始编译器开发技能
@@ -29,7 +29,7 @@ How to implement PL in ANTLR4/
 │   └── mcp-helper.py               # MCP管理工具
 ├── mcp-project-config.json         # 项目MCP配置
 └── ep1-ep21/                       # 21章节编译器实现
-```
+
 
 ## 核心工作流程
 
@@ -37,14 +37,14 @@ How to implement PL in ANTLR4/
 当开始新的编译器开发任务时：
 
 **环境检查**:
-```bash
+bash
 # 使用MCP辅助工具检查环境
 python scripts/mcp-helper.py check
 
 # 查看项目信息
 python scripts/mcp-helper.py list
 ./scripts/build.sh info
-```
+
 
 **环境要求**:
 - Java 11+ (推荐Java 21)
@@ -54,29 +54,29 @@ python scripts/mcp-helper.py list
 ### 2. 编译器开发流程
 
 **语法设计和实现**:
-1. 编辑 `ep20/src/main/antlr4/.../Cymbol.g4`
-2. 生成解析器代码: `./scripts/build.sh generate ep20`
-3. 实现AST节点: `ep20/src/main/java/org/teachfx/antlr4/ep20/ast/`
-4. 构建测试: `mvn test -pl ep20 -Dtest="*ParserTest"`
+1. 编辑 ep20/src/main/antlr4/.../Cymbol.g4
+2. 生成解析器代码: ./scripts/build.sh generate ep20
+3. 实现AST节点: ep20/src/main/java/org/teachfx/antlr4/ep20/ast/
+4. 构建测试: mvn test -pl ep20 -Dtest="*ParserTest"
 
 **语义分析和类型系统**:
-1. 实现符号表: `ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/`
-2. 开发语义检查: `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/sematic/`
-3. 类型检查测试: `mvn test -pl ep17 -Dtest="*TypeCheckTest"`
+1. 实现符号表: ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/
+2. 开发语义检查: ep20/src/main/java/org/teachfx/antlr4/ep20/pass/sematic/
+3. 类型检查测试: mvn test -pl ep17 -Dtest="*TypeCheckTest"
 
 **中间代码生成**:
-1. 设计IR结构: `ep20/src/main/java/org/teachfx/antlr4/ep20/ir/`
-2. 实现代码生成: `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/`
-3. 运行编译器: `./scripts/build.sh run ep20 program.cymbol`
+1. 设计IR结构: ep20/src/main/java/org/teachfx/antlr4/ep20/ir/
+2. 实现代码生成: ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/
+3. 运行编译器: ./scripts/build.sh run ep20 program.cymbol
 
 **虚拟机实现**:
-1. 开发字节码解释器: `ep18/src/main/java/org/teachfx/antlr4/ep18/stackvm/`
-2. 运行虚拟机: `./scripts/build.sh vm ep18 program.cymbol`
+1. 开发字节码解释器: ep18/src/main/java/org/teachfx/antlr4/ep18/stackvm/
+2. 运行虚拟机: ./scripts/build.sh vm ep18 program.cymbol
 
 ### 3. 测试和质量保证
 
 **全面测试策略**:
-```bash
+bash
 # 运行所有测试
 ./scripts/build.sh test
 
@@ -88,7 +88,7 @@ python scripts/mcp-helper.py list
 
 # 清理和重新构建
 ./scripts/build.sh clean && ./scripts/build.sh compile
-```
+
 
 **测试最佳实践**:
 - 单元测试覆盖率 ≥85%
@@ -100,10 +100,10 @@ python scripts/mcp-helper.py list
 
 **调试工具链**:
 1. **语法调试**: ANTLR4 TestRig
-   ```bash
+   bash
    java -cp "antlr-4.13.2-complete.jar:target/classes" \
      org.antlr.v4.gui.TestRig Cymbol file -tokens program.cymbol
-   ```
+   
 
 2. **AST可视化**: 使用ep19/ep20中的可视化工具
 3. **符号表调试**: 启用DEBUG级别日志
@@ -129,25 +129,25 @@ python scripts/mcp-helper.py list
 **context7**: 上下文管理
 
 ### MCP工具使用
-```bash
+bash
 # 启动特定MCP服务器
 python scripts/mcp-helper.py start antlr4-compiler
 
 # 查看MCP配置
 python scripts/mcp-helper.py check
-```
+
 
 ## 跨平台开发支持
 
 ### 支持的平台和脚本
-- **Linux/macOS**: `scripts/build.sh`
-- **Windows PowerShell**: `scripts/build.ps1`
-- **Windows CMD**: `scripts/build.bat`
-- **跨平台Python**: `scripts/mcp-helper.py`
+- **Linux/macOS**: scripts/build.sh
+- **Windows PowerShell**: scripts/build.ps1
+- **Windows CMD**: scripts/build.bat
+- **跨平台Python**: scripts/mcp-helper.py
 
 ### 统一命令接口
 所有脚本支持相同的命令集：
-```bash
+bash
 generate [module]    # 生成ANTLR4源文件
 compile [module]     # 编译项目
 test [module]        # 运行测试
@@ -156,13 +156,13 @@ vm [module] [file]   # 运行虚拟机
 clean [module]       # 清理项目
 coverage [module]    # 生成覆盖率报告
 info                 # 显示项目信息
-```
+
 
 ## 项目扩展和定制
 
 ### 添加新的EP模块
-1. 复制现有模块结构: `cp -r ep20 ep22`
-2. 更新 `pom.xml` 中的模块名称
+1. 复制现有模块结构: cp -r ep20 ep22
+2. 更新 pom.xml 中的模块名称
 3. 修改包名和类名前缀
 4. 更新构建脚本配置
 
@@ -173,13 +173,13 @@ info                 # 显示项目信息
 4. **持续集成**: 配置GitHub Actions、Jenkins
 
 ### 自定义构建流程
-修改 `scripts/build.sh` 添加新命令：
-```bash
+修改 scripts/build.sh 添加新命令：
+bash
 # 添加新命令
 lint)
     # 添加代码检查逻辑
     ;;
-```
+
 
 ## 最佳实践
 

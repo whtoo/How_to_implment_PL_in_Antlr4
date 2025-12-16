@@ -16,10 +16,10 @@ allowed-tools: Read, Grep, Glob
 ## 核心开发流程
 
 ### 1. 语法分析和前端（EP1-EP10, EP19）
-- **ANTLR4语法文件**: `ep20/src/main/antlr4/org/teachfx/antlr4/ep20/parser/Cymbol.g4`
-- **AST构建**: `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/ast/CymbolASTBuilder.java`
+- **ANTLR4语法文件**: ep20/src/main/antlr4/org/teachfx/antlr4/ep20/parser/Cymbol.g4
+- **AST构建**: ep20/src/main/java/org/teachfx/antlr4/ep20/pass/ast/CymbolASTBuilder.java
 - **关键命令**:
-  ```bash
+  bash
   # 重新生成解析器代码
   mvn generate-sources -pl ep20
 
@@ -28,37 +28,37 @@ allowed-tools: Read, Grep, Glob
 
   # 运行编译器前端
   mvn compile exec:java -pl ep19 -Dexec.args="program.cymbol"
-  ```
+  
 
 ### 2. 语义分析和类型系统（EP11-EP17）
-- **符号表实现**: `ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/`
-  - `scope/` - 作用域管理（GlobalScope, LocalScope）
-  - `symbol/` - 符号定义（VariableSymbol, MethodSymbol, StructSymbol）
-  - `type/` - 类型系统（BuiltInType, StructType, ArrayType）
-- **语义检查**: `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/sematic/`
+- **符号表实现**: ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/
+  - scope/ - 作用域管理（GlobalScope, LocalScope）
+  - symbol/ - 符号定义（VariableSymbol, MethodSymbol, StructSymbol）
+  - type/ - 类型系统（BuiltInType, StructType, ArrayType）
+- **语义检查**: ep20/src/main/java/org/teachfx/antlr4/ep20/pass/sematic/
 - **测试命令**:
-  ```bash
+  bash
   # 运行语义分析测试
   mvn test -pl ep17 -Dtest="*SemanticTest"
 
   # 运行类型检查测试
   mvn test -pl ep17 -Dtest="*TypeCheckTest"
-  ```
+  
 
 ### 3. 中间表示和代码生成（EP18, EP20）
-- **IR生成**: `ep20/src/main/java/org/teachfx/antlr4/ep20/ir/`
-  - `ir/expr/` - 表达式IR节点
-  - `ir/stmt/` - 语句IR节点
-  - `CymbolIRBuilder.java` - IR生成器
-- **控制流图**: `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/`
-  - `ControlFlowAnalysis.java` - 控制流分析
-  - `CFG.java` - 控制流图实现
-- **虚拟机实现**: `ep18/src/main/java/org/teachfx/antlr4/ep18/stackvm/`
-  - `CymbolStackVM.java` - 栈式虚拟机
-  - `BytecodeDefinition.java` - 字节码定义
-  - `StackFrame.java` - 栈帧管理
+- **IR生成**: ep20/src/main/java/org/teachfx/antlr4/ep20/ir/
+  - ir/expr/ - 表达式IR节点
+  - ir/stmt/ - 语句IR节点
+  - CymbolIRBuilder.java - IR生成器
+- **控制流图**: ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/
+  - ControlFlowAnalysis.java - 控制流分析
+  - CFG.java - 控制流图实现
+- **虚拟机实现**: ep18/src/main/java/org/teachfx/antlr4/ep18/stackvm/
+  - CymbolStackVM.java - 栈式虚拟机
+  - BytecodeDefinition.java - 字节码定义
+  - StackFrame.java - 栈帧管理
 - **运行命令**:
-  ```bash
+  bash
   # 运行完整编译器
   mvn compile exec:java -pl ep20 -Dexec.args="program.cymbol"
 
@@ -67,32 +67,32 @@ allowed-tools: Read, Grep, Glob
 
   # 测试IR生成
   mvn test -pl ep20 -Dtest="*IRTest"
-  ```
+  
 
 ### 4. 高级优化（EP21）
-- **数据流分析**: `ep21/src/main/java/org/teachfx/antlr4/ep21/analysis/dataflow/`
-- **SSA转换**: `ep21/src/main/java/org/teachfx/antlr4/ep21/analysis/ssa/`
+- **数据流分析**: ep21/src/main/java/org/teachfx/antlr4/ep21/analysis/dataflow/
+- **SSA转换**: ep21/src/main/java/org/teachfx/antlr4/ep21/analysis/ssa/
 - **测试命令**:
-  ```bash
+  bash
   mvn test -pl ep21
-  ```
+  
 
 ## 项目结构导航
 
 ### 关键文件位置
-- **主编译器入口**: `ep20/src/main/java/org/teachfx/antlr4/ep20/Compiler.java`
-- **最新Cymbol语法**: `ep20/src/main/antlr4/org/teachfx/antlr4/ep20/parser/Cymbol.g4`
-- **AST节点基类**: `ep20/src/main/java/org/teachfx/antlr4/ep20/ast/ASTNode.java`
-- **访问者模式接口**: `ep20/src/main/java/org/teachfx/antlr4/ep20/visitor/`
-- **类型系统基类**: `ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/type/Type.java`
-- **符号基类**: `ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/Symbol.java`
+- **主编译器入口**: ep20/src/main/java/org/teachfx/antlr4/ep20/Compiler.java
+- **最新Cymbol语法**: ep20/src/main/antlr4/org/teachfx/antlr4/ep20/parser/Cymbol.g4
+- **AST节点基类**: ep20/src/main/java/org/teachfx/antlr4/ep20/ast/ASTNode.java
+- **访问者模式接口**: ep20/src/main/java/org/teachfx/antlr4/ep20/visitor/
+- **类型系统基类**: ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/type/Type.java
+- **符号基类**: ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/Symbol.java
 
 ### 测试策略
 - **单元测试覆盖率**: ≥85%
 - **核心模块覆盖率**: ≥90%
 - **新功能覆盖率**: 100%
 - **运行测试**:
-  ```bash
+  bash
   # 运行所有测试
   mvn test
 
@@ -104,49 +104,49 @@ allowed-tools: Read, Grep, Glob
 
   # 生成覆盖率报告
   mvn jacoco:report
-  ```
+  
 
 ## 开发工作流
 
 ### 添加新AST节点
-1. 在 `ep20/src/main/java/org/teachfx/antlr4/ep20/ast/` 创建节点类
-2. 扩展 `ASTNode` 或相关基类（`ExprNode`, `StmtNode`, `DeclNode`）
+1. 在 ep20/src/main/java/org/teachfx/antlr4/ep20/ast/ 创建节点类
+2. 扩展 ASTNode 或相关基类（ExprNode, StmtNode, DeclNode）
 3. 实现访问者模式方法
-4. 在 `Cymbol.g4` 中添加语法规则
-5. 更新 `CymbolASTBuilder` 处理新节点
+4. 在 Cymbol.g4 中添加语法规则
+5. 更新 CymbolASTBuilder 处理新节点
 6. 创建对应的测试类
 
 ### 修改语法文件
-1. 编辑 `Cymbol.g4` 文件
-2. 运行 `mvn generate-sources -pl ep20` 重新生成解析器
-3. 更新 `CymbolASTBuilder` 和访问者实现
-4. 运行相关测试验证: `mvn test -pl ep20 -Dtest="*ParserTest"`
+1. 编辑 Cymbol.g4 文件
+2. 运行 mvn generate-sources -pl ep20 重新生成解析器
+3. 更新 CymbolASTBuilder 和访问者实现
+4. 运行相关测试验证: mvn test -pl ep20 -Dtest="*ParserTest"
 
 ### 添加新类型
-1. 在 `ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/type/` 创建类型类
-2. 扩展 `Type` 基类
-3. 更新类型检查器 `TypeChecker`
+1. 在 ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/type/ 创建类型类
+2. 扩展 Type 基类
+3. 更新类型检查器 TypeChecker
 4. 添加类型转换和提升规则
 5. 创建类型测试
 
 ### 调试技巧
 1. **语法调试**: 使用ANTLR4 TestRig工具
-   ```bash
+   bash
    java -cp "antlr-4.13.2-complete.jar:target/classes" org.antlr.v4.gui.TestRig Cymbol file -tokens program.cymbol
-   ```
+   
 2. **AST可视化**: 检查ep19/ep20中的可视化工具
 3. **符号表调试**: 启用DEBUG级别日志
-   ```bash
+   bash
    -Dlog4j.configurationFile=log4j2-debug.xml
-   ```
+   
 4. **IR调试**: 输出中间代码进行验证
 5. **VM调试**: 使用虚拟机调试模式
 
 ## 多平台脚本使用
 
-项目提供跨平台脚本在 `scripts/` 目录：
+项目提供跨平台脚本在 scripts/ 目录：
 
-```bash
+bash
 # Linux/macOS
 ./scripts/run.sh compile ep20
 ./scripts/run.sh test ep20
@@ -162,35 +162,35 @@ scripts\run.bat test ep20
 
 # Python脚本（跨平台）
 python scripts/run.py compile ep20
-```
+
 
 ## Cymbol语言特性
 
 ### 支持的类型
-- 基本类型: `int`, `float`, `bool`, `string`, `void`, `object`
-- 数组类型: `int[]`, `float[10]`
-- 结构体类型: `struct Point { int x; int y; }`
-- 类型别名: `typedef int MyInt;`
+- 基本类型: int, float, bool, string, void, object
+- 数组类型: int[], float[10]
+- 结构体类型: struct Point { int x; int y; }
+- 类型别名: typedef int MyInt;
 
 ### 控制结构
-- 条件语句: `if`, `if-else`
-- 循环语句: `while`, `break`, `continue`
+- 条件语句: if, if-else
+- 循环语句: while, break, continue
 - 函数调用和返回
 
 ### 操作符
 - 算术: +, -, *, /, %
-- 比较: `==`, `!=`, `>`, `>=`, `<`, `<=`
-- 逻辑: `&&`, `||`, `!`
-- 赋值: `=`
-- 数组访问: `[]`
-- 结构体访问: `.`
-- 类型转换: `(type)expr`
+- 比较: ==, !=, >, >=, <, <=
+- 逻辑: &&, ||, !
+- 赋值: =
+- 数组访问: []
+- 结构体访问: .
+- 类型转换: (type)expr
 
 ## 最佳实践
 
 1. **测试驱动开发**: 为新功能先编写测试
 2. **渐进实现**: 按照EP1-EP21顺序理解实现
-3. **文档同步**: 修改代码时更新 `.qoder/repowiki/` 文档
+3. **文档同步**: 修改代码时更新 .qoder/repowiki/ 文档
 4. **向后兼容**: 确保新功能不影响现有模块
 5. **日志调试**: 使用Log4j2进行分级日志记录
 6. **代码风格**: 遵循项目Java 21+代码规范
@@ -201,7 +201,7 @@ python scripts/run.py compile ep20
 ### 语法冲突
 **症状**: ANTLR4报告歧义或冲突
 **解决**:
-1. 使用 `-diagnostics` 选项分析冲突
+1. 使用 -diagnostics 选项分析冲突
 2. 重构语法规则，避免歧义
 3. 使用谓词或语义谓词消除冲突
 
@@ -229,7 +229,7 @@ python scripts/run.py compile ep20
 ## 扩展项目
 
 ### 添加新语言特性
-1. 在 `Cymbol.g4` 中添加语法规则
+1. 在 Cymbol.g4 中添加语法规则
 2. 实现AST节点
 3. 更新语义分析和类型检查
 4. 实现IR生成

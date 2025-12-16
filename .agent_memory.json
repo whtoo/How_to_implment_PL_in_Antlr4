@@ -3,5 +3,15 @@
     "timestamp": "2025-12-16T16:53:54.402424",
     "category": "project_info",
     "content": "EP18R无限循环问题修复完成：\n\n关键问题：\n1. 程序计数器调整逻辑错误（target-4导致无限循环）\n2. 缺少循环检测机制\n3. 边界检查不完整\n4. 调试输出混乱\n\n解决方案：\n1. 重构PC管理：添加didJump标志，只对非跳转指令自动增加PC\n2. 添加最大执行步数限制（1,000,000步）\n3. 完善跳转目标验证（范围检查+对齐检查）\n4. 清理调试输出\n\n验证结果：\n- SimpleVerificationTest: 2/2通过\n- GarbageCollectorTest: 17/17通过\n- 无限循环检测功能正常\n- 基本功能保持完整\n\n新增文件：\n- FINAL_FIX_REPORT.md (完整修复报告)\n- SimpleVerificationTest.java (验证测试)\n- INFINITE_LOOP_FIX_REPORT.md (技术细节)"
+  },
+  {
+    "timestamp": "2025-12-16T17:03:03.475026",
+    "category": "knowledge_migration",
+    "content": "从claude code配置成功学习skill和MCP知识迁移：\n\n## Skill配置模式：\n1. **Skill目录结构**：\n   - `.claude/skills/` 目录下存放所有技能\n   - 每个技能包含：`SKILL.md` (必需) + 可选的 `examples/`、`scripts/`、`references/`、`assets/`\n\n2. **SKILL.md格式**：\n   - YAML frontmatter：包含name、description、allowed-tools等元数据\n   - Markdown主体：详细的技能说明、工作流程、最佳实践\n   - 例如compiler-development技能包含完整的21章节编译器项目指导\n\n3. **权限控制**：\n   - `.claude/settings.local.json` 中配置允许使用的技能\n   - 如 `\"Skill(compiler-development)\"` 表示允许使用编译器开发技能\n\n## MCP配置模式：\n1. **MCP服务器配置**：\n   - `mcp.json`、`.mcp.json`、`.roo/mcp.json` 等配置文件\n   - 支持多种MCP服务器：tree-sitter、filesystem、memory、context7、git等\n   - 使用npx、uvx、python等命令启动\n\n2. **MCP服务器类型**：\n   - tree-sitter：语法树解析\n   - filesystem：文件系统访问\n   - memory：记忆功能\n   - context7：上下文管理\n   - git：Git操作\n\n## 核心迁移要点：\n- Skill是领域专业知识和工作流程的封装\n- MCP是外部服务和API集成的协议\n- 两者都支持渐进式信息披露（分层加载）\n- Skill更注重专业知识，MCP更注重工具集成"
+  },
+  {
+    "timestamp": "2025-12-16T17:07:41.945381",
+    "category": "skill_mcp_migration_complete",
+    "content": "✅ Skill和MCP知识迁移完成！\n\n## 成功迁移内容：\n\n### 1. Skill系统\n- **优化compiler-development技能** - 原有技能保持更新\n- **新增antlr4-compiler-development技能** - 专业ANTLR4开发指导\n- **新增compiler-ecosystem技能** - 完整生态系统整合\n\n### 2. MCP配置\n- **mcp-project-config.json** - 项目专用MCP配置\n- **6个MCP服务器** - antlr4-compiler、project-structure、maven-build、grammar-parser、memory、context7\n- **mcp-helper.py工具** - MCP管理和环境检查\n\n### 3. 跨平台构建系统\n- **build.sh** - Linux/macOS构建脚本\n- **build.ps1** - Windows PowerShell脚本  \n- **build.bat** - Windows CMD脚本\n- **统一命令接口** - generate/compile/test/run/vm/clean/coverage/info\n\n### 4. 示例和文档\n- **basic-program.cymbol** - Cymbol基础示例\n- **advanced-program.cymbol** - 高级特性示例\n- **migration-summary.md** - 完整迁移文档\n\n### 5. 配置更新\n- **权限配置更新** - 添加新技能到settings.local.json\n- **环境验证** - 所有工具正常工作\n- **21个EP模块识别** - 完整项目结构支持\n\n## 核心成果：\n🎯 创建了完整的编译器开发生态系统\n🔧 实现了跨平台自动化构建\n🤖 集成了MCP AI增强功能\n📚 提供了专业技能和文档\n🚀 建立了可扩展的项目架构\n\n项目现在具备了现代化的编译器开发环境，支持AI辅助开发、跨平台构建、自动化测试和专业指导！"
   }
 ]

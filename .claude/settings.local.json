@@ -13,14 +13,20 @@
       "Bash(xargs:*)",
       "Bash(tree:*)",
       "Bash(ls:*)",
-<<<<<<< HEAD
-      "Bash(git commit:*)"
-=======
+      "Bash(git commit:*)",
       "Bash(/usr/local/bin/mvn clean:*)",
       "Bash(/usr/local/bin/mvn compile:*)",
       "Bash(/usr/local/bin/mvn test:*)",
-      "Bash(/usr/local/bin/mvn exec:java:*)"
->>>>>>> 5e339459a98a3434364051443d3ac9b0b712eed1
+      "Bash(/usr/local/bin/mvn exec:java:*)",
+      "Skill(compiler-development)",
+      "Skill(antlr4-compiler-development)",
+      "Skill(compiler-ecosystem)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "tree-sitter",
+    "filesystem",
+    "memory",
+    "context7"
+  ]
 }

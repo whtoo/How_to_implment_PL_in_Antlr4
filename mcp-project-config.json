@@ -1,0 +1,56 @@
+{
+  "mcpServers": {
+    "antlr4-compiler": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4"
+      ]
+    },
+    "project-structure": {
+      "command": "npx", 
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep1",
+        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep10",
+        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep20",
+        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep21"
+      ]
+    },
+    "maven-build": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-bash"
+      ],
+      "env": {
+        "MAVEN_HOME": "/usr/local/bin/mvn",
+        "JAVA_HOME": "/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home"
+      }
+    },
+    "grammar-parser": {
+      "command": "npx",
+      "args": [
+        "-y", 
+        "@nendo/tree-sitter-mcp",
+        "--mcp"
+      ],
+      "cwd": "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4"
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "context7": {
+      "command": "uvx",
+      "args": [
+        "context7-mcp-server"
+      ]
+    }
+  }
+}

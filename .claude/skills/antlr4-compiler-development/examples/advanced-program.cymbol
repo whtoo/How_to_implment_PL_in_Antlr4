@@ -1,0 +1,132 @@
+// 高级Cymbol程序示例
+// 展示结构体、数组、函数参数和返回值的高级用法
+
+// 定义结构体类型
+struct Student {
+    string name;
+    int age;
+    float gpa;
+    int[] scores;
+}
+
+struct Course {
+    string title;
+    int credit;
+    Student[] enrolled;
+}
+
+// 定义全局变量
+int global_counter = 0;
+
+// 主函数
+int main() {
+    // 创建学生结构体
+    Student alice;
+    alice.name = "Alice Johnson";
+    alice.age = 20;
+    alice.gpa = 3.8;
+    alice.scores = {85, 90, 78, 92, 88};
+    
+    Student bob;
+    bob.name = "Bob Smith"; 
+    bob.age = 19;
+    bob.gpa = 3.6;
+    bob.scores = {79, 82, 91, 85, 87};
+    
+    // 创建课程
+    Course cs101;
+    cs101.title = "Introduction to Programming";
+    cs101.credit = 3;
+    cs101.enrolled = {alice, bob};
+    
+    // 函数调用和操作
+    print("=== Course Information ===");
+    print("Course: " + cs101.title);
+    print("Credits: " + cs101.credit);
+    print("Enrolled Students: " + cs101.enrolled.length);
+    
+    // 处理每个学生
+    int i = 0;
+    while (i < cs101.enrolled.length) {
+        processStudent(cs101.enrolled[i]);
+        i = i + 1;
+    }
+    
+    // 计算班级平均分
+    float classAverage = calculateClassAverage(cs101.enrolled);
+    print("Class Average GPA: " + classAverage);
+    
+    // 递归函数示例
+    int fibResult = fibonacci(10);
+    print("Fibonacci(10): " + fibResult);
+    
+    return 0;
+}
+
+// 处理学生信息
+void processStudent(Student s) {
+    print("=== Student Report ===");
+    print("Name: " + s.name);
+    print("Age: " + s.age);
+    print("GPA: " + s.gpa);
+    
+    // 计算平均分
+    float avgScore = calculateAverage(s.scores);
+    print("Average Score: " + avgScore);
+    
+    // 判断成绩等级
+    if (avgScore >= 90) {
+        print("Grade: A");
+    } else if (avgScore >= 80) {
+        print("Grade: B");
+    } else if (avgScore >= 70) {
+        print("Grade: C");
+    } else {
+        print("Grade: F");
+    }
+}
+
+// 计算数组平均值
+float calculateAverage(int[] scores) {
+    int sum = 0;
+    int i = 0;
+    
+    while (i < scores.length) {
+        sum = sum + scores[i];
+        i = i + 1;
+    }
+    
+    if (scores.length > 0) {
+        return (float)sum / scores.length;
+    } else {
+        return 0.0;
+    }
+}
+
+// 计算班级平均GPA
+float calculateClassAverage(Student[] students) {
+    float totalGpa = 0.0;
+    int i = 0;
+    
+    while (i < students.length) {
+        totalGpa = totalGpa + students[i].gpa;
+        i = i + 1;
+    }
+    
+    if (students.length > 0) {
+        return totalGpa / students.length;
+    } else {
+        return 0.0;
+    }
+}
+
+// 递归函数：斐波那契数列
+int fibonacci(int n) {
+    global_counter = global_counter + 1;
+    
+    if (n <= 1) {
+        return n;
+    } else {
+        return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+}

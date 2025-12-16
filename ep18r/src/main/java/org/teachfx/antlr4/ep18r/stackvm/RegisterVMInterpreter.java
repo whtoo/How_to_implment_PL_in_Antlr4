@@ -14,6 +14,9 @@ import java.io.InputStream;
  * 执行寄存器字节码指令，使用寄存器文件而非操作数栈
  */
 public class RegisterVMInterpreter {
+    // 虚拟机配置
+    private final VMConfig config;
+
     // 寄存器文件：16个寄存器，r0-r15
     private final int[] registers = new int[RegisterBytecodeDefinition.NUM_REGISTERS];
 
@@ -22,10 +25,10 @@ public class RegisterVMInterpreter {
     private byte[] code;
     private int codeSize;
     private Object[] globals;
-    private int[] heap = new int[1024 * 1024]; // 1MB 堆内存
-    private int[] locals = new int[1024];      // 局部变量数组
+    private final int[] heap; // 现在由配置控制
+    private final int[] locals; // 现在由配置控制
     private int heapAllocPointer = 0;          // 堆分配指针
-    private StackFrame[] callStack = new StackFrame[1024];
+    private final StackFrame[] callStack; // 现在由配置控制
     private int framePointer = -1;
     private FunctionSymbol mainFunction;
 
@@ -33,15 +36,44 @@ public class RegisterVMInterpreter {
     private int programCounter;
     private boolean running;
     private boolean trace = false;
-    
+
     // 循环检测和安全机制
-    private static final int MAX_EXECUTION_STEPS = 1000000; // 最大执行步数
+    private final int maxExecutionSteps; // 现在由配置控制
     private int executionSteps = 0;
+
+    // 跳转标志：指示是否发生了跳转
+    private boolean didJump = false;
 
     // 特殊用途寄存器别名
     private static final int SP = RegisterBytecodeDefinition.R13; // 栈指针
     private static final int FP = RegisterBytecodeDefinition.R14; // 帧指针
     private static final int LR = RegisterBytecodeDefinition.R15; // 链接寄存器
+
+    /**
+     * 使用默认配置创建虚拟机实例
+     * @deprecated 使用 RegisterVMInterpreter(VMConfig) 替代
+     */
+    @Deprecated
+    public RegisterVMInterpreter() {
+        this(new VMConfig.Builder().build());
+    }
+
+    /**
+     * 使用指定配置创建虚拟机实例
+     * @param config 虚拟机配置
+     */
+    public RegisterVMInterpreter(VMConfig config) {
+        if (config == null) {
+            throw new IllegalArgumentException("VMConfig cannot be null");
+        }
+        this.config = config;
+        this.heap = new int[config.getHeapSize()];
+        this.locals = new int[config.getLocalsSize()];
+        this.callStack = new StackFrame[config.getMaxCallStackDepth()];
+        this.maxExecutionSteps = config.getMaxExecutionSteps();
+        this.programCounter = 0;
+        this.running = false;
+    }
 
     /**
      * 从输入流加载寄存器汇编代码
@@ -99,7 +131,7 @@ public class RegisterVMInterpreter {
         
         while (running && programCounter < codeSize) {
             // 循环检测 - 防止无限循环
-            if (executionSteps++ > MAX_EXECUTION_STEPS) {
+            if (executionSteps++ > maxExecutionSteps) {
                 throw new RuntimeException("Maximum execution steps exceeded. Possible infinite loop detected at PC=" + programCounter);
             }
 
@@ -137,9 +169,6 @@ public class RegisterVMInterpreter {
             didJump = false; // 重置跳转标志
         }
     }
-    
-    // 标志位：指示是否发生了跳转
-    private boolean didJump = false;
 
     /**
      * 从操作数中提取寄存器编号（5位字段）
@@ -682,5 +711,106 @@ public class RegisterVMInterpreter {
      */
     public void setTrace(boolean trace) {
         this.trace = trace;
+    }
+
+    /**
+     * 获取虚拟机配置
+     */
+    public VMConfig getConfig() {
+        return config;
+    }
+
+    /**
+     * 获取寄存器数组（仅供内部使用）
+     */
+    int[] getRegisters() {
+        return registers;
+    }
+
+    /**
+     * 设置跳转目标（内部使用）
+     */
+    void setJumpTarget(int target) {
+        this.programCounter = target;
+        this.didJump = true;
+    }
+
+    /**
+     * 检查是否发生了跳转（内部使用）
+     */
+    boolean didJump() {
+        return didJump;
+    }
+
+    /**
+     * 读取堆内存（内部使用）
+     */
+    int readHeap(int address) {
+        if (address < 0 || address >= heap.length) {
+            throw new IndexOutOfBoundsException("Heap address out of bounds: " + address);
+        }
+        return heap[address];
+    }
+
+    /**
+     * 写入堆内存（内部使用）
+     */
+    void writeHeap(int address, int value) {
+        if (address < 0 || address >= heap.length) {
+            throw new IndexOutOfBoundsException("Heap address out of bounds: " + address);
+        }
+        heap[address] = value;
+    }
+
+    /**
+     * 读取内存（内部使用）
+     */
+    int readMemory(int address) {
+        // 简化实现：使用堆作为内存
+        return readHeap(address);
+    }
+
+    /**
+     * 写入内存（内部使用）
+     */
+    void writeMemory(int address, int value) {
+        // 简化实现：使用堆作为内存
+        writeHeap(address, value);
+    }
+
+    /**
+     * 获取堆大小
+     */
+    public int getHeapSize() {
+        return heap.length;
+    }
+
+    /**
+     * 获取局部变量数组大小
+     */
+    public int getLocalsSize() {
+        return locals.length;
+    }
+
+    /**
+     * 获取最大调用栈深度
+     */
+    public int getMaxCallStackDepth() {
+        return callStack.length;
+    }
+
+    /**
+     * 获取最大执行步数
+     */
+    public int getMaxExecutionSteps() {
+        return maxExecutionSteps;
+    }
+
+    /**
+     * 直接加载字节码（测试用）
+     */
+    public void loadCode(byte[] bytecode) {
+        this.code = bytecode;
+        this.codeSize = bytecode.length;
     }
 }

@@ -18,9 +18,7 @@ public abstract class RegisterVMTestBase {
         testConfig = createTestConfig();
 
         // 创建寄存器虚拟机实例
-        vm = new RegisterVMInterpreter();
-        // 注意：RegisterVMInterpreter当前没有VMConfig参数
-        // 后续可能需要添加配置支持
+        vm = new RegisterVMInterpreter(testConfig);
     }
 
     /**

@@ -80,7 +80,20 @@ public class VMConfig {
     public boolean isEnableTypeCheck() {
         return enableTypeCheck;
     }
-    
+
+    // 为RegisterVMInterpreter提供兼容的方法别名
+    public int getLocalsSize() {
+        return stackSize; // 使用stackSize作为localsSize
+    }
+
+    public int getMaxCallStackDepth() {
+        return maxStackDepth; // 使用maxStackDepth作为maxCallStackDepth
+    }
+
+    public int getMaxExecutionSteps() {
+        return maxExecutionTime * 1000; // 转换毫秒为步数（估算）
+    }
+
     /**
      * 配置构建器
      */
@@ -172,7 +185,26 @@ public class VMConfig {
             this.enableTypeCheck = enableTypeCheck;
             return this;
         }
-        
+
+        // 为RegisterVMInterpreter提供兼容的方法别名
+        public Builder heapSize(int heapSize) {
+            return setHeapSize(heapSize);
+        }
+
+        public Builder localsSize(int localsSize) {
+            return setStackSize(localsSize);
+        }
+
+        public Builder maxCallStackDepth(int depth) {
+            return setMaxStackDepth(depth);
+        }
+
+        public Builder maxExecutionSteps(int steps) {
+            // 转换步数为毫秒（估算）
+            int milliseconds = steps / 1000;
+            return setMaxExecutionTime(milliseconds);
+        }
+
         public VMConfig build() {
             return new VMConfig(this);
         }

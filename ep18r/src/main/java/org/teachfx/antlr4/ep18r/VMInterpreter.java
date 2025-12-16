@@ -12,6 +12,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+/**
+ * VMInterpreter - 栈式虚拟机解释器 (已弃用，请使用 RegisterVMInterpreter)
+ * @deprecated 栈式虚拟机已弃用，ep18r 现在是纯粹的寄存器虚拟机。请使用 RegisterVMInterpreter。
+ */
+@Deprecated
 public class VMInterpreter {
     public static final int DEFAULT_OPERAND_STACK_SIZE = 128;
     public static final int DEFAULT_CALL_STACK_SIZE = 1024;
@@ -112,18 +117,19 @@ public class VMInterpreter {
      * Execute the bytecodes in code memory starting at mainAddr
      */
     public void exec() throws Exception {
+        throw new UnsupportedOperationException("VMInterpreter is deprecated. ep18r is now a pure register VM. Use RegisterVMInterpreter instead.");
         // SIMULATE "call main()"; set up stack as if we'd called main()
-        if (mainFunction == null) {
-            mainFunction = new FunctionSymbol("main", 0, 0, 0);
-        }
-        StackFrame f = new StackFrame(mainFunction, -1);
-        calls[++fp] = f;
-        ip = mainFunction.address;
-        // 初始化所有局部变量为0
-        for (int i = 0; i < mainFunction.nlocals; i++) {
-            f.locals[i] = 0;
-        }
-        cpu();
+        // if (mainFunction == null) {
+        //     mainFunction = new FunctionSymbol("main", 0, 0, 0);
+        // }
+        // StackFrame f = new StackFrame(mainFunction, -1);
+        // calls[++fp] = f;
+        // ip = mainFunction.address;
+        // // 初始化所有局部变量为0
+        // for (int i = 0; i < mainFunction.nlocals; i++) {
+        //     f.locals[i] = 0;
+        // }
+        // cpu();
     }
 
     // simulation by software

@@ -3,9 +3,11 @@ package org.teachfx.antlr4.ep18r.stackvm;
 import java.util.Arrays;
 
 /**
- * CymbolStackVM - 基于栈的虚拟机实现
+ * CymbolStackVM - 基于栈的虚拟机实现 (已弃用，请使用 RegisterVMInterpreter)
  * 执行字节码指令，管理堆栈和内存
+ * @deprecated 栈式虚拟机已弃用，ep18r 现在是纯粹的寄存器虚拟机。请使用 RegisterVMInterpreter。
  */
+@Deprecated
 public class CymbolStackVM {
     // 虚拟机配置
     private final VMConfig config;
@@ -97,67 +99,69 @@ public class CymbolStackVM {
      * @throws Exception 执行异常
      */
     public int execute(byte[] bytecode) throws Exception {
-        if (bytecode == null || bytecode.length == 0) {
-            throw new IllegalArgumentException("Bytecode cannot be null or empty");
-        }
+        throw new UnsupportedOperationException("CymbolStackVM is deprecated. ep18r is now a pure register VM. Use RegisterVMInterpreter instead.");
+        // if (bytecode == null || bytecode.length == 0) {
+        //     throw new IllegalArgumentException("Bytecode cannot be null or empty");
+        // }
 
-        long startTime = System.nanoTime();
-        long startMemory = getUsedMemory();
-
-        // 加载字节码到指令缓存
-        loadBytecode(bytecode);
-
-        // 开始执行
-        this.running = true;
-        this.programCounter = 0;
-
-        try {
-            while (running && programCounter < instructionCache.length) {
-                // 调试支持：检查断点
-                if (breakpoints.contains(programCounter)) {
-                    System.out.println("[BREAKPOINT] Hit breakpoint at PC=" + programCounter);
-                    // 在实际调试器中，这里会暂停并等待用户输入
-                    // 简化实现：仅打印信息并继续
-                }
-
-                // 获取当前指令
-                int instruction = instructionCache[programCounter++];
-
-                // 执行指令
-                executeInstruction(instruction);
-
-                // 调试支持：单步执行模式
-                if (stepMode) {
-                    System.out.println("[STEP] Executed instruction at PC=" + (programCounter - 1));
-                    stepMode = false; // 执行一步后退出单步模式
-                }
-            }
-
-            // 返回栈顶值作为结果
-            int result = stackPointer > 0 ? stack[stackPointer - 1] : 0;
-
-            // 记录性能统计
-            long endTime = System.nanoTime();
-            long endMemory = getUsedMemory();
-            stats.recordExecution(startTime);
-            stats.recordMemoryUsage(endMemory);
-
-            if (config.isDebugMode()) {
-                System.out.println("Execution completed successfully");
-            }
-
-            return result;
-        } catch (Exception e) {
-            // 记录错误统计
-            stats.recordError(e);
-
-            if (config.isVerboseErrors()) {
-                System.err.println("VM execution error at PC=" + (programCounter - 1) + ": " + e.getMessage());
-            }
-            throw e;
-        } finally {
-            this.running = false;
-        }
+        // 代码已移除，ep18r 现在是纯粹的寄存器虚拟机
+        // long startTime = System.nanoTime();
+        // long startMemory = getUsedMemory();
+        //
+        // // 加载字节码到指令缓存
+        // loadBytecode(bytecode);
+        //
+        // // 开始执行
+        // this.running = true;
+        // this.programCounter = 0;
+        //
+        // try {
+        //     while (running && programCounter < instructionCache.length) {
+        //         // 调试支持：检查断点
+        //         if (breakpoints.contains(programCounter)) {
+        //             System.out.println("[BREAKPOINT] Hit breakpoint at PC=" + programCounter);
+        //             // 在实际调试器中，这里会暂停并等待用户输入
+        //             // 简化实现：仅打印信息并继续
+        //         }
+        //
+        //         // 获取当前指令
+        //         int instruction = instructionCache[programCounter++];
+        //
+        //         // 执行指令
+        //         executeInstruction(instruction);
+        //
+        //         // 调试支持：单步执行模式
+        //         if (stepMode) {
+        //             System.out.println("[STEP] Executed instruction at PC=" + (programCounter - 1));
+        //             stepMode = false; // 执行一步后退出单步模式
+        //         }
+        //     }
+        //
+        //     // 返回栈顶值作为结果
+        //     int result = stackPointer > 0 ? stack[stackPointer - 1] : 0;
+        //
+        //     // 记录性能统计
+        //     long endTime = System.nanoTime();
+        //     long endMemory = getUsedMemory();
+        //     stats.recordExecution(startTime);
+        //     stats.recordMemoryUsage(endMemory);
+        //
+        //     if (config.isDebugMode()) {
+        //         System.out.println("Execution completed successfully");
+        //     }
+        //
+        //     return result;
+        // } catch (Exception e) {
+        //     // 记录错误统计
+        //     stats.recordError(e);
+        //
+        //     if (config.isVerboseErrors()) {
+        //         System.err.println("VM execution error at PC=" + (programCounter - 1) + ": " + e.getMessage());
+        //     }
+        //     throw e;
+        // } finally {
+        //     this.running = false;
+        // }
     }
     
     /**

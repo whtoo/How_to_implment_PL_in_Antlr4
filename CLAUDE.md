@@ -7,6 +7,47 @@
 - **Command**: `npx @nendo/tree-sitter-mcp --mcp`
 - **Description**: 语义代码搜索和分析
 
+### Context7 and Tree-sitter (Global MCP)
+
+This project supports global MCP installation for enhanced code analysis.
+
+#### Global Installation Methods
+
+**Using npm (npx):**
+```bash
+# Install tree-sitter MCP globally
+npm install -g @nendo/tree-sitter-mcp
+
+# Install other useful MCP servers globally  
+npm install -g @modelcontextprotocol/server-filesystem
+npm install -g @modelcontextprotocol/server-git
+npm install -g @modelcontextprotocol/server-postgres
+```
+
+**Using uv (Python package manager):**
+```bash
+# Install Context7 MCP server
+uvx context7-mcp-server
+
+# Install other Python-based MCP servers
+uvx postgres-mcp-server
+uvx filesystem-mcp-server
+```
+
+#### Configuration
+The project's MCP configuration is located in `.roo/mcp.json` and includes:
+- **tree-sitter**: `npx -y @nendo/tree-sitter-mcp`
+- **context7**: `uvx context7-mcp-server` 
+- **filesystem**: `@modelcontextprotocol/server-filesystem`
+- **git**: `@modelcontextprotocol/server-git`
+
+#### Usage in Claude Code
+When using Claude Code with this repository, the MCP servers will be automatically available for:
+- Code analysis and semantic search
+- File system navigation and git integration
+- Database connectivity (PostgreSQL)
+- Context-aware development assistance
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview

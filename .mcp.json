@@ -1,0 +1,40 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "tree-sitter": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp_server_tree_sitter.server"
+      ]
+    },
+    "context7": {
+      "command": "uvx",
+      "args": [
+        "context7-mcp-server"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4"
+      ]
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git"
+      ],
+      "workingDirectory": "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4"
+    }
+  }
+}

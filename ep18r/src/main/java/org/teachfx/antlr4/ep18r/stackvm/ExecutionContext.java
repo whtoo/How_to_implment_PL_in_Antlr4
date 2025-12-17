@@ -169,4 +169,145 @@ public class ExecutionContext {
     public int[] getRegisters() {
         return registers;
     }
+
+    // ==================== VM内部状态访问 ====================
+
+    /**
+     * 获取堆分配指针
+     */
+    public int getHeapAllocPointer() {
+        return vm.getHeapAllocPointer();
+    }
+
+    /**
+     * 设置堆分配指针
+     */
+    public void setHeapAllocPointer(int pointer) {
+        vm.setHeapAllocPointer(pointer);
+    }
+
+    /**
+     * 获取调用栈数组
+     */
+    public StackFrame[] getCallStack() {
+        return vm.getCallStack();
+    }
+
+    /**
+     * 获取当前帧指针
+     */
+    public int getFramePointer() {
+        return vm.getFramePointer();
+    }
+
+    /**
+     * 设置帧指针
+     */
+    public void setFramePointer(int framePointer) {
+        vm.setFramePointer(framePointer);
+    }
+
+    /**
+     * 验证26位跳转目标地址（需要4字节对齐）
+     */
+    public void validateJumpTarget26(int target) {
+        if (target < 0 || target >= vm.getCodeSize() || target % 4 != 0) {
+            throw new IllegalArgumentException(
+                "Invalid 26-bit jump target: " + target + " at PC=" + getProgramCounter());
+        }
+    }
+
+    /**
+     * 检查调用栈是否溢出
+     */
+    public void checkStackOverflow() {
+        if (getFramePointer() + 1 >= getConfig().getMaxCallStackDepth()) {
+            throw new StackOverflowError("Call stack overflow");
+        }
+    }
+
+    /**
+     * 验证堆内存边界
+     */
+    public void validateHeapBounds(int address, int size) {
+        if (address < 0 || address + size > getConfig().getHeapSize()) {
+            throw new IndexOutOfBoundsException(
+                "Heap address out of bounds: " + address + " with size " + size);
+        }
+    }
+
+    // ==================== 栈帧访问 ====================
+
+    /**
+     * 获取当前栈帧
+     */
+    public StackFrame getCurrentFrame() {
+        return vm.getCurrentFrame();
+    }
+
+    /**
+     * 访问栈帧局部变量（通过偏移量）
+     * @param offset 局部变量偏移量（0表示第一个局部变量）
+     * @return 局部变量的值
+     */
+    public int getLocalVar(int offset) {
+        StackFrame frame = getCurrentFrame();
+        if (frame == null) {
+            throw new IllegalStateException("No current stack frame");
+        }
+        // 如果数组太小，扩展它
+        if (offset >= frame.locals.length) {
+            expandLocalsArray(frame, offset + 1);
+        }
+        if (offset < 0) {
+            throw new IndexOutOfBoundsException("Local variable offset out of bounds: " + offset);
+        }
+        Object value = frame.locals[offset];
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value == null) {
+            return 0;
+        } else {
+            throw new ClassCastException("Local variable is not an integer: " + value.getClass());
+        }
+    }
+
+    /**
+     * 设置栈帧局部变量（通过偏移量）
+     * @param offset 局部变量偏移量（0表示第一个局部变量）
+     * @param value 要设置的值
+     */
+    public void setLocalVar(int offset, int value) {
+        StackFrame frame = getCurrentFrame();
+        if (frame == null) {
+            throw new IllegalStateException("No current stack frame");
+        }
+        // 如果数组太小，扩展它
+        if (offset >= frame.locals.length) {
+            expandLocalsArray(frame, offset + 1);
+        }
+        if (offset < 0) {
+            throw new IndexOutOfBoundsException("Local variable offset out of bounds: " + offset);
+        }
+        frame.locals[offset] = value;
+    }
+
+    /**
+     * 扩展局部变量数组
+     */
+    private void expandLocalsArray(StackFrame frame, int newSize) {
+        Object[] newLocals = new Object[newSize];
+        System.arraycopy(frame.locals, 0, newLocals, 0, frame.locals.length);
+        frame.locals = newLocals;
+    }
+
+    /**
+     * 检查地址是否在栈帧局部变量范围内
+     * 简化实现：假设SP指向局部变量区域的开始
+     */
+    public boolean isStackAddress(int address) {
+        // 简化实现：负地址表示栈地址
+        // 实际情况更复杂，但这是当前实现的约定
+        return address < 0;
+    }
 }

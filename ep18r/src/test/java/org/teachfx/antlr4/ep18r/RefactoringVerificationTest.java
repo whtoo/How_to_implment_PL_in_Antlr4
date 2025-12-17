@@ -224,9 +224,10 @@ public class RefactoringVerificationTest {
         loadAndExecute(program);
 
         // main调用f，f调用g
-        // g返回后，f的r2=100，然后f返回到main
-        // main中r1 = 5 + 100 = 105
-        assertThat(interpreter.getRegister(1)).isEqualTo(105);
+        // CALL指令自动保存调用者保存寄存器r2-r7
+        // g修改r2=100，但RET恢复r2为原始值10
+        // f执行 add r1, r1, r2 => 5 + 10 = 15
+        assertThat(interpreter.getRegister(1)).isEqualTo(15);
     }
 
     @Test
@@ -244,18 +245,19 @@ public class RefactoringVerificationTest {
                 sle r3, r1, r2
                 jt r3, base
                 li r2, 1
-                sub r4, r1, r2
+                sub r4, r1, r2      ; r4 = n-1
                 li r2, 2
-                sub r5, r1, r2
-                mov r1, r4
-                call fib
-                mov r6, r1
-                mov r1, r5
-                call fib
-                add r1, r6, r1
+                sub r5, r1, r2      ; r5 = n-2
+                mov r1, r4          ; 参数设置为n-1
+                call fib            ; 递归调用fib(n-1)
+                sw r1, r13, 0       ; 保存结果到局部变量0
+                mov r1, r5          ; 参数设置为n-2
+                call fib            ; 递归调用fib(n-2)
+                lw r8, r13, 0       ; 从局部变量0加载第一个结果
+                add r1, r8, r1      ; r1 = fib(n-1) + fib(n-2)
                 ret
             base:
-                li r1, 1
+                li r1, 1            ; 返回1
                 ret
             """;
 
@@ -299,8 +301,8 @@ public class RefactoringVerificationTest {
                 sw_f r2, r1, 0    ; 结构体[0] = 10
                 li r3, 20
                 sw_f r3, r1, 4    ; 结构体[1] = 20
-                lw r4, r1, 0      ; r4 = 结构体[0]
-                lw r5, r1, 4      ; r5 = 结构体[1]
+                lw_f r4, r1, 0    ; r4 = 结构体[0]
+                lw_f r5, r1, 4    ; r5 = 结构体[1]
                 add r6, r4, r5
                 halt
             """;
@@ -460,18 +462,19 @@ public class RefactoringVerificationTest {
                 sle r3, r1, r2
                 jt r3, base
                 li r2, 1
-                sub r4, r1, r2
+                sub r4, r1, r2      ; r4 = n-1
                 li r2, 2
-                sub r5, r1, r2
-                mov r1, r4
-                call fib
-                mov r6, r1
-                mov r1, r5
-                call fib
-                add r1, r6, r1
+                sub r5, r1, r2      ; r5 = n-2
+                mov r1, r4          ; 参数设置为n-1
+                call fib            ; 递归调用fib(n-1)
+                sw r1, r13, 0       ; 保存结果到局部变量0
+                mov r1, r5          ; 参数设置为n-2
+                call fib            ; 递归调用fib(n-2)
+                lw r8, r13, 0       ; 从局部变量0加载第一个结果
+                add r1, r8, r1      ; r1 = fib(n-1) + fib(n-2)
                 ret
             base:
-                li r1, 1
+                li r1, 1            ; 返回1
                 ret
             """;
 

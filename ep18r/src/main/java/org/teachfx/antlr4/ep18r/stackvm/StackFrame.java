@@ -4,6 +4,7 @@ public class StackFrame {
     public FunctionSymbol symbol;
     public int returnAddress;
     public Object[] locals;
+    public int[] savedCallerRegisters; // 保存caller-saved寄存器 r2-r7
 
     public StackFrame(FunctionSymbol symbol, int returnAddress) {
         this.symbol = symbol;
@@ -13,5 +14,6 @@ public class StackFrame {
         } else {
             locals = new Object[0];
         }
+        savedCallerRegisters = new int[6]; // r2-r7 (索引0对应r2，索引5对应r7)
     }
 }

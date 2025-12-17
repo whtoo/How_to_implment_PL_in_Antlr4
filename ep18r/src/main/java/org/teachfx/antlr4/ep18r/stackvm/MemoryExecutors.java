@@ -57,6 +57,7 @@ public class MemoryExecutors {
 
     /**
      * 加载字指令执行器
+     * 特殊处理：当基址寄存器是r13（SP）时，访问栈帧局部变量
      */
     public static final InstructionExecutor LW = (operand, context) -> {
         int rd = context.extractRd(operand);
@@ -64,19 +65,32 @@ public class MemoryExecutors {
         int offset = context.extractImm16(operand);
 
         int baseAddr = context.getRegister(base);
-        int effectiveAddr = baseAddr + offset;
 
-        // 检查地址有效性
-        if (effectiveAddr < 0) {
-            throw new IllegalArgumentException("Invalid memory address: " + effectiveAddr);
+        // 检查是否是栈访问（通过SP寄存器）
+        if (base == RegisterBytecodeDefinition.R13) { // SP寄存器
+            // 偏移量除以4得到局部变量索引（假设每个局部变量4字节）
+            // 注意：offset是字节偏移，但局部变量索引是word索引
+            // 测试中使用的是字节偏移（如0, 4, 8...）
+            int varIndex = offset / 4;
+            int value = context.getLocalVar(varIndex);
+            context.setRegister(rd, value);
+        } else {
+            // 常规内存访问（offset是字节偏移，堆是int数组，需要除以4）
+            int effectiveAddr = baseAddr + offset / 4;
+
+            // 检查地址有效性
+            if (effectiveAddr < 0) {
+                throw new IllegalArgumentException("Invalid memory address: " + effectiveAddr);
+            }
+
+            int value = context.readMemory(effectiveAddr);
+            context.setRegister(rd, value);
         }
-
-        int value = context.readMemory(effectiveAddr);
-        context.setRegister(rd, value);
     };
 
     /**
      * 存储字指令执行器
+     * 特殊处理：当基址寄存器是r13（SP）时，访问栈帧局部变量
      */
     public static final InstructionExecutor SW = (operand, context) -> {
         int rs = context.extractRd(operand);  // rs 在 rd 字段位置
@@ -84,15 +98,27 @@ public class MemoryExecutors {
         int offset = context.extractImm16(operand);
 
         int baseAddr = context.getRegister(base);
-        int effectiveAddr = baseAddr + offset;
 
-        // 检查地址有效性
-        if (effectiveAddr < 0) {
-            throw new IllegalArgumentException("Invalid memory address: " + effectiveAddr);
+        // 检查是否是栈访问（通过SP寄存器）
+        if (base == RegisterBytecodeDefinition.R13) { // SP寄存器
+            // 偏移量除以4得到局部变量索引（假设每个局部变量4字节）
+            // 注意：offset是字节偏移，但局部变量索引是word索引
+            // 测试中使用的是字节偏移（如0, 4, 8...）
+            int varIndex = offset / 4;
+            int value = context.getRegister(rs);
+            context.setLocalVar(varIndex, value);
+        } else {
+            // 常规内存访问（offset是字节偏移，堆是int数组，需要除以4）
+            int effectiveAddr = baseAddr + offset / 4;
+
+            // 检查地址有效性
+            if (effectiveAddr < 0) {
+                throw new IllegalArgumentException("Invalid memory address: " + effectiveAddr);
+            }
+
+            int value = context.getRegister(rs);
+            context.writeMemory(effectiveAddr, value);
         }
-
-        int value = context.getRegister(rs);
-        context.writeMemory(effectiveAddr, value);
     };
 
     /**
@@ -133,8 +159,8 @@ public class MemoryExecutors {
             throw new IndexOutOfBoundsException("Object pointer out of bounds: " + objPtr);
         }
 
-        // 计算字段地址
-        int fieldAddr = objPtr + offset;
+        // 计算字段地址（offset是字节偏移，堆是int数组，需要除以4）
+        int fieldAddr = objPtr + offset / 4;
         int value = context.readMemory(fieldAddr);
         context.setRegister(rd, value);
     };
@@ -153,8 +179,8 @@ public class MemoryExecutors {
             throw new IndexOutOfBoundsException("Object pointer out of bounds: " + objPtr);
         }
 
-        // 计算字段地址
-        int fieldAddr = objPtr + offset;
+        // 计算字段地址（offset是字节偏移，堆是int数组，需要除以4）
+        int fieldAddr = objPtr + offset / 4;
         int value = context.getRegister(rs);
         context.writeMemory(fieldAddr, value);
     };
@@ -163,15 +189,32 @@ public class MemoryExecutors {
 
     /**
      * 结构体分配指令执行器
+     * struct rd, size: 在堆上分配结构体空间
+     * size参数表示字段数，每个字段占4字节
      */
     public static final InstructionExecutor STRUCT = (operand, context) -> {
         int rd = context.extractRd(operand);
-        int size = context.extractImm16(operand);
+        int numFields = context.extractImm16(operand);
 
-        // 简化实现：在堆上分配结构体空间
-        // 实际实现需要集成垃圾回收器
-        int structId = allocateStruct(size);
-        context.setRegister(rd, structId);
+        // 计算结构体大小（每个字段4字节，堆是int数组，每个元素4字节）
+        int structSize = numFields; // 字段数，每个字段对应一个int数组元素
+
+        // 在堆上分配结构体空间
+        int address = context.getHeapAllocPointer();
+
+        // 验证堆边界
+        context.validateHeapBounds(address, structSize);
+
+        // 初始化结构体内存（全部设为0）
+        for (int i = 0; i < structSize; i++) {
+            context.writeHeap(address + i, 0);
+        }
+
+        // 更新堆分配指针
+        context.setHeapAllocPointer(address + structSize);
+
+        // 将结构体地址存储到寄存器
+        context.setRegister(rd, address);
     };
 
     /**
@@ -209,13 +252,4 @@ public class MemoryExecutors {
         // 实际停止由解释器循环处理
         throw new RuntimeException("HALT instruction executed");
     };
-
-    /**
-     * 分配结构体（简化实现）
-     */
-    private static int allocateStruct(int size) {
-        // 简化实现：返回虚拟的对象ID
-        // 实际实现需要与垃圾回收器集成
-        return size; // 使用size作为标识符
-    }
 }

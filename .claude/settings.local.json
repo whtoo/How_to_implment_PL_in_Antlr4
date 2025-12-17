@@ -27,7 +27,9 @@
       "Bash(wc:*)",
       "Bash(git checkout:*)",
       "Bash(git add:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git stash pop:*)",
+      "Bash(git stash:*)"
     ]
   },
   "enabledMcpjsonServers": [

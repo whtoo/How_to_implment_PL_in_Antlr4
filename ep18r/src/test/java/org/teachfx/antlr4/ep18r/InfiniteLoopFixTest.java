@@ -32,11 +32,11 @@ public class InfiniteLoopFixTest extends RegisterVMTestBase {
                 li r7, 0
                 li r8, 10
                 sge r9, r1, r8
-                jt r9, 52
+                jt r9, loop_end
                 add r3, r3, r1
                 li r10, 1
                 add r1, r1, r10
-                j 12
+                j loop_start
             loop_end:
                 halt
             """;
@@ -84,7 +84,7 @@ public class InfiniteLoopFixTest extends RegisterVMTestBase {
                 li r1, 5
                 li r2, 10
                 sgt r3, r1, r2
-                jt r3, 20
+                jt r3, skip_print
                 li r1, 15
             skip_print:
                 halt
@@ -107,9 +107,9 @@ public class InfiniteLoopFixTest extends RegisterVMTestBase {
             .def main: args=0, locals=0
                 li r1, 5
                 li r2, 3
-                call 24
+                call add_func
                 halt
-            
+
             .def add_func: args=2, locals=0
                 add r1, r1, r2
                 ret

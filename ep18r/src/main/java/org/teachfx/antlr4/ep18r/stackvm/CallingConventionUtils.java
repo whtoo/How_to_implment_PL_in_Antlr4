@@ -324,6 +324,143 @@ public class CallingConventionUtils {
         return Integer.bitCount(mask);
     }
 
+    // ==================== ABI规范支持 ====================
+
+    /**
+     * 获取目标ABI规范的返回值寄存器
+     * 根据EP18R_ABI_设计文档，目标规范使用a0 (r2)作为返回值寄存器
+     * @return 目标ABI规范的返回值寄存器编号 (2 = a0)
+     */
+    public static int getTargetAbiReturnValueRegister() {
+        return 2; // a0 (r2) according to ABI specification
+    }
+
+    /**
+     * 获取当前实现的返回值寄存器（向后兼容）
+     * @return 当前实现的返回值寄存器编号 (1 = ra)
+     */
+    public static int getCurrentReturnValueRegister() {
+        return 1; // ra (r1) for backward compatibility
+    }
+
+    /**
+     * 检查是否使用目标ABI规范
+     * @param useTargetAbi true表示使用目标ABI规范，false表示使用当前实现
+     * @return 返回值寄存器编号
+     */
+    public static int getReturnValueRegister(boolean useTargetAbi) {
+        return useTargetAbi ? getTargetAbiReturnValueRegister() : getCurrentReturnValueRegister();
+    }
+
+    /**
+     * 获取参数寄存器（目标ABI规范）
+     * @param argIndex 参数索引（0-5对应a0-a5）
+     * @return 参数寄存器编号
+     * @throws IllegalArgumentException 如果argIndex超出范围
+     */
+    public static int getArgumentRegister(int argIndex) {
+        if (argIndex < 0 || argIndex > 5) {
+            throw new IllegalArgumentException("Argument index must be between 0 and 5, got: " + argIndex);
+        }
+        return 2 + argIndex; // a0=2, a1=3, ..., a5=7
+    }
+
+    /**
+     * 获取参数寄存器名称（目标ABI规范）
+     * @param argIndex 参数索引（0-5对应a0-a5）
+     * @return 参数寄存器ABI名称（如"a0", "a1"）
+     */
+    public static String getArgumentRegisterName(int argIndex) {
+        return StackOffsets.getAbiName(getArgumentRegister(argIndex));
+    }
+
+    /**
+     * 检查寄存器是否为参数寄存器（目标ABI规范）
+     * @param regNum 寄存器编号
+     * @return true如果寄存器是参数寄存器（a0-a5）
+     */
+    public static boolean isArgumentRegister(int regNum) {
+        return regNum >= 2 && regNum <= 7; // a0-a5 (r2-r7)
+    }
+
+    /**
+     * 获取参数寄存器索引
+     * @param regNum 寄存器编号
+     * @return 参数索引（0-5），如果不是参数寄存器则返回-1
+     */
+    public static int getArgumentIndex(int regNum) {
+        if (isArgumentRegister(regNum)) {
+            return regNum - 2; // a0=2 -> index 0
+        }
+        return -1;
+    }
+
+    /**
+     * 获取保存寄存器（目标ABI规范）
+     * @param saveIndex 保存寄存器索引（0-4对应s0-s4）
+     * @return 保存寄存器编号
+     * @throws IllegalArgumentException 如果saveIndex超出范围
+     */
+    public static int getSavedRegister(int saveIndex) {
+        if (saveIndex < 0 || saveIndex > 4) {
+            throw new IllegalArgumentException("Saved register index must be between 0 and 4, got: " + saveIndex);
+        }
+        return 8 + saveIndex; // s0=8, s1=9, ..., s4=12
+    }
+
+    /**
+     * 获取保存寄存器名称（目标ABI规范）
+     * @param saveIndex 保存寄存器索引（0-4对应s0-s4）
+     * @return 保存寄存器ABI名称（如"s0", "s1"）
+     */
+    public static String getSavedRegisterName(int saveIndex) {
+        return StackOffsets.getAbiName(getSavedRegister(saveIndex));
+    }
+
+    /**
+     * 生成函数调用指令序列（目标ABI规范）
+     * @param funcName 函数名
+     * @param argValues 参数值数组
+     * @param useTargetAbi 是否使用目标ABI规范
+     * @return 汇编指令字符串
+     */
+    public static String generateFunctionCall(String funcName, String[] argValues, boolean useTargetAbi) {
+        StringBuilder sb = new StringBuilder();
+
+        // 设置参数到寄存器
+        int numArgs = Math.min(argValues.length, 6);
+        for (int i = 0; i < numArgs; i++) {
+            String argReg = useTargetAbi ? getArgumentRegisterName(i) : "r" + getArgumentRegister(i);
+            sb.append(String.format("    li %s, %s          # 设置第%d个参数\n", argReg, argValues[i], i + 1));
+        }
+
+        // 调用函数
+        sb.append(String.format("    call %s             # 调用函数\n", funcName));
+
+        return sb.toString();
+    }
+
+    /**
+     * 验证ABI寄存器使用是否正确
+     * @param regNum 寄存器编号
+     * @param regType 寄存器类型 ("arg", "saved", "temp", "special")
+     * @return true如果使用正确
+     */
+    public static boolean validateAbiRegisterUsage(int regNum, String regType) {
+        switch (regType) {
+            case "arg":
+                return isArgumentRegister(regNum);
+            case "saved":
+                return regNum >= 8 && regNum <= 12; // s0-s4
+            case "temp":
+                return (regNum >= 1 && regNum <= 7) || regNum == 15; // ra, a0-a5, lr
+            case "special":
+                return regNum == 0 || regNum == 13 || regNum == 14; // zero, sp, fp
+            default:
+                return false;
+        }
+    }
+
     // ==================== 调试和验证 ====================
 
     /**

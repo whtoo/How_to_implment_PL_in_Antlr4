@@ -297,6 +297,24 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
                 v = getFunctionAddress(text);
                 break;
             case REG:
+            case VMAssemblerParser.ZERO:
+            case VMAssemblerParser.RA:
+            case VMAssemblerParser.A0:
+            case VMAssemblerParser.A1:
+            case VMAssemblerParser.A2:
+            case VMAssemblerParser.A3:
+            case VMAssemblerParser.A4:
+            case VMAssemblerParser.A5:
+            case VMAssemblerParser.S0:
+            case VMAssemblerParser.S1:
+            case VMAssemblerParser.S2:
+            case VMAssemblerParser.S3:
+            case VMAssemblerParser.S4:
+            case VMAssemblerParser.SP:
+            case VMAssemblerParser.FP:
+            case VMAssemblerParser.LR:
+            case VMAssemblerParser.T0:
+            case VMAssemblerParser.T1:
                 v = getRegisterNumber(operandToken);
                 break;
         }
@@ -323,9 +341,41 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
     }
 
     protected int getRegisterNumber(Token rToken) {
-        String rs = rToken.getText();
-        rs = rs.substring(1);
-        return Integer.valueOf(rs);
+        String rs = rToken.getText().toLowerCase();
+        int tokenType = rToken.getType();
+
+        // 数字寄存器：r0-r15
+        if (tokenType == VMAssemblerParser.REG) {
+            rs = rs.substring(1);
+            return Integer.valueOf(rs);
+        }
+
+        // ABI寄存器别名映射
+        switch (tokenType) {
+            case VMAssemblerParser.ZERO: return 0;
+            case VMAssemblerParser.RA:   return 1;
+            case VMAssemblerParser.A0:   return 2;
+            case VMAssemblerParser.A1:   return 3;
+            case VMAssemblerParser.A2:   return 4;
+            case VMAssemblerParser.A3:   return 5;
+            case VMAssemblerParser.A4:   return 6;
+            case VMAssemblerParser.A5:   return 7;
+            case VMAssemblerParser.S0:   return 8;
+            case VMAssemblerParser.S1:   return 9;
+            case VMAssemblerParser.S2:   return 10;
+            case VMAssemblerParser.S3:   return 11;
+            case VMAssemblerParser.S4:   return 12;
+            case VMAssemblerParser.SP:   return 13;
+            case VMAssemblerParser.FP:   return 14;
+            case VMAssemblerParser.LR:   return 15;
+
+            // 临时寄存器别名（映射到调用者保存寄存器）
+            case VMAssemblerParser.T0:   return 2; // t0 -> a0
+            case VMAssemblerParser.T1:   return 3; // t1 -> a1
+
+            default:
+                throw new IllegalArgumentException("Unknown register token: " + rs + " (type=" + tokenType + ")");
+        }
     }
 
     protected int getLabelAddress(String id) {

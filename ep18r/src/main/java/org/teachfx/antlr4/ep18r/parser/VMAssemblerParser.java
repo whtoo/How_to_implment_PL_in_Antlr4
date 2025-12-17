@@ -19,9 +19,10 @@ public class VMAssemblerParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, REG=9, 
-		ID=10, FUNC=11, INT=12, CHAR=13, BOOL=14, STRING=15, FLOAT=16, WS=17, 
-		NEWLINE=18;
+		T__0=1, T__1=2, T__2=3, T__3=4, T__4=5, T__5=6, T__6=7, T__7=8, ZERO=9, 
+		RA=10, A0=11, A1=12, A2=13, A3=14, A4=15, A5=16, S0=17, S1=18, S2=19, 
+		S3=20, S4=21, SP=22, FP=23, LR=24, T0=25, T1=26, REG=27, ID=28, FUNC=29, 
+		INT=30, CHAR=31, BOOL=32, STRING=33, FLOAT=34, WS=35, NEWLINE=36;
 	public static final int
 		RULE_program = 0, RULE_globals = 1, RULE_globalVariable = 2, RULE_functionDeclaration = 3, 
 		RULE_instr = 4, RULE_temp = 5, RULE_label = 6;
@@ -36,14 +37,18 @@ public class VMAssemblerParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, "'.globals'", "'.global'", "'.def'", "':'", "'args'", "'='", "','", 
-			"'locals'"
+			"'locals'", "'zero'", "'ra'", "'a0'", "'a1'", "'a2'", "'a3'", "'a4'", 
+			"'a5'", "'s0'", "'s1'", "'s2'", "'s3'", "'s4'", "'sp'", "'fp'", "'lr'", 
+			"'t0'", "'t1'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, null, null, null, null, null, null, null, null, "REG", "ID", "FUNC", 
-			"INT", "CHAR", "BOOL", "STRING", "FLOAT", "WS", "NEWLINE"
+			null, null, null, null, null, null, null, null, null, "ZERO", "RA", "A0", 
+			"A1", "A2", "A3", "A4", "A5", "S0", "S1", "S2", "S3", "S4", "SP", "FP", 
+			"LR", "T0", "T1", "REG", "ID", "FUNC", "INT", "CHAR", "BOOL", "STRING", 
+			"FLOAT", "WS", "NEWLINE"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -206,7 +211,7 @@ public class VMAssemblerParser extends Parser {
 				setState(24); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & 263176L) != 0) );
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & 68987912200L) != 0) );
 			}
 		}
 		catch (RecognitionException re) {
@@ -525,6 +530,24 @@ public class VMAssemblerParser extends Parser {
 		public TerminalNode ID() { return getToken(VMAssemblerParser.ID, 0); }
 		public TerminalNode REG() { return getToken(VMAssemblerParser.REG, 0); }
 		public TerminalNode FUNC() { return getToken(VMAssemblerParser.FUNC, 0); }
+		public TerminalNode ZERO() { return getToken(VMAssemblerParser.ZERO, 0); }
+		public TerminalNode RA() { return getToken(VMAssemblerParser.RA, 0); }
+		public TerminalNode A0() { return getToken(VMAssemblerParser.A0, 0); }
+		public TerminalNode A1() { return getToken(VMAssemblerParser.A1, 0); }
+		public TerminalNode A2() { return getToken(VMAssemblerParser.A2, 0); }
+		public TerminalNode A3() { return getToken(VMAssemblerParser.A3, 0); }
+		public TerminalNode A4() { return getToken(VMAssemblerParser.A4, 0); }
+		public TerminalNode A5() { return getToken(VMAssemblerParser.A5, 0); }
+		public TerminalNode S0() { return getToken(VMAssemblerParser.S0, 0); }
+		public TerminalNode S1() { return getToken(VMAssemblerParser.S1, 0); }
+		public TerminalNode S2() { return getToken(VMAssemblerParser.S2, 0); }
+		public TerminalNode S3() { return getToken(VMAssemblerParser.S3, 0); }
+		public TerminalNode S4() { return getToken(VMAssemblerParser.S4, 0); }
+		public TerminalNode SP() { return getToken(VMAssemblerParser.SP, 0); }
+		public TerminalNode FP() { return getToken(VMAssemblerParser.FP, 0); }
+		public TerminalNode LR() { return getToken(VMAssemblerParser.LR, 0); }
+		public TerminalNode T0() { return getToken(VMAssemblerParser.T0, 0); }
+		public TerminalNode T1() { return getToken(VMAssemblerParser.T1, 0); }
 		public TerminalNode INT() { return getToken(VMAssemblerParser.INT, 0); }
 		public TerminalNode BOOL() { return getToken(VMAssemblerParser.BOOL, 0); }
 		public TerminalNode CHAR() { return getToken(VMAssemblerParser.CHAR, 0); }
@@ -558,7 +581,7 @@ public class VMAssemblerParser extends Parser {
 			{
 			setState(75);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 130560L) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 34359737856L) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -625,55 +648,55 @@ public class VMAssemblerParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\u0012Q\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
-		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
-		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0001\u0000\u0001\u0000\u0003"+
-		"\u0000\u0011\b\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0004"+
-		"\u0000\u0017\b\u0000\u000b\u0000\f\u0000\u0018\u0001\u0001\u0005\u0001"+
-		"\u001c\b\u0001\n\u0001\f\u0001\u001f\t\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001"+
-		"\u0002\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001"+
-		"\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001"+
-		"\u0003\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001"+
-		"\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001"+
-		"\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001"+
-		"\u0004\u0001\u0004\u0001\u0004\u0003\u0004J\b\u0004\u0001\u0005\u0001"+
-		"\u0005\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0000\u0000\u0007"+
-		"\u0000\u0002\u0004\u0006\b\n\f\u0000\u0001\u0001\u0000\t\u0010S\u0000"+
-		"\u0010\u0001\u0000\u0000\u0000\u0002\u001d\u0001\u0000\u0000\u0000\u0004"+
-		"$\u0001\u0000\u0000\u0000\u0006)\u0001\u0000\u0000\u0000\bI\u0001\u0000"+
-		"\u0000\u0000\nK\u0001\u0000\u0000\u0000\fM\u0001\u0000\u0000\u0000\u000e"+
-		"\u0011\u0003\u0004\u0002\u0000\u000f\u0011\u0003\u0002\u0001\u0000\u0010"+
-		"\u000e\u0001\u0000\u0000\u0000\u0010\u000f\u0001\u0000\u0000\u0000\u0010"+
-		"\u0011\u0001\u0000\u0000\u0000\u0011\u0016\u0001\u0000\u0000\u0000\u0012"+
-		"\u0017\u0003\u0006\u0003\u0000\u0013\u0017\u0003\b\u0004\u0000\u0014\u0017"+
-		"\u0003\f\u0006\u0000\u0015\u0017\u0005\u0012\u0000\u0000\u0016\u0012\u0001"+
-		"\u0000\u0000\u0000\u0016\u0013\u0001\u0000\u0000\u0000\u0016\u0014\u0001"+
-		"\u0000\u0000\u0000\u0016\u0015\u0001\u0000\u0000\u0000\u0017\u0018\u0001"+
-		"\u0000\u0000\u0000\u0018\u0016\u0001\u0000\u0000\u0000\u0018\u0019\u0001"+
-		"\u0000\u0000\u0000\u0019\u0001\u0001\u0000\u0000\u0000\u001a\u001c\u0005"+
-		"\u0012\u0000\u0000\u001b\u001a\u0001\u0000\u0000\u0000\u001c\u001f\u0001"+
-		"\u0000\u0000\u0000\u001d\u001b\u0001\u0000\u0000\u0000\u001d\u001e\u0001"+
-		"\u0000\u0000\u0000\u001e \u0001\u0000\u0000\u0000\u001f\u001d\u0001\u0000"+
-		"\u0000\u0000 !\u0005\u0001\u0000\u0000!\"\u0005\f\u0000\u0000\"#\u0005"+
-		"\u0012\u0000\u0000#\u0003\u0001\u0000\u0000\u0000$%\u0005\u0002\u0000"+
-		"\u0000%&\u0005\n\u0000\u0000&\'\u0005\n\u0000\u0000\'(\u0005\u0012\u0000"+
-		"\u0000(\u0005\u0001\u0000\u0000\u0000)*\u0005\u0003\u0000\u0000*+\u0005"+
-		"\n\u0000\u0000+,\u0005\u0004\u0000\u0000,-\u0005\u0005\u0000\u0000-.\u0005"+
-		"\u0006\u0000\u0000./\u0005\f\u0000\u0000/0\u0005\u0007\u0000\u000001\u0005"+
-		"\b\u0000\u000012\u0005\u0006\u0000\u000023\u0005\f\u0000\u000034\u0005"+
-		"\u0012\u0000\u00004\u0007\u0001\u0000\u0000\u000056\u0005\n\u0000\u0000"+
-		"6J\u0005\u0012\u0000\u000078\u0005\n\u0000\u000089\u0003\n\u0005\u0000"+
-		"9:\u0005\u0012\u0000\u0000:J\u0001\u0000\u0000\u0000;<\u0005\n\u0000\u0000"+
-		"<=\u0003\n\u0005\u0000=>\u0005\u0007\u0000\u0000>?\u0003\n\u0005\u0000"+
-		"?@\u0005\u0012\u0000\u0000@J\u0001\u0000\u0000\u0000AB\u0005\n\u0000\u0000"+
-		"BC\u0003\n\u0005\u0000CD\u0005\u0007\u0000\u0000DE\u0003\n\u0005\u0000"+
-		"EF\u0005\u0007\u0000\u0000FG\u0003\n\u0005\u0000GH\u0005\u0012\u0000\u0000"+
-		"HJ\u0001\u0000\u0000\u0000I5\u0001\u0000\u0000\u0000I7\u0001\u0000\u0000"+
-		"\u0000I;\u0001\u0000\u0000\u0000IA\u0001\u0000\u0000\u0000J\t\u0001\u0000"+
-		"\u0000\u0000KL\u0007\u0000\u0000\u0000L\u000b\u0001\u0000\u0000\u0000"+
-		"MN\u0005\n\u0000\u0000NO\u0005\u0004\u0000\u0000O\r\u0001\u0000\u0000"+
-		"\u0000\u0005\u0010\u0016\u0018\u001dI";
+		"\u0004\u0001$Q\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002\u0002"+
+		"\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002\u0005"+
+		"\u0007\u0005\u0002\u0006\u0007\u0006\u0001\u0000\u0001\u0000\u0003\u0000"+
+		"\u0011\b\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0004\u0000"+
+		"\u0017\b\u0000\u000b\u0000\f\u0000\u0018\u0001\u0001\u0005\u0001\u001c"+
+		"\b\u0001\n\u0001\f\u0001\u001f\t\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002"+
+		"\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003"+
+		"\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003"+
+		"\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004"+
+		"\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004"+
+		"\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004"+
+		"\u0001\u0004\u0001\u0004\u0003\u0004J\b\u0004\u0001\u0005\u0001\u0005"+
+		"\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0000\u0000\u0007\u0000"+
+		"\u0002\u0004\u0006\b\n\f\u0000\u0001\u0001\u0000\t\"S\u0000\u0010\u0001"+
+		"\u0000\u0000\u0000\u0002\u001d\u0001\u0000\u0000\u0000\u0004$\u0001\u0000"+
+		"\u0000\u0000\u0006)\u0001\u0000\u0000\u0000\bI\u0001\u0000\u0000\u0000"+
+		"\nK\u0001\u0000\u0000\u0000\fM\u0001\u0000\u0000\u0000\u000e\u0011\u0003"+
+		"\u0004\u0002\u0000\u000f\u0011\u0003\u0002\u0001\u0000\u0010\u000e\u0001"+
+		"\u0000\u0000\u0000\u0010\u000f\u0001\u0000\u0000\u0000\u0010\u0011\u0001"+
+		"\u0000\u0000\u0000\u0011\u0016\u0001\u0000\u0000\u0000\u0012\u0017\u0003"+
+		"\u0006\u0003\u0000\u0013\u0017\u0003\b\u0004\u0000\u0014\u0017\u0003\f"+
+		"\u0006\u0000\u0015\u0017\u0005$\u0000\u0000\u0016\u0012\u0001\u0000\u0000"+
+		"\u0000\u0016\u0013\u0001\u0000\u0000\u0000\u0016\u0014\u0001\u0000\u0000"+
+		"\u0000\u0016\u0015\u0001\u0000\u0000\u0000\u0017\u0018\u0001\u0000\u0000"+
+		"\u0000\u0018\u0016\u0001\u0000\u0000\u0000\u0018\u0019\u0001\u0000\u0000"+
+		"\u0000\u0019\u0001\u0001\u0000\u0000\u0000\u001a\u001c\u0005$\u0000\u0000"+
+		"\u001b\u001a\u0001\u0000\u0000\u0000\u001c\u001f\u0001\u0000\u0000\u0000"+
+		"\u001d\u001b\u0001\u0000\u0000\u0000\u001d\u001e\u0001\u0000\u0000\u0000"+
+		"\u001e \u0001\u0000\u0000\u0000\u001f\u001d\u0001\u0000\u0000\u0000 !"+
+		"\u0005\u0001\u0000\u0000!\"\u0005\u001e\u0000\u0000\"#\u0005$\u0000\u0000"+
+		"#\u0003\u0001\u0000\u0000\u0000$%\u0005\u0002\u0000\u0000%&\u0005\u001c"+
+		"\u0000\u0000&\'\u0005\u001c\u0000\u0000\'(\u0005$\u0000\u0000(\u0005\u0001"+
+		"\u0000\u0000\u0000)*\u0005\u0003\u0000\u0000*+\u0005\u001c\u0000\u0000"+
+		"+,\u0005\u0004\u0000\u0000,-\u0005\u0005\u0000\u0000-.\u0005\u0006\u0000"+
+		"\u0000./\u0005\u001e\u0000\u0000/0\u0005\u0007\u0000\u000001\u0005\b\u0000"+
+		"\u000012\u0005\u0006\u0000\u000023\u0005\u001e\u0000\u000034\u0005$\u0000"+
+		"\u00004\u0007\u0001\u0000\u0000\u000056\u0005\u001c\u0000\u00006J\u0005"+
+		"$\u0000\u000078\u0005\u001c\u0000\u000089\u0003\n\u0005\u00009:\u0005"+
+		"$\u0000\u0000:J\u0001\u0000\u0000\u0000;<\u0005\u001c\u0000\u0000<=\u0003"+
+		"\n\u0005\u0000=>\u0005\u0007\u0000\u0000>?\u0003\n\u0005\u0000?@\u0005"+
+		"$\u0000\u0000@J\u0001\u0000\u0000\u0000AB\u0005\u001c\u0000\u0000BC\u0003"+
+		"\n\u0005\u0000CD\u0005\u0007\u0000\u0000DE\u0003\n\u0005\u0000EF\u0005"+
+		"\u0007\u0000\u0000FG\u0003\n\u0005\u0000GH\u0005$\u0000\u0000HJ\u0001"+
+		"\u0000\u0000\u0000I5\u0001\u0000\u0000\u0000I7\u0001\u0000\u0000\u0000"+
+		"I;\u0001\u0000\u0000\u0000IA\u0001\u0000\u0000\u0000J\t\u0001\u0000\u0000"+
+		"\u0000KL\u0007\u0000\u0000\u0000L\u000b\u0001\u0000\u0000\u0000MN\u0005"+
+		"\u001c\u0000\u0000NO\u0005\u0004\u0000\u0000O\r\u0001\u0000\u0000\u0000"+
+		"\u0005\u0010\u0016\u0018\u001dI";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

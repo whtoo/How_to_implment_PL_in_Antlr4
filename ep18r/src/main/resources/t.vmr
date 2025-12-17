@@ -1,31 +1,30 @@
-.def dec1: args=1 ,locals=1
-    li r2, 1
-    sub r1, r1, r2
+.def dec1: args=1, locals=0
+; ABI: 输入参数 r2 = n, 输出 r2 = n-1
+    li r3, 1         ; r3 = 1
+    sub r2, r2, r3   ; r2 = r2 - 1 (ABI: 结果在r2)
     ret
-.def main: args=0 ,locals=1
-    li r1, 10
+
+.def main: args=0, locals=0
+; 打印10到7的数字（递减）
+    li r1, 10        ; r1 = 10 (循环变量)
+
 L4:
-    li r2, 0
-    sgt r3, r1, r2
-    jf r3, L6
-L5:
-    li r4, 5
-    sgt r5, r1, r4
-    jf r5, L8
-L7:
-    print r1
-    li r6, 7
-    seq r7, r1, r6
-    jf r7, L8
-L9:
-    li r8, 7
-    j L3
-L8:
-    ls r9, "break"
-    print r9
-    call dec1
-    j L4
+    ; 检查 r1 > 7
+    li r2, 7         ; r2 = 7
+    sgt r3, r1, r2   ; r3 = (r1 > 7)
+    jf r3, L6        ; 如果 r1 <= 7，跳转到 L6
+
+    ; 打印 r1
+    print r1         ; 打印当前值
+
+    ; 调用 dec1(r1)
+    mov r2, r1       ; r2 = r1 (参数)
+    call dec1        ; r2 = r1 - 1
+
+    ; 更新循环变量
+    mov r1, r2       ; r1 = r2
+
+    j L4             ; 继续循环
+
 L6:
-    li r10, 0
-L3:
     halt

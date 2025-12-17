@@ -1,6 +1,7 @@
 .def main: args=0, locals=0
-    li r1, 5
-    li r2, 3
-    sub r3, r1, r2
-    print r3
+    ; ABI: 使用a0(r2)作为返回值寄存器
+    li r2, 5         ; r2 = 5
+    li r3, 3         ; r3 = 3
+    sub r4, r2, r3   ; r4 = r2 - r3 = 2
+    print r4         ; 打印r4 (应该输出2)
     halt

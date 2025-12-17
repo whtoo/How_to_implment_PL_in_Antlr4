@@ -28,7 +28,7 @@ public class ControlFlowExecutors {
         // 创建新的栈帧并压入调用栈
         StackFrame newFrame = new StackFrame(null, returnAddr);
         // 保存caller-saved寄存器（r2-r7）到新栈帧的savedCallerRegisters数组
-        // r1是返回值寄存器，不被保存
+        // 注意：r1是返回值寄存器，不保存以便被调用函数修改
         for (int i = 2; i <= 7; i++) {
             newFrame.savedCallerRegisters[i - 2] = context.getRegister(i); // i-2因为数组索引0对应r2
         }

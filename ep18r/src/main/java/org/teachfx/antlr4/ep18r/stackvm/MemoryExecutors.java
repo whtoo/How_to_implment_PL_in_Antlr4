@@ -239,7 +239,7 @@ public class MemoryExecutors {
      * 打印指令执行器
      */
     public static final InstructionExecutor PRINT = (operand, context) -> {
-        int rs = context.extractRs1(operand);
+        int rs = context.extractRd(operand);
         int value = context.getRegister(rs);
         System.out.println(value);
     };

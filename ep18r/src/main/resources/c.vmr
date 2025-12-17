@@ -1,21 +1,24 @@
 .def main: args=0, locals=0
 ; print f(10,20)
-    li r1, 10   ; first param
-    li r2, 20   ; second param
+; ABI: 前6个参数通过a0-a5(r2-r7)传递
+    li r2, 10        ; r2 = a0 = 10 (第一个参数)
+    li r3, 20        ; r3 = a1 = 20 (第二个参数)
     call f
-    print r1
+    print r2         ; 打印返回值 (r2 = a0, 应该输出43)
     halt
 
 ; f(x,y) { return ck(x, y); }
-.def f: args=2, locals=1
+; ABI: 输入参数 r2=x, r3=y, 输出 r2=ck(x,y)
+.def f: args=2, locals=0
+    ; 直接调用ck，参数已经在r2,r3中
     call ck
     ret
 
 .def ck: args=2, locals=0
-    li r3, 2
-    mul r4, r1, r3   ; 2*x
-    li r5, 3
-    add r6, r2, r5   ; y+3
-    add r7, r4, r6   ; 2*x + (y+3)
-    mov r1, r7       ; return value
+; ABI: 输入参数 r2=x, r3=y, 输出 r2=2*x + (y+3)
+    li r4, 2         ; r4 = 2
+    mul r5, r2, r4   ; r5 = 2*x
+    li r6, 3         ; r6 = 3
+    add r7, r3, r6   ; r7 = y+3
+    add r2, r5, r7   ; r2 = 2*x + (y+3) (ABI: 结果在r2)
     ret

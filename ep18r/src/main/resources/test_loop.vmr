@@ -1,34 +1,34 @@
 .def main: args=0, locals=2
     ; 初始化 i = 0
     li r1, 0
-    sw r1, r14, 0   ; store i at fp+0
+    sw r1, r14, 0   ; store i at fp+0 (字节偏移0)
 
-    ; 初始化 sum = 0
-    li r1, 0
-    sw r1, r14, 1   ; store sum at fp+1
+    ; 初始化 sum = 0 (使用r2作为返回值)
+    li r2, 0
+    sw r2, r14, 4   ; store sum at fp+4 (字节偏移4)
 
 loop_start:
     ; 加载 i 到 r1
-    lw r1, r14, 0   ; r1 = i
+    lw r1, r14, 0   ; r1 = i (字节偏移0)
 
     ; 比较 i >= 10
-    li r2, 10       ; r2 = 10
-    sge r3, r1, r2  ; r3 = (i >= 10)
-    jt r3, loop_end ; if r3 != 0, jump to loop_end
+    li r3, 10       ; r3 = 10
+    sge r4, r1, r3  ; r4 = (i >= 10)
+    jt r4, loop_end ; if r4 != 0, jump to loop_end
 
-    ; sum += i
-    lw r4, r14, 1   ; r4 = sum
-    add r4, r4, r1  ; r4 = sum + i
-    sw r4, r14, 1   ; store sum
+    ; sum += i (r2 = sum + i)
+    lw r5, r14, 4   ; r5 = sum (字节偏移4)
+    add r2, r5, r1  ; r2 = sum + i (ABI: r2作为累加器)
+    sw r2, r14, 4   ; store sum (字节偏移4)
 
     ; i++
-    li r5, 1        ; r5 = 1
-    add r1, r1, r5  ; r1 = i + 1
-    sw r1, r14, 0   ; store i
+    li r6, 1        ; r6 = 1
+    add r1, r1, r6  ; r1 = i + 1
+    sw r1, r14, 0   ; store i (字节偏移0)
 
     j loop_start
 
 loop_end:
-    ; 加载 sum 到 r1 作为返回值
-    lw r1, r14, 1
+    ; 加载 sum 到 r2 作为返回值 (ABI: r2 = a0)
+    lw r2, r14, 4   ; r2 = sum (字节偏移4)
     halt

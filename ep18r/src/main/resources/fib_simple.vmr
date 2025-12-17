@@ -1,0 +1,37 @@
+.def main: args=0, locals=0
+    ; 测试 fib(3) = 2 (简单测试)
+    li r2, 3         ; r2 = 3 (参数 n)
+    call fib         ; 调用 fib(3)
+    print r2         ; 打印结果 (应该输出 2)
+    halt
+
+; fib(n): 计算第n个fibonacci数
+.def fib: args=1, locals=0
+    ; 检查 n < 2
+    li r3, 2         ; r3 = 2
+    sge r4, r2, r3   ; r4 = (n >= 2)
+    jf r4, base_case ; 如果 n < 2，跳转到 base_case
+
+    ; 递归调用 fib(n-1)
+    mov r5, r2       ; r5 = n (保存n)
+    li r6, 1         ; r6 = 1
+    sub r2, r5, r6   ; r2 = n - 1
+    call fib         ; 调用 fib(n-1)
+
+    ; 此时 r2 = fib(n-1)，保存到r3
+    mov r3, r2       ; r3 = fib(n-1)
+
+    ; 递归调用 fib(n-2)
+    mov r2, r5       ; r2 = n (恢复n)
+    li r6, 2         ; r6 = 2
+    sub r2, r2, r6   ; r2 = n - 2
+    call fib         ; 调用 fib(n-2)
+
+    ; 此时 r2 = fib(n-2)
+    ; 计算 fib(n-1) + fib(n-2)
+    add r2, r3, r2   ; r2 = fib(n-1) + fib(n-2)
+    ret
+
+base_case:
+    ; n < 2 时返回 n (r2已经是n)
+    ret

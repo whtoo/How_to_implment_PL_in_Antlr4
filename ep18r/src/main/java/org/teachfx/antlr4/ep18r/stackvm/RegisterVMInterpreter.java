@@ -303,21 +303,6 @@ public class RegisterVMInterpreter {
                 }
                 return;
             }
-            case RegisterBytecodeDefinition.INSTR_STRUCT: {
-                // struct rd, size: 需要堆分配
-                int rd = extractRd(operand);
-                int size = extractImm16(operand);
-                int address = heapAllocPointer;
-                if (address + size > heap.length) {
-                    throw new OutOfMemoryError("Not enough heap space for struct");
-                }
-                for (int i = 0; i < size; i++) {
-                    heap[address + i] = 0;
-                }
-                heapAllocPointer += size;
-                setRegister(rd, address);
-                return;
-            }
         }
 
         // 使用策略模式执行其他指令
@@ -523,5 +508,12 @@ public class RegisterVMInterpreter {
     public void loadCode(byte[] bytecode) {
         this.code = bytecode;
         this.codeSize = bytecode.length;
+    }
+
+    /**
+     * 获取当前字节码（测试用）
+     */
+    public byte[] getCode() {
+        return code;
     }
 }

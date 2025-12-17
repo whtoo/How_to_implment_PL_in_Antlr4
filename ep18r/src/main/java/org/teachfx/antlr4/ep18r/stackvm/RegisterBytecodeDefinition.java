@@ -128,8 +128,8 @@ public class RegisterBytecodeDefinition {
             new Instruction("sw", REG, REG, INT),   // index 33
             new Instruction("lw_g", REG, INT),      // index 34
             new Instruction("sw_g", REG, INT),      // index 35
-            new Instruction("lw_f", REG, INT),      // index 36 (字段加载: base=对象指针在rs1? 需要调整)
-            new Instruction("sw_f", REG, INT),      // index 37 (字段存储)
+            new Instruction("lw_f", REG, REG, INT), // index 36 (字段加载: rd, base, offset)
+            new Instruction("sw_f", REG, REG, INT), // index 37 (字段存储: rs, base, offset)
             new Instruction("print", REG),          // index 38 (I类型: rd=寄存器)
             new Instruction("struct", REG, INT),    // index 39
             new Instruction("null", REG),           // index 40 (I类型: rd=寄存器)

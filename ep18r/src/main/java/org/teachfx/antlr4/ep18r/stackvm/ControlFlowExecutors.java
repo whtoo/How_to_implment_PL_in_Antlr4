@@ -12,16 +12,44 @@ public class ControlFlowExecutors {
      *
      * 按照ABI调用约定（第3.3节）：
      * - caller-saved寄存器：ra(r1), a1-a5(r3-r7), lr(r15)由调用者保存（共7个，不包括a0/r2）
-     * - 为被调用函数分配locals空间，更新FP指向新栈帧（第4节）
-     * - callee-saved寄存器（s0-s4, sp, fp）由被调用函数负责保存/恢复
+     * - 为被调用函数分配栈帧空间，更新SP/FP指向新栈帧（第4节）
+     * - callee-saved寄存器（s0-s4）由被调用函数负责保存/恢复
+     *
+     * 栈帧布局（根据StackOffsets定义）：
+     * 高地址
+     * +-------------------+ ← 调用者栈帧结束
+     * |   参数7+          |   fp + 16 + 4*(n-7)
+     * |   ...             |
+     * |   参数8           |   fp + 20
+     * |   参数7           |   fp + 16
+     * +-------------------+
+     * |   返回地址         |   fp + 12  (存储在调用栈中)
+     * +-------------------+
+     * |   旧帧指针(fp)     |   fp + 8   (fp旧值)
+     * +-------------------+
+     * |   保存寄存器s4     |   fp + 4   (r12)
+     * |   保存寄存器s3     |   fp + 0   (r11)
+     * |   保存寄存器s2     |   fp - 4   (r10)
+     * |   保存寄存器s1     |   fp - 8   (r9)
+     * |   保存寄存器s0     |   fp - 12  (r8)
+     * +-------------------+
+     * |   局部变量n       |   fp - 16 - 4*(n-1)
+     * |   ...             |
+     * |   局部变量2       |   fp - 20
+     * |   局部变量1       |   fp - 16
+     * +-------------------+
+     * |   临时空间         |   （用于表达式求值等）
+     * +-------------------+ ← sp (栈指针，低地址)
      */
     public static final InstructionExecutor CALL = (operand, context) -> {
         int target = context.extractImm26(operand);
 
         // 调试跟踪输出
-        System.out.printf("[CALL] PC=%d, target=%d (0x%x), returnAddr=%d, fp=%d%n",
+        System.out.printf("[CALL] PC=%d, target=%d (0x%x), returnAddr=%d, fp=%d, sp=%d%n",
             context.getProgramCounter(), target, target,
-            context.getProgramCounter() + 4, context.getRegister(RegisterBytecodeDefinition.R14));
+            context.getProgramCounter() + 4,
+            context.getRegister(RegisterBytecodeDefinition.R14),
+            context.getRegister(RegisterBytecodeDefinition.R13));
 
         // 验证跳转目标（26位跳转需要4字节对齐）
         context.validateJumpTarget26(target);
@@ -32,41 +60,47 @@ public class ControlFlowExecutors {
         // 检查调用栈溢出
         context.checkStackOverflow();
 
-        // 查找被调用函数符号，获取nlocals
+        // 查找被调用函数符号，获取参数数量和局部变量数量
         FunctionSymbol func = context.getFunctionSymbol(target);
+        int nargs = (func != null) ? func.nargs : 0;
         int nlocals = (func != null) ? func.nlocals : 0;
 
-        // 为被调用函数分配栈帧空间（按照ABI规范第4节）
-        // 栈帧包括：保存寄存器区域 + locals区域
-        // 注意：参数区域由调用者分配
-        // 简化：假设被调用者使用所有s0-s4寄存器，保存寄存器区域固定为5*4=20字节
-        // 实际应该根据函数是否使用s0-s4动态计算
-        final int CALLEE_SAVE_AREA_SIZE = 5 * 4; // s0-s4: 5个寄存器 * 4字节
-        int localsSize = nlocals * 4;
+        // 使用StackOffsets计算标准栈帧布局
+        // 假设被调用者使用所有s0-s4寄存器（5个）
+        final int NUM_CALLEE_SAVED_REGS = 5; // s0-s4
+        int numStackArgs = Math.max(0, nargs - 6); // 第7+个参数数量
+
+        // 计算栈帧大小（字节）和字数（8字节对齐，所以是2字的倍数）
+        int frameSize = StackOffsets.calculateFrameSize(NUM_CALLEE_SAVED_REGS, nlocals, numStackArgs);
+        int frameSizeWords = frameSize / 4; // 转换为字索引（堆是int数组）
+        int spAdjustment = StackOffsets.calculateSpAdjustment(NUM_CALLEE_SAVED_REGS, nlocals);
+
+        // 获取当前SP和堆分配指针
+        int currentSP = context.getRegister(RegisterBytecodeDefinition.R13);
         int currentHeapPointer = context.getHeapAllocPointer();
 
-        // 计算总栈帧大小（8字节对齐）
-        int frameSize = CALLEE_SAVE_AREA_SIZE + localsSize;
-        frameSize = (frameSize + 7) & ~7; // 对齐到8字节
+        // 确保SP和堆分配指针同步（使用堆作为栈空间）
+        // newSP指向新栈帧的开始（低地址），堆分配指针是字索引
+        int newSP = currentHeapPointer; // 字索引
+        // fp指向栈帧顶部-4字节：fp = sp + frameSize - 4 字节
+        // 转换为字索引：newFP = newSP + frameSizeWords - 1
+        int newFP = newSP + frameSizeWords - 1; // 字索引
 
-        // 检查heap空间是否足够
-        if (currentHeapPointer + frameSize > context.getConfig().getHeapSize()) {
-            throw new OutOfMemoryError("Not enough heap space for frame: need " + frameSize + " bytes");
+        // 检查堆空间是否足够（newSP和frameSizeWords都是字索引）
+        if (newSP + frameSizeWords > context.getConfig().getHeapSize()) {
+            throw new OutOfMemoryError("Not enough heap space for frame: need " + frameSize + " bytes (" + frameSizeWords + " words)");
         }
 
-        // locals区域从 当前heap指针 + 保存寄存器区域 开始
-        int localsBase = currentHeapPointer + CALLEE_SAVE_AREA_SIZE;
-
-        // FP指向旧FP保存位置（在locals区域上方16字节处）
-        // 16 = 返回地址(4) + 旧FP(4) + 参数区偏移(8)
-        int newFP = localsBase + 16;
-
-        // 保存旧的FP值到新栈帧的FP位置（ABI第4.3节）
+        // 保存旧的FP值到标准位置（fp+8字节）
         int oldFP = context.getRegister(RegisterBytecodeDefinition.R14);
-        context.writeMemory(newFP / 4, oldFP);
+        // StackOffsets.FP_SAVE_OFFSET=8字节，除以4得2字
+        int fpSaveAddress = newFP + StackOffsets.FP_SAVE_OFFSET / 4; // 字索引
+        context.writeMemory(fpSaveAddress, oldFP);
 
         // 创建新的栈帧并压入调用栈
-        // frameBasePointer指向locals区域开始
+        // frameBasePointer指向局部变量区域开始（fp-16字节）
+        // StackOffsets.FIRST_LOCAL_OFFSET = -16字节，除以4得-4字
+        int localsBase = newFP + StackOffsets.FIRST_LOCAL_OFFSET / 4;
         StackFrame newFrame = new StackFrame(func, returnAddr, localsBase);
 
         // 保存caller-saved寄存器（ABI第3.3节）
@@ -85,18 +119,28 @@ public class ControlFlowExecutors {
         context.getCallStack()[newFramePointer] = newFrame;
         context.setFramePointer(newFramePointer);
 
-        // 更新FP寄存器
+        // 更新寄存器
+        // SP寄存器（r13）指向新栈帧开始
+        context.setRegister(RegisterBytecodeDefinition.R13, newSP);
+        // FP寄存器（r14）指向新栈帧顶部-4
         context.setRegister(RegisterBytecodeDefinition.R14, newFP);
-
-        // 更新heap分配指针（跳过locals区域）
-        context.setHeapAllocPointer(localsBase + localsSize);
-
-        // 设置lr(r15)为返回地址
+        // LR寄存器（r15）设置为返回地址
         context.setRegister(RegisterBytecodeDefinition.R15, returnAddr);
 
+        // 更新堆分配指针（跳过整个栈帧，字数）
+        context.setHeapAllocPointer(newSP + frameSizeWords);
+
         // 调试跟踪输出
-        System.out.printf("[CALL] localsBase=%d, newFP=%d, heapPtr=%d, savedRegs=[a1=%d,a2=%d,a3=%d,a4=%d,a5=%d,lr=%d,ra=%d]%n",
-            localsBase, newFP, localsBase + localsSize,
+        System.out.printf("[CALL] 栈帧布局: frameSize=%d字节(%d字), newSP=%d字, newFP=%d字, localsBase=%d字, heapPtr=%d字%n",
+            frameSize, frameSizeWords, newSP, newFP, localsBase, newSP + frameSizeWords);
+        System.out.printf("[CALL] 参数: nargs=%d (栈参数=%d), nlocals=%d%n", nargs, numStackArgs, nlocals);
+        System.out.printf("[CALL] 保存寄存器位置: s0@fp%d, s1@fp%d, s2@fp%d, s3@fp%d, s4@fp%d%n",
+            StackOffsets.S0_SAVE_OFFSET, StackOffsets.S1_SAVE_OFFSET,
+            StackOffsets.S2_SAVE_OFFSET, StackOffsets.S3_SAVE_OFFSET,
+            StackOffsets.S4_SAVE_OFFSET);
+        System.out.printf("[CALL] 局部变量区域: 起始@fp%d, 结束@fp%d%n",
+            StackOffsets.FIRST_LOCAL_OFFSET, StackOffsets.FIRST_LOCAL_OFFSET - 4 * (nlocals - 1));
+        System.out.printf("[CALL] 保存caller寄存器: [a1=%d,a2=%d,a3=%d,a4=%d,a5=%d,lr=%d,ra=%d]%n",
             newFrame.savedCallerRegisters[0], newFrame.savedCallerRegisters[1],
             newFrame.savedCallerRegisters[2], newFrame.savedCallerRegisters[3],
             newFrame.savedCallerRegisters[4], newFrame.savedCallerRegisters[5],
@@ -113,17 +157,20 @@ public class ControlFlowExecutors {
      *
      * 按照ABI调用约定（第3.3节）：
      * - 恢复caller-saved寄存器（ra, a1-a5, lr）
-     * - 恢复帧指针（FP）指向上一个栈帧基址
+     * - 恢复帧指针（FP）从栈帧内存读取旧值（fp+8）
+     * - 恢复栈指针（SP）：sp = fp + 4
      * - 从栈帧获取返回地址
-     * - callee-saved寄存器（s0-s4, sp, fp）由被调用函数负责保存/恢复
+     * - callee-saved寄存器（s0-s4）由被调用函数在尾声恢复
      */
     public static final InstructionExecutor RET = (operand, context) -> {
         int returnAddr;
         int currentFramePointer = context.getFramePointer();
 
         // 调试跟踪输出 - 进入RET
-        System.out.printf("\n[RET ENTRY] PC=%d, 当前fp=%d%n",
-            context.getProgramCounter(), currentFramePointer);
+        System.out.printf("\n[RET ENTRY] PC=%d, 当前framePointer=%d, 寄存器fp=%d, sp=%d%n",
+            context.getProgramCounter(), currentFramePointer,
+            context.getRegister(RegisterBytecodeDefinition.R14),
+            context.getRegister(RegisterBytecodeDefinition.R13));
         System.out.printf("[RET ENTRY] 跳转前寄存器状态: a0=%d, a1=%d, a2=%d, s0=%d, s1=%d, s2=%d%n",
             context.getRegister(2), context.getRegister(3), context.getRegister(4),
             context.getRegister(8), context.getRegister(9), context.getRegister(10));
@@ -160,14 +207,34 @@ public class ControlFlowExecutors {
             context.setRegister(15, frame.savedCallerRegisters[5]); // lr
             context.setRegister(1, frame.savedCallerRegisters[6]);  // ra
 
-            // 恢复FP（指向调用者的旧FP位置）
-            // 调用者的FP = frameBasePointer + 16
-            int prevLocalsBase = frame.frameBasePointer;
-            int prevFP = prevLocalsBase + 16;
+            // 恢复FP：从当前栈帧内存读取旧FP值（存储在fp+8字节）
+            int currentFP = context.getRegister(RegisterBytecodeDefinition.R14); // 字索引
+            // StackOffsets.FP_SAVE_OFFSET=8字节，除以4得2字
+            int fpSaveAddress = currentFP + StackOffsets.FP_SAVE_OFFSET / 4; // 字索引
+            int prevFP = context.readMemory(fpSaveAddress);
             context.setRegister(RegisterBytecodeDefinition.R14, prevFP);
 
-            System.out.printf("[RET] 恢复FP: %d->%d, 设置framePointer: %d->%d%n",
-                context.getRegister(RegisterBytecodeDefinition.R14), prevFP,
+            // 恢复SP：sp = fp + 1 - frameSizeWords（因为fp = sp + frameSizeWords - 1）
+            // 需要计算当前栈帧的大小
+            int frameSizeWords = 0;
+            if (frame.symbol != null) {
+                int nargs = frame.symbol.nargs;
+                int nlocals = frame.symbol.nlocals;
+                int numStackArgs = Math.max(0, nargs - 6);
+                final int NUM_CALLEE_SAVED_REGS = 5; // 假设使用所有s0-s4
+                int frameSize = StackOffsets.calculateFrameSize(NUM_CALLEE_SAVED_REGS, nlocals, numStackArgs);
+                frameSizeWords = frameSize / 4;
+            } else {
+                // 未知函数，估计帧大小（至少包含保存寄存器区域）
+                // 假设没有局部变量，只有s0-s4寄存器
+                frameSizeWords = 5; // s0-s4
+            }
+            int newSP = currentFP + 1 - frameSizeWords;
+            context.setRegister(RegisterBytecodeDefinition.R13, newSP);
+
+            System.out.printf("[RET] 恢复FP: 从fp+8字节(字地址%d)读取旧FP=%d字, 设置SP=%d字 (fp+1-frameSizeWords, frameSizeWords=%d)%n",
+                fpSaveAddress, prevFP, newSP, frameSizeWords);
+            System.out.printf("[RET] 设置framePointer: %d->%d%n",
                 currentFramePointer, currentFramePointer - 1);
 
             context.setFramePointer(currentFramePointer - 1);

@@ -172,6 +172,7 @@ public class MemoryExecutors {
         // 计算字段地址（offset是字节偏移，堆是int数组，需要除以4）
         int fieldAddr = objPtr + offset / 4;
         int value = context.readMemory(fieldAddr);
+        System.out.printf("[LW_F] objPtr=%d, offset=%d, fieldAddr=%d, value=%d\n", objPtr, offset, fieldAddr, value);
         context.setRegister(rd, value);
     };
 
@@ -192,6 +193,7 @@ public class MemoryExecutors {
         // 计算字段地址（offset是字节偏移，堆是int数组，需要除以4）
         int fieldAddr = objPtr + offset / 4;
         int value = context.getRegister(rs);
+        System.out.printf("[SW_F] objPtr=%d, offset=%d, fieldAddr=%d, value=%d\n", objPtr, offset, fieldAddr, value);
         context.writeMemory(fieldAddr, value);
     };
 
@@ -224,6 +226,7 @@ public class MemoryExecutors {
         context.setHeapAllocPointer(address + structSize);
 
         // 将结构体地址存储到寄存器
+        System.out.printf("[STRUCT] 分配结构体: numFields=%d, address=%d, heapAllocPointer=%d\n", numFields, address, address + structSize);
         context.setRegister(rd, address);
     };
 

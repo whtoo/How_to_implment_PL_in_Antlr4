@@ -1,13 +1,3 @@
 {
-  "mcpServers": {
-    "tree-sitter": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@nendo/tree-sitter-mcp",
-        "--mcp"
-      ],
-      "cwd": "/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4"
-    }
-  }
+  "mcpServers": {}
 }

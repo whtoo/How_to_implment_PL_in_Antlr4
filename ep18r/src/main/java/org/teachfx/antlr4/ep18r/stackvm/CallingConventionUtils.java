@@ -25,12 +25,12 @@ public class CallingConventionUtils {
      */
     public static void saveCallerRegisters(StackFrame frame, int regMask) {
         // regMask的位0对应r0，位1对应r1，依此类推
-        // 只处理r2-r7（调用者保存寄存器）
-        for (int i = 2; i <= 7; i++) {
+        // 只处理r3-r7（调用者保存寄存器a1-a5）
+        for (int i = 3; i <= 7; i++) {
             if ((regMask & (1 << i)) != 0) {
                 // 保存到栈帧的savedCallerRegisters数组
-                // 注意：数组索引0对应r2
-                frame.savedCallerRegisters[i - 2] = 0; // 实际值在执行时设置
+                // 注意：数组索引0对应r3
+                frame.savedCallerRegisters[i - 3] = 0; // 实际值在执行时设置
                 // 实际实现中，这里应该生成存储指令
             }
         }
@@ -43,9 +43,9 @@ public class CallingConventionUtils {
      * @param regMask 寄存器掩码
      */
     public static void restoreCallerRegisters(StackFrame frame, int regMask) {
-        for (int i = 2; i <= 7; i++) {
+        for (int i = 3; i <= 7; i++) {
             if ((regMask & (1 << i)) != 0) {
-                // 从栈帧的savedCallerRegisters数组恢复
+                // 从栈帧的savedCallerRegisters数组恢复（索引0对应r3）
                 // 实际实现中，这里应该生成加载指令
             }
         }

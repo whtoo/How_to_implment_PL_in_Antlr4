@@ -31,7 +31,10 @@
       "Bash(git stash pop:*)",
       "Bash(git stash:*)",
       "Bash(chmod:*)",
-      "Bash(/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/test_vmr.sh:*)"
+      "Bash(/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/test_vmr.sh:*)",
+      "Bash(./test_vmr.sh:*)",
+      "Bash(timeout:*)",
+      "Bash(./scripts/run.sh run:*)"
     ]
   },
   "enabledMcpjsonServers": [

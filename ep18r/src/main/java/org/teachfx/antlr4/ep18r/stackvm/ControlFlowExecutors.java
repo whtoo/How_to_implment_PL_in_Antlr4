@@ -10,11 +10,17 @@ public class ControlFlowExecutors {
      * 函数调用指令执行器 (CALL)
      * call target: 保存返回地址到调用栈，跳转到目标地址
      *
-     * 按照调用约定，保存caller-saved寄存器：r1-r7
+     * 按照调用约定，保存caller-saved寄存器：r3-r7（a1-a5）
      * callee-saved寄存器：r8-r14 由被调用函数负责保存
+     * 注意：r2（a0）是返回值寄存器，不保存以便被调用函数修改
      */
     public static final InstructionExecutor CALL = (operand, context) -> {
         int target = context.extractImm26(operand);
+
+        // 调试跟踪输出
+        System.out.printf("[CALL] PC=%d, target=%d (0x%x), returnAddr=%d, fp=%d%n",
+            context.getProgramCounter(), target, target,
+            context.getProgramCounter() + 4, context.getFramePointer());
 
         // 验证跳转目标（26位跳转需要4字节对齐）
         context.validateJumpTarget26(target);
@@ -27,14 +33,20 @@ public class ControlFlowExecutors {
 
         // 创建新的栈帧并压入调用栈
         StackFrame newFrame = new StackFrame(null, returnAddr);
-        // 保存caller-saved寄存器（r2-r7）到新栈帧的savedCallerRegisters数组
-        // 注意：r1是返回值寄存器，不保存以便被调用函数修改
-        for (int i = 2; i <= 7; i++) {
-            newFrame.savedCallerRegisters[i - 2] = context.getRegister(i); // i-2因为数组索引0对应r2
+        // 保存caller-saved寄存器（r3-r7，a1-a5）到新栈帧的savedCallerRegisters数组
+        for (int i = 3; i <= 7; i++) {
+            newFrame.savedCallerRegisters[i - 3] = context.getRegister(i); // i-3因为数组索引0对应r3
         }
         int newFramePointer = context.getFramePointer() + 1;
         context.getCallStack()[newFramePointer] = newFrame;
         context.setFramePointer(newFramePointer);
+
+        // 调试跟踪输出
+        System.out.printf("[CALL] 新栈帧创建: fp=%d, 返回地址=%d, 保存寄存器 r3-r7: [%d, %d, %d, %d, %d]%n",
+            newFramePointer, returnAddr,
+            newFrame.savedCallerRegisters[0], newFrame.savedCallerRegisters[1],
+            newFrame.savedCallerRegisters[2], newFrame.savedCallerRegisters[3],
+            newFrame.savedCallerRegisters[4]);
 
         // 同时保存到 LR(r15) 以保持兼容性
         context.setRegister(RegisterBytecodeDefinition.R15, returnAddr);
@@ -47,11 +59,15 @@ public class ControlFlowExecutors {
      * 函数返回指令执行器 (RET)
      * ret: 从调用栈恢复返回地址和寄存器
      *
-     * 按照调用约定，恢复caller-saved寄存器：r1-r7
+     * 按照调用约定，恢复caller-saved寄存器：r3-r7（a1-a5）
      */
     public static final InstructionExecutor RET = (operand, context) -> {
         int returnAddr;
         int currentFramePointer = context.getFramePointer();
+
+        // 调试跟踪输出
+        System.out.printf("[RET] PC=%d, 当前fp=%d%n",
+            context.getProgramCounter(), currentFramePointer);
 
         if (currentFramePointer < 0) {
             // 没有调用栈帧，尝试使用 r15（兼容旧代码）
@@ -61,16 +77,25 @@ public class ControlFlowExecutors {
             StackFrame frame = context.getCallStack()[currentFramePointer];
             returnAddr = frame.returnAddress;
 
-            // 恢复caller-saved寄存器r2-r7
-            for (int i = 2; i <= 7; i++) {
-                context.setRegister(i, frame.savedCallerRegisters[i - 2]); // i-2因为数组索引0对应r2
+            // 恢复caller-saved寄存器r3-r7（a1-a5）
+            for (int i = 3; i <= 7; i++) {
+                context.setRegister(i, frame.savedCallerRegisters[i - 3]); // i-3因为数组索引0对应r3
             }
+
+            // 调试跟踪输出
+            System.out.printf("[RET] 恢复寄存器 r3-r7: [%d, %d, %d, %d, %d], 返回地址=%d, 新fp=%d%n",
+                frame.savedCallerRegisters[0], frame.savedCallerRegisters[1],
+                frame.savedCallerRegisters[2], frame.savedCallerRegisters[3],
+                frame.savedCallerRegisters[4], returnAddr, currentFramePointer - 1);
 
             context.setFramePointer(currentFramePointer - 1);
         }
 
         // 验证返回地址（26位跳转需要4字节对齐）
         context.validateJumpTarget26(returnAddr);
+
+        // 调试跟踪输出
+        System.out.printf("[RET] 跳转到返回地址=%d (0x%x)%n", returnAddr, returnAddr);
 
         // 跳转
         context.setJumpTarget(returnAddr);

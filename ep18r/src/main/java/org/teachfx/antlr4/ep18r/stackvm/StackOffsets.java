@@ -247,4 +247,28 @@ public class StackOffsets {
         }
         return argIndex + 2; // a0 = r2
     }
+
+    /**
+     * 打印局部变量偏移信息（调试用）
+     * @param functionName 函数名
+     * @param numArgs 参数数量
+     * @param numLocals 局部变量数量
+     */
+    public static void printLocalVarOffsets(String functionName, int numArgs, int numLocals) {
+        System.out.printf("[StackOffsets] 函数 %s: 参数数量=%d, 局部变量数量=%d%n", functionName, numArgs, numLocals);
+        // 参数偏移（栈传递的参数，索引>=6）
+        for (int i = 6; i < numArgs; i++) {
+            int offset = argOffset(i);
+            System.out.printf("  参数%d (栈传递): fp%+d%n", i, offset);
+        }
+        // 局部变量偏移
+        for (int i = 0; i < numLocals; i++) {
+            int offset = localVarOffset(i);
+            System.out.printf("  局部变量%d: fp%+d%n", i, offset);
+        }
+        // 计算栈帧大小
+        int numStackArgs = Math.max(0, numArgs - 6);
+        int frameSize = calculateFrameSize(0, numLocals, numStackArgs); // 假设没有保存寄存器
+        System.out.printf("  栈帧大小: %d 字节 (对齐后)%n", frameSize);
+    }
 }

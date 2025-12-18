@@ -57,7 +57,7 @@ public class MemoryExecutors {
 
     /**
      * 加载字指令执行器
-     * 特殊处理：当基址寄存器是r13（SP）时，访问栈帧局部变量
+     * 特殊处理：当基址寄存器是r13（SP）或r14（FP）时，访问栈帧局部变量
      */
     public static final InstructionExecutor LW = (operand, context) -> {
         int rd = context.extractRd(operand);
@@ -66,8 +66,8 @@ public class MemoryExecutors {
 
         int baseAddr = context.getRegister(base);
 
-        // 检查是否是栈访问（通过SP寄存器）
-        if (base == RegisterBytecodeDefinition.R13) { // SP寄存器
+        // 检查是否是栈访问（通过SP或FP寄存器）
+        if (base == RegisterBytecodeDefinition.R13 || base == RegisterBytecodeDefinition.R14) { // SP或FP寄存器
             // 偏移量除以4得到局部变量索引（假设每个局部变量4字节）
             // 注意：offset是字节偏移，但局部变量索引是word索引
             // 测试中使用的是字节偏移（如0, 4, 8...）
@@ -90,7 +90,7 @@ public class MemoryExecutors {
 
     /**
      * 存储字指令执行器
-     * 特殊处理：当基址寄存器是r13（SP）时，访问栈帧局部变量
+     * 特殊处理：当基址寄存器是r13（SP）或r14（FP）时，访问栈帧局部变量
      */
     public static final InstructionExecutor SW = (operand, context) -> {
         int rs = context.extractRd(operand);  // rs 在 rd 字段位置
@@ -99,8 +99,8 @@ public class MemoryExecutors {
 
         int baseAddr = context.getRegister(base);
 
-        // 检查是否是栈访问（通过SP寄存器）
-        if (base == RegisterBytecodeDefinition.R13) { // SP寄存器
+        // 检查是否是栈访问（通过SP或FP寄存器）
+        if (base == RegisterBytecodeDefinition.R13 || base == RegisterBytecodeDefinition.R14) { // SP或FP寄存器
             // 偏移量除以4得到局部变量索引（假设每个局部变量4字节）
             // 注意：offset是字节偏移，但局部变量索引是word索引
             // 测试中使用的是字节偏移（如0, 4, 8...）

@@ -236,10 +236,10 @@ public class CallingConventionUtils {
 
     /**
      * 获取返回值寄存器编号
-     * @return 返回值寄存器编号（r1，根据现有约定）
+     * @return 返回值寄存器编号（r2/a0，根据统一约定）
      */
     public static int getReturnValueRegister() {
-        return 1; // 根据现有约定，r1是返回值寄存器
+        return 2; // 根据统一约定，r2/a0是返回值寄存器
     }
 
     /**
@@ -336,11 +336,11 @@ public class CallingConventionUtils {
     }
 
     /**
-     * 获取当前实现的返回值寄存器（向后兼容）
-     * @return 当前实现的返回值寄存器编号 (1 = ra)
+     * 获取当前实现的返回值寄存器（统一为r2/a0）
+     * @return 当前实现的返回值寄存器编号 (2 = a0)
      */
     public static int getCurrentReturnValueRegister() {
-        return 1; // ra (r1) for backward compatibility
+        return 2; // a0 (r2) unified with target ABI
     }
 
     /**

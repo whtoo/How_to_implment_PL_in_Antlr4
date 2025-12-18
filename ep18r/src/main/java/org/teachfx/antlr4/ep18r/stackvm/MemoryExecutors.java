@@ -66,13 +66,18 @@ public class MemoryExecutors {
 
         int baseAddr = context.getRegister(base);
 
-        // 检查是否是栈访问（通过SP或FP寄存器）
-        if (base == RegisterBytecodeDefinition.R13 || base == RegisterBytecodeDefinition.R14) { // SP或FP寄存器
-            // 偏移量除以4得到局部变量索引（假设每个局部变量4字节）
-            // 注意：offset是字节偏移，但局部变量索引是word索引
-            // 测试中使用的是字节偏移（如0, 4, 8...）
-            int varIndex = offset / 4;
-            int value = context.getLocalVar(varIndex);
+        // 检查是否是FP相对寻址（通过FP寄存器）
+        if (base == RegisterBytecodeDefinition.R14) { // FP寄存器
+            // FP相对寻址：地址 = FP + offset
+            // offset是字节偏移，需要转换为int数组索引（除以4）
+            int effectiveAddr = baseAddr + offset / 4;
+
+            // 检查地址有效性
+            if (effectiveAddr < 0) {
+                throw new IllegalArgumentException("Invalid FP-relative address: " + effectiveAddr);
+            }
+
+            int value = context.readMemory(effectiveAddr);
             context.setRegister(rd, value);
         } else {
             // 常规内存访问（offset是字节偏移，堆是int数组，需要除以4）
@@ -99,14 +104,19 @@ public class MemoryExecutors {
 
         int baseAddr = context.getRegister(base);
 
-        // 检查是否是栈访问（通过SP或FP寄存器）
-        if (base == RegisterBytecodeDefinition.R13 || base == RegisterBytecodeDefinition.R14) { // SP或FP寄存器
-            // 偏移量除以4得到局部变量索引（假设每个局部变量4字节）
-            // 注意：offset是字节偏移，但局部变量索引是word索引
-            // 测试中使用的是字节偏移（如0, 4, 8...）
-            int varIndex = offset / 4;
+        // 检查是否是FP相对寻址（通过FP寄存器）
+        if (base == RegisterBytecodeDefinition.R14) { // FP寄存器
+            // FP相对寻址：地址 = FP + offset
+            // offset是字节偏移，需要转换为int数组索引（除以4）
+            int effectiveAddr = baseAddr + offset / 4;
+
+            // 检查地址有效性
+            if (effectiveAddr < 0) {
+                throw new IllegalArgumentException("Invalid FP-relative address: " + effectiveAddr);
+            }
+
             int value = context.getRegister(rs);
-            context.setLocalVar(varIndex, value);
+            context.writeMemory(effectiveAddr, value);
         } else {
             // 常规内存访问（offset是字节偏移，堆是int数组，需要除以4）
             int effectiveAddr = baseAddr + offset / 4;

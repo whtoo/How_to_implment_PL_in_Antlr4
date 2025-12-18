@@ -246,8 +246,18 @@ public class ExecutionContext {
     }
 
     /**
+     * 根据代码地址查找函数符号
+     * @param address 函数入口地址
+     * @return 函数符号，如果找不到返回null
+     */
+    public FunctionSymbol getFunctionSymbol(int address) {
+        return vm.findFunctionByAddress(address);
+    }
+
+    /**
      * 访问栈帧局部变量（通过偏移量）
-     * @param offset 局部变量偏移量（0表示第一个局部变量）
+     * 使用FP相对寻址：地址 = frameBasePointer + offset
+     * @param offset 局部变量偏移量（字节偏移，如-16表示第一个局部变量）
      * @return 局部变量的值
      */
     public int getLocalVar(int offset) {
@@ -255,26 +265,23 @@ public class ExecutionContext {
         if (frame == null) {
             throw new IllegalStateException("No current stack frame");
         }
-        // 如果数组太小，扩展它
-        if (offset >= frame.locals.length) {
-            expandLocalsArray(frame, offset + 1);
+
+        // FP相对寻址：计算heap地址
+        // offset是字节偏移，需要除以4转换为int数组索引
+        int heapIndex = frame.frameBasePointer + offset / 4;
+
+        // 检查地址有效性
+        if (heapIndex < 0) {
+            throw new IndexOutOfBoundsException("Local variable heap index out of bounds: " + heapIndex);
         }
-        if (offset < 0) {
-            throw new IndexOutOfBoundsException("Local variable offset out of bounds: " + offset);
-        }
-        Object value = frame.locals[offset];
-        if (value instanceof Integer) {
-            return (Integer) value;
-        } else if (value == null) {
-            return 0;
-        } else {
-            throw new ClassCastException("Local variable is not an integer: " + value.getClass());
-        }
+
+        return vm.readHeap(heapIndex);
     }
 
     /**
      * 设置栈帧局部变量（通过偏移量）
-     * @param offset 局部变量偏移量（0表示第一个局部变量）
+     * 使用FP相对寻址：地址 = frameBasePointer + offset
+     * @param offset 局部变量偏移量（字节偏移，如-16表示第一个局部变量）
      * @param value 要设置的值
      */
     public void setLocalVar(int offset, int value) {
@@ -282,23 +289,17 @@ public class ExecutionContext {
         if (frame == null) {
             throw new IllegalStateException("No current stack frame");
         }
-        // 如果数组太小，扩展它
-        if (offset >= frame.locals.length) {
-            expandLocalsArray(frame, offset + 1);
-        }
-        if (offset < 0) {
-            throw new IndexOutOfBoundsException("Local variable offset out of bounds: " + offset);
-        }
-        frame.locals[offset] = value;
-    }
 
-    /**
-     * 扩展局部变量数组
-     */
-    private void expandLocalsArray(StackFrame frame, int newSize) {
-        Object[] newLocals = new Object[newSize];
-        System.arraycopy(frame.locals, 0, newLocals, 0, frame.locals.length);
-        frame.locals = newLocals;
+        // FP相对寻址：计算heap地址
+        // offset是字节偏移，需要除以4转换为int数组索引
+        int heapIndex = frame.frameBasePointer + offset / 4;
+
+        // 检查地址有效性
+        if (heapIndex < 0) {
+            throw new IndexOutOfBoundsException("Local variable heap index out of bounds: " + heapIndex);
+        }
+
+        vm.writeHeap(heapIndex, value);
     }
 
     /**

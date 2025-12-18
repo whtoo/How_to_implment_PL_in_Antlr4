@@ -112,12 +112,14 @@ public class RegisterVMInterpreter {
         }
 
         // 初始化寄存器：r0恒为0，其他寄存器初始化为0
+        // FP (R14) 初始化为0，作为main函数的栈帧基址
         for (int i = 1; i < registers.length; i++) {
             registers[i] = 0;
         }
 
-        // 设置初始栈帧
-        StackFrame frame = new StackFrame(mainFunction, -1);
+        // 设置初始栈帧（main函数）
+        // frameBasePointer = 0，表示main函数的局部变量从heap[0]开始
+        StackFrame frame = new StackFrame(mainFunction, -1, 0);
         callStack[++framePointer] = frame;
         programCounter = mainFunction.address;
         running = true;
@@ -160,6 +162,13 @@ public class RegisterVMInterpreter {
             // 整个指令字作为操作数传递给执行逻辑
             int operand = instructionWord;
 
+            // 添加PC追踪调试输出（RET之后的关键指令）
+            if (programCounter == 16 || programCounter == 20 || programCounter == 24) {
+                System.out.printf("[CPU TRACE] 执行指令: PC=%d, opcode=%d, didJump=%b, 寄存器: a0=%d, a1=%d, a2=%d, s0=%d, s1=%d, s2=%d%n",
+                    programCounter, opcode, didJump,
+                    registers[2], registers[3], registers[4], registers[8], registers[9], registers[10]);
+            }
+
             // 根据操作码执行指令
             executeInstruction(opcode, operand);
 
@@ -168,6 +177,8 @@ public class RegisterVMInterpreter {
             // 跳转指令会在executeInstruction中直接设置PC
             if (!didJump) {
                 programCounter += 4;
+            } else if (programCounter == 16 || programCounter == 20 || programCounter == 24) {
+                System.out.printf("[CPU TRACE] 跳转后PC=%d, didJump重置前=%b%n", programCounter, didJump);
             }
             didJump = false; // 重置跳转标志
         }
@@ -515,5 +526,32 @@ public class RegisterVMInterpreter {
      */
     public byte[] getCode() {
         return code;
+    }
+
+    /**
+     * 获取常量池（用于查找函数符号）
+     */
+    Object[] getConstantPool() {
+        return constPool;
+    }
+
+    /**
+     * 根据代码地址查找函数符号
+     * @param address 函数入口地址
+     * @return 函数符号，如果找不到返回null
+     */
+    FunctionSymbol findFunctionByAddress(int address) {
+        if (constPool == null) {
+            return null;
+        }
+        for (Object obj : constPool) {
+            if (obj instanceof FunctionSymbol) {
+                FunctionSymbol func = (FunctionSymbol) obj;
+                if (func.address == address) {
+                    return func;
+                }
+            }
+        }
+        return null;
     }
 }

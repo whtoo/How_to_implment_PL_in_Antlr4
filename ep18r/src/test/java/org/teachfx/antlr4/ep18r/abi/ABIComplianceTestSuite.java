@@ -38,16 +38,23 @@ public class ABIComplianceTestSuite {
     @DisplayName("被调用者保存寄存器测试")
     void testCalleeSavedRegisters() throws Exception {
         // 测试被调用者保存寄存器s0-s4在函数调用后保持不变
+        // 修改：使用临时寄存器r5-r7(a3-a5)存储立即数，避免seq使用立即数
         String program = """
-            .def caller: args=0, locals=0
+            .def caller: args=0, locals=3  ; 增加locals用于存储临时值
                 li s0, 100
                 li s1, 200
                 li s2, 300
+                
+                ; 将比较值存入临时寄存器(r5-r7)
+                li r5, 100
+                li r6, 200
+                li r7, 300
+                
                 call callee
                 ; 验证s0-s4保持不变
-                seq a0, s0, 100
-                seq a1, s1, 200
-                seq a2, s2, 300
+                seq a0, s0, r5
+                seq a1, s1, r6
+                seq a2, s2, r7
                 halt
 
             .def callee: args=0, locals=2
@@ -69,6 +76,11 @@ public class ABIComplianceTestSuite {
             """;
 
         loadAndExecute(program);
+        // 添加调试输出
+        System.out.printf("DEBUG: After execution - a0=%d, a1=%d, a2=%d, s0=%d, s1=%d, s2=%d, r5=%d, r6=%d, r7=%d%n",
+            interpreter.getRegister(R2), interpreter.getRegister(R3), interpreter.getRegister(R4),
+            interpreter.getRegister(R8), interpreter.getRegister(R9), interpreter.getRegister(R10),
+            interpreter.getRegister(R6), interpreter.getRegister(R7), interpreter.getRegister(R8));
         // a0 = 1 (s0不变), a1 = 1 (s1不变), a2 = 1 (s2不变)
         assertThat(interpreter.getRegister(R2)).isEqualTo(1); // a0
         assertThat(interpreter.getRegister(R3)).isEqualTo(1); // a1

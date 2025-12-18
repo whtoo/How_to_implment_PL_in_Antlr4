@@ -4,7 +4,7 @@ public class StackFrame {
     public FunctionSymbol symbol;
     public int returnAddress;
     public Object[] locals;
-    public int[] savedCallerRegisters; // 保存caller-saved寄存器 r3-r7（a1-a5）
+    public int[] savedCallerRegisters; // 保存caller-saved寄存器 ra(r1), a0-a5(r2-r7), lr(r15) 共8个寄存器
 
     public StackFrame(FunctionSymbol symbol, int returnAddress) {
         this.symbol = symbol;
@@ -20,6 +20,6 @@ public class StackFrame {
             locals = new Object[0];
             System.out.printf("[StackFrame] 创建匿名栈帧: 返回地址=%d%n", returnAddress);
         }
-        savedCallerRegisters = new int[5]; // r3-r7 (索引0对应r3，索引4对应r7)
+        savedCallerRegisters = new int[8]; // 保存8个调用者保存寄存器: 索引0:ra(r1), 1:a0(r2), 2:a1(r3), 3:a2(r4), 4:a3(r5), 5:a4(r6), 6:a5(r7), 7:lr(r15)
     }
 }

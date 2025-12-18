@@ -25,12 +25,14 @@ public class CallingConventionUtils {
      */
     public static void saveCallerRegisters(StackFrame frame, int regMask) {
         // regMask的位0对应r0，位1对应r1，依此类推
-        // 只处理r3-r7（调用者保存寄存器a1-a5）
-        for (int i = 3; i <= 7; i++) {
-            if ((regMask & (1 << i)) != 0) {
+        // 处理所有调用者保存寄存器：ra(r1), a0-a5(r2-r7), lr(r15)
+        // 数组索引映射：0:ra(r1), 1:a0(r2), 2:a1(r3), 3:a2(r4), 4:a3(r5), 5:a4(r6), 6:a5(r7), 7:lr(r15)
+        int[] callerSavedRegs = {1, 2, 3, 4, 5, 6, 7, 15};
+        for (int idx = 0; idx < callerSavedRegs.length; idx++) {
+            int reg = callerSavedRegs[idx];
+            if ((regMask & (1 << reg)) != 0) {
                 // 保存到栈帧的savedCallerRegisters数组
-                // 注意：数组索引0对应r3
-                frame.savedCallerRegisters[i - 3] = 0; // 实际值在执行时设置
+                frame.savedCallerRegisters[idx] = 0; // 实际值在执行时设置
                 // 实际实现中，这里应该生成存储指令
             }
         }
@@ -43,9 +45,13 @@ public class CallingConventionUtils {
      * @param regMask 寄存器掩码
      */
     public static void restoreCallerRegisters(StackFrame frame, int regMask) {
-        for (int i = 3; i <= 7; i++) {
-            if ((regMask & (1 << i)) != 0) {
-                // 从栈帧的savedCallerRegisters数组恢复（索引0对应r3）
+        // 处理所有调用者保存寄存器：ra(r1), a0-a5(r2-r7), lr(r15)
+        // 数组索引映射：0:ra(r1), 1:a0(r2), 2:a1(r3), 3:a2(r4), 4:a3(r5), 5:a4(r6), 6:a5(r7), 7:lr(r15)
+        int[] callerSavedRegs = {1, 2, 3, 4, 5, 6, 7, 15};
+        for (int idx = 0; idx < callerSavedRegs.length; idx++) {
+            int reg = callerSavedRegs[idx];
+            if ((regMask & (1 << reg)) != 0) {
+                // 从栈帧的savedCallerRegisters数组恢复
                 // 实际实现中，这里应该生成加载指令
             }
         }

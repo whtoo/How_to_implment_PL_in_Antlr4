@@ -10,9 +10,9 @@ public class ControlFlowExecutors {
      * 函数调用指令执行器 (CALL)
      * call target: 保存返回地址到调用栈，跳转到目标地址
      *
-     * 按照调用约定，保存caller-saved寄存器：r3-r7（a1-a5）
-     * callee-saved寄存器：r8-r14 由被调用函数负责保存
-     * 注意：r2（a0）是返回值寄存器，不保存以便被调用函数修改
+     * 按照ABI调用约定，保存所有caller-saved寄存器：ra(r1), a0-a5(r2-r7), lr(r15)
+     * callee-saved寄存器：s0-s4(r8-r12), sp(r13), fp(r14) 由被调用函数负责保存
+     * 注意：a0(r2)是返回值寄存器，但也是调用者保存寄存器，调用者如需保留其值应保存
      */
     public static final InstructionExecutor CALL = (operand, context) -> {
         int target = context.extractImm26(operand);
@@ -33,22 +33,31 @@ public class ControlFlowExecutors {
 
         // 创建新的栈帧并压入调用栈
         StackFrame newFrame = new StackFrame(null, returnAddr);
-        // 保存caller-saved寄存器（r3-r7，a1-a5）到新栈帧的savedCallerRegisters数组
-        for (int i = 3; i <= 7; i++) {
-            newFrame.savedCallerRegisters[i - 3] = context.getRegister(i); // i-3因为数组索引0对应r3
+        // 保存所有caller-saved寄存器（ra(r1), a0-a5(r2-r7), lr(r15)）到新栈帧的savedCallerRegisters数组
+        // 数组索引映射：0:ra(r1), 1:a0(r2), 2:a1(r3), 3:a2(r4), 4:a3(r5), 5:a4(r6), 6:a5(r7), 7:lr(r15)
+        // 首先保存r1, r2-r7, r15的原始值
+        // 首先保存r1, r3-r7的原始值（跳过a0/r2，因为它是返回值寄存器）
+        for (int i = 1; i <= 7; i++) {
+            if (i != 2) { // 跳过a0(r2)
+                newFrame.savedCallerRegisters[i - 1] = context.getRegister(i);
+            }
         }
+        // 保存r15(lr)的原始值到索引7
+        newFrame.savedCallerRegisters[7] = context.getRegister(RegisterBytecodeDefinition.R15);
+
         int newFramePointer = context.getFramePointer() + 1;
         context.getCallStack()[newFramePointer] = newFrame;
         context.setFramePointer(newFramePointer);
 
         // 调试跟踪输出
-        System.out.printf("[CALL] 新栈帧创建: fp=%d, 返回地址=%d, 保存寄存器 r3-r7: [%d, %d, %d, %d, %d]%n",
+        System.out.printf("[CALL] 新栈帧创建: fp=%d, 返回地址=%d, 保存寄存器 ra(r1),a0-a5(r2-r7),lr(r15): [%d, %d, %d, %d, %d, %d, %d, %d]%n",
             newFramePointer, returnAddr,
             newFrame.savedCallerRegisters[0], newFrame.savedCallerRegisters[1],
             newFrame.savedCallerRegisters[2], newFrame.savedCallerRegisters[3],
-            newFrame.savedCallerRegisters[4]);
+            newFrame.savedCallerRegisters[4], newFrame.savedCallerRegisters[5],
+            newFrame.savedCallerRegisters[6], newFrame.savedCallerRegisters[7]);
 
-        // 同时保存到 LR(r15) 以保持兼容性
+        // 设置lr(r15)为返回地址以保持兼容性（调用者保存寄存器lr被调用者可以修改）
         context.setRegister(RegisterBytecodeDefinition.R15, returnAddr);
 
         // 跳转
@@ -59,7 +68,8 @@ public class ControlFlowExecutors {
      * 函数返回指令执行器 (RET)
      * ret: 从调用栈恢复返回地址和寄存器
      *
-     * 按照调用约定，恢复caller-saved寄存器：r3-r7（a1-a5）
+     * 按照ABI调用约定，恢复所有caller-saved寄存器：ra(r1), a0-a5(r2-r7), lr(r15)
+     * 注意：lr(r15)恢复为调用前的原始值，返回地址从栈帧的returnAddress获取
      */
     public static final InstructionExecutor RET = (operand, context) -> {
         int returnAddr;
@@ -77,16 +87,25 @@ public class ControlFlowExecutors {
             StackFrame frame = context.getCallStack()[currentFramePointer];
             returnAddr = frame.returnAddress;
 
-            // 恢复caller-saved寄存器r3-r7（a1-a5）
-            for (int i = 3; i <= 7; i++) {
-                context.setRegister(i, frame.savedCallerRegisters[i - 3]); // i-3因为数组索引0对应r3
+            // 恢复所有caller-saved寄存器ra(r1), a0-a5(r2-r7), lr(r15)
+            // 数组索引映射：0:ra(r1), 1:a0(r2), 2:a1(r3), 3:a2(r4), 4:a3(r5), 5:a4(r6), 6:a5(r7), 7:lr(r15)
+            // 恢复所有caller-saved寄存器，但跳过a0(r2)因为它是返回值寄存器
+            // 恢复ra(r1), a1-a5(r3-r7)
+            for (int i = 1; i <= 7; i++) {
+                if (i != 2) { // 跳过a0(r2)
+                    context.setRegister(i, frame.savedCallerRegisters[i - 1]);
+                }
             }
+            // 恢复lr(r15)的原始值
+            context.setRegister(RegisterBytecodeDefinition.R15, frame.savedCallerRegisters[7]);
 
             // 调试跟踪输出
-            System.out.printf("[RET] 恢复寄存器 r3-r7: [%d, %d, %d, %d, %d], 返回地址=%d, 新fp=%d%n",
+            System.out.printf("[RET] 恢复寄存器 ra(r1),a0-a5(r2-r7),lr(r15): [%d, %d, %d, %d, %d, %d, %d, %d], 返回地址=%d, 新fp=%d%n",
                 frame.savedCallerRegisters[0], frame.savedCallerRegisters[1],
                 frame.savedCallerRegisters[2], frame.savedCallerRegisters[3],
-                frame.savedCallerRegisters[4], returnAddr, currentFramePointer - 1);
+                frame.savedCallerRegisters[4], frame.savedCallerRegisters[5],
+                frame.savedCallerRegisters[6], frame.savedCallerRegisters[7],
+                returnAddr, currentFramePointer - 1);
 
             context.setFramePointer(currentFramePointer - 1);
         }

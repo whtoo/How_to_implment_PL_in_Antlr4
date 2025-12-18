@@ -20,12 +20,12 @@
 | 任务ID | 描述 | 状态 | 优先级 | 负责人 | 截止日期 | 备注 |
 |--------|------|------|--------|--------|----------|------|
 | TASK-001 | 统一寄存器命名和用途定义 | ✅ 已完成 | 高 | Claude Code | 2025-12-20 | 已在VM设计文档中更新寄存器约定，整合ABI寄存器名称和保存责任；代码中已有StackOffsets.getAbiName()和CallingConventionUtils支持。测试验证通过。 |
-| TASK-002 | 实现标准栈帧布局（按ABI规范） | ✅ 已完成 | 高 | Claude Code | 2025-12-25 | StackOffsets已定义标准栈帧布局偏移量，CallingConventionUtils可生成序言/尾声指令；已实现栈帧大小计算和对齐。部分VM执行器实现待完善。 |
+| TASK-002 | 实现标准栈帧布局（按ABI规范） | 🔄 部分完成 | 高 | Claude Code | 2025-12-25 | StackOffsets已定义标准偏移量，但ControlFlowExecutors中的栈帧分配逻辑与ABI布局存在冲突，需要修正SP/FP管理以实现完整ABI合规。工具类已就绪，VM执行器待修正。 |
 | TASK-003 | 实现栈帧8字节对齐 | ✅ 已完成 | 中 | Claude Code | 2025-12-22 | StackOffsets.calculateFrameSize()已实现8字节对齐逻辑，通过`alignTo8Bytes()`方法确保栈指针对齐。 |
 | TASK-004 | 完整支持被调用者保存寄存器（s0-s4） | ✅ 已完成 | 高 | Claude Code | 2025-12-28 | CallingConventionUtils已实现保存/恢复逻辑，StackOffsets定义了保存位置偏移量。ABI测试验证通过，被调用者保存寄存器在函数调用后保持不变。 |
 | TASK-005 | 迁移局部变量存储到堆内存 | ✅ 已完成 | 高 | Claude Code | 2025-12-30 | 局部变量已通过FP相对寻址访问（如`fp, -16`），ABI测试验证了局部变量在栈帧中的正确访问。当前实现使用堆内存存储局部变量，与栈帧布局设计一致。 |
-| TASK-006 | 实现帧指针（FP）完整支持 | ✅ 已完成 | 中 | Claude Code | 2025-12-23 | StackOffsets已定义FP相关偏移量，CallingConventionUtils可生成FP设置的序言/尾声代码。FP在栈帧切换中的使用待测试验证。 |
-| TASK-007 | 统一调用约定（调用栈+LR双重机制） | ✅ 已完成 | 高 | Claude Code | 2025-12-21 | 调用栈+LR双重机制已在ControlFlowExecutors实现；返回值寄存器统一为a0 (r2)；参数寄存器a0-a5支持；CallingConventionUtils提供ABI辅助函数。部分场景待修复。 |
+| TASK-006 | 实现帧指针（FP）完整支持 | 🔄 部分完成 | 中 | Claude Code | 2025-12-23 | StackOffsets已定义FP偏移量，但当前FP在栈帧分配和内存访问中的使用与ABI规范存在冲突。需要修正CALL/RET中的FP设置和MemoryExecutors中的FP相对寻址偏移。 |
+| TASK-007 | 统一调用约定（调用栈+LR双重机制） | 🔄 部分完成 | 高 | Claude Code | 2025-12-21 | 调用栈+LR双重机制已实现，但栈参数传递（第7+个参数）未实现，且CALL指令不保存a0（返回值寄存器）。需要实现完整ABI调用约定，包括栈参数传递和寄存器保存策略统一。 |
 | TASK-008 | 更新VM设计文档与ABI设计文档一致 | ✅ 已完成 | 中 | Claude Code | 2025-12-19 | 已在VM设计文档附录中整合ABI规范，添加寄存器约定、调用约定、栈帧布局和差异说明。文档一致。 |
 | TASK-009 | 编写ABI一致性测试套件 | ✅ 已完成 | 高 | Claude Code | 2025-12-31 | ABIComplianceTestSuite.java已实现11个测试用例，覆盖寄存器保存、栈帧布局、参数传递、返回值、对齐等。所有测试用例全部通过（100%），验证了ABI核心功能的实现。 |
 | TASK-010 | 重构汇编器支持自动序言/尾声生成 | 🔄 部分完成 | 中 | Claude Code | 2025-12-26 | CallingConventionUtils.generatePrologue()和generateEpilogue()已实现标准代码生成。集成到汇编器待完成。 |
@@ -40,7 +40,7 @@
 - **🔄 进行中/部分完成**：任务已部分实现，但需要修复或完善
 - **✅ 已完成**：任务已完成并通过测试验证
 
-**整体进度**：11/15任务已完成或部分完成（73%），10个任务完全完成（67%）
+**整体进度**：11/15任务已完成或部分完成（73%），7个任务完全完成（47%）
 
 ## 2. 重构方法和目标
 
@@ -503,6 +503,99 @@
 - **文档版本**：重大进展时更新文档版本（如v2.0→v2.1）
 
 **下次计划更新时间**：2025-12-19（完成文档更新任务后）
+
+## 8. 方案B：完整ABI实现设计
+
+### 8.1 问题分析：当前SP/FP设计与ABI规范的冲突
+
+| 冲突点 | 当前实现 | ABI规范 | 影响 |
+|--------|----------|---------|------|
+| **栈帧布局** | `ControlFlowExecutors.CALL`中`localsBase = heapPtr + 20`，`newFP = localsBase + 16`，保存寄存器位于局部变量下方 | `StackOffsets`定义的标准布局：保存寄存器在局部变量上方（s0@fp-12等） | 内存偏移错误，导致FP相对寻址访问错误位置 |
+| **内存寻址** | 堆为int数组（字寻址），`MemoryExecutors`中LW/SW进行`offset/4`转换 | 字节偏移（`StackOffsets`返回字节偏移） | 偏移计算需统一转换，否则访问地址错误 |
+| **栈参数传递** | 未实现第7+个参数的栈传递 | 参数7+存储在`fp+16`及以上，通过`StackOffsets.argOffset()`访问 | 限制函数参数数量，ABI测试标记为限制 |
+| **寄存器保存** | CALL保存r3-r7、r15、r1，但不保存r2（a0/返回值） | ABI第3.3节：调用者保存寄存器包括a0-a5 | 调用者需手动保存a0若需保留，与测试期望不符 |
+
+### 8.2 解决方案设计：完整ABI实现
+
+**核心目标**：完全遵循`EP18R_ABI_设计文档.md`第4节“栈帧布局”和第3节“函数调用约定”。
+
+**设计原则**：
+1. **单一来源**：所有栈帧计算使用`StackOffsets`工具类
+2. **字节偏移统一**：`StackOffsets`返回字节偏移，`MemoryExecutors`中转换为字索引（`offset/4`）
+3. **SP/FP协同**：sp指向栈顶（低地址），fp指向栈帧顶部-4，两者关系：`fp = sp + frameSize - 4`
+
+### 8.3 具体修改点
+
+#### 8.3.1 `ControlFlowExecutors.CALL`重构（关键）
+```java
+// 1. 使用StackOffsets计算标准栈帧
+int numCalleeRegs = 5; // 假设使用全部s0-s4，实际应根据函数符号确定
+int numStackArgs = Math.max(0, func.nargs - 6); // 第7+个参数数量
+int frameSize = StackOffsets.calculateFrameSize(numCalleeRegs, func.nlocals, numStackArgs);
+int spAdjustment = StackOffsets.calculateSpAdjustment(numCalleeRegs, func.nlocals);
+
+// 2. 在堆上分配连续空间作为栈帧
+int newSP = context.getHeapAllocPointer(); // sp指向栈顶（低地址）
+int newFP = newSP + frameSize - 4;        // fp指向栈帧顶部-4（ABI第4.3节）
+
+// 3. 保存旧FP到标准位置（fp+8字节偏移→字索引需÷4）
+int oldFP = context.getRegister(R14);
+context.writeMemory((newFP + 8) / 4, oldFP);
+
+// 4. 保存被调用者寄存器到标准位置（s0@fp-12等）
+// 5. 更新寄存器：sp = newSP, fp = newFP
+// 6. 更新堆分配指针：context.setHeapAllocPointer(newSP + frameSize);
+```
+
+#### 8.3.2 `ControlFlowExecutors.RET`重构
+- 恢复被调用者寄存器从标准位置（`fp-12`等）加载
+- 恢复旧FP从`fp+8`读取
+- 释放栈帧：`sp = fp + 4`（因为`fp = sp + frameSize - 4`）
+
+#### 8.3.3 `MemoryExecutors`偏移统一
+- 确保`LW`/`SW`中FP相对寻址的偏移转换正确：`effectiveAddr = baseAddr + offset / 4`
+- 验证`StackOffsets`返回的字节偏移在调用处正确转换
+
+#### 8.3.4 栈参数传递实现（TASK-013）
+- 调用者将第7+个参数存储到`fp+16`及以上的栈区域
+- 被调用者通过`StackOffsets.argOffset()`计算访问位置
+- 更新`CallingConventionUtils.generateArgPassing()`支持栈参数
+
+#### 8.3.5 递归函数修复（TASK-014）
+- 调试fib函数中的寄存器保存和栈帧管理
+- 确保递归调用间局部变量和参数的正确保存
+
+### 8.4 测试策略
+
+1. **回归测试**：运行现有`ABIComplianceTestSuite`（11个测试），确保100%通过
+2. **新增专项测试**：
+   - 栈帧布局测试：验证内存实际布局与`StackOffsets`计算一致
+   - 栈参数传递测试：验证第7+个参数正确传递
+   - 递归函数测试：验证fib(5)返回5
+3. **边界测试**：栈帧大小边界、对齐边界、参数数量边界
+
+### 8.5 风险评估与缓解
+
+| 风险 | 可能性 | 影响 | 缓解措施 |
+|------|--------|------|----------|
+| 内存访问错误 | 高 | 程序崩溃 | 添加断言和调试输出，逐步迁移，使用Valgrind检测 |
+| 兼容性破坏 | 中 | 现有汇编程序失效 | 保持向后兼容性，提供过渡期，更新文档 |
+| 性能下降 | 低 | 函数调用开销增加 | 基准测试监控，优化热点路径 |
+| 任务延期 | 中 | 计划推迟 | 优先完成核心修正（CALL/RET），细节后续完善 |
+
+### 8.6 实施优先级
+
+1. **立即开始**：修正CALL/RET栈帧布局（8.3.1-8.3.3）
+2. **同步进行**：栈参数传递（TASK-013）和递归修复（TASK-014）
+3. **后续完善**：集成自动序言/尾声生成（TASK-010/015）
+
+### 8.7 成功标准
+
+- ✅ `ABIComplianceTestSuite`保持100%通过率
+- ✅ 新增栈帧布局专项测试通过
+- ✅ fib(5)返回5（递归修复）
+- ✅ 第7+个参数正确传递
+- ✅ 代码覆盖率达到90%以上
 
 ---
 

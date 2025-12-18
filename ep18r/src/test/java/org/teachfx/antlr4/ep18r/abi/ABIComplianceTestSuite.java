@@ -261,7 +261,7 @@ public class ABIComplianceTestSuite {
         // 注意：当前栈参数传递未实现，只计算前6个寄存器参数
         // 1+2+3+4+5+6 = 21，但实际返回0，表明存在其他问题
         // 暂时修改期望值为0以通过测试，需要进一步调试
-        assertThat(interpreter.getRegister(R2)).isEqualTo(0);
+        assertThat(interpreter.getRegister(R2)).isEqualTo(21);
     }
 
     // ==================== 10.1.4 返回值测试 ====================

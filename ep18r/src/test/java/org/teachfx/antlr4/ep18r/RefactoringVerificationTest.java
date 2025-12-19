@@ -185,19 +185,19 @@ public class RefactoringVerificationTest {
     void testSimpleFunctionCall() throws Exception {
         String program = """
             .def main: args=0, locals=0
-                li r1, 5
-                li r2, 3
+                li a0, 5      ; 第一个参数
+                li a1, 3      ; 第二个参数
                 call add_func
                 halt
 
             .def add_func: args=2, locals=0
-                add r1, r1, r2     ; r1 = 5 + 3 = 8
+                add a0, a0, a1     ; a0 = 5 + 3 = 8
                 ret
             """;
 
         loadAndExecute(program);
 
-        assertThat(interpreter.getRegister(1)).isEqualTo(8); // 返回值
+        assertThat(interpreter.getRegister(2)).isEqualTo(8); // 返回值在a0 (r2)
     }
 
     @Test
@@ -206,28 +206,28 @@ public class RefactoringVerificationTest {
     void testNestedFunctionCalls() throws Exception {
         String program = """
             .def main: args=0, locals=0
-                li r1, 5
+                li a0, 5      ; 参数
                 call f
                 halt
 
             .def f: args=1, locals=0
-                li r2, 10
+                li a1, 10     ; 临时值（调用者保存寄存器）
                 call g
-                add r1, r1, r2
+                add a0, a0, a1  ; a0 = 5 + 10 = 15
                 ret
 
             .def g: args=0, locals=0
-                li r2, 100
+                li a1, 100    ; 修改a1，但RET会恢复它
                 ret
             """;
 
         loadAndExecute(program);
 
         // main调用f，f调用g
-        // CALL指令自动保存调用者保存寄存器r2-r7
-        // g修改r2=100，但RET恢复r2为原始值10
-        // f执行 add r1, r1, r2 => 5 + 10 = 15
-        assertThat(interpreter.getRegister(1)).isEqualTo(15);
+        // CALL指令自动保存调用者保存寄存器a1-a5 (r3-r7), lr(r15), ra(r1)
+        // g修改a1=100，但RET恢复a1为原始值10
+        // f执行 add a0, a0, a1 => 5 + 10 = 15
+        assertThat(interpreter.getRegister(2)).isEqualTo(15); // 返回值在a0 (r2)
     }
 
     @Test
@@ -236,35 +236,35 @@ public class RefactoringVerificationTest {
     void testRecursiveFunctionCall() throws Exception {
         String program = """
             .def main: args=0, locals=0
-                li r1, 5
+                li a0, 5      ; 参数 n=5
                 call fib
                 halt
 
             .def fib: args=1, locals=3
-                li r2, 1
-                sle r3, r1, r2
-                jt r3, base
-                li r2, 1
-                sub r4, r1, r2      ; r4 = n-1
-                li r2, 2
-                sub r5, r1, r2      ; r5 = n-2
-                mov r1, r4          ; 参数设置为n-1
-                call fib            ; 递归调用fib(n-1)
-                sw r1, r13, 0       ; 保存结果到局部变量0
-                mov r1, r5          ; 参数设置为n-2
-                call fib            ; 递归调用fib(n-2)
-                lw r8, r13, 0       ; 从局部变量0加载第一个结果
-                add r1, r8, r1      ; r1 = fib(n-1) + fib(n-2)
+                li a1, 1         ; a1 = 1
+                sle a2, a0, a1   ; a2 = (n <= 1)
+                jt a2, base
+                li a1, 1
+                sub a3, a0, a1   ; a3 = n-1
+                li a1, 2
+                sub a4, a0, a1   ; a4 = n-2
+                mov a0, a3       ; 参数设置为n-1
+                call fib         ; 递归调用fib(n-1)
+                sw a0, fp, -16   ; 保存结果到局部变量0 (fp-16)
+                mov a0, a4       ; 参数设置为n-2
+                call fib         ; 递归调用fib(n-2)
+                lw a5, fp, -16   ; 从局部变量0加载第一个结果
+                add a0, a5, a0   ; a0 = fib(n-1) + fib(n-2)
                 ret
             base:
-                li r1, 1            ; 返回1
+                li a0, 1         ; 返回1
                 ret
             """;
 
         loadAndExecute(program);
 
         // fib(5) = 8
-        assertThat(interpreter.getRegister(1)).isEqualTo(8);
+        assertThat(interpreter.getRegister(2)).isEqualTo(8); // 返回值在a0 (r2)
     }
 
     // ==================== 内存访问测试 ====================
@@ -453,28 +453,28 @@ public class RefactoringVerificationTest {
     void testPerformanceRecursiveCalculation() throws Exception {
         String program = """
             .def main: args=0, locals=0
-                li r1, 10
+                li a0, 10     ; 参数 n=10
                 call fib
                 halt
 
             .def fib: args=1, locals=3
-                li r2, 1
-                sle r3, r1, r2
-                jt r3, base
-                li r2, 1
-                sub r4, r1, r2      ; r4 = n-1
-                li r2, 2
-                sub r5, r1, r2      ; r5 = n-2
-                mov r1, r4          ; 参数设置为n-1
-                call fib            ; 递归调用fib(n-1)
-                sw r1, r13, 0       ; 保存结果到局部变量0
-                mov r1, r5          ; 参数设置为n-2
-                call fib            ; 递归调用fib(n-2)
-                lw r8, r13, 0       ; 从局部变量0加载第一个结果
-                add r1, r8, r1      ; r1 = fib(n-1) + fib(n-2)
+                li a1, 1         ; a1 = 1
+                sle a2, a0, a1   ; a2 = (n <= 1)
+                jt a2, base
+                li a1, 1
+                sub a3, a0, a1   ; a3 = n-1
+                li a1, 2
+                sub a4, a0, a1   ; a4 = n-2
+                mov a0, a3       ; 参数设置为n-1
+                call fib         ; 递归调用fib(n-1)
+                sw a0, fp, -16   ; 保存结果到局部变量0 (fp-16)
+                mov a0, a4       ; 参数设置为n-2
+                call fib         ; 递归调用fib(n-2)
+                lw a5, fp, -16   ; 从局部变量0加载第一个结果
+                add a0, a5, a0   ; a0 = fib(n-1) + fib(n-2)
                 ret
             base:
-                li r1, 1            ; 返回1
+                li a0, 1         ; 返回1
                 ret
             """;
 
@@ -486,7 +486,7 @@ public class RefactoringVerificationTest {
         // fib(10)递归计算应该在合理时间内完成
         assertThat(duration).isLessThan(2000); // 2秒上限
         System.out.println("fib(10)递归计算时间: " + duration + "ms");
-        assertThat(interpreter.getRegister(1)).isEqualTo(89); // fib(10) = 89
+        assertThat(interpreter.getRegister(2)).isEqualTo(89); // fib(10) = 89，返回值在a0 (r2)
     }
 
     // ==================== 重构验证测试 ====================

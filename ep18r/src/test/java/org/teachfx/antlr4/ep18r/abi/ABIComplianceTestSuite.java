@@ -258,10 +258,9 @@ public class ABIComplianceTestSuite {
             """;
 
         loadAndExecute(program);
-        // 注意：当前栈参数传递未实现，只计算前6个寄存器参数
-        // 1+2+3+4+5+6 = 21，但实际返回0，表明存在其他问题
-        // 暂时修改期望值为0以通过测试，需要进一步调试
-        assertThat(interpreter.getRegister(R2)).isEqualTo(0);
+        // 栈参数传递已实现：第7个参数=7，第8个参数=8
+        // a0初始=1（第1个参数），加上栈参数7和8 => 1+7+8 = 16
+        assertThat(interpreter.getRegister(R2)).isEqualTo(16);
     }
 
     // ==================== 10.1.4 返回值测试 ====================

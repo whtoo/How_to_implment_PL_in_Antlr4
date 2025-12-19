@@ -130,6 +130,20 @@ public class ControlFlowExecutors {
         // 更新堆分配指针（跳过整个栈帧，字数）
         context.setHeapAllocPointer(newSP + frameSizeWords);
 
+        // 复制栈参数（如果有）从调用者栈帧到被调用者栈帧参数区域
+        if (numStackArgs > 0) {
+            // 源地址：调用者栈帧中的栈参数区域（假设调用者将栈参数存储在 sp + ARG_AREA_START_OFFSET/4 开始的位置）
+            int srcBase = currentSP + StackOffsets.ARG_AREA_START_OFFSET / 4;
+            // 目标地址：被调用者栈帧参数区域（fp + ARG_AREA_START_OFFSET/4）
+            int dstBase = newFP + StackOffsets.ARG_AREA_START_OFFSET / 4;
+            System.out.printf("[CALL] 复制栈参数: 数量=%d, 从 src=%d字 到 dst=%d字%n", numStackArgs, srcBase, dstBase);
+            for (int i = 0; i < numStackArgs; i++) {
+                int argValue = context.readMemory(srcBase + i);
+                context.writeMemory(dstBase + i, argValue);
+                System.out.printf("[CALL]   栈参数 %d: 值=%d (src=%d, dst=%d)%n", i, argValue, srcBase + i, dstBase + i);
+            }
+        }
+
         // 调试跟踪输出
         System.out.printf("[CALL] 栈帧布局: frameSize=%d字节(%d字), newSP=%d字, newFP=%d字, localsBase=%d字, heapPtr=%d字%n",
             frameSize, frameSizeWords, newSP, newFP, localsBase, newSP + frameSizeWords);

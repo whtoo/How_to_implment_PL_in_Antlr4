@@ -11,7 +11,7 @@
 ; ABI: 输入参数 r2 = n, 输出 r2 = fib(n)
 .def fib: args=1, locals=2
     ; 保存参数 n 到栈帧
-    sw r2, r13, 0      ; 保存 n 到 sp+0 (局部变量0)
+    sw r2, fp, -16     ; 保存 n 到 fp-16 (局部变量0)
 
     ; 检查 n < 2
     li r3, 2         ; r3 = 2
@@ -20,25 +20,25 @@
 
     ; 递归调用 fib(n-1)
     ; 从栈帧加载 n
-    lw r2, r13, 0      ; r2 = n
+    lw r2, fp, -16     ; r2 = n
     li r5, 1         ; r5 = 1
     sub r2, r2, r5   ; r2 = n - 1
     call fib         ; 调用 fib(n-1)
 
     ; 此时 r2 = fib(n-1)
     ; 保存结果到栈帧
-    sw r2, r13, 4      ; 保存 fib(n-1) 到 sp+4 (局部变量1)
+    sw r2, fp, -20     ; 保存 fib(n-1) 到 fp-20 (局部变量1)
 
     ; 递归调用 fib(n-2)
     ; 从栈帧加载 n
-    lw r2, r13, 0      ; r2 = n
+    lw r2, fp, -16     ; r2 = n
     li r5, 2         ; r5 = 2
     sub r2, r2, r5   ; r2 = n - 2
     call fib         ; 调用 fib(n-2)
 
     ; 此时 r2 = fib(n-2)
     ; 从栈帧加载 fib(n-1)
-    lw r3, r13, 4      ; r3 = fib(n-1)
+    lw r3, fp, -20     ; r3 = fib(n-1)
 
     ; 计算 fib(n-1) + fib(n-2)
     add r2, r3, r2   ; r2 = fib(n-1) + fib(n-2) (ABI: 结果在r2)
@@ -48,5 +48,5 @@ base_case:
     ; n < 2 时返回 n
     ; ABI: 返回值在r2中
     ; 从栈帧加载 n
-    lw r2, r13, 0      ; r2 = n
+    lw r2, fp, -16     ; r2 = n
     ret

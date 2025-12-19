@@ -40,7 +40,8 @@
       "Bash(elif [ -f \".specify/scripts/bash/check-prerequisites.sh\" ])",
       "Bash(then bash .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)",
       "Bash(else echo \"No check-prerequisites script found\")",
-      "Bash(fi:*)"
+      "Bash(fi:*)",
+      "Bash(done:*)"
     ]
   },
   "enabledMcpjsonServers": [

@@ -34,7 +34,13 @@
       "Bash(/Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/test_vmr.sh:*)",
       "Bash(./test_vmr.sh:*)",
       "Bash(timeout:*)",
-      "Bash(./scripts/run.sh run:*)"
+      "Bash(./scripts/run.sh run:*)",
+      "Bash(if [ -f \".specify/scripts/powershell/check-prerequisites.ps1\" ])",
+      "Bash(then pwsh:*)",
+      "Bash(elif [ -f \".specify/scripts/bash/check-prerequisites.sh\" ])",
+      "Bash(then bash .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)",
+      "Bash(else echo \"No check-prerequisites script found\")",
+      "Bash(fi:*)"
     ]
   },
   "enabledMcpjsonServers": [

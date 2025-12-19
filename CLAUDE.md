@@ -144,55 +144,6 @@ java -jar antlr-4.13.2-complete.jar -visitor -no-listener Cymbol.g4
 
 ## Development Guidelines
 
-### Code Analysis Priority: Tree-sitter First
-
-When analyzing code, debugging issues, or understanding the codebase, **ALWAYS prioritize using tree-sitter-mcp** before other methods. Tree-sitter provides:
-- **Semantic search**: AST-based understanding (not just text search)
-- **Fast results**: Sub-100ms search across 773+ files
-- **Accurate analysis**: Type-aware code navigation
-- **Multi-language support**: Java, JavaScript, TypeScript, and more
-
-#### Priority Order for Code Analysis
-1. **Tree-sitter MCP** (primary tool)
-   - Use `search_code` for finding functions, classes, variables
-   - Use `find_usage` for tracking identifier usage
-   - Use `analyze_code` for quality and architecture analysis
-   - Use `check_errors` for syntax error detection
-
-2. **File System MCP** (supplementary)
-   - Use for reading specific files identified by tree-sitter
-   - Use for browsing directory structures
-
-3. **Manual Reading** (last resort)
-   - Only when MCP tools are unavailable
-   - Use Grep to locate files after tree-sitter identifies patterns
-
-#### Using Tree-sitter for Common Tasks
-
-When asked about code analysis, **always structure your response**:
-1. **Start with tree-sitter search** to understand the codebase structure
-2. **Use precise queries** with exact matching for better accuracy
-3. **Analyze results** before diving deeper into specific files
-4. **Use find_usage** to track dependencies and impacts
-
-**Example Workflow**:
-```
-User: "How does the IR generation work in this compiler?"
-
-Claude (should):
-1. tree-sitter: search_code("IRGenerator", type="class", exact=true)
-2. tree-sitter: find_usage("IRGenerator", exact=true, includeDeclarations=true)
-3. Analyze the search results to understand the structure
-4. Read specific files: ep20/src/main/java/org/teachfx/antlr4/ep20/ir/IRGenerator.java
-5. Use tree-sitter analyze_code on the ir/ directory for quality insights
-```
-
-**DO NOT**:
-- ❌ Start by manually reading random files
-- ❌ Use Grep without first understanding the code structure
-- ❌ Guess file locations without tree-sitter verification
-- ❌ Answer questions without analyzing actual code structure
-
 ### Code Style
 - Follow Java 21+ syntax and features
 - Use meaningful variable and method names
@@ -218,61 +169,6 @@ Claude (should):
 5. Run full test suite before committing
 
 ## Common Tasks
-
-### Code Analysis with Tree-sitter (Always Use This First!)
-
-**Before performing any code analysis task, ALWAYS use tree-sitter MCP to understand the codebase structure.**
-
-#### Tree-sitter-First Workflow
-
-```bash
-# Step 1: Search for code elements (DO THIS FIRST)
-tree-sitter-mcp search "ClassName" --type class --exact
-
-# Step 2: Find usage of identifiers (understand dependencies)
-tree-sitter-mcp find-usage "methodName" --exact
-
-# Step 3: Analyze code quality in the directory
-tree-sitter-mcp analyze path/to/directory --analysis-types quality structure
-
-# Step 4: Check for errors before making changes
-tree-sitter-mcp errors --output text
-
-# Step 5: Only now, read the specific files identified by tree-sitter
-# (use Read tool on the exact files tree-sitter found)
-```
-
-#### Example: Analyzing a Bug Report
-
-**Scenario**: User reports "NullPointerException in TypeChecker.visit() method"
-
-**Correct Approach**:
-1. **tree-sitter**: `search_code("TypeChecker", type="class", exact=true, includeContent=true)`
-2. Identify the exact `visit` method from results
-3. **tree-sitter**: `find_usage("TypeChecker", exact=true, includeDeclarations=true)`
-4. Understand where TypeChecker is instantiated and used
-5. **tree-sitter**: `analyze_code("ep20/src/main/java/org/teachfx/antlr4/ep20/typecheck", analysisTypes=["quality"])`
-6. Read the TypeChecker.java file at the specific line range
-7. Use Grep to check related error handling patterns
-
-**Incorrect Approach** (DO NOT DO THIS):
-- ❌ Directly guessing: "Let me check ep20/TypeChecker.java"
-- ❌ Using Grep first: `grep -r "visit" ep20/src/`
-- ❌ Reading random files without understanding the structure
-
-#### Tree-sitter API Cheat Sheet
-
-For common tasks, use these tree-sitter queries:
-
-| Task | API Call | Example |
-|------|----------|---------|
-| Find a class | `search_code` | `{"query": "ClassName", "type": "class", "exact": true}` |
-| Find a method | `search_code` | `{"query": "methodName", "type": "function", "exact": true}` |
-| Find all usages | `find_usage` | `{"identifier": "ClassName", "exact": true}` |
-| Analyze module quality | `analyze_code` | `{"path": "ep20/src/...", "analysisTypes": ["quality"]}` |
-| Check for errors | `check_errors` | `{"path": "ep20/src/...", "output": "text"}` |
-
-**Always prioritize tree-sitter over manual file reading or Grep searches.**
 
 ### Adding a New AST Node
 1. Create class in `ep*/src/main/java/org/teachfx/antlr4/ep*/ast/`
@@ -379,7 +275,6 @@ Check TypeChecker.java and SymbolTable.java in ep20 for details.
 - **Skill File**: `SKILL.md` (with YAML frontmatter)
 - **Activation**: Automatic based on skill description matching compiler-related topics
 - **Scope**: Project-specific knowledge of the complete Cymbol compiler implementation
-- **Allowed Tools**: Read, Grep, Glob (for code exploration and analysis)
 
 #### Skill Structure
 
@@ -398,7 +293,6 @@ To extend or modify the Compiler Development skill:
 2. Update the YAML frontmatter description if adding new capabilities
 3. Add new sections for additional compiler topics or features
 4. Update this section in CLAUDE.md to reflect changes
-5. Test the skill with compiler-related queries to ensure proper activation
 
 #### Integration with Development Environment
 
@@ -417,4 +311,3 @@ The skill integrates with the project's development tools:
 - **Testing is comprehensive** - maintain high coverage standards
 - **Documentation is extensive** - check `.qoder/repowiki/` for detailed technical docs
 - The project implements a **complete compiler pipeline** - understand the frontend/middle-end/backend separation
-- **ALWAYS USE TREE-SITTER FIRST** - When analyzing code, debugging, or answering questions about the codebase, always start with tree-sitter MCP tools before reading files or using Grep. See "Code Analysis Priority" in Development Guidelines for the correct workflow.

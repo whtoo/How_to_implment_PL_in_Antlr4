@@ -80,7 +80,15 @@ public class VMConfig {
     public boolean isEnableTypeCheck() {
         return enableTypeCheck;
     }
-    
+
+    /**
+     * 创建构建器的静态工厂方法
+     * @return 新的Builder实例
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
     /**
      * 配置构建器
      */

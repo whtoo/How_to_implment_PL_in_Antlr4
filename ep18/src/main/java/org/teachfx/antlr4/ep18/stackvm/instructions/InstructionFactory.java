@@ -42,31 +42,42 @@ public class InstructionFactory {
         registerInstruction(new ISubInstruction());
         registerInstruction(new IMulInstruction());
         registerInstruction(new IDivInstruction());
+        registerInstruction(new INegInstruction());
+        registerInstruction(new INotInstruction());
+        registerInstruction(new IAndInstruction());
+        registerInstruction(new IOrInstruction());
+        registerInstruction(new IXorInstruction());
 
         // 比较指令
         registerInstruction(new ILtInstruction());
+        registerInstruction(new ILeInstruction());
+        registerInstruction(new IGtInstruction());
+        registerInstruction(new IGeInstruction());
+        registerInstruction(new IEqInstruction());
+        registerInstruction(new INeInstruction());
 
         // 常量指令
         registerInstruction(new IConstInstruction());
+        registerInstruction(new NullInstruction());
 
         // 控制流指令
         registerInstruction(new BrInstruction());
         registerInstruction(new BrtInstruction());
+        registerInstruction(new BrfInstruction());
+        registerInstruction(new CallInstruction());
+        registerInstruction(new RetInstruction());
         registerInstruction(new HaltInstruction());
+        registerInstruction(new PrintInstruction());
+        registerInstruction(new PopInstruction());
 
         // 内存指令
         registerInstruction(new LoadInstruction());
         registerInstruction(new StoreInstruction());
-
-        // TODO: 继续添加更多指令...
-        // 需要添加的指令：
-        // - 其他比较指令: ILe, IGt, IGe, IEq, INe, INeg, INot, IAnd, IOr, IXor
-        // - 浮点指令: FAdd, FSub, FMul, FDiv, FLt, FEq, IToF
-        // - 函数调用指令: Call, Ret
-        // - 全局内存指令: GLoad, GStore
-        // - 结构体指令: FLoad, FStore, Struct, Null
-        // - 其他指令: Pop, Print
-        // - 分支指令: Brf
+        registerInstruction(new GLoadInstruction());
+        registerInstruction(new GStoreInstruction());
+        registerInstruction(new FLoadInstruction());
+        registerInstruction(new FStoreInstruction());
+        registerInstruction(new StructInstruction());
     }
 
     /**

@@ -898,4 +898,43 @@ public class CymbolStackVM {
     public java.util.Set<Integer> getBreakpoints() {
         return new java.util.HashSet<>(breakpoints);
     }
+
+    /**
+     * 函数调用 - 供新的CallInstruction使用
+     * @param functionAddress 函数入口地址
+     * @param returnAddress 返回地址
+     */
+    public void callFunction(int functionAddress, int returnAddress) {
+        // 创建虚拟FunctionSymbol用于栈帧
+        FunctionSymbol dummySymbol = new FunctionSymbol("func_" + functionAddress, 0, 0, functionAddress);
+        // 创建栈帧
+        StackFrame frame = new StackFrame(dummySymbol, returnAddress);
+        // 压入调用栈
+        if (framePointer + 1 >= callStack.length) {
+            throw new VMStackOverflowException("Call stack overflow", programCounter, "CALL");
+        }
+        callStack[++framePointer] = frame;
+        // 跳转到目标地址
+        programCounter = functionAddress;
+    }
+
+    /**
+     * 函数返回 - 供新的RetInstruction使用
+     */
+    public void returnFromFunction() {
+        // 从栈帧恢复返回地址
+        if (framePointer < 0) {
+            throw new IllegalStateException("RET called without active frame");
+        }
+        StackFrame frame = callStack[framePointer--];
+        programCounter = frame.getReturnAddress();
+    }
+
+    /**
+     * 获取程序计数器
+     * @return 当前程序计数器值
+     */
+    public int getProgramCounter() {
+        return programCounter;
+    }
 }

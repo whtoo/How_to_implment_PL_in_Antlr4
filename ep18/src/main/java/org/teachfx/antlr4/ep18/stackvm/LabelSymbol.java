@@ -44,4 +44,18 @@ public class LabelSymbol {
         }
     }
 
+    /**
+     * Get the label name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Get the label address
+     */
+    public int getAddress() {
+        return address;
+    }
+
 }

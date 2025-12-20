@@ -302,6 +302,94 @@ The skill integrates with the project's development tools:
 - **Testing Framework**: JUnit 5 with coverage requirements (≥85% overall)
 - **Documentation**: `.qoder/repowiki/` with 232+ technical documentation files
 
+## Context7 MCP Usage
+
+### Overview
+
+**Context7** is a context management MCP server that automatically records and retrieves project-specific context.
+This enables seamless continuity across conversations by maintaining awareness of previous discussions and decisions.
+
+#### Key Capabilities
+- **Automatic Context Recording**: Tracks project activities, decisions, and technical details
+- **Context Retrieval**: Access to historical conversation data and project state
+- **Session Management**: Maintains continuity across multiple development sessions
+
+### How to Use Context7
+
+When working on this project, Context7 automatically tracks your interactions and provides relevant context when needed.
+
+#### Context-Aware Development Workflow
+
+```bash
+# Example: Resuming work on a specific episode
+User: Let's continue implementing the type checker in ep20
+
+Claude: I'll check the context to see our previous progress on the type checker...
+# Context7 will provide previous discussion, implementation status, and next steps
+# You can then continue work seamlessly
+
+# Example: Getting project state
+User: What's the current status of this project?
+
+Claude: I'll retrieve the project context to provide an accurate status update...
+# Context7 provides current episode progress, recent changes, open issues, etc.
+
+# Example: Understanding previous decisions
+User: Why did we implement the symbol table this way?
+
+Claude: I'll check the context for our previous discussions about symbol table design...
+# Context7 provides historical rationale, alternatives considered, final decisions
+```
+
+#### Best Practices for Using Context7
+
+1. **Always Check Context First**: Before starting new work, ask Context7 for relevant context
+   ```
+   Let me check the context to see if there's any relevant history for this task...
+   ```
+
+2. **Maintain Context-Awareness**: Acknowledge when Context7 provides relevant information
+   ```
+   Based on the context, I can see we previously worked on [X] and the next step is [Y]...
+   ```
+
+3. **Update Context with Decisions**: When making important decisions, ensure they're captured
+   ```
+   I'll record this decision in the context for future reference...
+   ```
+
+4. **Use Context for Consistency**: Reference previous patterns and conventions from context
+   ```
+   According to the context, we typically implement [pattern] for [scenario]...
+   ```
+
+#### Session Continuity Guidelines
+
+- **New Sessions**: Always begin by checking Context7 for project state and recent activities
+- **Task Resumption**: Use Context7 to retrieve the exact state and next steps for paused tasks
+- **Decision Tracking**: When architectural decisions are made, they should be accessible via Context7
+- **Issue Resolution**: Check Context7 for historical context on recurring issues
+
+#### Integration with Development Tasks
+
+Context7 works seamlessly with the existing Claude Code skills:
+
+- **Compiler Development Skill**: Context7 maintains history of compiler implementation decisions
+- **Project Navigation**: Tracks which episodes/modules have been worked on
+- **Testing Strategy**: Records test coverage patterns and testing approaches used
+- **Architecture Decisions**: Captures rationale for design choices across the compiler pipeline
+
+#### Limitations and Considerations
+
+- Context7 is **episodic** - it provides historical context but doesn't replace real-time analysis
+- Always **validate context** against current code state - files may have changed since last session
+- Use context as a **starting point**, not a definitive source - always verify with current state
+- **Sensitive information** should not be included in context (API keys, credentials, etc.)
+
+### Configuration
+
+Context7 is configured in `.mcp.json` and is automatically available when working with this project.
+
 ## Notes for Future Claude Code Instances
 
 - This is an **educational project** focused on compiler construction
@@ -310,4 +398,5 @@ The skill integrates with the project's development tools:
 - **Visitor pattern** is used extensively for AST traversal
 - **Testing is comprehensive** - maintain high coverage standards
 - **Documentation is extensive** - check `.qoder/repowiki/` for detailed technical docs
+- **Context7 is available** - always check context first for project history and continuity
 - The project implements a **complete compiler pipeline** - understand the frontend/middle-end/backend separation

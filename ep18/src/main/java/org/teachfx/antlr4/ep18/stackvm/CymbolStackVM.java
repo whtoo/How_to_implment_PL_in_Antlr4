@@ -234,6 +234,52 @@ public class CymbolStackVM {
                              ", instruction=0x" + Integer.toHexString(instruction));
         }
 
+        // 使用指令工厂获取指令实现
+        org.teachfx.antlr4.ep18.stackvm.instructions.InstructionFactory factory =
+            org.teachfx.antlr4.ep18.stackvm.instructions.InstructionFactory.getInstance();
+
+        // 检查指令是否已重构（使用新的策略模式）
+        if (factory.isSupported(opcode)) {
+            // 使用新的策略模式执行指令
+            org.teachfx.antlr4.ep18.stackvm.instructions.Instruction instr = factory.getRequiredInstruction(opcode);
+            int operand = extractOperand(instruction);
+
+            // 创建执行上下文
+            VMExecutionContext context = new VMExecutionContext(
+                this, config, stats, programCounter, stack, stackPointer,
+                heap, locals, callStack, framePointer, config.isTraceEnabled(),
+                heapAllocPointer, structTable, nextStructId
+            );
+
+            // 执行指令
+            instr.execute(context, operand);
+
+            // 更新VM状态
+            programCounter = context.getProgramCounter();
+            stackPointer = context.getStackPointer();
+            framePointer = context.getFramePointer();
+            heapAllocPointer = context.getHeapAllocPointer();
+            nextStructId = context.getNextStructId();
+        } else {
+            // 暂时回退到原有的switch实现（向后兼容）
+            executeInstructionLegacy(instruction);
+        }
+    }
+
+    /**
+     * 原有指令执行方法（保持向后兼容）
+     * 将在所有指令迁移到新模式后删除
+     */
+    private void executeInstructionLegacy(int instruction) throws Exception {
+        // 提取操作码（高8位）
+        int opcode = (instruction >> 24) & 0xFF;
+
+        if (config.isTraceEnabled()) {
+            System.out.println("Executing instruction (legacy) at PC=" + (programCounter - 1) +
+                             ": opcode=0x" + Integer.toHexString(opcode) +
+                             ", instruction=0x" + Integer.toHexString(instruction));
+        }
+
         // 根据操作码执行指令
         switch (opcode) {
             case BytecodeDefinition.INSTR_IADD:
@@ -642,7 +688,7 @@ public class CymbolStackVM {
             throw new IllegalStateException("RET called without active frame");
         }
         StackFrame frame = callStack[framePointer--];
-        programCounter = frame.returnAddress;
+        programCounter = frame.getReturnAddress();
     }
 
     // 浮点指令实现

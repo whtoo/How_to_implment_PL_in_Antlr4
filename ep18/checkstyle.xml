@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  EP18 Checkstyle Configuration for TDD Refactoring
+  Based on Google Java Style Guide with project-specific adjustments
+-->
+<module name="Checker">
+    <!-- Root directory to scan for Java source files -->
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- Exclude generated ANTLR parser files -->
+    <module name="SuppressionFilter">
+        <property name="file" value="checkstyle-suppressions.xml"/>
+    </module>
+
+    <!-- Checks for whitespace -->
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+    </module>
+
+    <!-- Line length -->
+    <module name="LineLength">
+        <property name="fileExtensions" value="java"/>
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^ *\* *[^ ]+$"/>
+    </module>
+
+    <!-- Checks for imports -->
+    <module name="AvoidStarImport">
+        <property name="allowClassImports" value="false"/>
+        <property name="allowStaticMemberImports" value="false"/>
+    </module>
+
+    <module name="RedundantImport"/>
+    <module name="UnusedImports"/>
+
+    <!-- Package naming -->
+    <module name="PackageName">
+        <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+        <message key="name.invalidPattern" value="Package name ''{0}'' must match pattern ''{1}''."/>
+    </module>
+
+    <!-- Class naming -->
+    <module name="TypeName">
+        <property name="tokens" value="CLASS_DEF,INTERFACE_DEF,ENUM_DEF,ANNOTATION_DEF"/>
+        <message key="name.invalidPattern" value="Type name ''{0}'' must match pattern ''{1}''."/>
+    </module>
+
+    <module name="MemberName">
+        <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        <message key="name.invalidPattern" value="Member name ''{0}'' must match pattern ''{1}''."/>
+    </module>
+
+    <module name="ParameterName">
+        <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        <message key="name.invalidPattern" value="Parameter name ''{0}'' must match pattern ''{1}''."/>
+    </module>
+
+    <module name="LocalVariableName">
+        <property name="format" value="^[a-z][a-zA-Z0-9]*$"/>
+        <message key="name.invalidPattern" value="Local variable name ''{0}'' must match pattern ''{1}''."/>
+    </module>
+
+    <module name="ConstantName">
+        <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$"/>
+        <message key="name.invalidPattern" value="Constant name ''{0}'' must match pattern ''{1}''."/>
+    </module>
+
+    <!-- Indentation -->
+    <module name="Indentation">
+        <property name="basicOffset" value="4"/>
+        <property name="braceAdjustment" value="0"/>
+        <property name="caseIndent" value="4"/>
+        <property name="throwsIndent" value="8"/>
+        <property name="lineWrappingIndentation" value="4"/>
+        <property name="arrayInitIndent" value="4"/>
+    </module>
+
+    <!-- Braces -->
+    <module name="NeedBraces"/>
+    <module name="LeftCurly">
+        <property name="option" value="eol"/>
+    </module>
+    <module name="RightCurly">
+        <property name="option" value="alone"/>
+        <property name="tokens" value="LITERAL_FINALLY,LITERAL_CATCH,LITERAL_ELSE,LITERAL_IF"/>
+    </module>
+
+    <!-- Whitespace -->
+    <module name="WhitespaceAround">
+        <property name="allowEmptyConstructors" value="true"/>
+        <property name="allowEmptyMethods" value="true"/>
+        <property name="allowEmptyTypes" value="true"/>
+        <property name="allowEmptyLoops" value="true"/>
+        <property name="tokens" value="ASSIGN,BAND_ASSIGN,BOR_ASSIGN,BSR_ASSIGN,BUSH_ASSIGN,DIV_ASSIGN,GE,GT,LAND,LE,LITERAL_ASSERT,LITERAL_CASE,LITERAL_CATCH,LITERAL_DO,LITERAL_ELSE,LITERAL_FINALLY,LITERAL_FOR,LITERAL_IF,LITERAL_RETURN,LITERAL_SYNCHRONIZED,LITERAL_TRY,LITERAL_WHILE,MINUS_ASSIGN,MOD_ASSIGN,NOT_EQUAL,PLUS_ASSIGN,RCURLY,SL_ASSIGN,SR_ASSIGN,STAR_ASSIGN,LAMBDA"/>
+    </module>
+
+    <module name="WhitespaceAfter">
+        <property name="tokens" value="COMMA,SEMI,TYPECAST,LITERAL_IF,LITERAL_ELSE,LITERAL_WHILE,LITERAL_DO,LITERAL_FOR,LITERAL_RETURN"/>
+    </module>
+
+    <!-- Line wrapping -->
+    <module name="GenericWhitespace"/>
+    <module name="MethodParamPad"/>
+    <module name="OperatorWrap">
+        <property name="option" value="eol"/>
+        <property name="tokens" value="COLON,NOT_EQUAL,LT,GT,ASSIGN,DIV,PLUS,MINUS,STAR,MOD,BSR,SR,BSL,SR,BAND,BXOR,BOR,QUESTION,LITERAL_ASSERT"/>
+    </module>
+
+    <!-- Annotations -->
+    <module name="AnnotationLocation">
+        <property name="allowSamelineMultipleAnnotations" value="true"/>
+        <property name="allowSamelineSingleParameterlessAnnotation" value="true"/>
+    </module>
+
+    <!-- Block checks -->
+    <module name="EmptyBlock">
+        <property name="option" value="text"/>
+        <property name="tokens" value="LITERAL_WHILE,LITERAL_IF,LITERAL_ELSE,LITERAL_FOR,LITERAL_DO,LITERAL_CATCH,LITERAL_FINALLY,LITERAL_TRY"/>
+    </module>
+
+    <module name="EmptyCatchBlock">
+        <property name="exceptionVariableName" value="ignored"/>
+    </module>
+
+    <!-- Javadoc -->
+    <module name="JavadocMethod">
+        <property name="scope" value="public"/>
+        <property name="allowMissingParamTags" value="true"/>
+        <property name="allowMissingReturnTag" value="true"/>
+        <property name="allowMissingThrowsTags" value="true"/>
+        <property name="allowedAnnotations" value="Override,Test"/>
+    </module>
+
+    <module name="JavadocType">
+        <property name="scope" value="public"/>
+    </module>
+
+    <module name="JavadocVariable">
+        <property name="scope" value="public"/>
+    </module>
+
+    <!-- Final parameters -->
+    <module name="FinalParameters">
+        <property name="tokens" value="METHOD_DEF,CTOR_DEF,LITERAL_CATCH,LITERAL_FOR,LITERAL_IF,LITERAL_WHILE,LITERAL_DO,LITERAL_ELSE,LITERAL_TRY"/>
+    </module>
+
+    <!-- Modifiers -->
+    <module name="ModifierOrder"/>
+    <module name="RedundantModifier"/>
+
+    <!-- Code duplication -->
+    <module name="StrictDuplicateCode">
+        <property name="min" value="30"/>
+    </module>
+
+    <!-- Complexity -->
+    <module name="Complexity">
+        <property name="max" value="10"/>
+    </module>
+
+    <!-- Upper ellipsis -->
+    <module name="UpperEll"/>
+</module>

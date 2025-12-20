@@ -121,7 +121,7 @@ public class VMInterpreter {
         ip = mainFunction.address;
         // 初始化所有局部变量为0
         for (int i = 0; i < mainFunction.nlocals; i++) {
-            f.locals[i] = 0;
+            f.getLocals()[i] = 0;
         }
         cpu();
     }
@@ -273,7 +273,7 @@ public class VMInterpreter {
                     break;
                 case BytecodeDefinition.INSTR_RET:
                     StackFrame fr = calls[fp--];
-                    ip = fr.returnAddress;
+                    ip = fr.getReturnAddress();
                     break;
                 case BytecodeDefinition.INSTR_BR:
                     ip = getIntOperand();
@@ -307,11 +307,11 @@ public class VMInterpreter {
                     break;
                 case BytecodeDefinition.INSTR_LOAD:
                     int loadAddr = getIntOperand();
-                    operands[++sp] = calls[fp].locals[loadAddr];
+                    operands[++sp] = calls[fp].getLocals()[loadAddr];
                     break;
                 case BytecodeDefinition.INSTR_STORE:
                     int storeAddr = getIntOperand();
-                    calls[fp].locals[storeAddr] = operands[sp--];
+                    calls[fp].getLocals()[storeAddr] = operands[sp--];
                     break;
                 case BytecodeDefinition.INSTR_GLOAD:
                     int gloadAddr = getIntOperand();
@@ -368,7 +368,7 @@ public class VMInterpreter {
         StackFrame f = new StackFrame(fs, ip);
         calls[++fp] = f;
         for (int a = fs.nargs - 1; a >= 0; a--) {
-            f.locals[a] = operands[sp--];
+            f.getLocals()[a] = operands[sp--];
         }
         ip = fs.address;
     }
@@ -396,7 +396,7 @@ public class VMInterpreter {
         if (fp >= 0) {
             System.out.print(", calls=[");
             for (int i = 0; i <= fp; i++) {
-                System.out.print(" " + calls[i].symbol.name);
+                System.out.print(" " + calls[i].getSymbol().name);
             }
             System.out.print(" ]");
         }

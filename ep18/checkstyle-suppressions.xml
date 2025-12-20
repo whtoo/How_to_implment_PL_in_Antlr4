@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Suppressions for EP18 Checkstyle
+  Exclude generated ANTLR parser files and other generated content
+-->
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.0//EN"
+        "https://checkstyle.org/dtds/suppressions_1_0.dtd">
+
+<suppressions>
+    <!-- Generated ANTLR parser files -->
+    <suppress checks=".*" files=".*Parser\.java$"/>
+    <suppress checks=".*" files=".*Lexer\.java$"/>
+    <suppress checks=".*" files=".*BaseListener\.java$"/>
+    <suppress checks=".*" files=".*Listener\.java$"/>
+    <suppress checks=".*" files=".*BaseVisitor\.java$"/>
+    <suppress checks=".*" files=".*Visitor\.java$"/>
+
+    <!-- Generated ANTLR files in parser directory -->
+    <suppress checks=".*" files="parser/.*\.java$"/>
+
+    <!-- Test files may have different naming conventions -->
+    <suppress checks="JavadocType" files=".*Test\.java$"/>
+    <suppress checks="JavadocMethod" files=".*Test\.java$"/>
+
+    <!-- Allow short variable names in test files -->
+    <suppress checks="ParameterName" files=".*Test\.java$"/>
+    <suppress checks="LocalVariableName" files=".*Test\.java$"/>
+    <suppress checks="MemberName" files=".*Test\.java$"/>
+
+    <!-- Allow star imports in test files for convenience -->
+    <suppress checks="AvoidStarImport" files=".*Test\.java$"/>
+</suppressions>

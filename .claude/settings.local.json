@@ -41,7 +41,8 @@
       "Bash(then bash .specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)",
       "Bash(else echo \"No check-prerequisites script found\")",
       "Bash(fi:*)",
-      "Bash(done:*)"
+      "Bash(done:*)",
+      "Bash(javac:*)"
     ]
   },
   "enabledMcpjsonServers": [

@@ -307,11 +307,21 @@ public class VMInterpreter {
                     break;
                 case BytecodeDefinition.INSTR_LOAD:
                     int loadAddr = getIntOperand();
-                    operands[++sp] = calls[fp].getLocals()[loadAddr];
+                    // 添加边界检查
+                    if (loadAddr >= 0 && loadAddr < calls[fp].getLocals().length) {
+                        operands[++sp] = calls[fp].getLocals()[loadAddr];
+                    } else {
+                        operands[++sp] = null; // 或者抛出异常
+                    }
                     break;
                 case BytecodeDefinition.INSTR_STORE:
                     int storeAddr = getIntOperand();
-                    calls[fp].getLocals()[storeAddr] = operands[sp--];
+                    // 添加边界检查
+                    if (storeAddr >= 0 && storeAddr < calls[fp].getLocals().length) {
+                        calls[fp].getLocals()[storeAddr] = operands[sp--];
+                    } else {
+                        sp--; // 丢弃值但不存储
+                    }
                     break;
                 case BytecodeDefinition.INSTR_GLOAD:
                     int gloadAddr = getIntOperand();
@@ -367,8 +377,15 @@ public class VMInterpreter {
         FunctionSymbol fs = (FunctionSymbol) constPool[functionConstPoolIndex];
         StackFrame f = new StackFrame(fs, ip);
         calls[++fp] = f;
-        for (int a = fs.nargs - 1; a >= 0; a--) {
+        // 将参数存储到栈帧的局部变量区域（兼容原有行为）
+        // 只有当函数有局部变量时才执行存储操作
+        int localsToFill = Math.min(fs.nargs, fs.nlocals);
+        for (int a = localsToFill - 1; a >= 0; a--) {
             f.getLocals()[a] = operands[sp--];
+        }
+        // 如果参数数量超过局部变量数量，丢弃剩余参数
+        for (int a = fs.nargs - localsToFill - 1; a >= 0; a--) {
+            sp--; // 丢弃参数
         }
         ip = fs.address;
     }

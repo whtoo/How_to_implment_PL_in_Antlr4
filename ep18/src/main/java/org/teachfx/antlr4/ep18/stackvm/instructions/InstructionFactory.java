@@ -58,8 +58,15 @@ public class InstructionFactory {
         registerInstruction(new LoadInstruction());
         registerInstruction(new StoreInstruction());
 
-        // TODO: 添加更多指令...
-        // 其他指令将在后续实现中添加
+        // TODO: 继续添加更多指令...
+        // 需要添加的指令：
+        // - 其他比较指令: ILe, IGt, IGe, IEq, INe, INeg, INot, IAnd, IOr, IXor
+        // - 浮点指令: FAdd, FSub, FMul, FDiv, FLt, FEq, IToF
+        // - 函数调用指令: Call, Ret
+        // - 全局内存指令: GLoad, GStore
+        // - 结构体指令: FLoad, FStore, Struct, Null
+        // - 其他指令: Pop, Print
+        // - 分支指令: Brf
     }
 
     /**

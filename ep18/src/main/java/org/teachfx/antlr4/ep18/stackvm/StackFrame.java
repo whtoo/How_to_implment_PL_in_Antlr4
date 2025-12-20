@@ -47,8 +47,14 @@ public class StackFrame {
 
         // 计算栈帧大小和偏移
         this.frameSize = StackFrameCalculator.calculateFrameSize(symbol);
-        this.localOffset = StackFrameCalculator.getLocalVariableOffset(symbol, 0);
-        this.paramOffset = StackFrameCalculator.getParameterOffset(symbol, 0);
+        // 只有当存在局部变量时才计算偏移
+        this.localOffset = (symbol.nlocals > 0)
+            ? StackFrameCalculator.getLocalVariableOffset(symbol, 0)
+            : -1;
+        // 只有当存在参数时才计算偏移
+        this.paramOffset = (symbol.nargs > 0)
+            ? StackFrameCalculator.getParameterOffset(symbol, 0)
+            : -1;
 
         // 初始化局部变量数组
         this.locals = new Object[symbol.nlocals];

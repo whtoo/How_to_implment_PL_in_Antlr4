@@ -9,17 +9,19 @@ import java.util.function.BiFunction;
  * 提供统一的异常处理机制，支持异常恢复、日志记录和自定义处理策略
  */
 public class VMExceptionHandler {
-    private final Map<Class<? extends VMException>, BiFunction<VMException, VMExecutionContext, Boolean>> handlers;
+    private final Map<Class<? extends VMException>, BiFunction<VMException, VMExecutionContext, Boolean>> customHandlers;
+    private final Map<Class<? extends VMException>, BiFunction<VMException, VMExecutionContext, Boolean>> builtinHandlers;
     private BiFunction<VMException, VMExecutionContext, Boolean> defaultHandler;
     private boolean enabled;
 
     public VMExceptionHandler() {
-        this.handlers = new ConcurrentHashMap<>();
+        this.customHandlers = new ConcurrentHashMap<>();
+        this.builtinHandlers = new ConcurrentHashMap<>();
         this.enabled = true;
-        
+
         // 设置默认处理器 - 默认不处理异常，让其传播
         this.defaultHandler = (exception, context) -> false;
-        
+
         // 注册内置处理器
         registerBuiltinHandlers();
     }
@@ -29,9 +31,9 @@ public class VMExceptionHandler {
      * @param exceptionType 异常类型
      * @param handler 处理器函数，返回true表示异常已处理，false表示需要继续传播
      */
-    public void registerHandler(Class<? extends VMException> exceptionType, 
+    public void registerHandler(Class<? extends VMException> exceptionType,
                                BiFunction<VMException, VMExecutionContext, Boolean> handler) {
-        handlers.put(exceptionType, handler);
+        customHandlers.put(exceptionType, handler);
     }
 
     /**
@@ -73,16 +75,30 @@ public class VMExceptionHandler {
 
     /**
      * 查找最适合的异常处理器
+     * 优先使用自定义处理器，如果没有找到则使用内置处理器
      */
     private BiFunction<VMException, VMExecutionContext, Boolean> findHandler(Class<? extends VMException> exceptionType) {
-        // 首先查找精确匹配
-        BiFunction<VMException, VMExecutionContext, Boolean> handler = handlers.get(exceptionType);
+        // 首先查找自定义处理器（精确匹配）
+        BiFunction<VMException, VMExecutionContext, Boolean> handler = customHandlers.get(exceptionType);
         if (handler != null) {
             return handler;
         }
 
-        // 如果没有精确匹配，查找父类处理器
-        for (Map.Entry<Class<? extends VMException>, BiFunction<VMException, VMExecutionContext, Boolean>> entry : handlers.entrySet()) {
+        // 查找自定义处理器（父类匹配）
+        for (Map.Entry<Class<? extends VMException>, BiFunction<VMException, VMExecutionContext, Boolean>> entry : customHandlers.entrySet()) {
+            if (entry.getKey().isAssignableFrom(exceptionType)) {
+                return entry.getValue();
+            }
+        }
+
+        // 如果没有找到自定义处理器，查找内置处理器（精确匹配）
+        handler = builtinHandlers.get(exceptionType);
+        if (handler != null) {
+            return handler;
+        }
+
+        // 查找内置处理器（父类匹配）
+        for (Map.Entry<Class<? extends VMException>, BiFunction<VMException, VMExecutionContext, Boolean>> entry : builtinHandlers.entrySet()) {
             if (entry.getKey().isAssignableFrom(exceptionType)) {
                 return entry.getValue();
             }
@@ -117,40 +133,46 @@ public class VMExceptionHandler {
      */
     private void registerBuiltinHandlers() {
         // 算术溢出处理器 - 尝试恢复为默认值
-        registerHandler(VMOverflowException.class, (exception, context) -> {
+        builtinHandlers.put(VMOverflowException.class, (exception, context) -> {
             System.err.println("Arithmetic overflow detected at PC=" + exception.getPC() +
                              ", instruction=" + exception.getInstruction());
 
-            // 在某些情况下，可以尝试恢复为默认值
-            if (context.getStackDepth() >= 2) {
-                context.pop(); // 移除操作数
-                context.pop();
+            // 尝试恢复为默认值
+            // 先弹出操作数（如果存在）
+            int stackDepth = context.getStackDepth();
+            if (stackDepth >= 2) {
+                context.pop(); // 移除操作数2
+                context.pop(); // 移除操作数1
                 context.push(0); // 用默认值替代
-                return true; // 异常已处理
+            } else if (stackDepth == 1) {
+                context.pop(); // 移除操作数
+                context.push(0); // 用默认值替代
             }
-            return false; // 无法处理，继续传播
+            // 如果栈为空，不需要做任何操作
+
+            return true; // 异常已处理
         });
 
         // 除零异常处理器 - 提供有意义的错误信息
-        registerHandler(VMDivisionByZeroException.class, (exception, context) -> {
-            System.err.println("Division by zero detected at PC=" + exception.getPC() + 
+        builtinHandlers.put(VMDivisionByZeroException.class, (exception, context) -> {
+            System.err.println("Division by zero detected at PC=" + exception.getPC() +
                              ", instruction=" + exception.getInstruction());
-            
+
             // 除零异常通常是致命的，无法恢复
             return false;
         });
 
         // 栈下溢处理器 - 尝试恢复栈状态
-        registerHandler(VMStackUnderflowException.class, (exception, context) -> {
-            System.err.println("Stack underflow detected at PC=" + exception.getPC() + 
+        builtinHandlers.put(VMStackUnderflowException.class, (exception, context) -> {
+            System.err.println("Stack underflow detected at PC=" + exception.getPC() +
                              ", instruction=" + exception.getInstruction());
-            
+
             // 栈下溢通常是致命的，无法恢复
             return false;
         });
 
         // 内存访问异常处理器
-        registerHandler(VMMemoryAccessException.class, (exception, context) -> {
+        builtinHandlers.put(VMMemoryAccessException.class, (exception, context) -> {
             if (exception instanceof VMMemoryException) {
                 VMMemoryException memEx = (VMMemoryException) exception;
                 if (memEx.getAddress() == 0) {
@@ -172,14 +194,13 @@ public class VMExceptionHandler {
      * 获取已注册的处理器数量
      */
     public int getHandlerCount() {
-        return handlers.size();
+        return customHandlers.size() + builtinHandlers.size();
     }
 
     /**
      * 清除所有自定义处理器，只保留内置处理器
      */
     public void clearCustomHandlers() {
-        handlers.clear();
-        registerBuiltinHandlers();
+        customHandlers.clear();
     }
 }

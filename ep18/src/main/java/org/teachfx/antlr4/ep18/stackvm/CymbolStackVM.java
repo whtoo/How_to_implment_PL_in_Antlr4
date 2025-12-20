@@ -1,5 +1,7 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
+import org.teachfx.antlr4.ep18.stackvm.ABIConvention.*;
+
 import java.util.Arrays;
 
 /**
@@ -113,12 +115,24 @@ public class CymbolStackVM {
         // 加载字节码到指令缓存
         loadBytecode(bytecode);
 
+        // 创建主函数栈帧（模拟"call main()"）
+        FunctionSymbol mainSymbol = new FunctionSymbol("main", 0, 0, 0);
+        StackFrame mainFrame = new StackFrame(mainSymbol, -1);
+        callStack[++framePointer] = mainFrame;
+
         // 开始执行
         this.running = true;
         this.programCounter = 0;
 
         try {
-            while (running && programCounter < instructionCache.length) {
+            int stepCount = 0;
+            while (running && programCounter >= 0 && programCounter < instructionCache.length) {
+                stepCount++;
+                if (config.isDebugMode() && stepCount > 20) {
+                    System.out.println("[DEBUG] EXEC: Too many steps, breaking to avoid infinite loop!");
+                    break;
+                }
+
                 // 调试支持：检查断点
                 if (breakpoints.contains(programCounter)) {
                     System.out.println("[BREAKPOINT] Hit breakpoint at PC=" + programCounter);
@@ -126,15 +140,21 @@ public class CymbolStackVM {
                     // 简化实现：仅打印信息并继续
                 }
 
-                // 获取当前指令
-                int instruction = instructionCache[programCounter++];
+                if (config.isDebugMode()) {
+                    System.out.println("[DEBUG] EXEC: Step " + stepCount + ", PC=" + programCounter + ", running=" + running);
+                }
+
+                // 获取当前指令，注意：不要在这里递增PC，让指令自己控制PC
+                int instruction = instructionCache[programCounter];
+                int currentPC = programCounter;
+                programCounter++; // 递增PC，为下一条指令做准备
 
                 // 执行指令
                 executeInstruction(instruction);
 
                 // 调试支持：单步执行模式
                 if (stepMode) {
-                    System.out.println("[STEP] Executed instruction at PC=" + (programCounter - 1));
+                    System.out.println("[STEP] Executed instruction at PC=" + currentPC);
                     stepMode = false; // 执行一步后退出单步模式
                 }
             }
@@ -180,9 +200,16 @@ public class CymbolStackVM {
                                    ((bytecode[offset + 2] & 0xFF) << 8) |
                                    (bytecode[offset + 3] & 0xFF);
         }
-        
+
         if (config.isDebugMode()) {
             System.out.println("Loaded " + instructionCount + " instructions");
+            // 打印前几个指令用于调试
+            for (int i = 0; i < Math.min(instructionCount, 10); i++) {
+                int instr = instructionCache[i];
+                int opcode = (instr >> 24) & 0xFF;
+                int operand = extractOperand(instr);
+                System.out.println("  Instruction " + i + ": opcode=" + opcode + ", operand=" + operand);
+            }
         }
     }
     
@@ -233,6 +260,14 @@ public class CymbolStackVM {
     private void executeInstruction(int instruction) throws Exception {
         // 提取操作码（高8位）
         int opcode = (instruction >> 24) & 0xFF;
+
+        if (config.isDebugMode()) {
+            System.out.println("[DEBUG] executeInstruction: PC=" + (programCounter - 1) + ", opcode=" + opcode + ", sp=" + stackPointer);
+        }
+
+        if (config.isDebugMode() && (opcode == BytecodeDefinition.INSTR_RET || opcode == BytecodeDefinition.INSTR_CALL)) {
+            System.out.println("[DEBUG] CALL/RET instruction detected");
+        }
 
         if (config.isTraceEnabled()) {
             System.out.println("Executing instruction at PC=" + (programCounter - 1) +
@@ -728,27 +763,126 @@ public class CymbolStackVM {
     }
 
     private void executeCall(int instruction) {
-        // CALL指令：操作数为目标地址（简化）
+        // CALL指令：操作数为目标地址（函数地址在常量池中的索引）
         int targetAddress = extractOperand(instruction);
         // 保存返回地址（当前programCounter，指向下一条指令）
         int returnAddress = programCounter;
+        // 保存当前栈深度（用于函数返回时清理参数）
+        int savedStackDepth = stackPointer;
+
+        if (config.isDebugMode()) {
+            System.out.println("[ABI] CALL: targetAddress=" + targetAddress + ", returnAddress=" + returnAddress + ", savedStackDepth=" + savedStackDepth);
+            System.out.println("[ABI] CALL: current framePointer=" + framePointer + ", stackPointer=" + stackPointer);
+        }
+
         // 创建虚拟FunctionSymbol用于栈帧
-        FunctionSymbol dummySymbol = new FunctionSymbol("dummy", 0, 0, targetAddress);
-        // 创建栈帧
-        StackFrame frame = new StackFrame(dummySymbol, returnAddress);
-        // 保存当前局部变量状态？简化处理
+        // 注意：由于CymbolStackVM没有完整的常量池信息，我们使用虚拟符号
+        // 在实际使用中，应通过常量池获取完整的函数符号信息
+        FunctionSymbol dummySymbol = new FunctionSymbol("func_" + targetAddress, 0, 0, targetAddress);
+        // 创建栈帧（符合ABI规范）
+        StackFrame frame = new StackFrame(dummySymbol, returnAddress, null);
+
+        // 在当前栈帧（调用者）中保存栈深度信息（符合ABI规范）
+        if (framePointer >= 0 && callStack[framePointer] != null) {
+            callStack[framePointer].setDebugData("savedStackDepth", savedStackDepth);
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] CALL: saved depth in caller frame at index " + framePointer);
+            }
+        } else {
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] CALL: WARNING - no caller frame to save depth!");
+            }
+        }
+
+        // 压入调用栈
+        if (framePointer + 1 >= callStack.length) {
+            throw new VMStackOverflowException("Call stack overflow at PC=" + programCounter, programCounter, "CALL");
+        }
         callStack[++framePointer] = frame;
+
         // 跳转到目标地址
         programCounter = targetAddress;
+
+        if (config.isDebugMode()) {
+            System.out.println("[ABI] CALL: pushed new frame at index " + framePointer);
+            System.out.println("[ABI] CALL: set programCounter to " + programCounter);
+        }
     }
 
     private void executeRet() {
-        // RET指令：从栈帧恢复返回地址
+        // RET指令：从栈帧恢复返回地址，并清理栈（符合ABI规范）
         if (framePointer < 0) {
-            throw new VMStackUnderflowException("RET called without active frame", programCounter, "RET");
+            throw new VMStackUnderflowException("RET called without active frame at PC=" + programCounter, programCounter, "RET");
         }
         StackFrame frame = callStack[framePointer--];
-        programCounter = frame.getReturnAddress();
+        int returnAddress = frame.getReturnAddress();
+
+        if (config.isDebugMode()) {
+            System.out.println("[ABI] RET: popped frame, returnAddress=" + returnAddress);
+            System.out.println("[ABI] RET: new framePointer=" + framePointer);
+        }
+
+        // 从调用者栈帧获取保存的栈深度（如果存在）
+        Integer savedDepth = null;
+        if (framePointer >= 0 && callStack[framePointer] != null) {
+            savedDepth = (Integer) callStack[framePointer].getDebugData("savedStackDepth");
+            if (config.isDebugMode() && savedDepth != null) {
+                System.out.println("[ABI] RET: found savedDepth=" + savedDepth + ", current sp=" + stackPointer);
+            }
+        }
+
+        // 获取返回值（栈顶元素） - 检查栈是否为空
+        int returnValue = 0;
+        boolean hasReturnValue = stackPointer > 0;
+        if (hasReturnValue) {
+            returnValue = stack[stackPointer - 1];
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: returnValue=" + returnValue + " from stack[" + (stackPointer - 1) + "]");
+            }
+        } else {
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: WARNING - stack empty, no return value");
+            }
+        }
+
+        // 恢复栈状态：清理参数，恢复到调用前的栈深度
+        if (savedDepth != null) {
+            stackPointer = savedDepth;
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: restored sp to " + stackPointer);
+            }
+        } else {
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: WARNING - no saved depth, keeping sp=" + stackPointer);
+            }
+        }
+
+        // 压入返回值（符合ABI规范：返回值在栈顶）- 只有有返回值时才压入
+        if (hasReturnValue) {
+            stack[stackPointer++] = returnValue;
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: pushed return value " + returnValue + ", new sp=" + stackPointer);
+            }
+        } else {
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: no return value to push, sp remains " + stackPointer);
+            }
+        }
+
+        // 恢复程序计数器
+        programCounter = returnAddress;
+
+        // 如果返回地址为-1（如main函数返回），停止执行
+        if (returnAddress == -1) {
+            running = false;
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: main function returned, stopping execution");
+            }
+        }
+
+        if (config.isDebugMode()) {
+            System.out.println("[ABI] RET: set programCounter to " + programCounter);
+        }
     }
 
     // 浮点指令实现
@@ -965,29 +1099,133 @@ public class CymbolStackVM {
      * @param returnAddress 返回地址
      */
     public void callFunction(int functionAddress, int returnAddress) {
+        // 保存当前栈深度（用于函数返回时清理参数） - 符合ABI规范
+        int savedStackDepth = stackPointer;
+        if (config.isDebugMode()) {
+            System.out.println("[ABI] CALL: saving stack depth " + savedStackDepth + " before calling function at " + functionAddress);
+            System.out.println("[ABI] CALL: framePointer=" + framePointer + ", returnAddress=" + returnAddress);
+        }
+
         // 创建虚拟FunctionSymbol用于栈帧
+        // 注意：由于CymbolStackVM没有完整的常量池信息，我们使用虚拟符号
         FunctionSymbol dummySymbol = new FunctionSymbol("func_" + functionAddress, 0, 0, functionAddress);
-        // 创建栈帧
-        StackFrame frame = new StackFrame(dummySymbol, returnAddress);
-        // 压入调用栈
+        // 创建栈帧（符合ABI规范，使用新的构造函数）
+        StackFrame frame = new StackFrame(dummySymbol, returnAddress, null);
+
+        // 在当前栈帧（调用者）中保存栈深度信息 - 符合ABI规范
+        if (framePointer >= 0 && callStack[framePointer] != null) {
+            callStack[framePointer].setDebugData("savedStackDepth", savedStackDepth);
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] CALL: saved depth in caller frame at index " + framePointer);
+                System.out.println("[ABI] CALL: caller frame=" + callStack[framePointer]);
+            }
+        } else {
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] CALL: WARNING - no caller frame to save depth!");
+            }
+        }
+
+        // 压入调用栈（符合ABI规范）
         if (framePointer + 1 >= callStack.length) {
             throw new VMStackOverflowException("Call stack overflow at PC=" + programCounter, programCounter, "CALL");
         }
         callStack[++framePointer] = frame;
+
         // 跳转到目标地址
         programCounter = functionAddress;
+
+        if (config.isDebugMode()) {
+            System.out.println("[ABI] CALL: pushed new frame at index " + framePointer);
+            System.out.println("[ABI] CALL: set programCounter to " + programCounter);
+        }
     }
 
     /**
      * 函数返回 - 供新的RetInstruction使用
      */
     public void returnFromFunction() {
-        // 从栈帧恢复返回地址
+        if (config.isDebugMode()) {
+            System.out.println("[ABI] RET: entering returnFromFunction, framePointer=" + framePointer);
+        }
+
+        // 从栈帧恢复返回地址（符合ABI规范）
         if (framePointer < 0) {
             throw new VMStackUnderflowException("RET called without active frame at PC=" + programCounter, programCounter, "RET");
         }
         StackFrame frame = callStack[framePointer--];
-        programCounter = frame.getReturnAddress();
+        int returnAddress = frame.getReturnAddress();
+
+        if (config.isDebugMode()) {
+            System.out.println("[ABI] RET: popped frame, returnAddress=" + returnAddress);
+            System.out.println("[ABI] RET: new framePointer=" + framePointer);
+        }
+
+        // 从调用者栈帧获取保存的栈深度（如果存在） - 符合ABI规范
+        Integer savedDepth = null;
+        if (framePointer >= 0 && callStack[framePointer] != null) {
+            savedDepth = (Integer) callStack[framePointer].getDebugData("savedStackDepth");
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: caller frame at index " + framePointer + " is " + callStack[framePointer]);
+                System.out.println("[ABI] RET: savedDepth=" + savedDepth + ", current sp=" + stackPointer);
+            }
+        } else {
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: WARNING - no caller frame to restore depth!");
+            }
+        }
+
+        // 获取返回值（符合ABI规范：返回值在栈顶） - 检查栈是否为空
+        int returnValue = 0;
+        boolean hasReturnValue = stackPointer > 0;
+        if (hasReturnValue) {
+            returnValue = stack[stackPointer - 1];
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: returnValue=" + returnValue + " from stack[" + (stackPointer - 1) + "]");
+            }
+        } else {
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: WARNING - stack empty, no return value");
+            }
+        }
+
+        // 恢复栈状态：清理参数，恢复到调用前的栈深度
+        if (savedDepth != null) {
+            stackPointer = savedDepth;
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: restored sp to " + stackPointer);
+            }
+        } else {
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: WARNING - no saved depth, keeping current sp=" + stackPointer);
+            }
+        }
+
+        // 压入返回值（符合ABI规范）- 只有有返回值时才压入
+        if (hasReturnValue) {
+            stack[stackPointer++] = returnValue;
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: pushed return value " + returnValue + ", new sp=" + stackPointer);
+            }
+        } else {
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: no return value to push, sp remains " + stackPointer);
+            }
+        }
+
+        // 恢复程序计数器
+        programCounter = returnAddress;
+
+        // 如果返回地址为-1（如main函数返回），停止执行
+        if (returnAddress == -1) {
+            running = false;
+            if (config.isDebugMode()) {
+                System.out.println("[ABI] RET: main function returned, stopping execution");
+            }
+        }
+
+        if (config.isDebugMode()) {
+            System.out.println("[ABI] RET: set programCounter to " + programCounter);
+        }
     }
 
     /**
@@ -996,6 +1234,22 @@ public class CymbolStackVM {
      */
     public int getProgramCounter() {
         return programCounter;
+    }
+
+    /**
+     * 获取当前帧指针
+     * @return 当前帧指针值
+     */
+    public int getFramePointer() {
+        return framePointer;
+    }
+
+    /**
+     * 获取当前栈指针
+     * @return 当前栈指针值
+     */
+    public int getStackPointer() {
+        return stackPointer;
     }
 
     /**

@@ -28,5 +28,8 @@ public class CallInstruction extends BaseInstruction {
 
         // 调用VM的函数调用逻辑
         context.getVM().callFunction(functionAddress, returnAddress);
+
+        // 更新context中的程序计数器以匹配VM的新状态
+        context.setProgramCounter(functionAddress);
     }
 }

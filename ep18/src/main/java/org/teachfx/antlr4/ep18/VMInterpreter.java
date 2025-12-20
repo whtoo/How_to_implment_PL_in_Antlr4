@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.teachfx.antlr4.ep18.parser.VMAssemblerLexer;
 import org.teachfx.antlr4.ep18.parser.VMAssemblerParser;
 import org.teachfx.antlr4.ep18.stackvm.*;
+import org.teachfx.antlr4.ep18.stackvm.ABIConvention.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -272,8 +273,7 @@ public class VMInterpreter {
                     operands[++sp] = (float) v;
                     break;
                 case BytecodeDefinition.INSTR_RET:
-                    StackFrame fr = calls[fp--];
-                    ip = fr.getReturnAddress();
+                    handleReturn();
                     break;
                 case BytecodeDefinition.INSTR_BR:
                     ip = getIntOperand();
@@ -307,20 +307,32 @@ public class VMInterpreter {
                     break;
                 case BytecodeDefinition.INSTR_LOAD:
                     int loadAddr = getIntOperand();
-                    // 添加边界检查
-                    if (loadAddr >= 0 && loadAddr < calls[fp].getLocals().length) {
-                        operands[++sp] = calls[fp].getLocals()[loadAddr];
+                    StackFrame currentFrame = calls[fp];
+                    // 首先检查是否是局部变量
+                    if (loadAddr >= 0 && loadAddr < currentFrame.getLocals().length) {
+                        operands[++sp] = currentFrame.getLocals()[loadAddr];
+                    }
+                    // 然后检查是否是参数（当loadAddr在参数范围内且不是局部变量时）
+                    else if (loadAddr >= 0 && currentFrame.getParameters() != null &&
+                             loadAddr < currentFrame.getParameters().length) {
+                        operands[++sp] = currentFrame.getParameters()[loadAddr];
                     } else {
                         operands[++sp] = null; // 或者抛出异常
                     }
                     break;
                 case BytecodeDefinition.INSTR_STORE:
                     int storeAddr = getIntOperand();
-                    // 添加边界检查
-                    if (storeAddr >= 0 && storeAddr < calls[fp].getLocals().length) {
-                        calls[fp].getLocals()[storeAddr] = operands[sp--];
+                    StackFrame currentFrameStore = calls[fp];
+                    // 首先检查是否是局部变量
+                    if (storeAddr >= 0 && storeAddr < currentFrameStore.getLocals().length) {
+                        currentFrameStore.getLocals()[storeAddr] = operands[sp--];
+                    }
+                    // 然后检查是否是参数（当storeAddr在参数范围内且不是局部变量时）
+                    else if (storeAddr >= 0 && currentFrameStore.getParameters() != null &&
+                             storeAddr < currentFrameStore.getParameters().length) {
+                        currentFrameStore.getParameters()[storeAddr] = operands[sp--];
                     } else {
-                        sp--; // 丢弃值但不存储
+                        sp--; // 丢弃值
                     }
                     break;
                 case BytecodeDefinition.INSTR_GLOAD:
@@ -375,19 +387,117 @@ public class VMInterpreter {
 
     protected void call(int functionConstPoolIndex) {
         FunctionSymbol fs = (FunctionSymbol) constPool[functionConstPoolIndex];
-        StackFrame f = new StackFrame(fs, ip);
-        calls[++fp] = f;
-        // 将参数存储到栈帧的局部变量区域（兼容原有行为）
-        // 只有当函数有局部变量时才执行存储操作
-        int localsToFill = Math.min(fs.nargs, fs.nlocals);
-        for (int a = localsToFill - 1; a >= 0; a--) {
-            f.getLocals()[a] = operands[sp--];
+
+        // 创建符合ABI规范的调用上下文
+        Object[] arguments = extractArgumentsFromStack(fs);
+        StackFrame frame = new StackFrame(fs, ip, null); // 使用新的构造函数，保持previousFrame为null以兼容
+
+        // 创建调用上下文并验证
+        CallContext callContext = new CallContext(fs, ip, arguments, frame);
+        if (!callContext.validate()) {
+            throw new RuntimeException("ABI validation failed for call to " + fs.name);
         }
-        // 如果参数数量超过局部变量数量，丢弃剩余参数
-        for (int a = fs.nargs - localsToFill - 1; a >= 0; a--) {
-            sp--; // 丢弃参数
+
+        // 保存当前栈深度（用于返回时清理参数）
+        int savedStackDepth = sp;
+        if (fp >= 0 && calls[fp] != null) {
+            calls[fp].setDebugData("savedStackDepth", savedStackDepth);
         }
+
+        // 将参数存储到栈帧中
+        storeArgumentsInFrame(frame, arguments);
+
+        // 压入新的栈帧
+        calls[++fp] = frame;
+
+        // 跳转到函数入口地址
         ip = fs.address;
+
+        if (trace) {
+            System.out.println("[ABI] CALL " + fs.name + " with " + fs.nargs + " args, saved stack depth=" + savedStackDepth);
+        }
+    }
+
+    /**
+     * 从操作数栈中提取函数参数（符合ABI规范）
+     */
+    private Object[] extractArgumentsFromStack(FunctionSymbol function) {
+        if (function.nargs <= 0) {
+            return new Object[0];
+        }
+
+        Object[] args = new Object[function.nargs];
+        // 参数从右到左压栈，所以从栈顶开始反向提取
+        for (int i = function.nargs - 1; i >= 0; i--) {
+            if (sp < 0) {
+                throw new RuntimeException("Stack underflow while extracting arguments for " + function.name);
+            }
+            args[i] = operands[sp--];
+        }
+        return args;
+    }
+
+    /**
+     * 将参数存储到栈帧中（符合ABI规范）
+     */
+    private void storeArgumentsInFrame(StackFrame frame, Object[] arguments) {
+        FunctionSymbol function = frame.getSymbol();
+
+        // 根据ABI规范，参数可以存储在局部变量区或专门的参数区
+        // 当前实现：所有参数存储在局部变量数组中（如果空间足够）
+        // 如果局部变量不足，剩余参数存储在参数数组中
+        int localsToFill = Math.min(function.nargs, function.nlocals);
+        for (int i = 0; i < localsToFill; i++) {
+            frame.getLocals()[i] = arguments[i];
+        }
+
+        // 剩余参数存储在参数数组中
+        if (function.nargs > localsToFill && frame.getParameters() != null) {
+            for (int i = localsToFill; i < function.nargs; i++) {
+                frame.getParameters()[i - localsToFill] = arguments[i];
+            }
+        }
+    }
+
+    /**
+     * ABI兼容的函数返回处理
+     */
+    protected void handleReturn() {
+        if (fp < 0) {
+            throw new RuntimeException("RET called without active frame");
+        }
+
+        StackFrame frame = calls[fp--];
+        int returnAddress = frame.getReturnAddress();
+
+        // 获取返回值（如果有）
+        Object returnValue = null;
+        if (sp >= 0) {
+            returnValue = operands[sp--]; // 返回值应在栈顶
+        }
+
+        // 获取保存的栈深度并恢复栈状态
+        Integer savedDepth = null;
+        if (fp >= 0 && calls[fp] != null) {
+            savedDepth = (Integer) calls[fp].getDebugData("savedStackDepth");
+        }
+
+        // 清理参数：恢复到调用前的栈深度
+        if (savedDepth != null) {
+            sp = savedDepth;
+        }
+
+        // 压入返回值（如果有）
+        if (returnValue != null) {
+            operands[++sp] = returnValue;
+        }
+
+        // 恢复程序计数器
+        ip = returnAddress;
+
+        if (trace) {
+            System.out.println("[ABI] RET to " + returnAddress + ", return value=" + returnValue);
+        }
     }
 
     protected int getIntOperand() {

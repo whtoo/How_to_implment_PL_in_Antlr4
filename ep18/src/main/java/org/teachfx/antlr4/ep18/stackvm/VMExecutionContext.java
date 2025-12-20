@@ -33,6 +33,10 @@ public class VMExecutionContext {
     private java.util.List<StructValue> structTable;
     private int nextStructId;
 
+    // 异常处理
+    private VMExceptionHandler exceptionHandler;
+    private VMExceptionMonitor exceptionMonitor;
+
     /**
      * 构造函数
      * @param vm 虚拟机实例
@@ -79,6 +83,29 @@ public class VMExecutionContext {
         this.heapAllocPointer = heapAllocPointer;
         this.structTable = structTable;
         this.nextStructId = nextStructId;
+    }
+
+    /**
+     * 无参构造函数（用于测试）
+     * 创建默认的VM执行上下文
+     */
+    public VMExecutionContext() {
+        this(
+            new CymbolStackVM(VMConfig.builder().build()),
+            VMConfig.builder().build(),
+            new VMStats(),
+            0,
+            new int[1024],
+            0,
+            new int[1024],
+            new int[256],
+            new StackFrame[128],
+            0,
+            false,
+            0,
+            new java.util.ArrayList<>(),
+            0
+        );
     }
 
     /**
@@ -404,5 +431,42 @@ public class VMExecutionContext {
         structTable.add(struct);
         int structId = nextStructId++;
         return structId;
+    }
+
+    // 异常处理相关方法
+
+    /**
+     * 获取异常处理器
+     */
+    public VMExceptionHandler getExceptionHandler() {
+        return exceptionHandler;
+    }
+
+    /**
+     * 设置异常处理器
+     */
+    public void setExceptionHandler(VMExceptionHandler exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
+    }
+
+    /**
+     * 获取异常监控器
+     */
+    public VMExceptionMonitor getExceptionMonitor() {
+        return exceptionMonitor;
+    }
+
+    /**
+     * 设置异常监控器
+     */
+    public void setExceptionMonitor(VMExceptionMonitor exceptionMonitor) {
+        this.exceptionMonitor = exceptionMonitor;
+    }
+
+    /**
+     * 获取栈大小
+     */
+    public int getStackSize() {
+        return config.getStackSize();
     }
 }

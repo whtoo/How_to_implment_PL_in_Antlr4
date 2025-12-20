@@ -1,6 +1,6 @@
 # EP18 TDD重构优化方案
 
-**文档版本**: v2.3
+**文档版本**: v2.4
 **创建日期**: 2025-12-19
 **最后更新**: 2025-12-20
 **制定者**: Claude Code
@@ -8,7 +8,54 @@
 
 ---
 
-## 1. 计划执行追踪区域
+## 1. 项目执行图
+
+```mermaid
+graph TD
+    Start([项目启动]) --> Phase1[阶段1: 基础设施重构]
+    Start --> RiskMgmt[风险管理]
+    
+    Phase1 --> TASK11[TASK-1.1<br/>测试框架升级]
+    Phase1 --> TASK12[TASK-1.2<br/>构建工具优化]
+    Phase1 --> TASK13[TASK-1.3<br/>性能基准建立]
+    Phase1 --> TASK14[TASK-1.4<br/>测试基础设施]
+    Phase1 --> TASK15[TASK-1.5<br/>文档更新]
+    
+    TASK11 --> TASK21[TASK-2.1<br/>指令执行解耦]
+    TASK12 --> TASK22[TASK-2.2<br/>栈帧管理规范化]
+    TASK13 --> TASK23[TASK-2.3<br/>内存访问优化]
+    TASK14 --> TASK24[TASK-2.4<br/>编译错误修复]
+    TASK15 --> TASK25[TASK-2.5<br/>Checkstyle修正]
+    
+    TASK21 --> TASK31[TASK-3.1<br/>算术指令优化]
+    TASK22 --> TASK32[TASK-3.2<br/>控制流指令重构]
+    TASK23 --> TASK33[TASK-3.3<br/>内存指令增强]
+    
+    TASK31 --> TASK41[TASK-4.1<br/>调试器实现]
+    TASK32 --> TASK42[TASK-4.2<br/>垃圾回收优化]
+    TASK33 --> TASK43[TASK-4.3<br/>JIT编译探索]
+    
+    TASK41 --> ExceptionHandling[异常处理机制完善]
+    TASK42 --> ExceptionHandling
+    TASK43 --> ExceptionHandling
+    
+    ExceptionHandling --> FinalDelivery[最终交付]
+    RiskMgmt --> FinalDelivery
+    
+    %% 状态样式
+    classDef completed fill:#90EE90,stroke:#228B22,color:#000
+    classDef inProgress fill:#FFD700,stroke:#FF8C00,color:#000
+    classDef pending fill:#FFB6C1,stroke:#DC143C,color:#000
+    classDef risk fill:#FFA07A,stroke:#FF4500,color:#000
+    
+    %% 应用样式
+    class TASK11,TASK12,TASK13,TASK14,TASK15,TASK21,TASK22,TASK23,TASK24,TASK25,TASK31,TASK32,TASK33 completed
+    class ExceptionHandling inProgress
+    class TASK41,TASK42,TASK43 pending
+    class RiskMgmt risk
+```
+
+## 2. 计划执行追踪区域
 
 | 任务ID | 描述 | 状态 | 优先级 | 负责人 | 截止日期 | 备注 |
 |--------|------|------|--------|--------|----------|------|
@@ -28,6 +75,7 @@
 | TASK-4.1 | 调试器实现（VMDebugger、断点管理） | ⏸️ 未开始 | 中 | - | 2025-02-01 | 高级功能实现 |
 | TASK-4.2 | 垃圾回收优化（GC算法、多策略GC） | ⏸️ 未开始 | 中 | - | 2025-02-10 | 高级功能实现 |
 | TASK-4.3 | JIT编译探索（热点代码检测、简单JIT） | ⏸️ 未开始 | 低 | - | 2025-02-20 | 探索性功能 |
+| TASK-5.1 | 异常处理机制完善（异常层次、恢复策略） | 🔄 进行中 | 高 | Claude Code | 2025-12-21 | 新增异常类型、错误恢复、日志记录 |
 
 ---
 
@@ -74,7 +122,7 @@
 2. **测试覆盖**: 测试覆盖率不足，缺乏边界测试（部分改进）
 3. **性能瓶颈**: 关键路径存在性能优化空间
 4. ~~**规范符合**: 与OpenSpecKit和ABI规范存在差异~~ ✅ 已符合规范
-5. **错误处理**: 异常处理机制不完善（部分改进）
+5. **错误处理**: 异常处理机制不完善（正在进行系统性完善）
 
 ### 2.3 技术债务清单
 | 债务项 | 严重程度 | 影响范围 | 预估工作量 | 状态 |
@@ -86,6 +134,7 @@
 | 文档不完整 | 低 | 维护性 | 1-2天 | 🔄 进行中 |
 | 浮点指令未重构 | 低 | 算术运算 | 1天 | ⏸️ 待处理 |
 | 调试器功能缺失 | 中 | 开发体验 | 3-4天 | ⏸️ 待处理 |
+| 异常处理不完善 | 高 | 错误处理 | 2-3天 | 🔄 进行中 |
 
 ---
 
@@ -304,6 +353,85 @@
   - JIT编译正确性保证
   - 性能提升可测量
 
+### 阶段5：异常处理机制完善（1-2周）
+**目标**: 建立完善的异常处理体系，提高系统健壮性
+
+#### 任务5.1：异常层次结构完善
+- **目标**: 建立完整的异常类型体系
+- **子任务**:
+  1. 完善异常继承层次（VMException → 具体异常类型）
+  2. 新增内存异常（VMMemoryException, VMMemoryAccessException）
+  3. 新增指令异常（VMInstructionException, VMInvalidOpcodeException）
+  4. 新增运行时异常（VMRuntimeException, VMStackUnderflowException）
+  5. 实现异常链和错误码系统
+
+- **测试策略**:
+  - 单元测试每个异常类型的正确性
+  - 集成测试异常传播机制
+  - 边界测试异常触发条件
+
+- **验收标准**:
+  - 异常层次结构清晰完整
+  - 每种错误场景都有对应异常类型
+  - 异常信息包含足够的调试上下文
+
+#### 任务5.2：错误恢复策略实现
+- **目标**: 实现多层次的错误恢复机制
+- **子任务**:
+  1. 实现异常处理器注册机制（VMExceptionHandler）
+  2. 添加可恢复异常的处理策略
+  3. 实现虚拟机状态回滚机制
+  4. 添加错误日志和诊断信息收集
+  5. 支持用户自定义异常处理器
+
+- **测试策略**:
+  - 单元测试异常处理器功能
+  - 集成测试错误恢复流程
+  - 压力测试异常处理性能
+
+- **验收标准**:
+  - 异常可被正确捕获和处理
+  - 系统能从可恢复错误中恢复
+  - 异常处理不影响正常执行性能
+
+#### 任务5.3：异常监控和诊断
+- **目标**: 建立异常监控和诊断体系
+- **子任务**:
+  1. 实现异常统计和监控（VMExceptionMonitor）
+  2. 添加异常模式分析和预警
+  3. 实现运行时诊断工具（VMDiagnosticTool）
+  4. 添加异常历史记录和趋势分析
+  5. 支持远程异常报告和调试
+
+- **测试策略**:
+  - 单元测试监控工具功能
+  - 集成测试诊断流程
+  - 验证异常报告的准确性
+
+- **验收标准**:
+  - 异常信息被正确记录和分析
+  - 能识别异常模式和趋势
+  - 诊断工具提供有用的调试信息
+
+#### 任务5.4：安全性增强
+- **目标**: 通过异常处理增强系统安全性
+- **子任务**:
+  1. 实现安全边界检查（内存访问、栈操作）
+  2. 添加恶意代码检测和防护
+  3. 实现资源使用限制和监控
+  4. 添加安全审计日志
+  5. 支持安全策略配置
+
+- **测试策略**:
+  - 单元测试安全检查机制
+  - 渗透测试安全边界
+  - 验证安全日志的完整性
+
+- **验收标准**:
+  - 系统能检测和阻止恶意操作
+  - 安全事件被正确记录
+  - 安全检查不影响正常性能
+
 ---
 
 ## 4. 测试策略
@@ -452,7 +580,110 @@ void additionIsCommutative(@ForAll int a, @ForAll int b) {
 | 栈帧管理 | 95% | 90% | 100% |
 | 内存管理 | 90% | 85% | 100% |
 | 工具类 | 90% | 85% | 100% |
+| 异常处理 | 98% | 95% | 100% |
 | **总体** | **93%** | **88%** | **100%** |
+
+### 4.4 异常处理测试策略
+
+#### 异常测试框架
+```java
+@Test
+@DisplayName("Should throw VMDivisionByZeroException when dividing by zero")
+void testDivisionByZeroException() {
+    // Given
+    VMExecutionContext context = createContext();
+    context.push(10);
+    context.push(0);
+    
+    IDivInstruction instruction = new IDivInstruction();
+    
+    // When & Then
+    VMDivisionByZeroException exception = assertThrows(
+        VMDivisionByZeroException.class,
+        () -> instruction.execute(context, 0)
+    );
+    
+    assertThat(exception.getPC()).isEqualTo(context.getProgramCounter());
+    assertThat(exception.getInstruction()).isEqualTo("idiv");
+    assertThat(exception.getMessage()).contains("Division by zero");
+}
+
+@Test
+@DisplayName("Should recover from arithmetic overflow")
+void testArithmeticOverflowRecovery() {
+    // Given
+    VMExceptionHandler handler = new VMExceptionHandler();
+    handler.registerHandler(VMOverflowException.class, (ex, ctx) -> {
+        ctx.push(0); // 溢出时返回0
+        return true; // 表示异常已处理
+    });
+    
+    VMExecutionContext context = createContext();
+    context.setExceptionHandler(handler);
+    context.push(Integer.MAX_VALUE);
+    context.push(1);
+    
+    // When
+    IAddInstruction instruction = new IAddInstruction();
+    instruction.execute(context, 0);
+    
+    // Then
+    assertThat(context.pop()).isEqualTo(0);
+}
+```
+
+#### 异常监控测试
+```java
+@Test
+@DisplayName("Should monitor and analyze exception patterns")
+void testExceptionMonitoring() {
+    // Given
+    VMExceptionMonitor monitor = new VMExceptionMonitor();
+    VMExecutionContext context = createContext();
+    context.setExceptionMonitor(monitor);
+    
+    // When - 触发多个相同类型的异常
+    for (int i = 0; i < 5; i++) {
+        try {
+            context.push(Integer.MAX_VALUE);
+            context.push(1);
+            new IAddInstruction().execute(context, 0);
+        } catch (VMOverflowException e) {
+            // Expected
+        }
+    }
+    
+    // Then
+    VMExceptionStatistics stats = monitor.getStatistics();
+    assertThat(stats.getExceptionCount(VMOverflowException.class)).isEqualTo(5);
+    assertThat(stats.getMostFrequentException()).isEqualTo(VMOverflowException.class);
+    assertThat(stats.getExceptionRate()).isGreaterThan(0);
+}
+```
+
+#### 安全边界测试
+```java
+@Test
+@DisplayName("Should prevent stack buffer overflow")
+void testStackBufferOverflowProtection() {
+    // Given
+    VMConfig config = new VMConfig();
+    config.setStackSize(100);
+    CymbolStackVM vm = new CymbolStackVM(config);
+    
+    // When & Then - 尝试超出栈容量
+    for (int i = 0; i < 100; i++) {
+        vm.push(i);
+    }
+    
+    VMStackOverflowException exception = assertThrows(
+        VMStackOverflowException.class,
+        () -> vm.push(101)
+    );
+    
+    assertThat(exception.getMessage()).contains("Stack overflow");
+}
+```
 
 ---
 
@@ -515,15 +746,131 @@ public class PerformanceMetrics {
     private long heapAllocations;
     private long stackOperations;
 
+    // 异常处理统计
+    private long totalExceptions;
+    private long recoveredExceptions;
+    private long fatalExceptions;
+    private Map<Class<? extends VMException>, Long> exceptionCounts;
+
     // 性能指标
     private double instructionsPerSecond;
     private double memoryBandwidth;
+    private double exceptionRate;
+    private double recoveryRate;
 
     // 收集性能数据
     public void recordInstruction(int opcode, long executionTime) {
         instructionCounts[opcode]++;
         instructionTimes[opcode] += executionTime;
     }
+
+    // 收集异常数据
+    public void recordException(VMException exception, boolean recovered) {
+        totalExceptions++;
+        exceptionCounts.merge(exception.getClass(), 1L, Long::sum);
+        
+        if (recovered) {
+            recoveredExceptions++;
+        } else {
+            fatalExceptions++;
+        }
+        
+        updateExceptionRates();
+    }
+
+    private void updateExceptionRates() {
+        long totalInstructions = Arrays.stream(instructionCounts).sum();
+        if (totalInstructions > 0) {
+            exceptionRate = (double) totalExceptions / totalInstructions;
+            recoveryRate = totalExceptions > 0 ? (double) recoveredExceptions / totalExceptions : 0.0;
+        }
+    }
+}
+
+/**
+ * 异常监控器
+ */
+public class VMExceptionMonitor {
+    private final Map<Class<? extends VMException>, ExceptionStats> statsMap;
+    private final List<VMException> recentExceptions;
+    private final AtomicLong totalExceptionCount;
+    
+    public VMExceptionMonitor() {
+        this.statsMap = new ConcurrentHashMap<>();
+        this.recentExceptions = new CopyOnWriteArrayList<>();
+        this.totalExceptionCount = new AtomicLong(0);
+    }
+    
+    public void recordException(VMException exception) {
+        totalExceptionCount.incrementAndGet();
+        
+        // 记录异常统计
+        statsMap.computeIfAbsent(exception.getClass(), k -> new ExceptionStats())
+                .recordOccurrence();
+        
+        // 添加到最近异常列表
+        recentExceptions.add(exception);
+        if (recentExceptions.size() > 1000) {
+            recentExceptions.remove(0);
+        }
+        
+        // 检查异常模式
+        checkExceptionPatterns(exception);
+    }
+    
+    private void checkExceptionPatterns(VMException exception) {
+        // 检查是否频繁发生相同类型的异常
+        ExceptionStats stats = statsMap.get(exception.getClass());
+        if (stats != null && stats.getRecentRate() > 0.1) { // 10%的异常率
+            // 触发预警
+            triggerAlert("High exception rate for " + exception.getClass().getSimpleName());
+        }
+    }
+    
+    public VMExceptionStatistics getStatistics() {
+        return new VMExceptionStatistics(statsMap, totalExceptionCount.get(), recentExceptions);
+    }
+}
+
+/**
+ * 异常处理器管理器
+ */
+public class VMExceptionHandler {
+    private final Map<Class<? extends VMException>, ExceptionHandler> handlers;
+    private final ExceptionHandler defaultHandler;
+    
+    public VMExceptionHandler() {
+        this.handlers = new ConcurrentHashMap<>();
+        this.defaultHandler = (exception, context) -> false; // 默认不处理
+    }
+    
+    public void registerHandler(Class<? extends VMException> exceptionType, 
+                               ExceptionHandler handler) {
+        handlers.put(exceptionType, handler);
+    }
+    
+    public boolean handleException(VMException exception, VMExecutionContext context) {
+        ExceptionHandler handler = handlers.getOrDefault(exception.getClass(), defaultHandler);
+        
+        try {
+            return handler.handle(exception, context);
+        } catch (Exception e) {
+            // 异常处理器本身出错，记录日志并返回false
+            System.err.println("Exception handler failed: " + e.getMessage());
+            return false;
+        }
+    }
+}
+
+@FunctionalInterface
+public interface ExceptionHandler {
+    /**
+     * 处理异常
+     * @param exception 异常
+     * @param context 执行上下文
+     * @return true如果异常被成功处理，false如果需要继续传播
+     */
+    boolean handle(VMException exception, VMExecutionContext context);
 }
 ```
 
@@ -538,10 +885,42 @@ EP18 性能仪表板
 │   ├── 堆分配: 45.6 MB
 │   ├── 栈操作: 2.3M 次
 │   └── 缓存命中率: 96.7%
+├── 异常处理统计
+│   ├── 总异常数: 23
+│   ├── 异常率: 0.002%
+│   ├── 最严重异常: VMOverflowException (12次)
+│   ├── 恢复成功率: 91.3%
+│   └── 安全拦截: 3次
 └── 性能指标
     ├── 执行速度: 12.3M 指令/秒
     ├── 内存带宽: 45.2 MB/秒
-    └── GC暂停: 0.5% 时间
+    ├── GC暂停: 0.5% 时间
+    └── 异常处理开销: <0.1%
+```
+
+#### 异常监控仪表板
+```
+EP18 异常监控仪表板
+├── 异常概览
+│   ├── 当前异常率: 0.002%
+│   ├── 异常趋势: ↓12% (与上周相比)
+│   ├── 最严重异常: VMOverflowException
+│   └── 最新异常: VMDivisionByZeroException (2分钟前)
+├── 异常分类统计
+│   ├── 算术异常: 45% (VMOverflowException, VMDivisionByZeroException)
+│   ├── 内存异常: 25% (VMMemoryAccessException)
+│   ├── 栈异常: 20% (VMStackOverflowException, VMStackUnderflowException)
+│   └── 其他: 10% (VMInstructionException, VMRuntimeException)
+├── 异常处理性能
+│   ├── 平均处理时间: 0.05ms
+│   ├── 恢复成功率: 91.3%
+│   ├── 异常传播深度: 平均1.2层
+│   └── 性能影响: <0.1%
+└── 安全监控
+    ├── 恶意操作拦截: 3次
+    ├── 资源超限: 0次
+    ├── 访问违规: 1次
+    └── 安全检查通过率: 99.8%
 ```
 
 ---
@@ -599,6 +978,10 @@ EP18 性能仪表板
 - [ ] 性能达到基准目标
 - [ ] 所有测试通过率 100%
 - [ ] 文档完整性和准确性 100%
+- [ ] 异常处理覆盖率 ≥ 98%
+- [ ] 异常恢复成功率 ≥ 90%
+- [ ] 安全检查通过率 ≥ 99.5%
+- [ ] 异常监控覆盖率 100%
 
 ### 7.2 业务成功标准
 - [ ] 开发效率提升 30%
@@ -660,11 +1043,20 @@ EP18 性能仪表板
 - [ ] 垃圾回收优化完成
 - [ ] JIT编译探索完成
 
-### 最终交付（第13周）
+### 里程碑5：异常处理机制完善（第14周结束）
+- [ ] 异常层次结构完善
+- [ ] 错误恢复策略实现
+- [ ] 异常监控和诊断完成
+- [ ] 安全性增强完成
+- [ ] 异常处理测试覆盖率达标
+
+### 最终交付（第15周）
 - [ ] 所有重构任务完成
 - [ ] 所有测试通过
 - [ ] 文档更新完成
 - [ ] 性能达标验证
+- [ ] 异常处理机制验收
+- [ ] 安全性和稳定性验证
 
 ---
 
@@ -729,6 +1121,10 @@ EP18 性能仪表板
 - [ ] 文档更新完成
 - [ ] 代码审查通过
 - [ ] 用户验收测试通过
+- [ ] 异常处理机制验证
+- [ ] 安全性测试通过
+- [ ] 异常监控功能验证
+- [ ] 错误恢复能力测试
 
 ---
 
@@ -740,10 +1136,13 @@ EP18 性能仪表板
 - EP18_核心设计文档.md
 
 **下一步行动**:
-1. 组建重构团队
-2. 制定详细迭代计划
-3. 开始阶段1实施
-4. 建立定期评审机制
+1. 完善异常处理机制实现
+2. 集成异常监控和诊断工具
+3. 编写异常处理相关测试用例
+4. 验证错误恢复策略
+5. 进行安全性和稳定性测试
+6. 更新相关文档和示例
+7. 建立异常处理最佳实践指南
 
 **成功宣言**:
 > 通过系统的TDD重构，我们将把EP18堆栈式虚拟机打造成为教育领域的标杆项目，为学习编译器构建和虚拟机实现提供最佳实践。

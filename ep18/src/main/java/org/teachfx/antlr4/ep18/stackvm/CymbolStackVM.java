@@ -35,6 +35,10 @@ public class CymbolStackVM {
     // 执行状态
     private boolean running;
     private int programCounter;    // 程序计数器
+
+    // 异常处理
+    private VMExceptionHandler exceptionHandler;
+    private VMExceptionMonitor exceptionMonitor;
     
     /**
      * 构造函数 - 使用配置创建虚拟机实例
@@ -46,6 +50,8 @@ public class CymbolStackVM {
         }
         this.config = config;
         this.stats = new VMStats();
+        this.exceptionHandler = new VMExceptionHandler();
+        this.exceptionMonitor = new VMExceptionMonitor();
         initializeVM();
     }
     
@@ -251,18 +257,72 @@ public class CymbolStackVM {
                 heapAllocPointer, structTable, nextStructId
             );
 
-            // 执行指令
-            instr.execute(context, operand);
+            // 设置异常处理器和监控器
+            context.setExceptionHandler(exceptionHandler);
+            context.setExceptionMonitor(exceptionMonitor);
 
-            // 更新VM状态
-            programCounter = context.getProgramCounter();
-            stackPointer = context.getStackPointer();
-            framePointer = context.getFramePointer();
-            heapAllocPointer = context.getHeapAllocPointer();
-            nextStructId = context.getNextStructId();
+            // 执行指令（带异常处理）
+            try {
+                instr.execute(context, operand);
+
+                // 更新VM状态
+                programCounter = context.getProgramCounter();
+                stackPointer = context.getStackPointer();
+                framePointer = context.getFramePointer();
+                heapAllocPointer = context.getHeapAllocPointer();
+                nextStructId = context.getNextStructId();
+            } catch (VMException e) {
+                // 记录异常到监控器
+                if (exceptionMonitor != null) {
+                    exceptionMonitor.recordException(e, false, 0);
+                }
+
+                // 尝试使用异常处理器处理
+                boolean handled = false;
+                if (exceptionHandler != null) {
+                    handled = exceptionHandler.handleException(e, context);
+                }
+
+                // 如果异常未被处理，重新抛出
+                if (!handled) {
+                    throw e;
+                }
+
+                // 异常已处理，更新VM状态
+                programCounter = context.getProgramCounter();
+                stackPointer = context.getStackPointer();
+                framePointer = context.getFramePointer();
+                heapAllocPointer = context.getHeapAllocPointer();
+                nextStructId = context.getNextStructId();
+            }
         } else {
             // 暂时回退到原有的switch实现（向后兼容）
-            executeInstructionLegacy(instruction);
+            try {
+                executeInstructionLegacy(instruction);
+            } catch (VMException e) {
+                // 记录异常到监控器
+                if (exceptionMonitor != null) {
+                    exceptionMonitor.recordException(e, false, 0);
+                }
+
+                // 尝试使用异常处理器处理
+                boolean handled = false;
+                if (exceptionHandler != null) {
+                    VMExecutionContext context = new VMExecutionContext(
+                        this, config, stats, programCounter, stack, stackPointer,
+                        heap, locals, callStack, framePointer, config.isTraceEnabled(),
+                        heapAllocPointer, structTable, nextStructId
+                    );
+                    context.setExceptionHandler(exceptionHandler);
+                    context.setExceptionMonitor(exceptionMonitor);
+                    handled = exceptionHandler.handleException(e, context);
+                }
+
+                // 如果异常未被处理，重新抛出
+                if (!handled) {
+                    throw e;
+                }
+            }
         }
     }
 
@@ -400,9 +460,9 @@ public class CymbolStackVM {
                 executePrint();
                 break;
             default:
-                throw new UnsupportedOperationException(
-                    "Unsupported opcode: 0x" + Integer.toHexString(opcode) +
-                    " at PC=" + (programCounter - 1));
+                throw new VMInvalidOpcodeException(
+                    "Unsupported opcode: 0x" + Integer.toHexString(opcode),
+                    programCounter - 1, opcode);
         }
     }
 
@@ -570,7 +630,7 @@ public class CymbolStackVM {
     private void executeLoad(int instruction) {
         int index = extractOperand(instruction);
         if (index < 0 || index >= locals.length) {
-            throw new IndexOutOfBoundsException("Local variable index out of bounds: " + index);
+            throw VMMemoryAccessException.outOfBounds(programCounter, "LOAD", index, 0, locals.length - 1, VMMemoryException.MemoryAccessType.READ);
         }
         push(locals[index]);
     }
@@ -578,7 +638,7 @@ public class CymbolStackVM {
     private void executeStore(int instruction) {
         int index = extractOperand(instruction);
         if (index < 0 || index >= locals.length) {
-            throw new IndexOutOfBoundsException("Local variable index out of bounds: " + index);
+            throw VMMemoryAccessException.outOfBounds(programCounter, "STORE", index, 0, locals.length - 1, VMMemoryException.MemoryAccessType.WRITE);
         }
         int value = pop();
         locals[index] = value;
@@ -587,7 +647,7 @@ public class CymbolStackVM {
     private void executeGload(int instruction) {
         int address = extractOperand(instruction);
         if (address < 0 || address >= heap.length) {
-            throw new IndexOutOfBoundsException("Global memory address out of bounds: " + address);
+            throw VMMemoryAccessException.outOfBounds(programCounter, "GLOAD", address, 0, heap.length - 1, VMMemoryException.MemoryAccessType.READ);
         }
         push(heap[address]);
     }
@@ -595,7 +655,7 @@ public class CymbolStackVM {
     private void executeGstore(int instruction) {
         int address = extractOperand(instruction);
         if (address < 0 || address >= heap.length) {
-            throw new IndexOutOfBoundsException("Global memory address out of bounds: " + address);
+            throw VMMemoryAccessException.outOfBounds(programCounter, "GSTORE", address, 0, heap.length - 1, VMMemoryException.MemoryAccessType.WRITE);
         }
         int value = pop();
         heap[address] = value;
@@ -610,7 +670,7 @@ public class CymbolStackVM {
 
         // 检查null引用（0表示null）
         if (structRef == 0) {
-            throw new NullPointerException("Null struct reference in FLOAD");
+            throw VMMemoryAccessException.nullPointer(programCounter, "FLOAD", VMMemoryException.MemoryAccessType.READ);
         }
 
         // 判断structRef是结构体ID还是堆地址
@@ -626,11 +686,11 @@ public class CymbolStackVM {
             // 堆地址：回退到原有堆访问逻辑（保持兼容性）
             int actualAddress = structRef + fieldOffset;
             if (actualAddress < 0 || actualAddress >= heap.length) {
-                throw new IndexOutOfBoundsException("Struct field address out of bounds: " + actualAddress);
+                throw VMMemoryAccessException.outOfBounds(programCounter, "FLOAD", actualAddress, 0, heap.length - 1, VMMemoryException.MemoryAccessType.READ);
             }
             push(heap[actualAddress]);
         } else {
-            throw new IndexOutOfBoundsException("Invalid struct reference: " + structRef);
+            throw new VMMemoryAccessException("Invalid struct reference: " + structRef, programCounter, "FLOAD", (long)structRef, 0, VMMemoryException.MemoryAccessType.READ);
         }
     }
 
@@ -644,7 +704,7 @@ public class CymbolStackVM {
 
         // 检查null引用（0表示null）
         if (structRef == 0) {
-            throw new NullPointerException("Null struct reference in FSTORE");
+            throw VMMemoryAccessException.nullPointer(programCounter, "FSTORE", VMMemoryException.MemoryAccessType.WRITE);
         }
 
         // 判断structRef是结构体ID还是堆地址
@@ -659,11 +719,11 @@ public class CymbolStackVM {
             // 堆地址：回退到原有堆访问逻辑（保持兼容性）
             int actualAddress = structRef + fieldOffset;
             if (actualAddress < 0 || actualAddress >= heap.length) {
-                throw new IndexOutOfBoundsException("Struct field address out of bounds: " + actualAddress);
+                throw VMMemoryAccessException.outOfBounds(programCounter, "FSTORE", actualAddress, 0, heap.length - 1, VMMemoryException.MemoryAccessType.WRITE);
             }
             heap[actualAddress] = value;
         } else {
-            throw new IndexOutOfBoundsException("Invalid struct reference: " + structRef);
+            throw new VMMemoryAccessException("Invalid struct reference: " + structRef, programCounter, "FSTORE", (long)structRef, 0, VMMemoryException.MemoryAccessType.WRITE);
         }
     }
 
@@ -685,7 +745,7 @@ public class CymbolStackVM {
     private void executeRet() {
         // RET指令：从栈帧恢复返回地址
         if (framePointer < 0) {
-            throw new IllegalStateException("RET called without active frame");
+            throw new VMStackUnderflowException("RET called without active frame", programCounter, "RET");
         }
         StackFrame frame = callStack[framePointer--];
         programCounter = frame.getReturnAddress();
@@ -760,29 +820,29 @@ public class CymbolStackVM {
      */
     protected void push(int value) {
         if (stackPointer >= stack.length) {
-            throw new StackOverflowError("Stack overflow");
+            throw new VMStackOverflowException("Stack overflow at PC=" + programCounter, programCounter, "PUSH");
         }
         stack[stackPointer++] = value;
     }
-    
+
     /**
      * 从栈弹出值
      * @return 栈顶值
      */
     protected int pop() {
         if (stackPointer <= 0) {
-            throw new IllegalStateException("Stack underflow");
+            throw new VMStackUnderflowException("Stack underflow at PC=" + programCounter, programCounter, "POP");
         }
         return stack[--stackPointer];
     }
-    
+
     /**
      * 查看栈顶值（不弹出）
      * @return 栈顶值
      */
     protected int peek() {
         if (stackPointer <= 0) {
-            throw new IllegalStateException("Stack is empty");
+            throw new VMStackUnderflowException("Stack is empty at PC=" + programCounter, programCounter, "PEEK");
         }
         return stack[stackPointer - 1];
     }
@@ -911,7 +971,7 @@ public class CymbolStackVM {
         StackFrame frame = new StackFrame(dummySymbol, returnAddress);
         // 压入调用栈
         if (framePointer + 1 >= callStack.length) {
-            throw new VMStackOverflowException("Call stack overflow", programCounter, "CALL");
+            throw new VMStackOverflowException("Call stack overflow at PC=" + programCounter, programCounter, "CALL");
         }
         callStack[++framePointer] = frame;
         // 跳转到目标地址
@@ -924,7 +984,7 @@ public class CymbolStackVM {
     public void returnFromFunction() {
         // 从栈帧恢复返回地址
         if (framePointer < 0) {
-            throw new IllegalStateException("RET called without active frame");
+            throw new VMStackUnderflowException("RET called without active frame at PC=" + programCounter, programCounter, "RET");
         }
         StackFrame frame = callStack[framePointer--];
         programCounter = frame.getReturnAddress();
@@ -936,5 +996,37 @@ public class CymbolStackVM {
      */
     public int getProgramCounter() {
         return programCounter;
+    }
+
+    /**
+     * 获取异常处理器
+     * @return 异常处理器
+     */
+    public VMExceptionHandler getExceptionHandler() {
+        return exceptionHandler;
+    }
+
+    /**
+     * 设置异常处理器
+     * @param exceptionHandler 异常处理器
+     */
+    public void setExceptionHandler(VMExceptionHandler exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
+    }
+
+    /**
+     * 获取异常监控器
+     * @return 异常监控器
+     */
+    public VMExceptionMonitor getExceptionMonitor() {
+        return exceptionMonitor;
+    }
+
+    /**
+     * 设置异常监控器
+     * @param exceptionMonitor 异常监控器
+     */
+    public void setExceptionMonitor(VMExceptionMonitor exceptionMonitor) {
+        this.exceptionMonitor = exceptionMonitor;
     }
 }

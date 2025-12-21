@@ -1,7 +1,7 @@
 ---
 name: compiler-ecosystem
 description: 提供完整的编译器开发生态系统支持，包括ANTLR4语法设计、项目构建、测试、调试和部署。整合编译器开发技能、构建脚本、MCP服务器配置和跨平台开发工具。当用户需要进行编译器项目开发、调试、优化或部署时使用此技能。
-allowed-tools: Read, Grep, Glob, Bash, Edit, Write
+allowed-tools: Read, Grep, Glob, Bash, Edit, Write, mcp__cclsp__find_definition, mcp__cclsp__find_references, mcp__cclsp__get_diagnostics, mcp__cclsp__restart_server, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 ---
 
 # 编译器开发生态系统技能

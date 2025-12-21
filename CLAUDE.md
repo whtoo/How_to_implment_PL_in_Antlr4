@@ -92,6 +92,16 @@
 **📍 位置**: `.claude/skills/`
 
 **已建立**:
+- ✅ **编译器开发者** (`.claude/skills/compiler-development/SKILL.md`)
+  - ANTLR4语法分析、语义分析、IR生成
+  - CCLSP和Context7代码智能分析工具
+  - 虚拟机实现和优化技术
+
+- ✅ **编译器开发生态系统** (`.claude/skills/compiler-ecosystem/SKILL.md`)
+  - 完整的编译器开发生态支持
+  - 跨平台构建脚本和MCP配置
+  - 开发工具和环境检查
+
 - ✅ **技术文档编写与重构** (`.claude/skills/technical-documentation-writing-and-refactoring/SKILL.md`)
   - 标准化文档结构
   - TDD任务计划模板
@@ -102,11 +112,17 @@
   - 覆盖率要求 (≥85%)
   - 测试命名和结构规范
 
+- ✅ **CCLSP使用指南** (`.claude/skills/cclsp-usage-guide/SKILL.md`)
+  - CCLSP代码智能分析优先原则
+  - 精确符号查找和引用分析
+  - 诊断检查和服务器管理
+
 **使用时机**: 根据任务类型自动加载
 ```
-用户请求包含 "文档" → 加载技术文档编写 Skill
-用户请求包含 "测试" → 加载测试框架 Skill  
-用户请求包含 "TDD" → 加载技术文档编写 Skill (含TDD章节)
+用户请求包含 "开发"、"调试"、"测试"、"重构"、"TDD" → 加载编译器开发者 Skill (compiler-development)
+用户请求包含 "文档修订"、"设计重构" → 加载技术文档编写与重构 Skill
+用户请求包含 "测试框架规范" → 加载测试框架规范 Skill
+用户请求包含 "代码分析"、"符号查找"、"诊断" → 加载CCLSP使用指南 Skill
 ```
 
 ---
@@ -140,17 +156,17 @@
 
 【步骤 4】加载相关Skill
 ↓
-读取: .claude/skills/testing-framework-specification/SKILL.md
-提取: - 覆盖率要求: ≥85%
-      - 测试结构: Given-When-Then
-      - 命名规范: test{场景}_{期望}_{条件}
+读取: .claude/skills/compiler-development/SKILL.md
+提取: - 编译器开发工作流和最佳实践
+      - 项目结构导航
+      - 调试技巧和常见问题解决
 
 【步骤 5】创建Sub-Agent
 ↓
 使用: docs/master-memory/MAIN.md中的模板
 创建: "EP18_GC实现Agent"
 输入: - EP18专属记忆 (上下文)
-      - 测试框架Skill (质量标准)
+      - 编译器开发Skill (开发标准)
       - 任务描述 (范围和交付物)
 
 【步骤 6】协调执行
@@ -368,7 +384,7 @@ mcp__cclsp__find_references file_path="..." symbol_name="ClassName"
     ↓
 识别: 开发任务
     ↓
-加载: .claude/skills/testing-framework-specification/SKILL.md
+加载: .claude/skills/compiler-development/SKILL.md
 ```
 
 ### Sub-Agent生命周期
@@ -394,8 +410,11 @@ mcp__cclsp__find_references file_path="..." symbol_name="ClassName"
 | **重构总结** | `docs/master-memory/REFACTORING_SUMMARY.md` | 重构成果和对比 |
 | **EP18记忆** | `docs/ep-memory/EP18.md` | 栈式VM专属信息 |
 | **EP21记忆** | `docs/ep-memory/EP21.md` | 高级优化专属信息 |
+| **编译器开发者Skill** | `.claude/skills/compiler-development/SKILL.md` | 编译器开发标准 |
+| **编译器开发生态Skill** | `.claude/skills/compiler-ecosystem/SKILL.md` | 完整开发环境支持 |
 | **文档编写Skill** | `.claude/skills/technical-documentation-writing-and-refactoring/SKILL.md` | 文档标准化指南 |
 | **测试框架Skill** | `.claude/skills/testing-framework-specification/SKILL.md` | 测试开发标准 |
+| **CCLSP使用指南** | `.claude/skills/cclsp-usage-guide/SKILL.md` | 代码智能分析指南 |
 
 ---
 
@@ -412,8 +431,8 @@ mcp__cclsp__find_references file_path="..." symbol_name="ClassName"
 → 查看现有指令实现模式
 
 # 3. Skill加载 (2秒)
-读取 .claude/skills/testing-framework-specification/SKILL.md
-→ 创建测试: testNewInstruction_when{条件}
+读取 .claude/skills/compiler-development/SKILL.md
+→ 遵循编译器开发工作流，创建测试: testNewInstruction_when{条件}
 
 # 4. 实施 (15分钟)
 修改: Instruction.java (添加新opcode)

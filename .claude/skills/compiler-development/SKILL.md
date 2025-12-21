@@ -1,7 +1,7 @@
 ---
 name: compiler-development
 description: 为ANTLR4编译器项目提供专业开发指导，包括语法分析、语义分析、IR生成、代码优化和虚拟机实现。当用户需要编译器开发、ANTLR4语法设计、类型系统实现、中间代码生成或编译器优化相关帮助时使用此技能。
-allowed-tools: Read, Grep, Glob
+allowed-tools: Read, Grep, Glob, mcp__cclsp__find_definition, mcp__cclsp__find_references, mcp__cclsp__get_diagnostics, mcp__cclsp__restart_server, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 ---
 
 # 编译器开发技能

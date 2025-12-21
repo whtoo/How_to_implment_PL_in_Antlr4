@@ -48,7 +48,8 @@
       "mcp__cclsp__find_references",
       "mcp__cclsp__get_diagnostics",
       "Bash(python3:*)",
-      "Skill(technical-documentation-writing-and-refactoring)"
+      "Skill(technical-documentation-writing-and-refactoring)",
+      "WebFetch(domain:mermaid.js.org)"
     ]
   },
   "enabledMcpjsonServers": [

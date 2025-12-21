@@ -394,6 +394,147 @@ CCLSP complements other Claude Code features:
 - **Compiler Development Skill**: CCLSP provides low-level code navigation, skill provides high-level compiler concepts
 - **Maven Build**: CCLSP uses actual project build configuration for accurate analysis
 
+## Module Code Structure Exploration Guide
+
+### Overview
+When exploring the code structure of a specific module (e.g., ep20), follow a systematic approach that prioritizes CCLSP tools for intelligent code analysis, supplemented by minimal use of grep and read for specific tasks. This guide provides a step-by-step workflow for efficiently understanding module architecture.
+
+### Why Prioritize CCLSP?
+CCLSP language servers provide semantic understanding of code that surpasses text-based search:
+- **Semantic accuracy**: Understands Java inheritance, method overloading, and generics
+- **Cross-module awareness**: Works across all 21 Maven modules
+- **Real-time analysis**: Based on actual compilation context
+- **Precise navigation**: Exact symbol definition and reference locations
+
+### Exploration Workflow
+
+#### Step 1: Module Context Establishment
+Before diving into code, establish module context:
+- **Check pom.xml**: Understand dependencies and build configuration
+  ```bash
+  # Minimal read usage for configuration
+  read file_path="ep20/pom.xml" limit=30
+  ```
+- **Identify module role**: Based on episode number (EP1-EP21 progression)
+
+#### Step 2: CCLSP-Driven Code Analysis
+Start with CCLSP tools to get comprehensive code understanding:
+
+1. **Get module diagnostics** - Identify code quality issues:
+   ```bash
+   # Get diagnostics for main source directory
+   mcp__cclsp__get_diagnostics file_path="ep20/src/main/java/org/teachfx/antlr4/ep20/Compiler.java"
+   ```
+
+2. **Find key class definitions** - Locate main entry points:
+   ```bash
+   # Find definition of Compiler class
+   mcp__cclsp__find_definition file_path="ep20/src/main/java/org/teachfx/antlr4/ep20/Compiler.java" symbol_name="Compiler" symbol_kind="class"
+   ```
+
+3. **Explore symbol references** - Understand usage patterns:
+   ```bash
+   # Find all references to SymbolTable
+   mcp__cclsp__find_references file_path="ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/SymbolTable.java" symbol_name="SymbolTable" symbol_kind="class" include_declaration=true
+   ```
+
+4. **Navigate package structure** - Use CCLSP to understand organization:
+   ```bash
+   # Find definitions in specific packages
+   mcp__cclsp__find_definition file_path="ep20/src/main/java/org/teachfx/antlr4/ep20/ast/ASTNode.java" symbol_name="ASTNode" symbol_kind="class"
+   ```
+
+#### Step 3: Targeted grep Usage (Minimal)
+Use grep only for patterns that CCLSP doesn't handle well:
+
+1. **Find specific patterns** in non-Java files:
+   ```bash
+   # Search for specific configuration patterns
+   grep pattern="<artifactId>" glob="ep20/pom.xml" output_mode="content"
+   ```
+
+2. **Locate TODO/FIXME comments**:
+   ```bash
+   # Find development notes
+   grep pattern="TODO|FIXME" path="ep20/src" output_mode="files_with_matches" head_limit=5
+   ```
+
+3. **Search for specific string literals**:
+   ```bash
+   # Find error message patterns
+   grep pattern="error.*message" path="ep20/src/main/java" output_mode="content" -i head_limit=3
+   ```
+
+#### Step 4: Strategic Read Operations
+Use read for specific file examination:
+
+1. **Read key configuration files**:
+   ```bash
+   # Examine grammar file structure
+   read file_path="ep20/src/main/antlr4/org/teachfx/antlr4/ep20/parser/Cymbol.g4" limit=50
+   ```
+
+2. **View test structure**:
+   ```bash
+   # Understand test organization
+   read file_path="ep20/src/test/java/org/teachfx/antlr4/ep20/CompilerTest.java" limit=30
+   ```
+
+3. **Check log configuration**:
+   ```bash
+   # Examine logging setup
+   read file_path="ep20/src/main/resources/log4j2.xml" limit=20
+   ```
+
+### Example: Exploring ep20 Module
+
+#### Quick Exploration Script
+```bash
+# 1. Check module configuration
+read file_path="ep20/pom.xml" limit=20
+
+# 2. Get overall code quality
+mcp__cclsp__get_diagnostics file_path="ep20/src/main/java/org/teachfx/antlr4/ep20/Compiler.java"
+
+# 3. Find main compiler components
+mcp__cclsp__find_definition file_path="ep20/src/main/java/org/teachfx/antlr4/ep20/Compiler.java" symbol_name="compile" symbol_kind="method"
+
+# 4. Explore type system
+mcp__cclsp__find_references file_path="ep20/src/main/java/org/teachfx/antlr4/ep20/symtab/TypeChecker.java" symbol_name="TypeChecker" symbol_kind="class"
+
+# 5. Targeted grep for specific patterns
+grep pattern="implements.*Visitor" path="ep20/src/main/java" output_mode="files_with_matches"
+```
+
+### Best Practices
+
+1. **CCLSP First Principle**: Always start with CCLSP tools before using grep/read
+2. **Progressive Exploration**: Start high-level (Compiler class), then drill down to specific components
+3. **Context Preservation**: Use findings to build mental model of module architecture
+4. **Tool Selection Guide**:
+   - Use CCLSP for: class/method navigation, type analysis, reference finding
+   - Use grep for: text patterns, comments, configuration values
+   - Use read for: file structure examination, configuration details
+5. **Efficiency Tips**:
+   - Combine multiple CCLSP calls in parallel when independent
+   - Use head_limit to avoid overwhelming output
+   - Restart servers if analysis seems stale: `mcp__cclsp__restart_server`
+
+### Common Exploration Scenarios
+
+| Scenario | Primary Tool | Secondary Tool |
+|----------|--------------|----------------|
+| Understanding class hierarchy | CCLSP find_definition | grep for "extends"/"implements" |
+| Finding usages of a method | CCLSP find_references | grep for method name |
+| Examining configuration | read file | grep for specific values |
+| Locating error handling | CCLSP diagnostics | grep for "throw" or "catch" |
+| Understanding test coverage | read test files | grep for "@Test" |
+
+### Integration with Other Tools
+- **Compiler Development Skill**: Use for high-level compiler concepts while exploring
+- **Context7**: Check for previous exploration history of the module
+- **Maven**: Build module to ensure CCLSP has accurate compilation context
+
 ## Context7 MCP Usage
 
 ### Overview

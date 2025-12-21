@@ -1,6 +1,8 @@
 package org.teachfx.antlr4.ep18.stackvm;
 
 import org.teachfx.antlr4.ep18.stackvm.ABIConvention.*;
+import org.teachfx.antlr4.ep18.gc.GarbageCollector;
+import org.teachfx.antlr4.ep18.gc.ReferenceCountingGC;
 
 import java.util.Arrays;
 
@@ -33,7 +35,11 @@ public class CymbolStackVM {
 
     // 结构体管理（统一表示适配层）
     private java.util.List<StructValue> structTable;  // 结构体实例表
+    private java.util.Map<Integer, Integer> gcIdToStructIndex;  // GC对象ID到structTable索引的映射
     private int nextStructId;  // 下一个结构体ID（0保留给null）
+
+    // 垃圾回收器
+    private GarbageCollector garbageCollector;
 
     // 执行状态
     private boolean running;
@@ -66,8 +72,12 @@ public class CymbolStackVM {
         this.heap = new int[config.getHeapSize()];
         this.heapAllocPointer = 0;
 
+        // 初始化垃圾回收器
+        this.garbageCollector = new ReferenceCountingGC(config.getHeapSize());
+
         // 初始化结构体管理
         this.structTable = new java.util.ArrayList<>();
+        this.gcIdToStructIndex = new java.util.HashMap<>();
         this.nextStructId = 1; // 0保留给null引用
 
         // 初始化操作数栈
@@ -537,24 +547,63 @@ public class CymbolStackVM {
     // 指令执行方法实现
 
     private void executeStruct(int instruction) {
-        int nfields = extractOperand(instruction);
-        // 保持向后兼容性：检查堆空间是否足够（模拟原有行为）
-        if (heapAllocPointer + nfields > heap.length) {
+        try {
+            int nfields = extractOperand(instruction);
+
+            // 调试信息
+            if (config.isDebugMode()) {
+                System.out.println("[GC] executeStruct called: nfields=" + nfields);
+            }
+
+        // 使用GC分配内存
+        int structId;
+        try {
+            structId = garbageCollector.allocate(nfields);
+        } catch (OutOfMemoryError e) {
+            // 保持向后兼容的错误消息
             throw new OutOfMemoryError("Not enough heap space for struct with " + nfields + " fields");
         }
+
         // 创建StructValue实例
         StructValue struct = new StructValue(nfields);
         // 初始化字段为0（Integer）
         for (int i = 0; i < nfields; i++) {
             struct.setField(i, 0); // int自动装箱为Integer
         }
-        // 添加到结构体表并分配ID
+
+        // 添加到结构体表
+        int structIndex = structTable.size();
         structTable.add(struct);
-        int structId = nextStructId++;
-        // 压入结构体ID（兼容现有代码）
+
+        // 建立GC对象ID到structTable索引的映射
+        gcIdToStructIndex.put(structId, structIndex);
+
+        // 压入结构体ID（使用GC对象ID）
         push(structId);
-        // 更新堆分配指针以模拟堆分配（保持兼容性）
+
+        // 更新堆分配指针以保持向后兼容性
         heapAllocPointer += nfields;
+
+        // 增加引用计数（结构体被压入栈，有一个引用）
+        garbageCollector.incrementRef(structId);
+
+        // 调试信息
+        if (config.isDebugMode()) {
+            System.out.println("[GC] executeStruct: allocated structId=" + structId +
+                             ", isAlive=" + garbageCollector.isObjectAlive(structId));
+        }
+    }
+
+    /**
+     * 当GC回收对象时清理structTable
+     * @param objectId 被回收的对象ID
+     */
+    private void onObjectCollected(int objectId) {
+        Integer structIndex = gcIdToStructIndex.remove(objectId);
+        if (structIndex != null && structIndex >= 0 && structIndex < structTable.size()) {
+            // 标记为null，但不从列表中移除以保持索引稳定
+            structTable.set(structIndex, null);
+        }
     }
 
     private void executeNull() {
@@ -742,23 +791,43 @@ public class CymbolStackVM {
         }
 
         // 判断structRef是结构体ID还是堆地址
-        // 结构体ID从1开始，且ID-1必须在structTable范围内
-        int structIndex = structRef - 1;
-        if (structIndex >= 0 && structIndex < structTable.size()) {
+        // 首先检查是否是GC分配的结构体
+        Integer structIndex = gcIdToStructIndex.get(structRef);
+        if (structIndex != null && structIndex >= 0 && structIndex < structTable.size()) {
             // 有效的结构体ID：使用StructValue
             StructValue struct = structTable.get(structIndex);
-            Object fieldValue = struct.getField(fieldOffset);
-            int intValue = valueToInt(fieldValue);
-            push(intValue);
-        } else if (structRef >= 0 && structRef < heap.length) {
-            // 堆地址：回退到原有堆访问逻辑（保持兼容性）
-            int actualAddress = structRef + fieldOffset;
-            if (actualAddress < 0 || actualAddress >= heap.length) {
-                throw VMMemoryAccessException.outOfBounds(programCounter, "FLOAD", actualAddress, 0, heap.length - 1, VMMemoryException.MemoryAccessType.READ);
+            if (struct != null) {
+                Object fieldValue = struct.getField(fieldOffset);
+                int intValue = valueToInt(fieldValue);
+                push(intValue);
+            } else {
+                // 结构体已被回收
+                throw VMMemoryAccessException.nullPointer(programCounter, "FLOAD", VMMemoryException.MemoryAccessType.READ);
             }
-            push(heap[actualAddress]);
         } else {
-            throw new VMMemoryAccessException("Invalid struct reference: " + structRef, programCounter, "FLOAD", (long)structRef, 0, VMMemoryException.MemoryAccessType.READ);
+            // 检查是否是旧的索引方式（structRef - 1）
+            int oldStructIndex = structRef - 1;
+            if (oldStructIndex >= 0 && oldStructIndex < structTable.size()) {
+                // 旧的索引方式：使用StructValue
+                StructValue struct = structTable.get(oldStructIndex);
+                if (struct != null) {
+                    Object fieldValue = struct.getField(fieldOffset);
+                    int intValue = valueToInt(fieldValue);
+                    push(intValue);
+                } else {
+                    // 结构体已被回收
+                    throw VMMemoryAccessException.nullPointer(programCounter, "FLOAD", VMMemoryException.MemoryAccessType.READ);
+                }
+            } else if (structRef >= 0 && structRef < heap.length) {
+                // 堆地址：回退到原有堆访问逻辑（保持兼容性）
+                int actualAddress = structRef + fieldOffset;
+                if (actualAddress < 0 || actualAddress >= heap.length) {
+                    throw VMMemoryAccessException.outOfBounds(programCounter, "FLOAD", actualAddress, 0, heap.length - 1, VMMemoryException.MemoryAccessType.READ);
+                }
+                push(heap[actualAddress]);
+            } else {
+                throw new VMMemoryAccessException("Invalid struct reference: " + structRef, programCounter, "FLOAD", (long)structRef, 0, VMMemoryException.MemoryAccessType.READ);
+            }
         }
     }
 
@@ -776,22 +845,41 @@ public class CymbolStackVM {
         }
 
         // 判断structRef是结构体ID还是堆地址
-        // 结构体ID从1开始，且ID-1必须在structTable范围内
-        int structIndex = structRef - 1;
-        if (structIndex >= 0 && structIndex < structTable.size()) {
+        // 首先检查是否是GC分配的结构体
+        Integer structIndex = gcIdToStructIndex.get(structRef);
+        if (structIndex != null && structIndex >= 0 && structIndex < structTable.size()) {
             // 有效的结构体ID：使用StructValue
             StructValue struct = structTable.get(structIndex);
-            Object fieldValue = intToValue(value);
-            struct.setField(fieldOffset, fieldValue);
-        } else if (structRef >= 0 && structRef < heap.length) {
-            // 堆地址：回退到原有堆访问逻辑（保持兼容性）
-            int actualAddress = structRef + fieldOffset;
-            if (actualAddress < 0 || actualAddress >= heap.length) {
-                throw VMMemoryAccessException.outOfBounds(programCounter, "FSTORE", actualAddress, 0, heap.length - 1, VMMemoryException.MemoryAccessType.WRITE);
+            if (struct != null) {
+                Object fieldValue = intToValue(value);
+                struct.setField(fieldOffset, fieldValue);
+            } else {
+                // 结构体已被回收
+                throw VMMemoryAccessException.nullPointer(programCounter, "FSTORE", VMMemoryException.MemoryAccessType.WRITE);
             }
-            heap[actualAddress] = value;
         } else {
-            throw new VMMemoryAccessException("Invalid struct reference: " + structRef, programCounter, "FSTORE", (long)structRef, 0, VMMemoryException.MemoryAccessType.WRITE);
+            // 检查是否是旧的索引方式（structRef - 1）
+            int oldStructIndex = structRef - 1;
+            if (oldStructIndex >= 0 && oldStructIndex < structTable.size()) {
+                // 旧的索引方式：使用StructValue
+                StructValue struct = structTable.get(oldStructIndex);
+                if (struct != null) {
+                    Object fieldValue = intToValue(value);
+                    struct.setField(fieldOffset, fieldValue);
+                } else {
+                    // 结构体已被回收
+                    throw VMMemoryAccessException.nullPointer(programCounter, "FSTORE", VMMemoryException.MemoryAccessType.WRITE);
+                }
+            } else if (structRef >= 0 && structRef < heap.length) {
+                // 堆地址：回退到原有堆访问逻辑（保持兼容性）
+                int actualAddress = structRef + fieldOffset;
+                if (actualAddress < 0 || actualAddress >= heap.length) {
+                    throw VMMemoryAccessException.outOfBounds(programCounter, "FSTORE", actualAddress, 0, heap.length - 1, VMMemoryException.MemoryAccessType.WRITE);
+                }
+                heap[actualAddress] = value;
+            } else {
+                throw new VMMemoryAccessException("Invalid struct reference: " + structRef, programCounter, "FSTORE", (long)structRef, 0, VMMemoryException.MemoryAccessType.WRITE);
+            }
         }
     }
 
@@ -989,6 +1077,16 @@ public class CymbolStackVM {
         if (stackPointer >= stack.length) {
             throw new VMStackOverflowException("Stack overflow at PC=" + programCounter, programCounter, "PUSH");
         }
+
+        // 如果是结构体引用（value > 0），增加引用计数
+        if (value > 0 && garbageCollector.isObjectAlive(value)) {
+            garbageCollector.incrementRef(value);
+            // 调试信息
+            if (config.isDebugMode()) {
+                System.out.println("[GC] PUSH incrementRef(" + value + ")");
+            }
+        }
+
         stack[stackPointer++] = value;
     }
 
@@ -1000,7 +1098,20 @@ public class CymbolStackVM {
         if (stackPointer <= 0) {
             throw new VMStackUnderflowException("Stack underflow at PC=" + programCounter, programCounter, "POP");
         }
-        return stack[--stackPointer];
+
+        int value = stack[--stackPointer];
+
+        // 如果是结构体引用（value > 0），减少引用计数
+        if (value > 0 && garbageCollector.isObjectAlive(value)) {
+            garbageCollector.decrementRef(value);
+
+            // 检查对象是否还存活（可能已被回收）
+            if (!garbageCollector.isObjectAlive(value)) {
+                onObjectCollected(value);
+            }
+        }
+
+        return value;
     }
 
     /**

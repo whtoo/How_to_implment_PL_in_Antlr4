@@ -76,7 +76,13 @@ public class ReferenceCountingGC implements GarbageCollector {
 
         // 创建对象头部
         GCObjectHeader header = new GCObjectHeader(size);
+        // 新分配的对象引用计数为1（分配者持有引用）
+        header.incrementRef();
         objectHeaders.put(objectId, header);
+
+        // 调试信息
+        System.out.println("DEBUG allocate: objectId=" + objectId + ", size=" + size + ", header=" + header);
+        System.out.println("DEBUG objectHeaders size: " + objectHeaders.size());
 
         // 记录统计信息
         stats.recordAllocation(size);
@@ -162,7 +168,15 @@ public class ReferenceCountingGC implements GarbageCollector {
     @Override
     public boolean isObjectAlive(int objectId) {
         GCObjectHeader header = objectHeaders.get(objectId);
-        return header != null && header.isAlive();
+        boolean alive = header != null && header.isAlive();
+        // 调试信息
+        if (objectId == 1) {
+            System.out.println("DEBUG isObjectAlive(" + objectId + "): header=" + header + ", alive=" + alive);
+            if (header != null) {
+                System.out.println("DEBUG header refCount=" + header.getRefCount() + ", size=" + header.getSize());
+            }
+        }
+        return alive;
     }
 
     @Override

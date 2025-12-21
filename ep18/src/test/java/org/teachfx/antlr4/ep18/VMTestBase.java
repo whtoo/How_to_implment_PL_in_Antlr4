@@ -159,6 +159,24 @@ public abstract class VMTestBase {
         return opcode << 24;
     }
 
+    /**
+     * Encode instruction with 32-bit parameter (extended format)
+     * Returns two instruction words: first word contains opcode with high bit set,
+     * second word contains 32-bit parameter
+     *
+     * @param opcode operation code
+     * @param param 32-bit parameter
+     * @return array of two encoded instruction words
+     */
+    protected int[] encodeInstruction32(int opcode, int param) {
+        // Set high bit of opcode to indicate extended instruction
+        int extendedOpcode = opcode | 0x80; // Use bit 7 as extended format flag
+        return new int[]{
+            extendedOpcode << 24, // First word: extended opcode
+            param                 // Second word: 32-bit parameter
+        };
+    }
+
     // ====================
     // Enhanced Assertions
     // ====================

@@ -20,3 +20,9 @@ out/
 **/output/*
 **/logs/*
 machinet.conf
+**/.settings/*
+.factorypath
+.project
+.classpath
+.checkstyle
+.checkstyle_suppressions.xml

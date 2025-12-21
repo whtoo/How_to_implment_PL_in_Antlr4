@@ -47,6 +47,12 @@ public class InstructionFactory {
         registerInstruction(new IAndInstruction());
         registerInstruction(new IOrInstruction());
         registerInstruction(new IXorInstruction());
+        // 浮点算术指令
+        registerInstruction(new FAddInstruction());
+        registerInstruction(new FSubInstruction());
+        registerInstruction(new FMulInstruction());
+        registerInstruction(new FDivInstruction());
+        registerInstruction(new IToFInstruction());
 
         // 比较指令
         registerInstruction(new ILtInstruction());
@@ -55,9 +61,13 @@ public class InstructionFactory {
         registerInstruction(new IGeInstruction());
         registerInstruction(new IEqInstruction());
         registerInstruction(new INeInstruction());
+        // 浮点比较指令
+        registerInstruction(new FLtInstruction());
+        registerInstruction(new FEqInstruction());
 
         // 常量指令
         registerInstruction(new IConstInstruction());
+        registerInstruction(new FConstInstruction());
         registerInstruction(new NullInstruction());
 
         // 控制流指令

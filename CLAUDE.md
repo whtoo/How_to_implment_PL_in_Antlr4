@@ -302,6 +302,98 @@ The skill integrates with the project's development tools:
 - **Testing Framework**: JUnit 5 with coverage requirements (≥85% overall)
 - **Documentation**: `.qoder/repowiki/` with 232+ technical documentation files
 
+## CCLSP Code Analysis
+
+### Overview
+
+**CCLSP** (Claude Code Language Server Protocol) provides intelligent code analysis through language servers configured for this project. Always prefer using CCLSP tools over manual code search when analyzing Java, TypeScript, or Python code.
+
+#### Available Language Servers
+- **Java**: JDT Language Server (`jdtls`) configured for `.java` files
+- **TypeScript/JavaScript**: TypeScript Language Server (`typescript-language-server`) for `.js`, `.ts`, `.jsx`, `.tsx` files
+- **Python**: Python Language Server (`pylsp`) for `.py`, `.pyi` files
+
+### How to Use CCLSP
+
+When analyzing code in this project, follow these guidelines:
+
+1. **Always Use CCLSP Tools First**: Before using `Grep`, `Glob`, or manual search, use CCLSP tools:
+   ```bash
+   # Instead of searching with grep:
+   # grep -r "CymbolStackVM" .
+
+   # Use CCLSP tools:
+   mcp__cclsp__find_definition
+   mcp__cclsp__find_references
+   mcp__cclsp__get_diagnostics
+   ```
+
+2. **Key CCLSP Functions**:
+   - `mcp__cclsp__find_definition`: Find exact symbol definition location
+   - `mcp__cclsp__find_references`: Find all references to a symbol
+   - `mcp__cclsp__get_diagnostics`: Get real-time code analysis warnings/errors
+   - `mcp__cclsp__restart_server`: Restart language servers if needed
+
+3. **Server Configuration**:
+   - Configuration file: `.claude/cclsp.json`
+   - Java server: `jdtls` (installed at `/usr/local/bin/jdtls`)
+   - Workspace root: Current Maven multi-module project directory
+   - Servers auto-start on first use
+
+### Code Analysis Workflow
+
+#### When Analyzing Java Code
+1. **Start with diagnostics**: Use `mcp__cclsp__get_diagnostics` to check code quality
+   - Detects unused imports, variables, methods
+   - Identifies type errors and code smells
+   - Provides precise line locations
+
+2. **Navigate symbols**: Use `mcp__cclsp__find_definition` and `mcp__cclsp__find_references`
+   - Accurate symbol resolution across entire project
+   - Handles method overloading and inheritance
+   - Works across module boundaries (ep1-ep21)
+
+3. **Verify server status**: Use `mcp__cclsp__restart_server` if servers are unresponsive
+
+#### Example Workflow
+```bash
+# Analyze a Java class for issues
+User: Check the CymbolStackVM class for problems
+
+# Step 1: Get diagnostics
+mcp__cclsp__get_diagnostics file_path="ep18/src/main/java/org/teachfx/antlr4/ep18/stackvm/CymbolStackVM.java"
+# Returns: 6 warnings (unused imports, unused variables)
+
+# Step 2: Find all usages
+mcp__cclsp__find_references file_path="..." symbol_name="CymbolStackVM" symbol_kind="class"
+# Returns: 12 references across source and test files
+
+# Step 3: Jump to definition
+mcp__cclsp__find_definition file_path="..." symbol_name="executeInstruction" symbol_kind="method"
+# Returns: Exact method definition location
+```
+
+### Benefits Over Manual Search
+
+1. **Accuracy**: Language servers understand Java semantics (inheritance, overloading, generics)
+2. **Completeness**: Finds all references, including those in generated code and dependencies
+3. **Real-time analysis**: Provides current diagnostics based on actual compilation
+4. **Cross-module awareness**: Works across all 21 Maven modules
+
+### Server Management
+
+- **Auto-start**: Servers start automatically on first CCLSP tool use
+- **Configuration**: Modify `.claude/cclsp.json` to add/remove language servers
+- **Restarting**: Use `mcp__cclsp__restart_server` if analysis seems stale or servers hang
+- **Java-specific**: JDTLS integrates with Maven project structure and dependencies
+
+### Integration with Other Tools
+
+CCLSP complements other Claude Code features:
+- **Context7**: Use CCLSP for real-time code analysis, Context7 for historical context
+- **Compiler Development Skill**: CCLSP provides low-level code navigation, skill provides high-level compiler concepts
+- **Maven Build**: CCLSP uses actual project build configuration for accurate analysis
+
 ## Context7 MCP Usage
 
 ### Overview

@@ -486,7 +486,6 @@ public class CymbolStackVMTest extends VMTestBase {
     }
 
     @Test
-    @Disabled("浮点指令需要32位常量加载支持，暂时禁用")
     @DisplayName("应该正确执行浮点加法指令")
     void testFloatAddition() throws Exception {
         // 测试FADD指令：3.5 + 2.5 = 6.0
@@ -494,9 +493,13 @@ public class CymbolStackVMTest extends VMTestBase {
         int float2 = Float.floatToIntBits(2.5f);
         int expected = Float.floatToIntBits(6.0f);
 
+        // 使用扩展指令格式加载32位浮点常量
+        int[] fconst1 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float1);
+        int[] fconst2 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float2);
+
         byte[] bytecode = createBytecode(new int[]{
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float1),
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float2),
+            fconst1[0], fconst1[1],  // 第一个FCONST指令（扩展格式）
+            fconst2[0], fconst2[1],  // 第二个FCONST指令（扩展格式）
             encodeInstruction(BytecodeDefinition.INSTR_FADD),
             encodeInstruction(BytecodeDefinition.INSTR_HALT)
         });
@@ -509,7 +512,6 @@ public class CymbolStackVMTest extends VMTestBase {
     }
 
     @Test
-    @Disabled("浮点指令需要32位常量加载支持，暂时禁用")
     @DisplayName("应该正确执行浮点减法指令")
     void testFloatSubtraction() throws Exception {
         // 测试FSUB指令：5.0 - 2.5 = 2.5
@@ -517,9 +519,13 @@ public class CymbolStackVMTest extends VMTestBase {
         int float2 = Float.floatToIntBits(2.5f);
         int expected = Float.floatToIntBits(2.5f);
 
+        // 使用扩展指令格式加载32位浮点常量
+        int[] fconst1 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float1);
+        int[] fconst2 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float2);
+
         byte[] bytecode = createBytecode(new int[]{
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float1),
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float2),
+            fconst1[0], fconst1[1],  // 第一个FCONST指令（扩展格式）
+            fconst2[0], fconst2[1],  // 第二个FCONST指令（扩展格式）
             encodeInstruction(BytecodeDefinition.INSTR_FSUB),
             encodeInstruction(BytecodeDefinition.INSTR_HALT)
         });
@@ -531,7 +537,6 @@ public class CymbolStackVMTest extends VMTestBase {
     }
 
     @Test
-    @Disabled("浮点指令需要32位常量加载支持，暂时禁用")
     @DisplayName("应该正确执行浮点乘法指令")
     void testFloatMultiplication() throws Exception {
         // 测试FMUL指令：3.0 * 2.5 = 7.5
@@ -539,9 +544,13 @@ public class CymbolStackVMTest extends VMTestBase {
         int float2 = Float.floatToIntBits(2.5f);
         int expected = Float.floatToIntBits(7.5f);
 
+        // 使用扩展指令格式加载32位浮点常量
+        int[] fconst1 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float1);
+        int[] fconst2 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float2);
+
         byte[] bytecode = createBytecode(new int[]{
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float1),
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float2),
+            fconst1[0], fconst1[1],  // 第一个FCONST指令（扩展格式）
+            fconst2[0], fconst2[1],  // 第二个FCONST指令（扩展格式）
             encodeInstruction(BytecodeDefinition.INSTR_FMUL),
             encodeInstruction(BytecodeDefinition.INSTR_HALT)
         });
@@ -553,7 +562,6 @@ public class CymbolStackVMTest extends VMTestBase {
     }
 
     @Test
-    @Disabled("浮点指令需要32位常量加载支持，暂时禁用")
     @DisplayName("应该正确执行浮点除法指令")
     void testFloatDivision() throws Exception {
         // 测试FDIV指令：10.0 / 2.5 = 4.0
@@ -561,9 +569,13 @@ public class CymbolStackVMTest extends VMTestBase {
         int float2 = Float.floatToIntBits(2.5f);
         int expected = Float.floatToIntBits(4.0f);
 
+        // 使用扩展指令格式加载32位浮点常量
+        int[] fconst1 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float1);
+        int[] fconst2 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float2);
+
         byte[] bytecode = createBytecode(new int[]{
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float1),
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float2),
+            fconst1[0], fconst1[1],  // 第一个FCONST指令（扩展格式）
+            fconst2[0], fconst2[1],  // 第二个FCONST指令（扩展格式）
             encodeInstruction(BytecodeDefinition.INSTR_FDIV),
             encodeInstruction(BytecodeDefinition.INSTR_HALT)
         });
@@ -581,9 +593,13 @@ public class CymbolStackVMTest extends VMTestBase {
         int float1 = Float.floatToIntBits(10.0f);
         int float2 = Float.floatToIntBits(0.0f);
 
+        // 使用扩展指令格式加载32位浮点常量
+        int[] fconst1 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float1);
+        int[] fconst2 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float2);
+
         byte[] bytecode = createBytecode(new int[]{
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float1),
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float2),
+            fconst1[0], fconst1[1],  // 第一个FCONST指令（扩展格式）
+            fconst2[0], fconst2[1],  // 第二个FCONST指令（扩展格式）
             encodeInstruction(BytecodeDefinition.INSTR_FDIV),
             encodeInstruction(BytecodeDefinition.INSTR_HALT)
         });
@@ -594,16 +610,19 @@ public class CymbolStackVMTest extends VMTestBase {
     }
 
     @Test
-    @Disabled("浮点指令需要32位常量加载支持，暂时禁用")
     @DisplayName("应该正确执行浮点比较指令")
     void testFloatComparison() throws Exception {
         // 测试FLT指令：2.5 < 5.0 应该返回1 (true)
         int float1 = Float.floatToIntBits(2.5f);
         int float2 = Float.floatToIntBits(5.0f);
 
+        // 使用扩展指令格式加载32位浮点常量
+        int[] fconst1 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float1);
+        int[] fconst2 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float2);
+
         byte[] bytecode = createBytecode(new int[]{
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float1),
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float2),
+            fconst1[0], fconst1[1],  // 第一个FCONST指令（扩展格式）
+            fconst2[0], fconst2[1],  // 第二个FCONST指令（扩展格式）
             encodeInstruction(BytecodeDefinition.INSTR_FLT),
             encodeInstruction(BytecodeDefinition.INSTR_HALT)
         });
@@ -616,9 +635,13 @@ public class CymbolStackVMTest extends VMTestBase {
         int float3 = Float.floatToIntBits(3.0f);
         int float4 = Float.floatToIntBits(3.0f);
 
+        // 使用扩展指令格式加载32位浮点常量
+        int[] fconst3 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float3);
+        int[] fconst4 = encodeInstruction32(BytecodeDefinition.INSTR_FCONST, float4);
+
         bytecode = createBytecode(new int[]{
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float3),
-            encodeInstruction(BytecodeDefinition.INSTR_ICONST, float4),
+            fconst3[0], fconst3[1],  // 第一个FCONST指令（扩展格式）
+            fconst4[0], fconst4[1],  // 第二个FCONST指令（扩展格式）
             encodeInstruction(BytecodeDefinition.INSTR_FEQ),
             encodeInstruction(BytecodeDefinition.INSTR_HALT)
         });
@@ -814,18 +837,19 @@ public class CymbolStackVMTest extends VMTestBase {
     }
 
     @Test
-    @DisplayName("应该处理结构体内存不足错误")
-    void testStructOutOfMemory() {
-        // 测试STRUCT指令在堆空间不足时抛出OutOfMemoryError
-        // 堆大小为1MB（1024*1024个整数），使用更大的字段数
-        int hugeFields = 2000000; // 超过堆大小
+    @DisplayName("应该能够创建结构体")
+    void testStructOutOfMemory() throws Exception {
+        // 测试STRUCT指令能够创建结构体
+        // 注意：重构后结构体字段存储在Java堆中，不占用虚拟机堆空间
+        // 因此不再测试虚拟机堆内存不足场景
+        int fieldCount = 1000; // 合理的字段数量
         byte[] bytecode = createBytecode(new int[]{
-            encodeInstruction(BytecodeDefinition.INSTR_STRUCT, hugeFields),
+            encodeInstruction(BytecodeDefinition.INSTR_STRUCT, fieldCount),
             encodeInstruction(BytecodeDefinition.INSTR_HALT)
         });
 
-        // 应该抛出OutOfMemoryError
-        assertThatThrownBy(() -> execute(bytecode))
-            .isInstanceOf(OutOfMemoryError.class);
+        // 应该正常执行，返回结构体引用（非零值）
+        int structRef = execute(bytecode);
+        assertThat(structRef).isNotEqualTo(0);
     }
 }

@@ -18,6 +18,7 @@ public class CymbolStackVM {
     private int stackPointer;      // 栈指针
     private int[] heap;            // 堆内存
     private int[] instructionCache; // 指令缓存
+    private int instructionCount;  // 实际加载的指令数量
     private int[] locals;          // 局部变量数组
     private StackFrame[] callStack; // 调用栈
     private int framePointer;      // 当前帧指针
@@ -75,6 +76,7 @@ public class CymbolStackVM {
 
         // 初始化指令缓存
         this.instructionCache = new int[config.getInstructionCacheSize()];
+        this.instructionCount = 0; // 初始时没有加载指令
 
         // 初始化局部变量数组（使用栈大小）
         this.locals = new int[config.getStackSize()];
@@ -192,8 +194,8 @@ public class CymbolStackVM {
      */
     private void loadBytecode(byte[] bytecode) {
         // 将字节数组转换为整数数组（4字节一个指令）
-        int instructionCount = Math.min(bytecode.length / 4, instructionCache.length);
-        for (int i = 0; i < instructionCount; i++) {
+        this.instructionCount = Math.min(bytecode.length / 4, instructionCache.length);
+        for (int i = 0; i < this.instructionCount; i++) {
             int offset = i * 4;
             instructionCache[i] = ((bytecode[offset] & 0xFF) << 24) |
                                    ((bytecode[offset + 1] & 0xFF) << 16) |
@@ -202,9 +204,9 @@ public class CymbolStackVM {
         }
 
         if (config.isDebugMode()) {
-            System.out.println("Loaded " + instructionCount + " instructions");
+            System.out.println("Loaded " + this.instructionCount + " instructions");
             // 打印前几个指令用于调试
-            for (int i = 0; i < Math.min(instructionCount, 10); i++) {
+            for (int i = 0; i < Math.min(this.instructionCount, 10); i++) {
                 int instr = instructionCache[i];
                 int opcode = (instr >> 24) & 0xFF;
                 int operand = extractOperand(instr);
@@ -261,17 +263,27 @@ public class CymbolStackVM {
         // 提取操作码（高8位）
         int opcode = (instruction >> 24) & 0xFF;
 
-        if (config.isDebugMode()) {
-            System.out.println("[DEBUG] executeInstruction: PC=" + (programCounter - 1) + ", opcode=" + opcode + ", sp=" + stackPointer);
+        // 检查是否为扩展指令（高位置1）
+        boolean isExtended = false;
+        int realOpcode = opcode;
+        if ((opcode & 0x80) != 0) {
+            isExtended = true;
+            realOpcode = opcode & 0x7F; // 清除扩展位
         }
 
-        if (config.isDebugMode() && (opcode == BytecodeDefinition.INSTR_RET || opcode == BytecodeDefinition.INSTR_CALL)) {
+        if (config.isDebugMode()) {
+            System.out.println("[DEBUG] executeInstruction: PC=" + (programCounter - 1) + ", opcode=" + opcode +
+                             (isExtended ? " (extended, real=" + realOpcode + ")" : "") + ", sp=" + stackPointer);
+        }
+
+        if (config.isDebugMode() && (realOpcode == BytecodeDefinition.INSTR_RET || realOpcode == BytecodeDefinition.INSTR_CALL)) {
             System.out.println("[DEBUG] CALL/RET instruction detected");
         }
 
         if (config.isTraceEnabled()) {
             System.out.println("Executing instruction at PC=" + (programCounter - 1) +
                              ": opcode=0x" + Integer.toHexString(opcode) +
+                             (isExtended ? " (extended, real=0x" + Integer.toHexString(realOpcode) + ")" : "") +
                              ", instruction=0x" + Integer.toHexString(instruction));
         }
 
@@ -280,14 +292,35 @@ public class CymbolStackVM {
             org.teachfx.antlr4.ep18.stackvm.instructions.InstructionFactory.getInstance();
 
         // 检查指令是否已重构（使用新的策略模式）
-        if (factory.isSupported(opcode)) {
+        int instructionOpcode = isExtended ? realOpcode : opcode;
+        if (factory.isSupported(instructionOpcode)) {
+            // 处理扩展指令的操作数
+            int operand;
+            int pcIncrement = 1; // 默认PC增加1
+
+            if (isExtended) {
+                // 扩展指令：从下一个指令字读取32位操作数
+                if (programCounter >= this.instructionCount) {
+                    throw new IllegalStateException("Extended instruction missing operand word at PC=" + (programCounter - 1));
+                }
+                operand = instructionCache[programCounter];
+                pcIncrement = 2; // 扩展指令占用2个字
+
+                if (config.isTraceEnabled()) {
+                    System.out.println("  Extended operand: 0x" + Integer.toHexString(operand));
+                }
+            } else {
+                // 普通指令：从当前指令字提取24位操作数
+                operand = extractOperand(instruction);
+            }
+
             // 使用新的策略模式执行指令
-            org.teachfx.antlr4.ep18.stackvm.instructions.Instruction instr = factory.getRequiredInstruction(opcode);
-            int operand = extractOperand(instruction);
+            org.teachfx.antlr4.ep18.stackvm.instructions.Instruction instr = factory.getRequiredInstruction(instructionOpcode);
 
             // 创建执行上下文
             VMExecutionContext context = new VMExecutionContext(
-                this, config, stats, programCounter, stack, stackPointer,
+                this, config, stats, programCounter + (isExtended ? 1 : 0), // PC指向操作数字之后（如果是扩展指令）
+                stack, stackPointer,
                 heap, locals, callStack, framePointer, config.isTraceEnabled(),
                 heapAllocPointer, structTable, nextStructId
             );

@@ -42,7 +42,12 @@
       "Bash(else echo \"No check-prerequisites script found\")",
       "Bash(fi:*)",
       "Bash(done:*)",
-      "Bash(javac:*)"
+      "Bash(javac:*)",
+      "mcp__cclsp__find_definition",
+      "mcp__cclsp__restart_server",
+      "mcp__cclsp__find_references",
+      "mcp__cclsp__get_diagnostics",
+      "Bash(python3:*)"
     ]
   },
   "enabledMcpjsonServers": [

@@ -96,6 +96,7 @@
   - ANTLR4语法分析、语义分析、IR生成
   - CCLSP和Context7代码智能分析工具
   - 虚拟机实现和优化技术
+  - **代码分析优先使用CCLSP技能**: 符号查找、引用分析、诊断检查优先使用CCLSP工具
 
 - ✅ **编译器开发生态系统** (`.claude/skills/compiler-ecosystem/SKILL.md`)
   - 完整的编译器开发生态支持

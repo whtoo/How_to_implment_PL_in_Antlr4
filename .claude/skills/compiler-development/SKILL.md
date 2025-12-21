@@ -195,6 +195,7 @@ python scripts/run.py compile ep20
 5. **日志调试**: 使用Log4j2进行分级日志记录
 6. **代码风格**: 遵循项目Java 21+代码规范
 7. **错误处理**: 提供有意义的错误信息和位置
+8. **代码分析优先使用CCLSP工具**: 符号查找、引用分析、诊断检查优先使用CCLSP工具（mcp__cclsp__find_definition, mcp__cclsp__find_references, mcp__cclsp__get_diagnostics），确保代码分析的精确性和一致性
 
 ## 常见问题解决
 

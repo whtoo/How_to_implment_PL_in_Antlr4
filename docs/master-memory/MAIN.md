@@ -87,8 +87,8 @@ graph TD
     EP17 --> EP18[EP18: 虚拟机]
     
     %% 高级优化层
-    EP18 --> EP19[EP19: 调试器]
-    EP19 --> EP20[EP20: 完整编译器]
+    EP18 --> EP19[EP19: 基础编译器（解释）]
+    EP19 --> EP20[EP20: 进阶编译器（IR+代码生成）]
     EP20 --> EP21[EP21: 高级优化]
     
     %% 特殊分支
@@ -113,7 +113,8 @@ graph TD
 | **EP1-EP10** | `CymbolBase*.g4`, `*Node.java` | `CymbolLexer`, `CymbolParser`, `EvalVisitor` | 语法解析、AST构建、解释执行 | `docs/intro/` |
 | **EP11-EP15** | `TypeChecker.java`, `SymbolTable.java` | `TypeChecker`, `SymbolTable`, `IRGenerator` | 类型检查、符号解析、IR生成 | `ep*/docs/` |
 | **EP16-EP18** | `BytecodeEmitter.java`, `VMInterpreter.java` | `BytecodeEmitter`, `VMInterpreter`, `Instruction` | 字节码生成、VM执行、内存管理 | `ep*/docs/` |
-| **EP19-EP20** | `CodeGenerator.java`, `Optimizer.java` | `CodeGenerator`, `Optimizer`, `DataFlowAnalyzer` | 代码生成、优化、调试 | `ep*/docs/` |
+| **EP19** | `Compiler.java`, `Interpreter.java` | `Compiler`, `Interpreter`, `LocalDefine`, `TypeCheckVisitor` | 完整编译流水线、解释执行、类型检查 | `ep19/docs/` |
+| **EP20** | `CodeGenerator.java`, `CymbolIRBuilder.java` | `CodeGenerator`, `CymbolIRBuilder`, `ControlFlowAnalysis` | IR生成、控制流分析、代码生成 | `ep20/docs/` |
 | **EP21** | `SSAConverter.java`, `OptimizationPass.java` | `SSAConverter`, `OptimizationPass`, `PhiFunction` | SSA转换、优化传递、性能分析 | `ep21/docs/` |
 | **EP18R** | `RegisterVMInterpreter.java`, `Register*.java` | `RegisterVMInterpreter`, `RegisterFile`, `StackFrame` | 寄存器指令、调用约定、ABI | `ep18r/docs/` |
 

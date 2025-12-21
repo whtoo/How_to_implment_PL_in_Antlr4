@@ -72,8 +72,28 @@ public class CymbolStackVM {
         this.heap = new int[config.getHeapSize()];
         this.heapAllocPointer = 0;
 
-        // 初始化垃圾回收器
-        this.garbageCollector = new ReferenceCountingGC(config.getHeapSize());
+        // 初始化垃圾回收器（如果启用）
+        if (config.isEnableGC()) {
+            int gcHeapSize = config.getGcHeapSize() > 0 ? config.getGcHeapSize() : config.getHeapSize();
+            String gcType = config.getGcType();
+
+            if ("reference-counting".equals(gcType)) {
+                this.garbageCollector = new ReferenceCountingGC(gcHeapSize);
+            } else {
+                // 默认使用引用计数GC
+                this.garbageCollector = new ReferenceCountingGC(gcHeapSize);
+            }
+
+            if (config.isDebugMode()) {
+                System.out.println("[GC] Initialized " + gcType + " GC with heap size: " + gcHeapSize);
+            }
+        } else {
+            // 禁用GC，使用null对象模式
+            this.garbageCollector = new NoOpGarbageCollector();
+            if (config.isDebugMode()) {
+                System.out.println("[GC] GC is disabled");
+            }
+        }
 
         // 初始化结构体管理
         this.structTable = new java.util.ArrayList<>();
@@ -591,6 +611,11 @@ public class CymbolStackVM {
         if (config.isDebugMode()) {
             System.out.println("[GC] executeStruct: allocated structId=" + structId +
                              ", isAlive=" + garbageCollector.isObjectAlive(structId));
+        }
+        } catch (Exception e) {
+            System.err.println("[GC] executeStruct error: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
     }
 

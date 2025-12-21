@@ -21,6 +21,11 @@ public class VMConfig {
     private final int maxExecutionTime;
     private final boolean enableBoundsCheck;
     private final boolean enableTypeCheck;
+
+    // GC配置
+    private final boolean enableGC;
+    private final String gcType;
+    private final int gcHeapSize;
     
     private VMConfig(Builder builder) {
         this.heapSize = builder.heapSize;
@@ -34,6 +39,9 @@ public class VMConfig {
         this.maxExecutionTime = builder.maxExecutionTime;
         this.enableBoundsCheck = builder.enableBoundsCheck;
         this.enableTypeCheck = builder.enableTypeCheck;
+        this.enableGC = builder.enableGC;
+        this.gcType = builder.gcType;
+        this.gcHeapSize = builder.gcHeapSize;
     }
     
     // Getters
@@ -81,6 +89,19 @@ public class VMConfig {
         return enableTypeCheck;
     }
 
+    // GC配置getters
+    public boolean isEnableGC() {
+        return enableGC;
+    }
+
+    public String getGcType() {
+        return gcType;
+    }
+
+    public int getGcHeapSize() {
+        return gcHeapSize;
+    }
+
     /**
      * 创建构建器的静态工厂方法
      * @return 新的Builder实例
@@ -105,6 +126,11 @@ public class VMConfig {
         private int maxExecutionTime = 60000; // 最大执行时间（毫秒）
         private boolean enableBoundsCheck = true;
         private boolean enableTypeCheck = true;
+
+        // GC配置默认值
+        private boolean enableGC = true;
+        private String gcType = "reference-counting";
+        private int gcHeapSize = 1024 * 1024; // 1MB
         
         public Builder() {}
         
@@ -178,6 +204,28 @@ public class VMConfig {
         
         public Builder setEnableTypeCheck(boolean enableTypeCheck) {
             this.enableTypeCheck = enableTypeCheck;
+            return this;
+        }
+
+        // GC配置setters
+        public Builder setEnableGC(boolean enableGC) {
+            this.enableGC = enableGC;
+            return this;
+        }
+
+        public Builder setGcType(String gcType) {
+            if (gcType == null || gcType.trim().isEmpty()) {
+                throw new IllegalArgumentException("GC type cannot be null or empty");
+            }
+            this.gcType = gcType;
+            return this;
+        }
+
+        public Builder setGcHeapSize(int gcHeapSize) {
+            if (gcHeapSize <= 0) {
+                throw new IllegalArgumentException("GC heap size must be positive");
+            }
+            this.gcHeapSize = gcHeapSize;
             return this;
         }
         

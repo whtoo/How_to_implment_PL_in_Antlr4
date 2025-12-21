@@ -9,6 +9,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The project implements the **Cymbol language** (a C-like language) with a complete compiler pipeline: frontend (lexer, parser, AST), middle-end (type system, semantic analysis, IR), and backend (code generation, VM execution).
 
+### 文档地图 (Documentation Map)
+
+| 章节 | 内容概述 | 相关 EP 范围 | 关键用途 |
+|------|----------|--------------|----------|
+| **Architecture** | 项目结构、模块划分、核心组件 | EP1-EP21 (全部) | 理解整体架构和模块职责 |
+| **Development Commands** | 构建、测试、执行命令 | EP1-EP21 (全部) | 日常开发工作流 |
+| **Testing Strategy** | 测试级别、覆盖率要求、运行测试 | EP1-EP21 (全部) | 确保代码质量和测试合规 |
+| **ANTLR4 Integration** | 语法文件、解析器生成 | EP1-EP10 (基础), EP20 (主语法) | 语法设计和解析器开发 |
+| **Key File Locations** | 核心编译器组件文件位置 | EP20 (主参考), 其他 EP 类似 | 快速定位关键源代码 |
+| **Development Guidelines** | 代码风格、错误处理、日志规范 | EP1-EP21 (全部) | 保持代码一致性和可维护性 |
+| **Common Tasks** | 常见开发任务步骤 | EP1-EP21 (全部) | 指导常见操作（添加 AST 节点等） |
+| **Claude Code Skills** | Compiler Development Skill 使用指南，覆盖开发、重构、调试、架构设计和规范设计任务 | EP1-EP21 (全部) | 自动获取编译器开发专业知识，包括规范设计指导 |
+| **Agent 工作流程** | Fork 子代理、上下文监控、进度保存 | EP1-EP21 (全部) | 管理复杂任务和上下文限制 |
+| **CCLSP Code Analysis** | 智能代码分析工具使用指南 | EP1-EP21 (全部) | 高效代码导航和问题诊断 |
+| **Module Code Structure Exploration Guide** | 模块代码探索方法论 | EP1-EP21 (全部) | 系统化理解模块内部结构 |
+| **Context7 MCP Usage** | 上下文管理工具使用指南 | EP1-EP21 (全部) | 保持会话连续性和决策追踪 |
+| **Episode-Specific Guidance** | EP 特定工作焦点和记忆管理 | EP1-EP21 (分组) | 在特定 EP 工作时优化上下文 |
+
 ## Architecture
 
 ### Module Structure
@@ -199,6 +217,15 @@ This project includes a specialized **Compiler Development** skill that provides
 
 The Compiler Development skill is a Claude Code skill that activates automatically when users ask about compiler-related topics. It provides expertise across the complete compiler pipeline implemented in this 21-episode educational project.
 
+**默认启动策略**：对于本项目的开发、重构、调试、架构设计和规范设计任务，Compiler Development Skill 会自动激活并提供专业指导：
+- **开发任务**：新增功能、模块扩展、API 修改（EP1-EP21 各模块）
+- **重构任务**：代码优化、设计模式调整、架构重构
+- **调试任务**：问题诊断、错误修复、性能调优、编译问题调试
+- **架构设计任务**：系统架构设计、模块划分、接口设计、技术选型
+- **规范设计任务**：语言规范设计、API规范设计、编码规范制定、接口契约设计
+
+技能自动检测编译器相关话题并激活，无需手动调用。
+
 #### Skill Capabilities
 
 The Compiler Development skill can assist with:
@@ -236,11 +263,18 @@ The Compiler Development skill can assist with:
    - Guide testing strategies, coverage requirements, and TDD practices
    - Provide development scripts and multi-platform support
 
+7. **Compiler Specification and Standards Design**
+   - Guide language specification design and formal definitions
+   - Assist with API contract design and interface specifications
+   - Help establish coding standards and best practices
+   - Support documentation standards and technical writing guidelines
+
 #### When to Use the Skill
 
 The Compiler Development skill activates when users ask about:
 - ANTLR4 grammar design, parsing, and debugging
 - Cymbol language syntax, semantics, and language design
+- Compiler specification design and standards definition
 - Compiler construction concepts, phases, and implementation
 - Type systems, symbol tables, semantic analysis, and name resolution
 - Intermediate representation, control flow, optimization, and code generation
@@ -301,6 +335,112 @@ The skill integrates with the project's development tools:
 - **Multi-platform Scripts**: `scripts/` directory for Linux, macOS, and Windows
 - **Testing Framework**: JUnit 5 with coverage requirements (≥85% overall)
 - **Documentation**: `.qoder/repowiki/` with 232+ technical documentation files
+
+## Agent 工作流程
+
+### Overview
+
+在复杂的编译器开发任务中，合理使用 Claude Code 的 Agent 功能可以显著提高效率和上下文管理能力。本工作流程指导如何通过 fork 子代理、监控上下文限制、保存进度到文档等方式，实现长期、复杂的开发任务。
+
+### Fork 新子代理
+
+当遇到以下情况时，应考虑 fork 新的子代理：
+
+1. **复杂多阶段任务**：需要独立执行编译、测试、调试等不同阶段
+2. **上下文限制临近**：当前对话上下文长度接近模型限制（约 200K tokens）
+3. **专业化分工**：需要不同专长的代理（如语法分析、类型检查、代码生成）
+4. **并行执行**：多个独立任务可以同时进行以加快进度
+
+**操作方法**：
+```bash
+# 使用 Task 工具启动新的子代理
+# 示例：启动编译器开发代理处理特定 EP 模块
+Task(description="处理 ep18 GC 集成", prompt="继续实现 ep18 的垃圾回收功能...", subagent_type="general-purpose")
+```
+
+### 监控上下文限制
+
+定期监控上下文使用情况，避免超出限制：
+
+1. **识别上下文积累点**：
+   - 大量代码文件读取和分析
+   - 长时间对话历史
+   - 多次工具调用记录
+
+2. **预警信号**：
+   - 响应速度明显下降
+   - 模型开始遗忘早期对话内容
+   - 工具调用结果被截断
+
+3. **主动管理策略**：
+   - 定期总结进度并保存到文档
+   - 关闭不再需要的背景代理
+   - 使用 Context7 记录关键决策点
+
+### 保存进度到文档
+
+在 fork 新代理前，必须将当前进度保存到相关文档：
+
+1. **进度文档位置**：
+   - 模块特定文档：`ep*/docs/` 目录下（如 `ep18/docs/GC_集成进度_20251221.md`）
+   - 技术设计文档：`/.qoder/repowiki/en/` 目录
+   - 测试进展文档：`ep*/src/test/resources/` 目录
+
+2. **保存内容**：
+   - 当前实现状态和已完成的功能
+   - 遇到的错误和解决方案
+   - 下一步计划的具体任务
+   - 关键设计决策和理由
+
+3. **文档格式**：
+   ```markdown
+   ## 进度更新 [YYYY-MM-DD]
+
+   ### 已完成
+   - 功能 A：实现细节...
+   - 功能 B：测试结果...
+
+   ### 当前问题
+   - 问题 1：描述...
+   - 解决方案：尝试...
+
+   ### 下一步计划
+   - 任务 1：具体描述...
+   - 任务 2：依赖关系...
+
+   ### 设计决策
+   - 决策 1：选择方案 X，因为...
+   ```
+
+### Fork 继续工作流程
+
+完整的 fork-and-continue 工作流程：
+
+```bash
+# 1. 检查当前上下文状态
+# 2. 保存进度到相关文档
+# 3. 使用 Task 工具 fork 新代理
+# 4. 新代理读取进度文档继续工作
+# 5. 重复此流程直到任务完成
+
+# 示例：继续 ep18 的垃圾回收实现
+Task(description="继续 ep18 GC 实现", prompt="读取 ep18/docs/GC_集成进度_20251221.md 中的进度，继续实现垃圾回收器的内存压缩功能...", subagent_type="general-purpose")
+```
+
+### 默认 Agent 配置
+
+对于本项目的开发、重构、调试、架构设计和规范设计任务，**默认自动启动 Compiler Development Skill**：
+
+- **开发任务**：新增功能、模块扩展、API 修改
+- **重构任务**：代码优化、设计模式调整、架构重构
+- **调试任务**：问题诊断、错误修复、性能调优、编译问题调试
+- **架构设计任务**：系统架构设计、模块划分、接口设计、技术选型
+- **规范设计任务**：语言规范设计、API规范设计、编码规范制定、接口契约设计
+
+**自动激活机制**：
+- 当用户请求涉及编译器开发、ANTLR4 语法、类型系统等话题时
+- Compiler Development Skill 自动提供专业知识指导
+- 与 CCLSP、Context7 等工具无缝集成
 
 ## CCLSP Code Analysis
 
@@ -622,6 +762,87 @@ Context7 works seamlessly with the existing Claude Code skills:
 ### Configuration
 
 Context7 is configured in `.mcp.json` and is automatically available when working with this project.
+
+## Episode-Specific Guidance
+
+### 概述
+
+当在特定 Episode（EP）模块工作时，应当选择性精简无关当前 EP 的记忆，专注于与当前 EP 相关的技术和架构知识。本指南提供针对不同 EP 阶段的工作焦点和记忆管理策略。
+
+### EP 阶段与关注焦点
+
+| EP 范围 | 核心关注点 | 可忽略的记忆 | 关键关联文件 |
+|---------|------------|--------------|--------------|
+| **EP1-EP10** (基础阶段) | 词法分析、语法分析、AST 构建、访问者模式 | EP11-EP21 的高级优化、IR 生成、代码生成 | `Cymbol.g4` 语法文件、AST 节点类、Visitor 接口 |
+| **EP11-EP20** (编译器核心) | 类型系统、符号表、语义分析、中间表示、控制流图 | EP1-EP10 的基础解析细节、EP21 的高级优化 | `TypeChecker.java`、`SymbolTable.java`、`IRGenerator.java`、`CFG.java` |
+| **EP21** (高级优化) | 数据流分析、SSA 形式、优化传递、性能调优 | EP1-EP10 的基础设施、EP11-EP20 的核心编译逻辑 | `DataFlowAnalyzer.java`、`SSAConverter.java`、`OptimizationPass.java` |
+
+### 选择性记忆管理策略
+
+#### 1. 当前 EP 上下文强化
+- **深度聚焦**：深入理解当前 EP 模块的特定职责和技术栈
+- **关联文件优先**：优先读取和记忆与当前 EP 直接相关的源代码文件
+- **测试用例导向**：以当前 EP 的测试用例为引导，理解功能需求
+
+#### 2. 无关 EP 记忆精简
+- **层级忽略**：当工作在 EP11-EP20 时，可忽略 EP1-EP10 的具体实现细节
+- **概念保留**：保留高层概念（如“AST 节点”），但忽略具体实现类名和方法
+- **接口关注**：只关注模块间接口（如 AST 节点类型），忽略内部实现
+
+#### 3. 跨 EP 依赖管理
+- **向上依赖**：当前 EP 依赖先前 EP 时，只记忆必要的 API 和接口
+- **向下透明**：后续 EP 的功能对当前 EP 透明，无需提前记忆
+- **接口契约**：通过清晰的接口契约减少跨 EP 记忆负担
+
+### 工作流程示例
+
+#### 示例：在 EP18（虚拟机）工作时
+```bash
+# 1. 聚焦 EP18 相关文件
+# 关键文件：CymbolStackVM.java、Bytecode指令集、内存管理
+
+# 2. 精简无关记忆
+# 忽略：EP1-EP10 的语法分析细节、EP20 的代码生成优化
+
+# 3. 管理跨 EP 依赖
+# 只需知道：EP17 产生的字节码格式、EP19 需要的虚拟机接口
+
+# 4. 使用 Context7 记录 EP18 特定决策
+# 记录垃圾回收策略、指令集扩展等 EP18 专属决策
+```
+
+#### 示例：在 EP20（代码生成）工作时
+```bash
+# 1. 聚焦 EP20 相关文件
+# 关键文件：CodeGenerator.java、寄存器分配、指令选择
+
+# 2. 精简无关记忆
+# 忽略：EP1-EP10 的 AST 构建细节、EP18 的虚拟机内部实现
+
+# 3. 管理跨 EP 依赖
+# 只需知道：EP19 的优化后 IR、EP18 的目标指令集
+
+# 4. 强化 EP20 特定知识
+# 深入记忆代码生成算法、目标平台特性
+```
+
+### 工具集成
+
+- **CCLSP**：使用 `find_references` 仅查找当前 EP 范围内的符号引用
+- **Context7**：记录当前 EP 的特定决策，避免污染其他 EP 的上下文
+- **Compiler Development Skill**：自动提供与当前 EP 相关的编译器知识
+- **Task 工具**：fork 子代理时，明确指定 EP 范围和相关文档
+
+### 检查清单
+
+在开始特定 EP 工作前，检查以下事项：
+
+1. [ ] 明确当前 EP 在 21 个阶段中的位置和职责
+2. [ ] 识别当前 EP 的关键源代码文件和测试用例
+3. [ ] 确定对先前 EP 的最小依赖集合
+4. [ ] 规划对后续 EP 的接口设计
+5. [ ] 设置 Context7 过滤，聚焦当前 EP 相关历史
+6. [ ] 准备 EP 特定的进度文档（如 `ep*/docs/` 目录）
 
 ## Notes for Future Claude Code Instances
 

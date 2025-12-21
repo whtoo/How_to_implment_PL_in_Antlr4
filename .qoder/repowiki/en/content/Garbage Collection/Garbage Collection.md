@@ -6,9 +6,9 @@
 - [ReferenceCountingGC.java](file://ep18/src/main/java/org/teachfx/antlr4/ep18/gc/ReferenceCountingGC.java)
 - [GCObjectHeader.java](file://ep18/src/main/java/org/teachfx/antlr4/ep18/gc/GCObjectHeader.java)
 - [GCStats.java](file://ep18/src/main/java/org/teachfx/antlr4/ep18/gc/GCStats.java)
-- [CymbolStackVMGCIntegrationTest.java](file://ep18/src/test/java/org/teachfx/antlr4/ep18/CymbolStackVMGCIntegrationTest.java)
+- [CymbolStackVMGCIntegrationTest.java](file://ep18/src/test/java/org/teachfx/antlr4/ep18/stackvm/CymbolStackVMGCIntegrationTest.java)
 - [MemoryLeakDetectionTest.java](file://ep18/src/test/java/org/teachfx/antlr4/ep18/gc/MemoryLeakDetectionTest.java)
-- [GCPerformanceBenchmark.java](file://ep18/src/jmh/java/org/teachfx/antlr4/ep18/gc/GCPerformanceBenchmark.java)
+- [GCPerformanceBenchmark.java](file://ep18/src/test/jmh/java/org/teachfx/antlr4/ep18/performance/GCPerformanceBenchmark.java)
 - [GCBoundaryTests.java](file://ep18/src/test/java/org/teachfx/antlr4/ep18/gc/GCBoundaryTests.java)
 </cite>
 
@@ -574,6 +574,94 @@ public class GCStats {
 3. **Compaction**: Reduce fragmentation through compaction
 4. **Alternative Algorithms**: Mark-sweep, copying, or hybrid approaches
 
+## TDD Test Suite for GC Integration
+
+### Test-Driven Development Approach
+
+The GC integration follows strict TDD principles with comprehensive test coverage. All tests were created before implementation to define expected behavior and ensure quality.
+
+### Test Categories Created
+
+1. **GC Initialization Tests**
+   - `testGCInitialization`: Verifies GC is properly initialized in VM
+   - `testGCDisabledConfiguration`: Tests backward compatibility when GC is disabled
+
+2. **Memory Allocation Tests**
+   - `testStructAllocationUsesGC`: Verifies struct allocation uses GC instead of simple heap
+   - `testStructAllocationWithDifferentSizes`: Parameterized test for various struct sizes
+
+3. **Reference Counting Tests**
+   - `testReferenceCounting`: Tests proper reference count management
+   - `testGarbageCollection`: Verifies garbage collection works correctly
+
+4. **Memory Management Tests**
+   - `testOutOfMemoryHandling`: Tests proper handling of out-of-memory conditions
+   - `testMemoryLeakDetection`: Detects potential memory leaks
+
+5. **Performance Tests**
+   - `testGCPerformanceImpact`: Measures GC overhead on VM performance
+   - `testGCNoLongPauses`: Ensures GC doesn't cause long pauses
+
+### Test Implementation Details
+
+```java
+// Example: Comprehensive GC integration test
+@Test
+@DisplayName("应该正确管理引用计数")
+@Tag("reference-counting")
+void testReferenceCounting() throws Exception {
+    // Given: Allocate a struct
+    byte[] allocateCode = createTestBytecode(new int[]{
+        encodeInstruction(BytecodeDefinition.INSTR_STRUCT, 2),
+        encodeInstruction(BytecodeDefinition.INSTR_HALT)
+    });
+
+    int structId = vm.execute(allocateCode);
+    assertThat(structId).isGreaterThan(0);
+
+    // When: Get GC instance and manipulate references
+    GarbageCollector gc = getGCInstance();
+    ReferenceCountingGC refGC = (ReferenceCountingGC) gc;
+
+    // Then: Verify reference counting works correctly
+    refGC.incrementRef(structId);
+    refGC.incrementRef(structId);
+    refGC.decrementRef(structId);
+    assertThat(refGC.isObjectAlive(structId)).isTrue();
+}
+```
+
+### Performance Benchmark Suite
+
+The JMH benchmark suite includes:
+
+1. **Allocation Performance**: Small, medium, large struct allocation
+2. **GC Overhead Comparison**: With GC vs without GC
+3. **Memory Pressure Tests**: Under high allocation rates
+4. **GC Pause Time Measurements**: Collection pause durations
+
+### Test Coverage Requirements
+
+- **Line Coverage**: ≥95% for GC-related code
+- **Branch Coverage**: ≥90% for decision points
+- **Integration Coverage**: 100% of VM-GC integration points
+- **Performance Requirements**: GC overhead <10%, pause times <10ms
+
+### Running Tests
+
+```bash
+# Run GC integration tests
+mvn test -pl ep18 -Dtest="CymbolStackVMGCIntegrationTest"
+
+# Run all GC-related tests
+mvn test -pl ep18 -Dtest="*GC*"
+
+# Run performance benchmarks
+mvn verify -pl ep18 -Pbenchmarks
+```
+
 **Section sources**
 - [GCStats.java](file://ep18/src/main/java/org/teachfx/antlr4/ep18/gc/GCStats.java)
 - [ReferenceCountingGC.java](file://ep18/src/main/java/org/teachfx/antlr4/ep18/gc/ReferenceCountingGC.java)
+- [CymbolStackVMGCIntegrationTest.java](file://ep18/src/test/java/org/teachfx/antlr4/ep18/stackvm/CymbolStackVMGCIntegrationTest.java)
+- [GCPerformanceBenchmark.java](file://ep18/src/test/jmh/java/org/teachfx/antlr4/ep18/performance/GCPerformanceBenchmark.java)

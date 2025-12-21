@@ -3,6 +3,7 @@ package org.teachfx.antlr4.ep18.stackvm;
 import org.teachfx.antlr4.ep18.stackvm.ABIConvention.*;
 import org.teachfx.antlr4.ep18.gc.GarbageCollector;
 import org.teachfx.antlr4.ep18.gc.ReferenceCountingGC;
+import org.teachfx.antlr4.ep18.gc.NoOpGarbageCollector;
 
 import java.util.Arrays;
 

@@ -1,0 +1,181 @@
+// Reference Counting Example
+// Demonstrates explicit reference counting and memory management
+
+struct Node {
+    int value;
+    Node next;
+}
+
+// Function demonstrating reference counting basics
+void referenceCountingDemo() {
+    print("=== Reference Counting Demo ===\n");
+
+    // Create a node
+    Node n1 = new Node();
+    n1.value = 42;
+    n1.next = null;
+
+    print("Created Node n1 with value: ");
+    print(n1.value);
+    print("\n");
+
+    // Create another node that references the first
+    Node n2 = new Node();
+    n2.value = 100;
+    n2.next = n1;  // n2 references n1
+
+    print("Created Node n2 with value: ");
+    print(n2.value);
+    print(", references n1\n");
+
+    // Create a third node
+    Node n3 = new Node();
+    n3.value = 200;
+    n3.next = n1;  // n3 also references n1
+
+    print("Created Node n3 with value: ");
+    print(n3.value);
+    print(", also references n1\n");
+
+    // Now n1 has two references: from n2 and n3
+
+    // Remove references
+    n2.next = null;  // n2 no longer references n1
+    print("n2.next set to null - removed reference to n1\n");
+
+    n3.next = null;  // n3 no longer references n1
+    print("n3.next set to null - removed reference to n1\n");
+
+    // Now n1 has no references and will be collected by GC
+    print("n1 now has no references - will be garbage collected\n");
+
+    // n2 and n3 will be collected when function returns
+}
+
+// Function demonstrating circular references
+void circularReferenceDemo() {
+    print("\n=== Circular Reference Demo ===\n");
+
+    // Create two nodes that reference each other
+    Node a = new Node();
+    a.value = 1;
+
+    Node b = new Node();
+    b.value = 2;
+
+    // Create circular reference
+    a.next = b;
+    b.next = a;
+
+    print("Created circular reference: a -> b -> a\n");
+    print("Both nodes have reference count = 1\n");
+
+    // When a and b go out of scope, they still reference each other
+    // Reference counting cannot collect circular references automatically
+    print("Warning: Circular references cannot be collected by reference counting GC\n");
+}
+
+// Function demonstrating proper reference management
+void properReferenceManagement() {
+    print("\n=== Proper Reference Management ===\n");
+
+    // Create a linked list
+    Node head = null;
+
+    // Build list: 3 -> 2 -> 1
+    for (int i = 1; i <= 3; i = i + 1) {
+        Node newNode = new Node();
+        newNode.value = i;
+        newNode.next = head;
+        head = newNode;
+
+        print("Added node with value: ");
+        print(i);
+        print("\n");
+    }
+
+    // Traverse and print list
+    print("Linked list contents: ");
+    Node current = head;
+    while (current != null) {
+        print(current.value);
+        if (current.next != null) {
+            print(" -> ");
+        }
+        current = current.next;
+    }
+    print("\n");
+
+    // Properly clear the list
+    print("Clearing linked list...\n");
+    while (head != null) {
+        Node toDelete = head;
+        head = head.next;
+        toDelete.next = null;  // Remove reference
+        // toDelete will be collected by GC
+    }
+
+    print("List cleared - all nodes will be garbage collected\n");
+}
+
+// Function demonstrating reference counting with arrays
+void arrayReferenceDemo() {
+    print("\n=== Array Reference Demo ===\n");
+
+    // Create array of nodes
+    Node[5] nodes;
+
+    // Initialize array
+    for (int i = 0; i < 5; i = i + 1) {
+        nodes[i] = new Node();
+        nodes[i].value = i * 10;
+        nodes[i].next = null;
+
+        print("Created node ");
+        print(i);
+        print(" with value: ");
+        print(nodes[i].value);
+        print("\n");
+    }
+
+    // Create references between nodes
+    for (int i = 0; i < 4; i = i + 1) {
+        nodes[i].next = nodes[i + 1];
+        print("Node ");
+        print(i);
+        print(" references node ");
+        print(i + 1);
+        print("\n");
+    }
+
+    // Clear array - all nodes will be collected
+    // (except they reference each other, creating a chain)
+    print("Clearing array...\n");
+    for (int i = 0; i < 5; i = i + 1) {
+        nodes[i] = null;
+    }
+
+    // The chain of references means nodes still reference each other
+    // This creates a reference cycle that cannot be collected
+    print("Warning: Reference cycle prevents collection\n");
+}
+
+// Main function
+int main() {
+    print("=== Reference Counting Examples ===\n\n");
+
+    referenceCountingDemo();
+    circularReferenceDemo();
+    properReferenceManagement();
+    arrayReferenceDemo();
+
+    print("\n=== Summary ===\n");
+    print("Reference counting GC automatically collects unreferenced objects\n");
+    print("Circular references require manual intervention or alternative GC algorithms\n");
+    print("Proper reference management is essential for memory efficiency\n");
+
+    return 0;
+}
+
+// Run the program
+main();

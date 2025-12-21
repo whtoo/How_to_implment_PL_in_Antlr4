@@ -1,0 +1,95 @@
+// Basic GC Usage Example
+// Demonstrates automatic garbage collection with struct allocation
+
+struct Point {
+    int x;
+    int y;
+}
+
+struct Rectangle {
+    Point topLeft;
+    Point bottomRight;
+    int area;
+}
+
+// Function that creates and uses structs
+void createAndUseStructs() {
+    // Create a Point struct - will be automatically managed by GC
+    Point p1 = new Point();
+    p1.x = 10;
+    p1.y = 20;
+
+    // Create another Point
+    Point p2 = new Point();
+    p2.x = 30;
+    p2.y = 40;
+
+    // Create a Rectangle containing the Points
+    Rectangle rect = new Rectangle();
+    rect.topLeft = p1;
+    rect.bottomRight = p2;
+    rect.area = (p2.x - p1.x) * (p2.y - p1.y);
+
+    print("Rectangle area: ");
+    print(rect.area);
+    print("\n");
+
+    // When this function returns, all local variables go out of scope
+    // The GC will automatically collect the structs if they're not referenced elsewhere
+}
+
+// Function demonstrating temporary struct usage
+void temporaryStructDemo() {
+    for (int i = 0; i < 10; i = i + 1) {
+        // Create temporary struct in loop
+        Point temp = new Point();
+        temp.x = i;
+        temp.y = i * 2;
+
+        // Use the struct
+        print("Point ");
+        print(i);
+        print(": (");
+        print(temp.x);
+        print(", ");
+        print(temp.y);
+        print(")\n");
+
+        // temp goes out of scope at end of each iteration
+        // GC will collect it automatically
+    }
+}
+
+// Main function
+int main() {
+    print("=== Basic GC Example ===\n");
+
+    // Demonstrate struct creation and automatic cleanup
+    createAndUseStructs();
+
+    print("\n=== Temporary Struct Demo ===\n");
+    temporaryStructDemo();
+
+    print("\n=== GC Statistics Example ===\n");
+
+    // Allocate many structs to demonstrate GC in action
+    for (int i = 0; i < 100; i = i + 1) {
+        Point p = new Point();
+        p.x = i;
+        p.y = i * i;
+
+        // Only keep every 10th struct
+        if (i % 10 == 0) {
+            // Store in array or global variable to keep reference
+            // In this case, we just let it go out of scope
+        }
+    }
+
+    print("Allocated 100 Point structs\n");
+    print("Most were automatically collected by GC\n");
+
+    return 0;
+}
+
+// Run the program
+main();

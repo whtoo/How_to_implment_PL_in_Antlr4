@@ -1,3 +1,9 @@
+---
+name: technical-documentation-writing-and-refactoring
+description: 提供完整的技术文档编写与重构指南，包括标准化文档结构、TDD任务计划模板、质量评估模型等。适用于EP系列项目的文档标准化和自动化编写任务。
+allowed-tools: Read, Grep, Glob, Bash, Write, Edit
+---
+
 # 技术文档编写与重构 Skill
 
 **文档版本**: v1.0

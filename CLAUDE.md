@@ -186,6 +186,17 @@ java -jar antlr-4.13.2-complete.jar -visitor -no-listener Cymbol.g4
 4. Ensure backward compatibility
 5. Run full test suite before committing
 
+### Git Commit Style
+Follow conventional commit format: `type(scope): description`
+- **type**: `docs`, `feat`, `fix`, `refactor`, `test`, `chore`
+- **scope**: module name (e.g., `ep21`, `antlr`, `vm`)
+- **description**: concise summary in present tense
+
+Examples:
+- `docs(ep21): restructure documentation and update specifications`
+- `feat(ep15): add constant folding optimization`
+- `fix(ep8): resolve symbol table lookup issue`
+
 ## Common Tasks
 
 ### Adding a New AST Node

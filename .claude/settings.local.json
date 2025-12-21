@@ -49,13 +49,23 @@
       "mcp__cclsp__get_diagnostics",
       "Bash(python3:*)",
       "Skill(technical-documentation-writing-and-refactoring)",
-      "WebFetch(domain:mermaid.js.org)"
+      "WebFetch(domain:mermaid.js.org)",
+      "Bash(test -f .claude/cclsp.json)",
+      "Bash(jdtls --help:*)",
+      "Bash(C:\\tools\\jdtls\\bin\\jdtls.bat:*)",
+      "Bash(/c/tools/jdtls/bin/jdtls:*)",
+      "Bash(./jdtls-wrapper:*)",
+      "Bash(kill 2372:*)",
+      "Bash(kill:*)",
+      "Bash(dir:*)",
+      "Bash(test:*)",
+      "Bash(python:*)",
+      "Bash(where:*)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "tree-sitter",
-    "filesystem",
-    "memory",
-    "context7"
+    "context7",
+    "cclsp"
   ]
 }

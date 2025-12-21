@@ -5,9 +5,311 @@
 **参考文档**: 架构设计规范.md, 语言规范.md
 **状态**: 进行中 (In Progress)
 
-## 1. 重构概述
+---
 
-### 1.1 重构目标
+## 📊 项目看板与任务概览
+
+### 2.1 项目看板 (Kanban Board)
+
+```mermaid
+kanban
+  title EP21 TDD重构优化项目看板
+  column "✅ 已完成 (Completed)"
+    TASK-1.1: 测试框架升级
+    TASK-1.2: 构建系统优化
+    TASK-1.1.1: 升级JUnit5配置
+    TASK-1.1.2: 配置JaCoCo覆盖率检查
+    TASK-1.1.3: 建立测试数据工厂
+    TASK-1.1.4: 配置CI集成
+    TASK-1.2.1: 清理POM文件
+    TASK-1.2.2: 统一依赖版本
+    TASK-1.2.3: 优化插件配置
+    TASK-1.2.4: 配置代码质量检查
+    规范体系设计
+    架构设计规范
+    语言规范
+    TDD重构计划
+
+  column "🔄 进行中 (In Progress)"
+    规范文档编写 (当前)
+    TDD计划制定 (当前)
+    TASK-4.1.2: 重构统一数据流接口
+    TASK-4.1.3: 实现迭代求解器
+    TASK-4.1.4: 改进格理论实现
+    TASK-4.2.2: 重构支配树算法
+    TASK-4.2.3: 改进Φ函数插入
+    TASK-4.2.4: 实现变量重命名
+
+  column "⏸️ 未开始 (To Do)"
+    Phase2: 前端层重构
+    Phase3: 中间表示层重构
+    Phase4: 优化层重构
+    Phase5: 后端层重构
+    TASK-2.1: 词法分析器重构
+    TASK-2.2: 语法分析器重构
+    TASK-2.3: AST系统重构
+    TASK-3.1: MIR/LIR系统重构
+    TASK-3.2: 控制流图重构
+    TASK-4.3: 控制流优化重构 [研究生进阶]
+    TASK-4.4: 高级数据流分析扩展 [研究生进阶]
+    TASK-4.5: 高级寄存器分配实现 [研究生进阶]
+    TASK-4.6: 指令选择优化实现 [研究生进阶]
+    TASK-5.1: 代码生成器重构
+    TASK-5.2: 指令调度重构 [研究生进阶]
+    TASK-5.3: 类型系统扩展 [研究生进阶]
+    TASK-5.4: 运行时支持系统 [研究生进阶]
+
+  column "🚫 阻塞 (Blocked)"
+    [暂无]
+```
+
+### 2.2 任务追踪看板 (Task Tracking)
+
+#### Agent任务状态
+| Agent | 当前阶段 | 状态 | 进度 | 预计完成 | 阻塞项 |
+|-------|----------|------|------|----------|--------|
+| Agent 1 | 基础设施重构 | ✅ 已完成 | 100% | 2025-12-23 | 无 |
+| Agent 2 | 前端层重构 | ⏸️ 未开始 | 0% | 2025-12-30 | 依赖Agent1 |
+| Agent 3 | 中间表示层重构 | ⏸️ 未开始 | 0% | 2026-01-06 | 依赖Agent2 |
+| Agent 4 | 优化层重构 | 🔄 计划中 | 15% | 2026-01-20 | 依赖Agent3 |
+| Agent 5 | 后端层重构 | 🔄 计划中 | 10% | 2026-02-03 | 依赖Agent3 |
+
+#### 里程碑追踪
+| 里程碑 | 目标日期 | 状态 | 进度 | 关键任务 |
+|--------|----------|------|------|----------|
+| M1: 基础设施完成 | 2025-12-23 | ✅ 已达成 | 100% | 测试框架升级、构建优化 |
+| M2: 前端层完成 | 2025-12-30 | ⏸️ 未开始 | 0% | 词法/语法分析器、AST系统 |
+| M3: 中间表示层完成 | 2026-01-06 | ⏸️ 未开始 | 0% | MIR/LIR、CFG构建 |
+| M4: 优化层完成 | 2026-01-20 | 🔄 计划中 | 15% | 数据流分析、SSA、进阶优化 |
+| M5: 后端层完成 | 2026-02-03 | 🔄 计划中 | 10% | 代码生成、指令调度、寄存器分配 |
+
+#### 优先级看板
+```
+高优先级 (P0) 🔴
+├── 基础设施重构 (当前)
+├── 测试框架升级 (当前)
+└── 规范文档编写 (当前)
+
+中优先级 (P1) 🟡
+├── 前端层重构
+├── 中间表示层重构
+└── 数据流分析框架
+
+低优先级 (P2) 🟢
+├── 高级寄存器分配
+├── 指令选择优化
+└── 类型系统扩展
+```
+
+### 2.3 任务拆解看板 (WBS Breakdown)
+
+#### 阶段1: 基础设施重构 (预计: 3天) ✅
+```
+✅ TASK-1.1: 测试框架升级 (2天)
+    ✅ TASK-1.1.1: 升级JUnit5配置
+    ✅ TASK-1.1.2: 配置JaCoCo覆盖率检查
+    ✅ TASK-1.1.3: 建立测试数据工厂
+    ✅ TASK-1.1.4: 配置CI集成
+
+✅ TASK-1.2: 构建系统优化 (1天)
+    ✅ TASK-1.2.1: 清理POM文件
+    ✅ TASK-1.2.2: 统一依赖版本
+    ✅ TASK-1.2.3: 优化插件配置
+    ✅ TASK-1.2.4: 配置代码质量检查
+```
+
+#### 阶段2: 前端层重构 (预计: 8天) ⏸️
+```
+⏸️ TASK-2.1: 词法分析器重构 (2天)
+    ⏸️ TASK-2.1.1: 创建词法测试套件
+    ⏸️ TASK-2.1.2: 实现Unicode标识符支持
+    ⏸️ TASK-2.1.3: 改进错误恢复机制
+
+⏸️ TASK-2.2: 语法分析器重构 (3天)
+    ⏸️ TASK-2.2.1: 创建语法测试套件
+    ⏸️ TASK-2.2.2: 重构语法规则消除歧义
+    ⏸️ TASK-2.2.3: 改进错误报告
+
+⏸️ TASK-2.3: AST系统重构 (3天)
+    ⏸️ TASK-2.3.1: 创建AST测试套件
+    ⏸️ TASK-2.3.2: 重构AST节点层次结构
+    ⏸️ TASK-2.3.3: 增强访问者模式支持
+```
+
+#### 阶段3: 中间表示层重构 (预计: 7天) ⏸️
+```
+⏸️ TASK-3.1: MIR/LIR系统重构 (4天)
+    ⏸️ TASK-3.1.1: 创建IR测试套件
+    ⏸️ TASK-3.1.2: 重构MIR节点体系
+    ⏸️ TASK-3.1.3: 实现LIR指令集
+    ⏸️ TASK-3.1.4: 改进IR转换算法
+
+⏸️ TASK-3.2: 控制流图重构 (3天)
+    ⏸️ TASK-3.2.1: 创建CFG测试套件
+    ⏸️ TASK-3.2.2: 重构基本块表示
+    ⏸️ TASK-3.2.3: 改进CFG构建算法
+    ⏸️ TASK-3.2.4: 实现可视化输出
+```
+
+#### 阶段4: 优化层重构 (预计: 11天) 🔄
+```
+🔄 TASK-4.1: 数据流分析框架重构 (4天)
+    🔄 TASK-4.1.1: 创建数据流测试套件
+    🔄 TASK-4.1.2: 重构统一数据流接口
+    🔄 TASK-4.1.3: 实现迭代求解器
+    🔄 TASK-4.1.4: 改进格理论实现
+
+🔄 TASK-4.2: SSA形式转换重构 (3天)
+    🔄 TASK-4.2.1: 创建SSA测试套件
+    🔄 TASK-4.2.2: 重构支配树算法
+    🔄 TASK-4.2.3: 改进Φ函数插入
+    🔄 TASK-4.2.4: 实现变量重命名
+
+🔄 TASK-4.3: 控制流优化重构 (4天) [研究生进阶]
+    🔄 TASK-4.3.1: 创建控制流优化测试套件
+    🔄 TASK-4.3.2: 实现循环分析框架
+    🔄 TASK-4.3.3: 实现条件常量传播
+    🔄 TASK-4.3.4: 实现跳转线程化优化
+
+🔄 TASK-4.4: 高级数据流分析扩展 (3天) [研究生进阶]
+    🔄 TASK-4.4.1: 实现常量传播分析算法
+    🔄 TASK-4.4.2: 实现到达定义分析算法
+    🔄 TASK-4.4.3: 实现可用表达式分析
+
+🔄 TASK-4.5: 高级寄存器分配实现 (4天) [研究生进阶]
+    🔄 TASK-4.5.1: 实现干涉图构建算法
+    🔄 TASK-4.5.2: 实现图着色寄存器分配
+    🔄 TASK-4.5.3: 实现线性扫描寄存器分配
+    🔄 TASK-4.5.4: 实现智能溢出处理策略
+
+🔄 TASK-4.6: 指令选择优化实现 (3天) [研究生进阶]
+    🔄 TASK-4.6.1: 定义指令选择模式
+    🔄 TASK-4.6.2: 实现动态规划匹配算法
+    🔄 TASK-4.6.3: 实现代码生成器
+```
+
+#### 阶段5: 后端层重构 (预计: 10天) 🔄
+```
+🔄 TASK-5.1: 代码生成器重构 (3天)
+    🔄 TASK-5.1.1: 创建代码生成测试套件
+    🔄 TASK-5.1.2: 重构代码生成接口
+    🔄 TASK-5.1.3: 改进指令选择算法
+
+🔄 TASK-5.2: 指令调度重构 (3天) [研究生进阶]
+    🔄 TASK-5.2.1: 实现依赖分析框架
+    🔄 TASK-5.2.2: 实现列表调度算法
+    🔄 TASK-5.2.3: 实现关键路径调度
+
+🔄 TASK-5.3: 类型系统扩展 (3天) [研究生进阶]
+    🔄 TASK-5.3.1: 实现结构体类型表示
+    🔄 TASK-5.3.2: 实现成员访问代码生成
+    🔄 TASK-5.3.3: 优化内存布局
+
+🔄 TASK-5.4: 运行时支持系统 (4天) [研究生进阶]
+    🔄 TASK-5.4.1: 实现标记-清除垃圾回收
+    🔄 TASK-5.4.2: 实现异常处理机制
+    🔄 TASK-5.4.3: 实现堆内存管理器
+    🔄 TASK-5.4.4: 优化运行时性能
+```
+
+### 2.4 精确任务追踪表
+
+| 层级 | 任务ID | 描述 | 状态 | 优先级 | 负责人 | 截止日期 | 依赖项 | 验收标准 | 备注 |
+|------|--------|------|------|--------|--------|----------|--------|----------|------|
+| **阶段** | **Phase1** | **基础设施重构** | ✅ 已完成 | 高 | 团队 | 2025-12-23 | 无 | 全部测试通过，构建无警告 | 包含2个主要任务，8个子任务 |
+| 主要任务 | TASK-1.1 | 测试框架升级 | ✅ 已完成 | 高 | 团队 | 2025-12-22 | Phase1 | 覆盖率≥85%，CI构建通过 | 升级JUnit5、配置JaCoCo等 |
+| 二级子任务 | TASK-1.1.1 | 升级JUnit5配置 | ✅ 已完成 | 高 | 团队 | 2025-12-21 | TASK-1.1 | 所有测试通过JUnit5运行 | 迁移现有测试到JUnit5 |
+| 二级子任务 | TASK-1.1.2 | 配置JaCoCo覆盖率检查 | ✅ 已完成 | 高 | 团队 | 2025-12-21 | TASK-1.1.1 | 核心模块覆盖率≥85% | 设置覆盖率阈值≥85% |
+| 二级子任务 | TASK-1.1.3 | 建立测试数据工厂 | ✅ 已完成 | 中 | 团队 | 2025-12-22 | TASK-1.1.2 | 测试辅助类完整可用 | 创建测试辅助工具类 |
+| 二级子任务 | TASK-1.1.4 | 配置CI集成 | ✅ 已完成 | 中 | 团队 | 2025-12-22 | TASK-1.1.3 | CI流水线正常运行 | 集成到CI/CD流水线 |
+| 主要任务 | TASK-1.2 | 构建系统优化 | ✅ 已完成 | 高 | 团队 | 2025-12-23 | TASK-1.1 | 构建时间减少30% | 优化Maven构建配置 |
+| 二级子任务 | TASK-1.2.1 | 清理POM文件 | ✅ 已完成 | 高 | 团队 | 2025-12-22 | TASK-1.2 | 无冗余依赖 | 清理不必要的依赖 |
+| 二级子任务 | TASK-1.2.2 | 统一依赖版本 | ✅ 已完成 | 中 | 团队 | 2025-12-22 | TASK-1.2.1 | 依赖版本统一 | 统一依赖版本管理 |
+| 二级子任务 | TASK-1.2.3 | 优化插件配置 | ✅ 已完成 | 中 | 团队 | 2025-12-23 | TASK-1.2.2 | 插件配置最优 | 优化插件配置 |
+| 二级子任务 | TASK-1.2.4 | 配置代码质量检查 | ✅ 已完成 | 中 | 团队 | 2025-12-23 | TASK-1.2.3 | 静态检查通过 | 配置Checkstyle、SpotBugs等 |
+| **阶段** | **Phase2** | **前端层重构** | ⏸️ 未开始 | 高 | 团队 | 2025-12-30 | Phase1 | 解析100%正确，错误恢复完善 | 包含3个主要任务，9个子任务 |
+| 主要任务 | TASK-2.1 | 词法分析器重构 | ⏸️ 未开始 | 高 | 团队 | 2025-12-26 | TASK-1.2 | 支持Unicode，错误恢复完善 | 符合语言规范第3章要求 |
+| 三级子任务 | TASK-2.1.1 | 创建词法测试套件 | ⏸️ 未开始 | 高 | 团队 | 2025-12-24 | TASK-2.1 | 测试覆盖率≥90% | 标识符、字面量、关键字测试 |
+| 三级子任务 | TASK-2.1.1.1 | 标识符测试用例 | ⏸️ 未开始 | 高 | 团队 | 2025-12-24 | TASK-2.1.1 | 有效/无效标识符全覆盖 | 测试有效和无效标识符 |
+| 三级子任务 | TASK-2.1.1.2 | 字面量测试用例 | ⏸️ 未开始 | 高 | 团队 | 2025-12-24 | TASK-2.1.1 | 各种字面量格式测试 | 测试整数、浮点、字符串等 |
+| 三级子任务 | TASK-2.1.1.3 | 关键字识别测试 | ⏸️ 未开始 | 中 | 团队 | 2025-12-24 | TASK-2.1.1 | 所有关键字正确识别 | 测试if、while、return等关键字 |
+| 三级子任务 | TASK-2.1.2 | 实现Unicode标识符支持 | ⏸️ 未开始 | 高 | 团队 | 2025-12-25 | TASK-2.1.1 | 支持完整Unicode范围 | 支持完整Unicode标识符 |
+| 三级子任务 | TASK-2.1.2.1 | 更新词法规则 | ⏸️ 未开始 | 高 | 团队 | 2025-12-25 | TASK-2.1.2 | Cymbol.g4支持Unicode | 修改Cymbol.g4词法规则 |
+| 三级子任务 | TASK-2.1.2.2 | 更新词法分析器 | ⏸️ 未开始 | 高 | 团队 | 2025-12-25 | TASK-2.1.2.1 | 生成器支持Unicode | 重新生成词法分析器 |
+| 三级子任务 | TASK-2.1.3 | 改进错误恢复机制 | ⏸️ 未开始 | 中 | 团队 | 2025-12-26 | TASK-2.1.2 | 错误恢复完善 | 完善错误恢复机制 |
+| 三级子任务 | TASK-2.1.3.1 | 实现错误处理器 | ⏸️ 未开始 | 中 | 团队 | 2025-12-26 | TASK-2.1.3 | 错误处理正确 | 实现LexicalErrorHandler |
+| 三级子任务 | TASK-2.1.3.2 | 添加同步机制 | ⏸️ 未开始 | 低 | 团队 | 2025-12-26 | TASK-2.1.3.1 | 错误后正确同步 | 添加token同步机制 |
+| 主要任务 | TASK-2.2 | 语法分析器重构 | ⏸️ 未开始 | 高 | 团队 | 2025-12-28 | TASK-2.1 | 语法错误准确报告 | 符合语言规范第4章要求 |
+| 三级子任务 | TASK-2.2.1 | 创建语法测试套件 | ⏸️ 未开始 | 高 | 团队 | 2025-12-26 | TASK-2.2 | 测试覆盖率≥90% | 声明、语句、表达式测试 |
+| 三级子任务 | TASK-2.2.1.1 | 声明语法测试 | ⏸️ 未开始 | 高 | 团队 | 2025-12-26 | TASK-2.2.1 | 变量/函数声明测试通过 | 测试变量声明、函数声明 |
+| 三级子任务 | TASK-2.2.1.2 | 语句语法测试 | ⏸️ 未开始 | 高 | 团队 | 2025-12-26 | TASK-2.2.1 | 控制流语句测试通过 | 测试if、while、for语句 |
+| 三级子任务 | TASK-2.2.1.3 | 表达式语法测试 | ⏸️ 未开始 | 中 | 团队 | 2025-12-26 | TASK-2.2.1 | 表达式解析正确 | 测试算术、逻辑、关系表达式 |
+| 三级子任务 | TASK-2.2.2 | 重构语法规则消除歧义 | ⏸️ 未开始 | 高 | 团队 | 2025-12-27 | TASK-2.2.1 | 无语法歧义 | 重构Cymbol.g4语法规则 |
+| 三级子任务 | TASK-2.2.2.1 | 分析现有歧义 | ⏸️ 未开始 | 高 | 团队 | 2025-12-27 | TASK-2.2.2 | 歧义点识别完整 | 识别并分析语法歧义 |
+| 三级子任务 | TASK-2.2.2.2 | 重写歧义规则 | ⏸️ 未开始 | 高 | 团队 | 2025-12-27 | TASK-2.2.2.1 | 消除所有歧义 | 重写有歧义的语法规则 |
+| 三级子任务 | TASK-2.2.3 | 改进错误报告 | ⏸️ 未开始 | 中 | 团队 | 2025-12-28 | TASK-2.2.2 | 错误信息准确详细 | 改进错误报告和恢复 |
+| 三级子任务 | TASK-2.2.3.1 | 实现语法错误处理器 | ⏸️ 未开始 | 中 | 团队 | 2025-12-28 | TASK-2.2.3 | 语法错误准确定位 | 实现SyntaxErrorHandler |
+| 三级子任务 | TASK-2.2.3.2 | 添加错误恢复策略 | ⏸️ 未开始 | 低 | 团队 | 2025-12-28 | TASK-2.2.3.1 | 错误后继续解析 | 添加同步点恢复机制 |
+| **阶段** | **Phase3** | **中间表示层重构** | ⏸️ 未开始 | 高 | 团队 | 2026-01-06 | Phase2 | IR转换100%正确，CFG完整 | 包含2个主要任务，8个子任务 |
+| 主要任务 | TASK-3.1 | MIR/LIR系统重构 | ⏸️ 未开始 | 高 | 团队 | 2026-01-03 | TASK-2.3 | IR类型安全，转换高效 | 符合架构设计规范第4章 |
+| 三级子任务 | TASK-3.1.1 | 创建IR测试套件 | ⏸️ 未开始 | 高 | 团队 | 2025-12-31 | TASK-3.1 | 测试覆盖率≥90% | MIR节点、LIR指令测试 |
+| 三级子任务 | TASK-3.1.1.1 | MIR节点测试 | ⏸️ 未开始 | 高 | 团队 | 2025-12-31 | TASK-3.1.1 | 所有MIR节点测试通过 | 测试MIRFunction、MIRBlock等 |
+| 三级子任务 | TASK-3.1.1.2 | LIR指令测试 | ⏸️ 未开始 | 高 | 团队 | 2025-12-31 | TASK-3.1.1 | 所有LIR指令测试通过 | 测试Assign、Label、Branch等 |
+| 三级子任务 | TASK-3.1.1.3 | IR转换测试 | ⏸️ 未开始 | 中 | 团队 | 2025-12-31 | TASK-3.1.1 | AST→MIR→LIR转换正确 | 测试IR转换流程 |
+| 三级子任务 | TASK-3.1.2 | 重构MIR节点体系 | ⏸️ 未开始 | 高 | 团队 | 2026-01-01 | TASK-3.1.1 | 类型层次清晰 | 重构MIR节点层次 |
+| 三级子任务 | TASK-3.1.2.1 | 设计MIR类型层次 | ⏸️ 未开始 | 高 | 团队 | 2026-01-01 | TASK-3.1.2 | 类型体系完整 | 设计MIRNode类型层次 |
+| 三级子任务 | TASK-3.1.2.2 | 实现MIR节点类 | ⏸️ 未开始 | 高 | 团队 | 2026-01-01 | TASK-3.1.2.1 | 所有MIR节点实现 | 实现所有MIR节点类 |
+| 三级子任务 | TASK-3.1.3 | 实现LIR指令集 | ⏸️ 未开始 | 高 | 团队 | 2026-01-02 | TASK-3.1.2 | 指令集完整高效 | 实现LIR指令集 |
+| 三级子任务 | TASK-3.1.3.1 | 设计LIR指令接口 | ⏸️ 未开始 | 高 | 团队 | 2026-01-02 | TASK-3.1.3 | 接口设计合理 | 设计LIRInstruction接口 |
+| 三级子任务 | TASK-3.1.3.2 | 实现具体LIR指令 | ⏸️ 未开始 | 高 | 团队 | 2026-01-02 | TASK-3.1.3.1 | 指令实现正确 | 实现所有LIR指令 |
+| 三级子任务 | TASK-3.1.4 | 改进IR转换算法 | ⏸️ 未开始 | 中 | 团队 | 2026-01-03 | TASK-3.1.3 | 转换算法优化 | 改进IR转换算法 |
+| 主要任务 | TASK-3.2 | 控制流图重构 | ⏸️ 未开始 | 高 | 团队 | 2026-01-06 | TASK-3.1 | CFG构建正确，可视化完整 | 符合架构设计规范第4.4节 |
+| 三级子任务 | TASK-3.2.1 | 创建CFG测试套件 | ⏸️ 未开始 | 高 | 团队 | 2026-01-03 | TASK-3.2 | 测试覆盖率≥90% | 基本块、边关系测试 |
+| 三级子任务 | TASK-3.2.1.1 | 基本块测试 | ⏸️ 未开始 | 高 | 团队 | 2026-01-03 | TASK-3.2.1 | 基本块操作正确 | 测试BasicBlock创建、操作 |
+| 三级子任务 | TASK-3.2.1.2 | 边关系测试 | ⏸️ 未开始 | 高 | 团队 | 2026-01-03 | TASK-3.2.1 | 前驱后继关系正确 | 测试前驱后继关系 |
+| 三级子任务 | TASK-3.2.2 | 重构基本块表示 | ⏸️ 未开始 | 高 | 团队 | 2026-01-04 | TASK-3.2.1 | 表示高效清晰 | 重构BasicBlock表示 |
+| 三级子任务 | TASK-3.2.2.1 | 优化基本块结构 | ⏸️ 未开始 | 高 | 团队 | 2026-01-04 | TASK-3.2.2 | 结构优化合理 | 优化BasicBlock内部结构 |
+| 三级子任务 | TASK-3.2.2.2 | 改进指令列表管理 | ⏸️ 未开始 | 中 | 团队 | 2026-01-04 | TASK-3.2.2.1 | 指令管理高效 | 改进指令列表管理 |
+| 三级子任务 | TASK-3.2.3 | 改进CFG构建算法 | ⏸️ 未开始 | 中 | 团队 | 2026-01-05 | TASK-3.2.2 | 算法正确高效 | 改进CFG构建算法 |
+| 三级子任务 | TASK-3.2.3.1 | 优化块划分算法 | ⏸️ 未开始 | 中 | 团队 | 2026-01-05 | TASK-3.2.3 | 块划分正确 | 优化基本块划分算法 |
+| 三级子任务 | TASK-3.2.3.2 | 改进边连接算法 | ⏸️ 未开始 | 低 | 团队 | 2026-01-05 | TASK-3.2.3.1 | 边连接正确 | 改进控制流边连接 |
+| 三级子任务 | TASK-3.2.4 | 实现可视化输出 | ⏸️ 未开始 | 低 | 团队 | 2026-01-06 | TASK-3.2.3 | 可视化输出正确 | 实现DOT/Mermaid输出 |
+| **阶段** | **Phase4** | **优化层重构** | 🔄 计划中 | 高 | 团队 | 2026-01-20 | Phase3 | 数据流分析正确，SSA转换正确 | 包含6个主要任务，21个子任务 |
+| 主要任务 | TASK-4.1 | 数据流分析框架重构 | 🔄 计划中 | 高 | 团队 | 2026-01-10 | TASK-3.2 | 框架统一，算法正确 | 符合架构设计规范第5.2节 |
+| 三级子任务 | TASK-4.1.1 | 创建数据流测试套件 | ⏸️ 未开始 | 高 | 团队 | 2026-01-06 | TASK-4.1 | 测试覆盖率≥90% | 活跃变量、到达定义测试 |
+| 三级子任务 | TASK-4.1.1.1 | 活跃变量分析测试 | ⏸️ 未开始 | 高 | 团队 | 2026-01-06 | TASK-4.1.1 | 活跃变量计算正确 | 测试LiveVariableAnalysis |
+| 三级子任务 | TASK-4.1.1.2 | 到达定义分析测试 | ⏸️ 未开始 | 高 | 团队 | 2026-01-06 | TASK-4.1.1 | 到达定义计算正确 | 测试ReachingDefinitionAnalysis |
+| 三级子任务 | TASK-4.1.2 | 重构统一数据流接口 | 🔄 计划中 | 高 | 团队 | 2026-01-08 | TASK-4.1.1 | 接口统一清晰 | 统一DataFlowAnalysis接口 |
+| 三级子任务 | TASK-4.1.2.1 | 设计统一接口 | 🔄 计划中 | 高 | 团队 | 2026-01-08 | TASK-4.1.2 | 接口设计合理 | 设计DataFlowAnalysis接口 |
+| 三级子任务 | TASK-4.1.2.2 | 实现接口规范 | 🔄 计划中 | 高 | 团队 | 2026-01-08 | TASK-4.1.2.1 | 规范完整清晰 | 编写接口规范文档 |
+| 三级子任务 | TASK-4.1.3 | 实现迭代求解器 | 🔄 计划中 | 高 | 团队 | 2026-01-09 | TASK-4.1.2 | 求解器正确高效 | 实现IterativeSolver |
+| 三级子任务 | TASK-4.1.3.1 | 设计迭代算法 | 🔄 计划中 | 高 | 团队 | 2026-01-09 | TASK-4.1.3 | 算法设计正确 | 设计迭代求解算法 |
+| 三级子任务 | TASK-4.1.3.2 | 实现迭代框架 | 🔄 计划中 | 高 | 团队 | 2026-01-09 | TASK-4.1.3.1 | 框架实现正确 | 实现IterativeSolver框架 |
+| 三级子任务 | TASK-4.1.4 | 改进格理论实现 | 🔄 计划中 | 中 | 团队 | 2026-01-10 | TASK-4.1.3 | 格运算正确 | 改进Lattice实现 |
+
+### 2.4 风险看板 (Risk Board)
+
+| 风险等级 | 风险描述 | 概率 | 影响 | 缓解措施 | 负责人 |
+|----------|----------|------|------|----------|--------|
+| 🔴 高 | 性能回归 | 中 | 高 | 建立性能基准测试 | 技术负责人 |
+| 🟡 中 | 兼容性破坏 | 低 | 高 | 保持向后兼容性测试 | 架构师 |
+| 🟡 中 | 测试覆盖率下降 | 中 | 中 | 设置覆盖率阈值检查 | 测试负责人 |
+| 🟢 低 | 文档不同步 | 中 | 低 | 文档同步更新流程 | 项目经理 |
+
+### 2.5 资源看板 (Resource Board)
+
+| 资源类型 | 当前分配 | 可用容量 | 利用率 | 状态 |
+|----------|----------|----------|--------|------|
+| 人员 | 3人 | 5人 | 60% | 🟢 充足 |
+| 时间 | 30天 | 45天 | 67% | 🟢 充足 |
+| 测试环境 | 2套 | 3套 | 67% | 🟢 充足 |
+| 代码审查 | 2人 | 3人 | 67% | 🟢 充足 |
+
+---
+
+## 3. 重构概述
+
+### 3.1 重构目标
 
 1. **规范符合性**: 确保代码完全符合新制定的规范
 2. **测试覆盖率**: 达到≥85%的测试覆盖率要求
@@ -15,7 +317,7 @@
 4. **教育价值**: 增强代码的可读性和教学价值
 5. **扩展性**: 改进扩展点和插件机制
 
-### 1.2 重构原则
+### 3.2 重构原则
 
 1. **测试先行**: 所有重构必须先写测试，再实现代码
 2. **增量重构**: 小步快跑，每次只重构一个模块
@@ -23,7 +325,7 @@
 4. **文档更新**: 代码重构同步更新相关文档
 5. **向后兼容**: 保持现有功能的向后兼容性
 
-### 1.3 成功标准
+### 3.3 成功标准
 
 | 指标 | 目标值 | 当前值 | 状态 |
 |------|--------|--------|------|
@@ -33,9 +335,9 @@
 | 性能回归 | ≤5% | 待测试 | ⏸️ |
 | 文档完整性 | 100% | 进行中 | 🔄 |
 
-## 2. 当前状态分析
+## 4. 当前状态分析
 
-### 2.1 代码质量评估
+### 4.1 代码质量评估
 
 基于现有代码分析，识别主要问题区域：
 
@@ -56,7 +358,7 @@
 - [ ] **类型不安全**: 类型检查不完善
 - [ ] **文档缺失**: 缺乏API文档和注释
 
-### 2.2 测试现状
+### 4.2 测试现状
 
 #### 2.2.1 测试覆盖率 (待测量)
 ```
@@ -76,7 +378,7 @@
 - 端到端测试比例: ?%
 ```
 
-## 3. 重构任务分解
+## 5. 重构任务分解
 
 ### Agent 1: 基础设施重构
 
@@ -364,6 +666,126 @@
 - [ ] 跳转线程化消除冗余控制流
 - [ ] 死代码消除显著减少代码大小
 
+#### 阶段4: 高级数据流分析扩展 (预计: 3天) - **研究生进阶任务**
+**目标**: 实现工业级数据流分析，扩展基础框架功能
+
+**测试先行任务**:
+1. **创建数据流扩展测试套件** (第1天)
+   - [ ] 常量传播分析测试: 验证常量替换正确性
+   - [ ] 到达定义分析测试: 验证定义传播准确性
+   - [ ] 可用表达式分析测试: 验证表达式重用
+   - [ ] 数据流框架扩展测试: 验证新分析类型集成
+
+2. **实现数据流分析扩展** (第2-3天)
+   - [ ] 实现常量传播分析算法
+     - 定义数据流信息结构 (⊤, ⊥, 常量值)
+     - 实现转移函数 (赋值、常量运算)
+     - 实现汇聚操作 (取交集)
+   - [ ] 实现到达定义分析算法
+     - 定义gen和kill集合
+     - 实现数据流方程计算
+     - 实现迭代求解器
+   - [ ] 实现可用表达式分析
+     - 计算可用表达式集合
+     - 处理表达式等价性判断
+   - [ ] 扩展统一数据流接口支持新分析类型
+
+**代码修改文件**:
+- `ConstantPropagation.java`: 常量传播分析
+- `ReachingDefinitions.java`: 到达定义分析
+- `AvailableExpressions.java`: 可用表达式分析
+- `DataFlowFramework.java`: 扩展框架接口
+
+**验收标准**:
+- [ ] 通过所有数据流扩展测试
+- [ ] 常量传播正确识别和替换常量
+- [ ] 到达定义准确计算定义传播
+- [ ] 可用表达式分析有效识别可重用表达式
+- [ ] 优化效果验证: 删除恒真/恒假条件、消除无用计算
+
+#### 阶段5: 高级寄存器分配实现 (预计: 4天) - **研究生进阶任务**
+**目标**: 实现图着色等工业级寄存器分配算法
+
+**测试先行任务**:
+1. **创建寄存器分配测试套件** (第1-2天)
+   - [ ] 图着色算法测试: 验证干涉图构建和着色
+   - [ ] 线性扫描算法测试: 验证快速分配
+   - [ ] 溢出处理测试: 验证溢出代价计算
+   - [ ] 分配效果评估测试: 验证性能提升
+
+2. **实现寄存器分配算法** (第3-4天)
+   - [ ] 实现干涉图构建算法
+     - 活跃变量分析获取变量生命周期
+     - 构建变量干涉图 (节点=变量, 边=干涉)
+   - [ ] 实现图着色寄存器分配
+     - 简化阶段: 选择度数<k的节点压栈
+     - 溢出选择: 计算溢出代价 (cost = (use+def)/degree)
+     - 分配阶段: 为节点分配不冲突的颜色
+   - [ ] 实现线性扫描寄存器分配
+     - 线性扫描活跃区间
+     - 快速寄存器分配
+     - 溢出代码生成
+   - [ ] 实现智能溢出处理策略
+     - 溢出代价模型
+     - 重启动机制
+     - 溢出代码优化
+
+**代码修改文件**:
+- `InterferenceGraph.java`: 干涉图表示
+- `GraphColoringAllocator.java`: 图着色分配器
+- `LinearScanAllocator.java`: 线性扫描分配器
+- `SpillCodeGenerator.java`: 溢出代码生成
+- `RegisterAllocator.java`: 统一分配接口
+
+**验收标准**:
+- [ ] 通过所有寄存器分配测试
+- [ ] 图着色算法正确分配寄存器
+- [ ] 线性扫描算法高效运行
+- [ ] 溢出处理最小化内存访问
+- [ ] 寄存器分配显著提升性能 (目标: 减少30%内存访问)
+
+#### 阶段6: 指令选择优化实现 (预计: 3天) - **研究生进阶任务**
+**目标**: 实现树匹配等工业级指令选择算法
+
+**测试先行任务**:
+1. **创建指令选择测试套件** (第1天)
+   - [ ] 树匹配算法测试: 验证模式匹配正确性
+   - [ ] 动态规划测试: 验证最优匹配计算
+   - [ ] 指令生成测试: 验证代码质量
+   - [ ] 模式覆盖测试: 验证指令集覆盖度
+
+2. **实现指令选择算法** (第2-3天)
+   - [ ] 定义指令选择模式
+     - IR模式定义 (如: ADD(REG, REG) -> "add r1, r2")
+     - 模式匹配规则
+     - 成本模型设计
+   - [ ] 实现动态规划匹配算法
+     - 为每个IR节点计算最优匹配
+     - 使用DP表存储中间结果
+     - 递归计算子树最优匹配
+   - [ ] 实现代码生成器
+     - 根据匹配结果生成机器指令
+     - 处理操作数顺序和格式
+     - 寄存器分配协调
+   - [ ] 优化模式匹配效率
+     - 模式Trie结构
+     - 快速匹配算法
+     - 匹配结果缓存
+
+**代码修改文件**:
+- `InstructionSelector.java`: 指令选择器
+- `PatternMatcher.java`: 模式匹配器
+- `DPTable.java`: 动态规划表
+- `InstructionPatterns.java`: 指令模式定义
+- `CodeEmitter.java`: 指令发射器
+
+**验收标准**:
+- [ ] 通过所有指令选择测试
+- [ ] 模式匹配正确识别IR结构
+- [ ] 动态规划找到最优匹配
+- [ ] 生成代码质量高 (指令数少, 无冗余)
+- [ ] 指令集覆盖率≥90%
+
 ### Agent 5: 后端层重构
 
 #### 阶段1: 代码生成器重构 (预计: 3天)
@@ -456,7 +878,94 @@
 - [ ] 溢出处理最小化内存访问
 - [ ] 寄存器分配显著提升性能
 
-## 4. 测试策略
+#### 阶段4: 类型系统扩展 (预计: 3天) - **研究生进阶任务**
+**目标**: 实现结构体等高级类型支持
+
+**测试先行任务**:
+1. **创建类型系统扩展测试套件** (第1天)
+   - [ ] 结构体类型测试: 验证类型表示和操作
+   - [ ] 成员访问测试: 验证字段访问和偏移计算
+   - [ ] 嵌套结构体测试: 验证复杂结构类型
+   - [ ] 内存布局测试: 验证对齐和大小计算
+
+2. **实现类型系统扩展** (第2-3天)
+   - [ ] 实现结构体类型表示
+     - 定义StructType类 (Map<String, Type> fields)
+     - 实现字段偏移量计算 (Map<String, Integer> offsets)
+     - 考虑对齐要求计算结构体大小
+   - [ ] 实现成员访问代码生成
+     - 生成偏移量计算代码
+     - 支持嵌套结构体访问 (a.b.c)
+     - 处理指针解引用
+   - [ ] 实现类型检查扩展
+     - 结构体类型兼容性检查
+     - 成员存在性检查
+     - 类型转换检查
+   - [ ] 优化内存布局
+     - 字段重排序优化
+     - 填充字节最小化
+     - 缓存友好布局
+
+**代码修改文件**:
+- `StructType.java`: 结构体类型表示
+- `StructField.java`: 结构体字段
+- `MemoryLayout.java`: 内存布局计算
+- `StructMemberAccess.java`: 成员访问代码生成
+- `TypeChecker.java`: 扩展类型检查
+
+**验收标准**:
+- [ ] 通过所有类型系统扩展测试
+- [ ] 结构体类型正确表示和操作
+- [ ] 成员访问代码正确生成
+- [ ] 内存布局高效 (对齐填充最小)
+- [ ] 类型检查准确 (错误检测率100%)
+
+#### 阶段5: 运行时支持系统 (预计: 4天) - **研究生进阶任务**
+**目标**: 实现垃圾回收和异常处理等运行时支持
+
+**测试先行任务**:
+1. **创建运行时支持测试套件** (第1-2天)
+   - [ ] 垃圾回收测试: 验证内存回收正确性
+   - [ ] 异常处理测试: 验证异常传播和处理
+   - [ ] 内存管理测试: 验证堆管理效率
+   - [ ] 性能基准测试: 验证运行时性能
+
+2. **实现运行时支持系统** (第3-4天)
+   - [ ] 实现标记-清除垃圾回收器
+     - 标记阶段: 从根集合遍历可达对象
+     - 清除阶段: 回收未标记对象内存
+     - 根集合识别: 全局变量、栈变量、寄存器
+     - 写屏障实现: 跟踪引用变化
+   - [ ] 实现异常处理机制
+     - 异常表生成: 记录try/catch块范围
+     - 栈展开机制: 运行时展开调用栈
+     - 清理代码执行: finally块处理
+     - 异常传播路径: 匹配异常类型
+   - [ ] 实现堆内存管理器
+     - 内存分配器: 快速分配算法
+     - 内存碎片整理: 减少碎片
+     - 堆增长策略: 动态调整堆大小
+   - [ ] 优化运行时性能
+     - 增量GC: 减少停顿时间
+     - 并行标记: 多线程标记
+     - 写屏障优化: 减少开销
+
+**代码修改文件**:
+- `GarbageCollector.java`: 垃圾回收器
+- `MarkSweepGC.java`: 标记-清除GC实现
+- `ExceptionHandler.java`: 异常处理器
+- `StackUnwinder.java`: 栈展开器
+- `HeapManager.java`: 堆内存管理
+- `RootSet.java`: 根集合定义
+
+**验收标准**:
+- [ ] 通过所有运行时支持测试
+- [ ] 垃圾回收正确回收所有不可达对象
+- [ ] 异常处理准确传播和处理异常
+- [ ] 内存管理高效 (碎片率<20%)
+- [ ] GC停顿时间<100ms (目标)
+
+## 6. 测试策略与模板
 
 ### 4.1 测试金字塔模型
 
@@ -570,7 +1079,685 @@ jobs:
     script: ./scripts/run-e2e-tests.sh
 ```
 
-## 5. 进度跟踪
+### 4.5 测试模板库
+
+#### 4.5.1 AST节点测试模板
+
+##### BinaryExprNodeTest.java
+```java
+package org.teachfx.antlr4.ep21.test.ast;
+
+import org.junit.jupiter.api.Test;
+import org.teachfx.antlr4.ep21.ast.expr.BinaryExprNode;
+import org.teachfx.antlr4.ep21.ast.expr.IntExprNode;
+import org.teachfx.antlr4.ep21.symtab.type.BuiltInTypeSymbol;
+import static org.junit.jupiter.api.Assertions.*;
+
+class BinaryExprNodeTest {
+
+    @Test
+    void testBinaryExprCreation() {
+        // Arrange
+        IntExprNode left = new IntExprNode(10);
+        IntExprNode right = new IntExprNode(20);
+        BinaryExprNode.OpType op = BinaryExprNode.OpType.ADD;
+
+        // Act
+        BinaryExprNode expr = new BinaryExprNode(op, left, right);
+
+        // Assert
+        assertEquals(op, expr.getOpType());
+        assertEquals(left, expr.getLhs());
+        assertEquals(right, expr.getRhs());
+    }
+
+    @Test
+    void testBinaryExprTypePropagation() {
+        // Arrange
+        IntExprNode left = new IntExprNode(10);
+        left.setType(BuiltInTypeSymbol.intType);
+
+        IntExprNode right = new IntExprNode(20);
+        right.setType(BuiltInTypeSymbol.intType);
+
+        BinaryExprNode expr = new BinaryExprNode(BinaryExprNode.OpType.ADD, left, right);
+
+        // Act
+        expr.setType(BuiltInTypeSymbol.intType);
+
+        // Assert
+        assertEquals(BuiltInTypeSymbol.intType, expr.getType());
+    }
+}
+```
+
+##### FuncDeclNodeTest.java
+```java
+package org.teachfx.antlr4.ep21.test.ast;
+
+import org.junit.jupiter.api.Test;
+import org.teachfx.antlr4.ep21.ast.decl.FuncDeclNode;
+import org.teachfx.antlr4.ep21.ast.decl.VarDeclListNode;
+import org.teachfx.antlr4.ep21.ast.stmt.BlockStmtNode;
+import org.teachfx.antlr4.ep21.symtab.type.BuiltInTypeSymbol;
+import static org.junit.jupiter.api.Assertions.*;
+
+class FuncDeclNodeTest {
+
+    @Test
+    void testFuncDeclCreation() {
+        // Arrange & Act
+        FuncDeclNode func = new FuncDeclNode(
+            BuiltInTypeSymbol.intType,
+            "testFunc",
+            new VarDeclListNode(),
+            new BlockStmtNode()
+        );
+
+        // Assert
+        assertEquals("testFunc", func.getFuncName());
+        assertEquals(BuiltInTypeSymbol.intType, func.getRetType());
+        assertNotNull(func.getBody());
+    }
+}
+```
+
+#### 4.5.2 IR生成测试模板
+
+##### IRGenerationTest.java
+```java
+package org.teachfx.antlr4.ep21.test.ir;
+
+import org.junit.jupiter.api.Test;
+import org.teachfx.antlr4.ep21.ir.IRNode;
+import org.teachfx.antlr4.ep21.ir.expr.BinExpr;
+import org.teachfx.antlr4.ep21.ir.expr.Operand;
+import org.teachfx.antlr4.ep21.ir.stmt.Assign;
+import org.teachfx.antlr4.ep21.ir.expr.ConstVal;
+import org.teachfx.antlr4.ep21.symtab.type.OperatorType;
+import static org.junit.jupiter.api.Assertions.*;
+
+class IRGenerationTest {
+
+    @Test
+    void testConstantGeneration() {
+        // Arrange
+        int value = 42;
+
+        // Act
+        ConstVal constVal = new ConstVal(value);
+
+        // Assert
+        assertEquals(value, constVal.getIntVal());
+        assertTrue(constVal.isInt());
+    }
+
+    @Test
+    void testBinaryOpIR() {
+        // Arrange
+        Operand left = new ConstVal(10);
+        Operand right = new ConstVal(20);
+        OperatorType op = OperatorType.ADD;
+
+        // Act
+        BinExpr binExpr = new BinExpr(op, left, right);
+
+        // Assert
+        assertEquals(op, binExpr.getOpType());
+        assertEquals(left, binExpr.getLhs());
+        assertEquals(right, binExpr.getRhs());
+    }
+}
+```
+
+##### BasicBlockTest.java
+```java
+package org.teachfx.antlr4.ep21.test.ir;
+
+import org.junit.jupiter.api.Test;
+import org.teachfx.antlr4.ep21.ir.IRNode;
+import org.teachfx.antlr4.ep21.ir.expr.Operand;
+import org.teachfx.antlr4.ep21.ir.stmt.Assign;
+import org.teachfx.antlr4.ep21.ir.stmt.Label;
+import org.teachfx.antlr4.ep21.pass.cfg.BasicBlock;
+import static org.junit.jupiter.api.Assertions.*;
+
+class BasicBlockTest {
+
+    @Test
+    void testBasicBlockCreation() {
+        // Arrange & Act
+        BasicBlock<IRNode> block = new BasicBlock<>(1);
+
+        // Assert
+        assertEquals(1, block.getBlockId());
+        assertTrue(block.getIRNodes().isEmpty());
+    }
+
+    @Test
+    void testBasicBlockWithInstructions() {
+        // Arrange
+        BasicBlock<IRNode> block = new BasicBlock<>(1);
+        Label label = new Label("L1", 1);
+        Assign assign = Assign.with(new Operand("x"), new ConstVal(10));
+
+        // Act
+        block.addIRNode(label);
+        block.addIRNode(assign);
+
+        // Assert
+        assertEquals(2, block.getIRNodes().size());
+    }
+}
+```
+
+#### 4.5.3 符号表测试模板
+
+##### SymbolTableTest.java
+```java
+package org.teachfx.antlr4.ep21.test.symtab;
+
+import org.junit.jupiter.api.Test;
+import org.teachfx.antlr4.ep21.symtab.scope.*;
+import org.teachfx.antlr4.ep21.symtab.symbol.*;
+import org.teachfx.antlr4.ep21.symtab.type.BuiltInTypeSymbol;
+import static org.junit.jupiter.api.Assertions.*;
+
+class SymbolTableTest {
+
+    @Test
+    void testGlobalScope() {
+        // Arrange
+        GlobalScope globalScope = new GlobalScope();
+        VariableSymbol var = new VariableSymbol("globalVar", BuiltInTypeSymbol.intType);
+
+        // Act
+        globalScope.define(var);
+
+        // Assert
+        assertNotNull(globalScope.resolve("globalVar"));
+        assertEquals(var, globalScope.resolve("globalVar"));
+    }
+
+    @Test
+    void testLocalScopeNesting() {
+        // Arrange
+        GlobalScope global = new GlobalScope();
+        LocalScope local1 = new LocalScope(global);
+        LocalScope local2 = new LocalScope(local1);
+
+        VariableSymbol var = new VariableSymbol("var", BuiltInTypeSymbol.intType);
+
+        // Act
+        local2.define(var);
+
+        // Assert
+        assertEquals(var, local2.resolve("var"));
+        assertNotNull(local2.resolve("var")); // 向上查找
+    }
+}
+```
+
+#### 4.5.4 集成测试模板
+
+##### EndToEndCompilationTest.java
+```java
+package org.teachfx.antlr4.ep21.test.integration;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.teachfx.antlr4.ep21.Compiler;
+import java.nio.file.Path;
+import java.io.FileWriter;
+import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.*;
+
+class EndToEndCompilationTest {
+
+    @Test
+    void testSimpleProgramCompilation(@TempDir Path tempDir)
+        throws IOException {
+        // Arrange
+        String sourceCode = """
+            int main() {
+                int x = 10;
+                int y = 20;
+                return x + y;
+            }
+            """;
+
+        Path sourceFile = tempDir.resolve("test.cym");
+        try (FileWriter writer = new FileWriter(sourceFile.toFile())) {
+            writer.write(sourceCode);
+        }
+
+        // Act
+        String[] args = {sourceFile.toString()};
+        Compiler.main(args);
+
+        // Assert
+        Path outputFile = tempDir.resolve("test.s");
+        assertTrue(outputFile.toFile().exists());
+    }
+}
+```
+
+#### 4.5.5 数据流分析测试模板
+
+##### LiveVariableAnalyzerTest.java
+```java
+package org.teachfx.antlr4.ep21.test.analysis;
+
+import org.junit.jupiter.api.Test;
+import org.teachfx.antlr4.ep21.analysis.dataflow.LiveVariableAnalyzer;
+import org.teachfx.antlr4.ep21.ir.IRNode;
+import org.teachfx.antlr4.ep21.pass.cfg.BasicBlock;
+import org.teachfx.antlr4.ep21.pass.cfg.CFG;
+import java.util.Set;
+import static org.junit.jupiter.api.Assertions.*;
+
+class LiveVariableAnalyzerTest {
+
+    @Test
+    void testSimpleLiveVariableAnalysis() {
+        // 构建简单的CFG
+        // 变量x在定义后被使用
+        // Setup: x = 10; y = x + 5;
+
+        // 验证x在第二条指令中是活跃的
+    }
+
+    @Test
+    void testControlFlowLiveVariables() {
+        // 测试控制流中的活跃变量
+        // if (x > 0) { y = x; } else { z = x; }
+        // 验证x在分支前后都是活跃的
+    }
+}
+```
+
+##### SSAGraphTest.java
+```java
+package org.teachfx.antlr4.ep21.test.analysis;
+
+import org.junit.jupiter.api.Test;
+import org.teachfx.antlr4.ep21.analysis.ssa.SSAGraph;
+import org.teachfx.antlr4.ep21.ir.IRNode;
+import org.teachfx.antlr4.ep21.pass.cfg.CFG;
+import static org.junit.jupiter.api.Assertions.*;
+
+class SSAGraphTest {
+
+    @Test
+    void testSSABuilding() {
+        // 构建CFG
+        CFG<IRNode> cfg = buildTestCFG();
+
+        // 构建SSA
+        SSAGraph ssaGraph = new SSAGraph(cfg);
+        ssaGraph.buildSSA();
+
+        // 验证Φ函数插入
+        // 验证变量版本号
+    }
+
+    @Test
+    void testSSARenaming() {
+        // 测试变量重命名
+        // 验证版本栈的正确管理
+    }
+}
+```
+
+### 4.6 测试最佳实践
+
+#### 4.6.1 命名规范
+- **测试类**: `被测试类名Test`
+- **测试方法**: `test被测试方法场景`
+- **示例**: `testBinaryOpIR()`
+
+#### 4.6.2 组织结构
+```
+Arrange: 准备测试数据和对象
+Act: 执行被测试的操作
+Assert: 验证结果
+```
+
+#### 4.6.3 测试原则
+1. **独立性**: 每个测试应该独立运行
+2. **可重复**: 结果不依赖外部环境
+3. **小粒度**: 测试单个功能点
+4. **有意义的断言**: 验证重要行为
+
+#### 4.6.4 测试分类
+- **单元测试**: 测试单个类或方法（占70%）
+- **集成测试**: 测试多个组件协作（占20%）
+- **端到端测试**: 测试完整流程（占10%）
+
+### 4.7 快速测试生成脚本
+
+#### 4.7.1 测试文件创建脚本
+```bash
+#!/bin/bash
+# 快速生成测试类骨架
+
+# AST测试
+for class in BinaryExprNode FuncDeclNode VarDeclNode IfStmtNode WhileStmtNode; do
+    testClass="${class}Test"
+    cat > "src/test/java/org/teachfx/antlr4/ep21/test/ast/${testClass}.java" <<EOF
+package org.teachfx.antlr4.ep21.test.ast;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class ${class}Test {
+
+    @Test
+    void test${class}Creation() {
+        // TODO: 实现测试
+        assertTrue(true);
+    }
+}
+EOF
+    echo "创建测试: ${testClass}"
+done
+```
+
+#### 4.7.2 覆盖率配置
+```xml
+<!-- pom.xml中添加Jacoco插件配置 -->
+<plugin>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.8.11</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>prepare-agent</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+                <goal>report</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+**执行覆盖率检查**:
+```bash
+mvn clean test
+mvn jacoco:report
+open target/site/jacoco/index.html
+```
+
+**覆盖率目标**:
+- P0阶段：60%
+- P1阶段：70%
+- P2阶段：80%
+- 最终目标：≥85%
+
+### 4.8 JUnit 5 特性应用
+
+#### 4.8.1 参数化测试示例
+```java
+// 参数化测试示例
+@ParameterizedTest
+@ValueSource(ints = {1, 2, 3, 4, 5})
+void testWithParameters(int argument) {
+    // 使用不同的参数运行多次
+}
+
+// 测试套件组织
+@Tag("fast")
+class FastTests {
+    // 快速测试
+}
+
+@Tag("slow")
+class SlowTests {
+    // 慢速测试
+}
+```
+
+#### 4.8.2 执行计划
+**第1周测试任务**:
+1. **Day 1-2**: AST节点测试
+2. **Day 3-4**: IR生成测试
+3. **Day 5**: CFG和符号表测试
+4. **Day 6-7**: 集成测试和覆盖率检查
+
+**目标**: 60%覆盖率，100+测试用例
+
+### 4.9 模块难度与工作量评估
+
+#### 4.9.1 评估标准
+- **难度等级**：⭐（初级）到 ⭐⭐⭐⭐⭐（高级）
+- **预计工作量**：小时数（包含学习、实现、测试）
+- **先修知识**：实现该模块需要的背景知识
+
+#### 4.9.2 详细评估表
+
+| 模块名称 | 难度 | 预计工作量 | 先修知识要求 | 适合阶段 |
+|---------|------|-----------|-------------|----------|
+| 常量传播分析 | ⭐⭐ | 40-60小时 | 数据流分析基础、Lattice理论 | 硕士一年级 |
+| 可用表达式分析 | ⭐⭐ | 35-50小时 | 数据流分析、Gen/Kill集合 | 硕士一年级 |
+| 到达定义分析 | ⭐⭐ | 30-45小时 | 数据流分析、CFG遍历 | 硕士一年级 |
+| 死代码消除 | ⭐⭐ | 25-40小时 | 数据流分析结果应用 | 硕士一年级 |
+| 循环不变量提取 | ⭐⭐⭐ | 50-80小时 | 循环识别、数据流分析 | 硕士二年级 |
+| 循环展开 | ⭐⭐⭐ | 40-60小时 | 循环分析、代码生成 | 硕士二年级 |
+| 图着色寄存器分配 | ⭐⭐⭐⭐ | 80-120小时 | 图论、干涉图构建、消减算法 | 硕士二年级 |
+| 线性扫描寄存器分配 | ⭐⭐ | 45-65小时 | 区间分析、贪心算法 | 硕士一年级 |
+| 树匹配指令选择 | ⭐⭐⭐ | 60-90小时 | 模式匹配、动态规划 | 硕士二年级 |
+| 列表调度 | ⭐⭐ | 40-60小时 | 数据依赖分析、优先级队列 | 硕士一年级 |
+| 结构体/联合体 | ⭐⭐⭐ | 70-100小时 | 类型系统、内存布局、对齐 | 硕士二年级 |
+| 泛型/模板机制 | ⭐⭐⭐⭐ | 100-150小时 | 类型推导、约束求解 | 硕士三年级 |
+| 标记-清除垃圾回收 | ⭐⭐⭐⭐⭐ | 120-180小时 | 运行时系统、指针分析、STW | 硕士三年级 |
+| DWARF调试信息 | ⭐⭐⭐ | 60-90小时 | DWARF标准、汇编级调试 | 硕士二年级 |
+| 线程局部存储 | ⭐⭐⭐ | 50-75小时 | 线程模型、TLS实现机制 | 硕士二年级 |
+| 自动并行化 | ⭐⭐⭐⭐⭐ | 150-200小时 | 依赖分析、并行模式识别 | 博士阶段 |
+
+#### 4.9.3 模块依赖关系
+```
+数据流分析基础（必须先实现）
+├── 常量传播
+├── 可用表达式
+└── 到达定义
+
+循环优化依赖
+└── 循环识别（需要先实现循环检测Pass）
+
+寄存器分配依赖
+└── 活跃变量分析（已实现）
+
+指令选择依赖
+└── 目标机器描述（需要定义指令模板）
+```
+
+### 4.10 实施优先级（按研究阶段）
+
+#### 4.10.1 硕士一年级（第1-2学期）
+**重点**：掌握编译器基础，实现数据流分析和简单优化
+1. **必选模块**（选一个）：
+   - 到达定义分析（相对简单，适合入门）
+   - 线性扫描寄存器分配（实用性强）
+
+2. **扩展模块**（选一个）：
+   - 常量传播分析
+   - 死代码消除
+
+**理由**：
+- 基于已有的活跃变量分析，容易理解
+- 工作量为40-60小时，可在1个学期内完成
+- 为后续高级优化奠定基础
+
+#### 4.10.2 硕士二年级（第3-4学期）
+**重点**：深入研究工业级算法，提升系统能力
+1. **核心模块**（选一个）：
+   - 图着色寄存器分配
+   - 指令选择算法
+
+2. **辅助模块**（选1-2个）：
+   - 循环不变量提取
+   - 列表调度
+   - 类型系统扩展（结构体）
+
+**理由**：
+- 挑战更复杂的算法，提升研究深度
+- 可与论文研究课题结合
+- 需要较多时间进行性能调优
+
+#### 4.10.3 硕士三年级/博士阶段
+**重点**：前沿研究，创新算法设计
+1. **科研导向模块**：
+   - 自动并行化（Research Topic）
+   - 高级垃圾回收算法
+   - 自定义优化算法设计
+
+2. **工程导向模块**：
+   - 完整垃圾回收实现
+   - DWARF调试信息生成
+   - 并发运行时支持
+
+**理由**：
+- 与毕业论文研究目标高度相关
+- 可以进行创新性算法改进
+- 有机会发表学术论文
+
+### 4.11 验证和测试标准
+
+#### 4.11.1 正确性验证
+- 通过所有现有单元测试，确保优化不破坏程序语义
+- 对10个以上的测试程序（包含递归、循环、多重嵌套）进行验证
+- 与未优化的寄存器分配（栈分配）结果进行比对，验证执行结果一致
+
+#### 4.11.2 性能验证
+- 在标准测试集（如Stanford Benchmark）上测量执行时间
+- 与栈分配版本相比，整体性能提升至少15%
+- 内存访问指令数量减少至少20%
+
+#### 4.11.3 代码质量指标
+- 生成的汇编代码中spill指令占比不超过15%
+- 寄存器利用率（指令中使用寄存器的平均数）提升30%
+- 测试覆盖率：核心代码行覆盖率不低于80%
+
+#### 4.11.4 测试用例设计示例
+```java
+// 测试1：简单变量使用
+int a = 1;
+int b = 2;
+int c = a + b;
+
+// 测试2：复杂表达式
+int result = (a * b + c) / (d - e);
+
+// 测试3：循环中的寄存器分配
+for (int i = 0; i < 100; i++) {
+    sum += arr[i];
+}
+```
+
+### 4.12 学术资源与工具链
+
+#### 4.12.1 经典论文参考
+
+##### 数据流分析
+- "A Unified Approach to Global Program Optimization" (Kildall, 1973)
+- "Constant Propagation with Conditional Branches" (Wegman & Zadeck, 1991)
+- "Efficiently Computing Static Single Assignment Form" (Cytron et al., 1991)
+
+##### 寄存器分配
+- "Register Allocation via Coloring of Chordal Graphs" (Hack et al., 2006)
+- "Linear Scan Register Allocation" (Poletto & Sarkar, 1999)
+- "Register Allocation for Programs in SSA Form" (Briggs et al., 1998)
+
+##### 指令选择
+- "Engineering a Simple, Efficient Code-Generator Generator" (Fraser et al., 1993)
+- "Linear Scan Instruction Selection" (Aho et al., 2007)
+
+#### 4.12.2 开源实现参考
+- **LLVM**：工业级编译器，包含完整的优化流水线
+  - 关键代码：`lib/Transforms/Scalar/`目录下的各种优化Pass
+  - 寄存器分配：`lib/CodeGen/RegAllocGreedy.cpp`
+- **GCC**：经典编译器框架
+  - 数据流分析：`gcc/tree-ssa-dom.c`（常量传播）
+- **V8 JavaScript引擎**：现代优化编译器
+  - TurboFan优化流水线：`src/compiler/`目录
+
+#### 4.12.3 调试与可视化工具
+- **Graphviz**：用于可视化CFG和干涉图
+  ```bash
+  # 在BasicBlock中添加toDot()方法生成dot格式
+  dot -Tpng cfg.dot -o cfg.png
+  ```
+- **LLVM可视化工具**：
+  ```bash
+  opt -dot-cfg input.ll    # 生成CFG
+  opt -dot-dom input.ll    # 生成支配树
+  ```
+- **性能分析**：
+  ```bash
+  # Linux perf工具
+  perf stat ./compiled_program
+  perf record -g ./compiled_program
+  perf report
+  ```
+
+#### 4.12.4 推荐学习路径
+1. **第1-2周**：精读SSA相关论文，理解现有SSA实现
+2. **第3-4周**：实现常量传播分析（作为热身）
+3. **第5-8周**：挑战寄存器分配或指令选择
+4. **第9-10周**：性能调优和论文撰写
+5. **持续**：每周阅读1-2篇相关论文，做文献综述
+
+#### 4.12.5 代码质量标准
+- **Java编码规范**：遵循Google Java Style Guide
+- **测试覆盖率**：核心代码行覆盖率不低于80%
+- **文档要求**：所有public类和方法必须有Javadoc注释
+- **Git提交规范**：使用清晰的分支策略（feature/xxx）
+
+### 4.13 🚀 快速开始指南（30分钟上手）
+
+#### 4.13.1 步骤1：搭建开发环境
+```bash
+# 克隆项目
+git clone https://github.com/your-repo/ep21.git
+cd ep21
+
+# 构建项目（确保Java 21已安装）
+mvn clean compile
+
+# 运行测试验证环境
+mvn test -Dtest=LivenessAnalyzerTest
+
+# 查看现有代码结构
+find src/main/java/ep21 -name "*.java" | head -20
+```
+
+#### 4.13.2 步骤2：选择第一个模块
+推荐从**到达定义分析**开始：
+```bash
+# 定位到活跃变量分析代码作为参考
+cat src/main/java/ep21/analysis/LivenessAnalyzer.java
+
+# 创建新模块文件
+touch src/main/java/ep21/analysis/ReachingDefinitionAnalysis.java
+```
+
+#### 4.13.3 步骤3：实现模板
+参考活跃变量分析的实现模式，创建数据流分析框架。
+
+#### 4.13.4 步骤4：集成到现有系统
+在`OptimizationManager.java`中注册新模块：
+```java
+// 添加以下代码
+optimizationPasses.add(new ReachingDefinitionAnalysis());
+```
+
+## 7. 进度跟踪
 
 ### 5.1 重构状态看板
 
@@ -635,7 +1822,7 @@ jobs:
 | 人员不足 | 中 | 中 | 明确任务分工，文档完善 |
 | 知识缺失 | 低 | 高 | 建立学习资源，结对编程 |
 
-## 6. 质量保证
+## 8. 质量保证
 
 ### 6.1 代码质量标准
 
@@ -676,7 +1863,7 @@ jobs:
 - [ ] API文档有使用示例
 - [ ] 错误处理有完整说明
 
-## 7. 沟通和协作
+## 9. 沟通和协作
 
 ### 7.1 团队协作规范
 
@@ -728,7 +1915,7 @@ docs/
 - **测试驱动开发**: TDD实践指南
 - **性能优化**: 性能分析和优化指南
 
-## 8. 附录
+## 10. 附录
 
 ### 8.1 工具链配置
 

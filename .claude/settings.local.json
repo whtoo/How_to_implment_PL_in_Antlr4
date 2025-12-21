@@ -47,7 +47,8 @@
       "mcp__cclsp__restart_server",
       "mcp__cclsp__find_references",
       "mcp__cclsp__get_diagnostics",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Skill(technical-documentation-writing-and-refactoring)"
     ]
   },
   "enabledMcpjsonServers": [

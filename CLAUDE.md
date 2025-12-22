@@ -329,9 +329,11 @@ open ep18/target/site/jacoco/index.html
 - [x] **EP专属记忆**: EP18.md (210行), EP19.md (~450行), EP21.md (420行)
 - [x] **Skill库**: 技术文档编写, 测试框架规范
 - [x] **重构总结**: docs/master-memory/REFACTORING_SUMMARY.md
+- [x] **EP21重构进展**: 数据流分析框架已完成 (TASK-3.1.2 & TASK-3.1.3, 2025-12-22)
 
 ### 进行中 🔄
 - [ ] **EP专属记忆**: EP1-17, EP20, EP18R (18/21待创建)
+- [ ] **EP21代码重构**: Phase3 优化层重构 (SSA转换、控制流优化等)
 
 ### 计划 📋
 - [ ] **Skill扩展**: TDD开发流程, Maven高级配置

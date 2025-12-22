@@ -95,9 +95,8 @@
 **已建立**:
 - ✅ **编译器开发者** (`.claude/skills/compiler-development/SKILL.md`)
   - ANTLR4语法分析、语义分析、IR生成
-  - CCLSP和Context7代码智能分析工具
+  - Context7代码智能分析工具
   - 虚拟机实现和优化技术
-  - **代码分析优先使用CCLSP技能**: 符号查找、引用分析、诊断检查优先使用CCLSP工具
 
 - ✅ **编译器开发生态系统** (`.claude/skills/compiler-ecosystem/SKILL.md`)
   - 完整的编译器开发生态支持
@@ -114,17 +113,12 @@
   - 覆盖率要求 (≥85%)
   - 测试命名和结构规范
 
-- ✅ **CCLSP使用指南** (`.claude/skills/cclsp-usage-guide/SKILL.md`)
-  - CCLSP代码智能分析优先原则
-  - 精确符号查找和引用分析
-  - 诊断检查和服务器管理
 
 **使用时机**: 根据任务类型自动加载
 ```
 用户请求包含 "开发"、"调试"、"测试"、"重构"、"TDD" → 加载编译器开发者 Skill (compiler-development)
 用户请求包含 "文档修订"、"设计重构" → 加载技术文档编写与重构 Skill
 用户请求包含 "测试框架规范" → 加载测试框架规范 Skill
-用户请求包含 "代码分析"、"符号查找"、"诊断" → 加载CCLSP使用指南 Skill
 ```
 
 ---
@@ -140,7 +134,7 @@
 ↓
 读取: docs/master-memory/MAIN.md (3-5秒)
 提取: - EP18在架构中的位置
-      - 工具链配置 (Maven, CCLSP)
+      - 工具链配置 (Maven)
       - Sub-Agent协调机制
 
 【步骤 2】识别用户意图
@@ -198,10 +192,8 @@
 读取: docs/ep-memory/EP18.md (栈式VM ABI)
 读取: docs/ep-memory/EP18R.md (寄存器VM ABI)
 
-【步骤 3】使用CCLSP工具分析
+【步骤 3】使用代码分析工具
 ↓
-mcp__cclsp__find_definition (CymbolStackVM.java)
-mcp__cclsp__find_definition (RegisterVMInterpreter.java)
 grep pattern="ABI|调用约定|栈帧"
 
 【步骤 4】生成对比报告
@@ -275,7 +267,6 @@ grep pattern="ABI|调用约定|栈帧"
 ### 开发工具
 | 工具 | 配置位置 | 功能 |
 |------|----------|------|
-| CCLSP | `.claude/cclsp.json` | Java/TypeScript/Python代码智能分析 |
 | Context7 | `.mcp.json` | 上下文管理和历史记录 |
 | Log4j2 | `src/main/resources/log4j2.xml` | 日志配置 |
 
@@ -327,16 +318,6 @@ open ep18/target/site/jacoco/index.html
 ```
 
 ### 代码分析
-```bash
-# 使用CCLSP获取诊断
-mcp__cclsp__get_diagnostics file_path="ep18/src/main/java/CymbolStackVM.java"
-
-# 查找符号定义
-mcp__cclsp__find_definition file_path="..." symbol_name="MethodName"
-
-# 查找所有引用
-mcp__cclsp__find_references file_path="..." symbol_name="ClassName"
-```
 
 ---
 
@@ -353,7 +334,7 @@ mcp__cclsp__find_references file_path="..." symbol_name="ClassName"
 - [ ] **EP专属记忆**: EP1-17, EP20, EP18R (18/21待创建)
 
 ### 计划 📋
-- [ ] **Skill扩展**: CCLSP使用指南, TDD开发流程, Maven高级配置
+- [ ] **Skill扩展**: TDD开发流程, Maven高级配置
 - [ ] **工具脚本**: 内存加载验证, Sub-Agent创建助手
 - [ ] **质量门禁**: 自动化文档完整性检查
 
@@ -453,7 +434,6 @@ mcp__cclsp__find_references file_path="..." symbol_name="ClassName"
 | **编译器开发生态Skill** | `.claude/skills/compiler-ecosystem/SKILL.md` | 完整开发环境支持 |
 | **文档编写Skill** | `.claude/skills/technical-documentation-writing-and-refactoring/SKILL.md` | 文档标准化指南 |
 | **测试框架Skill** | `.claude/skills/testing-framework-specification/SKILL.md` | 测试开发标准 |
-| **CCLSP使用指南** | `.claude/skills/cclsp-usage-guide/SKILL.md` | 代码智能分析指南 |
 
 ---
 
@@ -487,9 +467,6 @@ mcp__cclsp__find_references file_path="..." symbol_name="ClassName"
 读取 docs/ep-memory/EP18.md (栈式VM)
 读取 docs/ep-memory/EP18R.md (寄存器VM)
 
-# CCLSP 分析
-mcp__cclsp__find_definition (CymbolStackVM.java)
-mcp__cclsp__find_definition (RegisterVMInterpreter.java)
 
 # 生成对比报告
 使用: .claude/skills/technical-documentation-writing-and-refactoring/SKILL.md
@@ -504,7 +481,7 @@ mcp__cclsp__find_definition (RegisterVMInterpreter.java)
 
 ### 短期 (1-2周)
 - 创建剩余EP专属记忆 (EP1-17, EP20, EP18R)
-- 补充Skill库 (CCLSP使用指南, TDD流程)
+- 补充Skill库 (TDD流程)
 
 ### 中期 (1-2月)
 - 自动化Sub-Agent创建工具

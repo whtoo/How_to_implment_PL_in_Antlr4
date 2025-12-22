@@ -239,9 +239,6 @@ public class WorkingMemoryManager {
             case "TDD重构":
                 loadSkill("TDD开发流程");
                 break;
-            case "代码分析":
-                loadSkill("CCLSP使用指南");
-                break;
         }
     }
 }
@@ -484,11 +481,6 @@ public interface SharedMemory {
       "coverage": "jacoco:report"
     }
   },
-  "cclsp": {
-    "enabled": true,
-    "servers": ["jdtls", "typescript-language-server", "pylsp"],
-    "default": "jdtls"
-  },
   "context7": {
     "enabled": true,
     "auto_record": true
@@ -498,7 +490,6 @@ public interface SharedMemory {
 
 ### MCP 服务器集成
 
-- **CCLSP**: Java/TypeScript/Python 代码智能分析
 - **Context7**: 上下文管理和历史记录
 - **Compiler Development Skill**: 编译器开发专业知识
 - **技术文档编写 Skill**: 文档编写规范和标准
@@ -518,7 +509,6 @@ project-root/
 │   │   ├── 技术文档编写与重构.md
 │   │   ├── 测试框架规范.md
 │   │   ├── TDD开发流程.md
-│   │   └── CCLSP使用指南.md
 │   ├── ep-memory/             <-- EP 专属记忆
 │   │   ├── EP18.md
 │   │   ├── EP18R.md
@@ -529,7 +519,6 @@ project-root/
 │       └── ...
 ├── ep*/                       <-- EP 模块
 └── .claude/
-    └── cclsp.json            <-- CCLSP 配置
 ```
 
 ---

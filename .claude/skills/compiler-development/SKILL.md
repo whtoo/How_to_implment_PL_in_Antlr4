@@ -1,7 +1,7 @@
 ---
 name: compiler-development
 description: 为ANTLR4编译器项目提供专业开发指导，包括语法分析、语义分析、IR生成、代码优化和虚拟机实现。当用户需要编译器开发、ANTLR4语法设计、类型系统实现、中间代码生成或编译器优化相关帮助时使用此技能。
-allowed-tools: Read, Grep, Glob, mcp__cclsp__find_definition, mcp__cclsp__find_references, mcp__cclsp__get_diagnostics, mcp__cclsp__restart_server, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+allowed-tools: Read, Grep, Glob, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
 ---
 
 # 编译器开发技能
@@ -195,7 +195,6 @@ python scripts/run.py compile ep20
 5. **日志调试**: 使用Log4j2进行分级日志记录
 6. **代码风格**: 遵循项目Java 21+代码规范
 7. **错误处理**: 提供有意义的错误信息和位置
-8. **代码分析优先使用CCLSP工具**: 符号查找、引用分析、诊断检查优先使用CCLSP工具（mcp__cclsp__find_definition, mcp__cclsp__find_references, mcp__cclsp__get_diagnostics），确保代码分析的精确性和一致性
 
 ## 常见问题解决
 

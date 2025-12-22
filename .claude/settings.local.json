@@ -60,7 +60,10 @@
       "Bash(dir:*)",
       "Bash(test:*)",
       "Bash(python:*)",
-      "Bash(where:*)"
+      "Bash(where:*)",
+      "mcp__serena__list_memories",
+      "mcp__serena__list_dir",
+      "mcp__serena__search_for_pattern"
     ]
   },
   "enableAllProjectMcpServers": true,

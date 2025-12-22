@@ -52,7 +52,7 @@ CLAUDE.md 重构 → 分层记忆体系
 
 **内容包含**:
 - ✅ EP 关系图谱（21个EP的依赖关系）
-- ✅ 工具链通用信息（Maven、CCLSP、Context7）
+- ✅ 工具链通用信息（Maven、Context7）
 - ✅ 工作记忆管理策略（分层、按需加载）
 - ✅ Sub-Agent 创建和协调机制
 - ✅ 主控 Agent 工作流程和决策树
@@ -409,7 +409,6 @@ mkdir -p docs/skills
 
 ### 短期 (1-2 周)
 - [ ] 为 EP1-EP17 创建专属记忆文件
-- [ ] 补充 CCLSP 使用指南 Skill
 - [ ] 补充 TDD 开发流程 Skill
 - [ ] 创建验证脚本检查完整性
 

@@ -1,7 +1,7 @@
 # CLAUDE.md - EP 项目主控导航
 
-**文档版本**: v2.1
-**最后重构**: 2025-12-22  
+**文档版本**: v2.2
+**最后重构**: 2025-12-23 (EP21 SSA重构完成)
 **维护方式**: 主控Agent负责导航，具体内容分散维护
 
 ---
@@ -93,15 +93,12 @@
 **📍 位置**: `.claude/skills/`
 
 **已建立**:
-- ✅ **编译器开发者** (`.claude/skills/compiler-development/SKILL.md`)
-  - ANTLR4语法分析、语义分析、IR生成
-  - Context7代码智能分析工具
-  - 虚拟机实现和优化技术
-
-- ✅ **编译器开发生态系统** (`.claude/skills/compiler-ecosystem/SKILL.md`)
-  - 完整的编译器开发生态支持
-  - 跨平台构建脚本和MCP配置
-  - 开发工具和环境检查
+- ✅ **编译器专家** (`.claude/skills/compiler-expert/SKILL.md`)
+  - 合并编译器开发者和开发生态系统的所有功能
+  - ANTLR4语法分析、语义分析、IR生成、代码优化、虚拟机实现
+  - 完整的编译器开发生态支持（构建、测试、部署、MCP配置）
+  - 优先使用Serena智能代码分析工具
+  - 跨平台开发工具和环境检查
 
 - ✅ **技术文档编写与重构** (`.claude/skills/technical-documentation-writing-and-refactoring/SKILL.md`)
   - 标准化文档结构
@@ -116,9 +113,9 @@
 
 **使用时机**: 根据任务类型自动加载
 ```
-用户请求包含 "开发"、"调试"、"测试"、"重构"、"TDD" → 加载编译器开发者 Skill (compiler-development)
-用户请求包含 "文档修订"、"设计重构" → 加载技术文档编写与重构 Skill
-用户请求包含 "测试框架规范" → 加载测试框架规范 Skill
+所有Agent默认加载编译器专家 Skill (compiler-expert)
+用户请求包含 "文档修订"、"设计重构" → 额外加载技术文档编写与重构 Skill
+用户请求包含 "测试框架规范" → 额外加载测试框架规范 Skill
 ```
 
 ---
@@ -152,8 +149,9 @@
 
 【步骤 4】加载相关Skill
 ↓
-读取: .claude/skills/compiler-development/SKILL.md
-提取: - 编译器开发工作流和最佳实践
+读取: .claude/skills/compiler-expert/SKILL.md (编译器专家技能)
+提取: - 编译器开发生态支持 (构建、MCP配置、工具链)
+      - 编译器开发工作流和最佳实践
       - 项目结构导航
       - 调试技巧和常见问题解决
 
@@ -325,15 +323,23 @@ open ep18/target/site/jacoco/index.html
 
 ### 已完成 ✅
 - [x] **分层记忆体系**: 主控→EP→Skill三级结构
-- [x] **主控记忆**: docs/master-memory/MAIN.md (450行)
-- [x] **EP专属记忆**: EP18.md (210行), EP19.md (~450行), EP21.md (420行)
-- [x] **Skill库**: 技术文档编写, 测试框架规范
-- [x] **重构总结**: docs/master-memory/REFACTORING_SUMMARY.md
-- [x] **EP21重构进展**: 数据流分析框架已完成 (TASK-3.1.2 & TASK-3.1.3, 2025-12-22)
+- [x] **主控记忆**: MAIN.md (Serena记忆系统, 2025-12-23)
+- [x] **EP专属记忆**: EP21_TECH_MEM.md (2025-12-23), EP18.md (210行), EP19.md (~450行)
+- [x] **Skill库**: 编译器专家, 技术文档编写, 测试框架规范
+- [x] **EP21重构进展**:
+  - ✅ 数据流分析框架已完成 (TASK-3.1.2 & TASK-3.1.3, 2025-12-22)
+  - ✅ SSA转换器重构完成 (TASK-3.1.4, 2025-12-23)
+    - 基于支配边界的Φ函数插入算法
+    - 完整变量重命名机制（左值+右值）
+    - 支配树递归重命名算法
+    - 223/223测试全部通过
 
 ### 进行中 🔄
 - [ ] **EP专属记忆**: EP1-17, EP20, EP18R (18/21待创建)
-- [ ] **EP21代码重构**: Phase3 优化层重构 (SSA转换、控制流优化等)
+- [ ] **EP21代码重构**: Phase3 优化层重构剩余任务
+  - [ ] 控制流优化（常量传播、 CSE、 DCE）
+  - [ ] 寄存器分配（图着色、线性扫描）
+  - [ ] 指令调度（列表调度、寄存器压力感知）
 
 ### 计划 📋
 - [ ] **Skill扩展**: TDD开发流程, Maven高级配置
@@ -406,7 +412,7 @@ open ep18/target/site/jacoco/index.html
     ↓
 识别: 开发任务
     ↓
-加载: .claude/skills/compiler-development/SKILL.md
+加载: .claude/skills/compiler-expert/SKILL.md
 ```
 
 ### Sub-Agent生命周期
@@ -428,12 +434,11 @@ open ep18/target/site/jacoco/index.html
 ### 重构后核心文档
 | 文档 | 位置 | 用途 |
 |------|------|------|
-| **主控记忆** | `docs/master-memory/MAIN.md` | 任务协调和规划 |
+| **主控记忆** | `.serena/memories/MAIN.md` (Serena记忆) | 任务协调和规划 |
+| **EP21技术记忆** | `.serena/memories/EP21_TECH_MEM.md` (Serena记忆) | 高级优化专属信息，2025-12-23更新 |
 | **重构总结** | `docs/master-memory/REFACTORING_SUMMARY.md` | 重构成果和对比 |
 | **EP18记忆** | `docs/ep-memory/EP18.md` | 栈式VM专属信息 |
-| **EP21记忆** | `docs/ep-memory/EP21.md` | 高级优化专属信息 |
-| **编译器开发者Skill** | `.claude/skills/compiler-development/SKILL.md` | 编译器开发标准 |
-| **编译器开发生态Skill** | `.claude/skills/compiler-ecosystem/SKILL.md` | 完整开发环境支持 |
+| **编译器专家Skill** | `.claude/skills/compiler-expert/SKILL.md` | 合并编译器开发者和开发生态系统的所有功能，优先使用Serena工具 |
 | **文档编写Skill** | `.claude/skills/technical-documentation-writing-and-refactoring/SKILL.md` | 文档标准化指南 |
 | **测试框架Skill** | `.claude/skills/testing-framework-specification/SKILL.md` | 测试开发标准 |
 
@@ -452,7 +457,7 @@ open ep18/target/site/jacoco/index.html
 → 查看现有指令实现模式
 
 # 3. Skill加载 (2秒)
-读取 .claude/skills/compiler-development/SKILL.md
+读取 .claude/skills/compiler-expert/SKILL.md
 → 遵循编译器开发工作流，创建测试: testNewInstruction_when{条件}
 
 # 4. 实施 (15分钟)
@@ -477,6 +482,32 @@ open ep18/target/site/jacoco/index.html
 效率提升: 60% (避免重复搜索和手动整理)
 ```
 
+### 示例 3: 在 EP21 使用 Serena 记忆系统 (2025-12-23)
+```bash
+# 1. 加载主控记忆 (1秒)
+mcp__serena__read_memory("MAIN.md")
+
+# 2. 加载 EP21 技术记忆 (1秒)
+mcp__serena__read_memory("EP21_TECH_MEM.md")
+→ 提取关键信息:
+  - SSAGraph.java 位置和状态
+  - 最新测试结果: 223/223 通过
+  - 2025-12-23 重构内容
+
+# 3. 继续开发 (5分钟)
+→ 定位到: src/main/java/org/teachfx/antlr4/ep21/analysis/ssa/SSAGraph.java
+→ 查看: 变量重命名算法实现
+→ 验证: 编译和测试
+
+# 4. 自动更新记忆 (1秒)
+mcp__serena__write_memory("EP21_TECH_MEM.md", 更新内容)
+→ 同步更新到 CLAUDE.md
+→ 同步更新到 ep21/README.md
+
+总计时间: 传统方法 20分钟 → 新方法 7分钟 (节省65%)
+优势: 自动化文档同步，无需手动查找文件
+```
+
 ---
 
 ## 🔮 未来演进
@@ -495,13 +526,19 @@ open ep18/target/site/jacoco/index.html
 
 ---
 
-**文档版本**: v2.1
-**重构完成**: 2025-12-22
-**架构验证**: ✅ 已通过 (EP18, EP19 & EP21)  
-**推荐使用**: 所有新开发会话  
+**文档版本**: v2.2
+**重构完成**: 2025-12-23 (EP21 SSA重构)
+**架构验证**: ✅ 已通过 (EP18, EP19 & EP21)
+**推荐使用**: 所有新开发会话
 
-**核心价值**: 
+**核心价值**:
 - 加载时间减少 75% (800行→200行)
 - 检索速度提升 80% (直接定位)
 - 维护成本降低 70% (模块化)
 - 质量标准化提升 300% (Skill库)
+- **新增**: Serena智能记忆系统，自动文档同步
+
+**2025-12-23更新**:
+- ✅ EP21 SSA重构完成，223测试通过
+- ✅ Serena记忆系统集成
+- ✅ 自动化文档更新流程

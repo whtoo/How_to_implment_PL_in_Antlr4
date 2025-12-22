@@ -50,7 +50,7 @@ public abstract class AbstractDataFlowAnalysis<T, I extends IRNode> implements D
         // 根据分析方向设置边界条件
         if (isForward()) {
             // 前向分析：入口基本块的in为初始值
-            if (!cfg.isEmpty()) {
+            if (!cfg.nodes.isEmpty()) {
                 BasicBlock<I> entry = cfg.getBlock(0); // 假设第一个基本块是入口
                 if (entry != null) {
                     in.put(entry.getId(), getInitialValue());

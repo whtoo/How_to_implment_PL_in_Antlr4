@@ -1,8 +1,9 @@
 # EP21 TDD重构计划
 
-**版本**: v1.0 | **日期**: 2025-12-21 | **状态**: 进行中 (In Progress)
+**版本**: v1.1 | **日期**: 2025-12-23 | **状态**: 进行中 (In Progress)
 **目的**: 基于新规范进行测试驱动的重构，确保代码质量和规范符合性
 **参考文档**: 架构设计规范.md, 语言规范.md
+**更新内容**: 添加TASK-3.2.5 SSA扩展任务及TDD测试用例
 
 ---
 
@@ -25,6 +26,11 @@ kanban
     'TASK-1.2.2: 统一依赖版本'
     'TASK-1.2.3: 优化插件配置'
     'TASK-1.2.4: 配置代码质量检查'
+    'TASK-3.2: SSA形式转换重构'
+    'TASK-3.2.1: 创建SSA测试套件'
+    'TASK-3.2.2: 重构支配树算法'
+    'TASK-3.2.3: 改进Φ函数插入'
+    'TASK-3.2.4: 实现变量重命名'
     '规范体系设计'
     '架构设计规范'
     '语言规范'
@@ -33,12 +39,10 @@ kanban
   column '🔄 进行中'
     '规范文档编写<当前>'
     'TDD计划制定<当前>'
-    'TASK-4.1.2: 重构统一数据流接口'
-    'TASK-4.1.3: 实现迭代求解器'
-    'TASK-4.1.4: 改进格理论实现'
-    'TASK-4.2.2: 重构支配树算法'
-    'TASK-4.2.3: 改进Φ函数插入'
-    'TASK-4.2.4: 实现变量重命名'
+    'TASK-3.2.5: 扩展SSA转换器支持更多指令<当前>'
+    'TASK-3.2.5.1: 添加对CallFunc指令的支持'
+    'TASK-3.2.5.2: 添加对ReturnVal指令的支持'
+    'TASK-3.2.5.3: 添加对CJMP指令的支持'
 
   column '⏸️ 未开始'
     'Phase2: 中间表示层重构'
@@ -162,11 +166,19 @@ kanban
     🔄 TASK-3.1.3: 实现迭代求解器
     🔄 TASK-3.1.4: 改进格理论实现
 
-🔄 TASK-3.2: SSA形式转换重构 (3天)
-    🔄 TASK-3.2.1: 创建SSA测试套件
-    🔄 TASK-3.2.2: 重构支配树算法
-    🔄 TASK-3.2.3: 改进Φ函数插入
-    🔄 TASK-3.2.4: 实现变量重命名
+✅ TASK-3.2: SSA形式转换重构 (3天)
+    ✅ TASK-3.2.1: 创建SSA测试套件
+    ✅ TASK-3.2.2: 重构支配树算法
+    ✅ TASK-3.2.3: 改进Φ函数插入
+    ✅ TASK-3.2.4: 实现变量重命名
+
+🔄 TASK-3.2.5: 扩展SSA转换器支持更多指令 (2天) [2025-12-23新增]
+    🔄 TASK-3.2.5.1: 添加对CallFunc指令的支持
+    🔄 TASK-3.2.5.2: 添加对ReturnVal指令的支持
+    🔄 TASK-3.2.5.3: 添加对CJMP指令的支持
+    🔄 TASK-3.2.5.4: 添加对JMP指令的支持
+    🔄 TASK-3.2.5.5: 完善表达式重命名（BinExpr、UnaryExpr）
+    🔄 TASK-3.2.5.6: 实现SSA验证器
 
 🔄 TASK-3.3: 控制流优化重构 (4天) [研究生进阶]
     🔄 TASK-3.3.1: 创建控制流优化测试套件
@@ -284,6 +296,18 @@ kanban
 | 三级子任务 | TASK-3.1.3.1 | 设计迭代算法 | 🔄 计划中 | 高 | 团队 | 2026-01-02 | TASK-3.1.3 | 算法设计正确 | 设计迭代求解算法 |
 | 三级子任务 | TASK-3.1.3.2 | 实现迭代框架 | 🔄 计划中 | 高 | 团队 | 2026-01-02 | TASK-3.1.3.1 | 框架实现正确 | 实现IterativeSolver框架 |
 | 三级子任务 | TASK-3.1.4 | 改进格理论实现 | 🔄 计划中 | 中 | 团队 | 2026-01-03 | TASK-3.1.3 | 格运算正确 | 改进Lattice实现 |
+| 主要任务 | TASK-3.2 | SSA形式转换重构 | ✅ 已完成 | 高 | 团队 | 2025-12-23 | TASK-3.1 | SSA转换正确，Φ函数插入正确 | 基于支配边界的Φ函数插入，完整变量重命名 |
+| 三级子任务 | TASK-3.2.1 | 创建SSA测试套件 | ✅ 已完成 | 高 | 团队 | 2025-12-22 | TASK-3.2 | 测试覆盖率≥90% | SSAGraph测试，DominatorAnalysis测试 |
+| 三级子任务 | TASK-3.2.2 | 重构支配树算法 | ✅ 已完成 | 高 | 团队 | 2025-12-22 | TASK-3.2.1 | 支配关系计算正确 | 实现DominatorAnalysis算法 |
+| 三级子任务 | TASK-3.2.3 | 改进Φ函数插入 | ✅ 已完成 | 高 | 团队 | 2025-12-23 | TASK-3.2.2 | Φ函数插入正确 | 基于支配边界的Φ函数插入算法 |
+| 三级子任务 | TASK-3.2.4 | 实现变量重命名 | ✅ 已完成 | 高 | 团队 | 2025-12-23 | TASK-3.2.3 | 变量重命名正确 | 支配树递归重命名算法 |
+| **四级子任务** | **TASK-3.2.5** | **扩展SSA转换器支持更多指令** | 🔄 计划中 | **高** | **团队** | **2025-12-30** | **TASK-3.2.4** | **SSA转换支持所有指令类型** | **2025-12-23新增任务** |
+| 四级子任务 | TASK-3.2.5.1 | 添加对CallFunc指令的支持 | 🔄 计划中 | 高 | 团队 | 2025-12-25 | TASK-3.2.5 | CallFunc指令变量重命名正确 | 修改SSAGraph.renameOperand支持CallFunc |
+| 四级子任务 | TASK-3.2.5.2 | 添加对ReturnVal指令的支持 | 🔄 计划中 | 高 | 团队 | 2025-12-26 | TASK-3.2.5.1 | ReturnVal指令变量重命名正确 | 修改SSAGraph.renameOperand支持ReturnVal |
+| 四级子任务 | TASK-3.2.5.3 | 添加对CJMP指令的支持 | 🔄 计划中 | 高 | 团队 | 2025-12-27 | TASK-3.2.5.2 | CJMP指令变量重命名正确 | 修改SSAGraph.renameOperand支持CJMP |
+| 四级子任务 | TASK-3.2.5.4 | 添加对JMP指令的支持 | 🔄 计划中 | 高 | 团队 | 2025-12-28 | TASK-3.2.5.3 | JMP指令变量重命名正确 | 修改SSAGraph.renameOperand支持JMP |
+| 四级子任务 | TASK-3.2.5.5 | 完善表达式重命名 | 🔄 计划中 | 中 | 团队 | 2025-12-29 | TASK-3.2.5.4 | 表达式重命名完整正确 | 支持BinExpr、UnaryExpr等复杂表达式 |
+| 四级子任务 | TASK-3.2.5.6 | 实现SSA验证器 | 🔄 计划中 | 中 | 团队 | 2025-12-30 | TASK-3.2.5.5 | SSA形式验证正确 | 检查Φ函数参数、变量版本一致性 |
 
 ### 2.4 风险看板 (Risk Board)
 
@@ -1422,6 +1446,217 @@ class SSAGraphTest {
     }
 }
 ```
+
+#### 4.5.6 SSA扩展测试模板 (TASK-3.2.5)
+
+##### 4.5.6.1 CallFunc指令支持测试 (TASK-3.2.5.1)
+
+**TDD测试用例**:
+```java
+@Nested
+@DisplayName("TASK-3.2.5.1: CallFunc指令SSA重命名测试")
+class CallFuncInstructionSSATest {
+
+    @Test
+    @DisplayName("Given: 包含CallFunc的IR代码，When: 执行SSA转换，Then: CallFunc中的变量应正确重命名")
+    void testCallFuncVariableRenaming() {
+        // Given: 创建包含CallFunc指令的IR
+        CFG cfg = createTestCFG();
+        CallFunc callFunc = CallFunc.create(
+            FrameSlot.get(varSymbol),  // 返回值
+            "testFunction",
+            Arrays.asList(
+                FrameSlot.get(param1),  // 参数1
+                FrameSlot.get(param2)   // 参数2
+            )
+        );
+        cfg.getEntryBlock().addInstruction(callFunc);
+
+        // When: 执行SSA转换
+        SSAGraph ssaGraph = new SSAGraph(cfg).buildSSA();
+
+        // Then: 验证CallFunc中的变量被正确重命名
+        assertThat(callFunc.getReturnSlot()).isInstanceOf(SSARegister.class);
+        assertThat(callFunc.getReturnSlot().toString())
+            .matches(".*_\\d+$");  // 应该是 x_1, x_2 格式
+
+        callFunc.getArguments().forEach(arg -> {
+            assertThat(arg).isInstanceOf(SSARegister.class);
+            assertThat(arg.toString()).matches(".*_\\d+$");
+        });
+    }
+
+    @Test
+    @DisplayName("Given: CallFunc有嵌套表达式参数，When: SSA转换，Then: 表达式中的变量也应重命名")
+    void testCallFuncWithNestedExpressions() {
+        // 测试嵌套表达式的变量重命名
+        // 例如: func(a + b, c * d)
+    }
+}
+```
+
+##### 4.5.6.2 ReturnVal指令支持测试 (TASK-3.2.5.2)
+
+**TDD测试用例**:
+```java
+@Nested
+@DisplayName("TASK-3.2.5.2: ReturnVal指令SSA重命名测试")
+class ReturnValInstructionSSATest {
+
+    @Test
+    @DisplayName("Given: 包含ReturnVal的IR代码，When: 执行SSA转换，Then: ReturnVal中的变量应正确重命名")
+    void testReturnValVariableRenaming() {
+        // Given: 创建包含ReturnVal指令的IR
+        CFG cfg = createTestCFG();
+        ReturnVal returnVal = ReturnVal.create(
+            FrameSlot.get(returnVar)
+        );
+        cfg.getExitBlock().addInstruction(returnVal);
+
+        // When: 执行SSA转换
+        SSAGraph ssaGraph = new SSAGraph(cfg).buildSSA();
+
+        // Then: 验证ReturnVal中的变量被正确重命名
+        assertThat(returnVal.getValue()).isInstanceOf(SSARegister.class);
+        assertThat(returnVal.getValue().toString())
+            .matches(".*_\\d+$");
+    }
+}
+```
+
+##### 4.5.6.3 CJMP指令支持测试 (TASK-3.2.5.3)
+
+**TDD测试用例**:
+```java
+@Nested
+@DisplayName("TASK-3.2.5.3: CJMP指令SSA重命名测试")
+class CJMPInstructionSSATest {
+
+    @Test
+    @DisplayName("Given: 包含CJMP的IR代码，When: 执行SSA转换，Then: CJMP中的条件变量应正确重命名")
+    void testCJMPVariableRenaming() {
+        // Given: 创建包含CJMP指令的IR
+        CFG cfg = createTestCFG();
+        CJMP cjmp = CJMP.create(
+            FrameSlot.get(conditionVar),  // 条件变量
+            cfg.getBlock("true"),
+            cfg.getBlock("false")
+        );
+        cfg.getEntryBlock().addInstruction(cjmp);
+
+        // When: 执行SSA转换
+        SSAGraph ssaGraph = new SSAGraph(cfg).buildSSA();
+
+        // Then: 验证CJMP中的条件变量被正确重命名
+        assertThat(cjmp.getCondition()).isInstanceOf(SSARegister.class);
+        assertThat(cjmp.getCondition().toString())
+            .matches(".*_\\d+$");
+    }
+}
+```
+
+##### 4.5.6.4 JMP指令支持测试 (TASK-3.2.5.4)
+
+**TDD测试用例**:
+```java
+@Nested
+@DisplayName("TASK-3.2.5.4: JMP指令SSA重命名测试")
+class JMPInstructionSSATest {
+
+    @Test
+    @DisplayName("Given: 包含JMP的IR代码，When: 执行SSA转换，Then: JMP指令应正确处理")
+    void testJMPInstructionHandling() {
+        // JMP指令通常不包含变量，但需要确保它被正确处理
+        // 验证JMP指令在SSA转换后仍然存在且不变
+    }
+}
+```
+
+##### 4.5.6.5 表达式重命名测试 (TASK-3.2.5.5)
+
+**TDD测试用例**:
+```java
+@Nested
+@DisplayName("TASK-3.2.5.5: 表达式SSA重命名测试")
+class ExpressionSSATest {
+
+    @Test
+    @DisplayName("Given: 包含BinExpr的IR代码，When: 执行SSA转换，Then: BinExpr中的变量应正确重命名")
+    void testBinExprVariableRenaming() {
+        // Given: 创建包含二元表达式的IR
+        CFG cfg = createTestCFG();
+        BinExpr binExpr = BinExpr.create(
+            FrameSlot.get(var1),
+            BinExpr.Op.ADD,
+            FrameSlot.get(var2)
+        );
+        Assign assign = Assign.create(
+            FrameSlot.get(result),
+            binExpr
+        );
+        cfg.getEntryBlock().addInstruction(assign);
+
+        // When: 执行SSA转换
+        SSAGraph ssaGraph = new SSAGraph(cfg).buildSSA();
+
+        // Then: 验证BinExpr中的变量被正确重命名
+        assertThat(binExpr.getLeftOperand()).isInstanceOf(SSARegister.class);
+        assertThat(binExpr.getRightOperand()).isInstanceOf(SSARegister.class);
+
+        // 验证操作数已经被重命名
+        SSARegister left = (SSARegister) binExpr.getLeftOperand();
+        SSARegister right = (SSARegister) binExpr.getRightOperand();
+        assertThat(left.toString()).matches(".*_\\d+$");
+        assertThat(right.toString()).matches(".*_\\d+$");
+    }
+}
+```
+
+##### 4.5.6.6 SSA验证器测试 (TASK-3.2.5.6)
+
+**TDD测试用例**:
+```java
+@Nested
+@DisplayName("TASK-3.2.5.6: SSA验证器测试")
+class SSAValidatorTest {
+
+    @Test
+    @DisplayName("Given: 正确的SSA形式代码，When: 验证器检查，Then: 应通过验证")
+    void testValidSSAForm() {
+        // Given: 创建正确的SSA形式代码
+        SSAGraph ssaGraph = createValidSSAGraph();
+
+        // When: 运行验证器
+        SSAValidator validator = new SSAValidator();
+        ValidationResult result = validator.validate(ssaGraph);
+
+        // Then: 验证应通过
+        assertThat(result.isValid()).isTrue();
+        assertThat(result.getErrors()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Given: 包含错误的SSA形式代码，When: 验证器检查，Then: 应检测到错误")
+    void testInvalidSSAForm() {
+        // Given: 创建包含错误的SSA形式代码
+        SSAGraph ssaGraph = createInvalidSSAGraph();
+
+        // When: 运行验证器
+        SSAValidator validator = new SSAValidator();
+        ValidationResult result = validator.validate(ssaGraph);
+
+        // Then: 验证应失败并报告错误
+        assertThat(result.isValid()).isFalse();
+        assertThat(result.getErrors()).isNotEmpty();
+    }
+}
+```
+
+**验收标准**:
+- ✅ 所有测试通过
+- ✅ 测试覆盖率 ≥90%
+- ✅ 集成到CI/CD流水线
+- ✅ 性能影响 <5%
 
 ### 4.6 测试最佳实践
 

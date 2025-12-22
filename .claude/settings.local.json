@@ -18,9 +18,8 @@
       "Bash(/usr/local/bin/mvn compile:*)",
       "Bash(/usr/local/bin/mvn test:*)",
       "Bash(/usr/local/bin/mvn exec:java:*)",
-      "Skill(compiler-development)",
+      "Skill(compiler-expert)",
       "Skill(antlr4-compiler-development)",
-      "Skill(compiler-ecosystem)",
       "mcp__tree-sitter__search_code",
       "Bash(cat:*)",
       "Bash(mvn:*)",
@@ -43,14 +42,9 @@
       "Bash(fi:*)",
       "Bash(done:*)",
       "Bash(javac:*)",
-      "mcp__cclsp__find_definition",
-      "mcp__cclsp__restart_server",
-      "mcp__cclsp__find_references",
-      "mcp__cclsp__get_diagnostics",
       "Bash(python3:*)",
       "Skill(technical-documentation-writing-and-refactoring)",
       "WebFetch(domain:mermaid.js.org)",
-      "Bash(test -f .claude/cclsp.json)",
       "Bash(jdtls --help:*)",
       "Bash(C:\\tools\\jdtls\\bin\\jdtls.bat:*)",
       "Bash(/c/tools/jdtls/bin/jdtls:*)",
@@ -70,12 +64,14 @@
       "mcp__serena__read_memory",
       "mcp__serena__get_symbols_overview",
       "mcp__serena__check_onboarding_performed",
-      "mcp__serena__think_about_collected_information"
+      "mcp__serena__think_about_collected_information",
+      "mcp__serena__onboarding",
+      "mcp__serena__think_about_task_adherence",
+      "mcp__serena__edit_memory"
     ]
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "context7",
-    "cclsp"
+    "context7"
   ]
 }

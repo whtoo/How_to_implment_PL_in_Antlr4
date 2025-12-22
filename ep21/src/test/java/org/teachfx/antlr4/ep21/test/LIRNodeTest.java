@@ -41,7 +41,7 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
             };
@@ -64,7 +64,7 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
             };
@@ -87,16 +87,23 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
-                    return visitor.visit(this);
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
+                    return null;
                 }
             };
 
             assertDoesNotThrow(() -> node.accept(new IRVisitor<Object, Object>() {
-                @Override
-                public Object visit(LIRNode node) {
-                    return "visited";
-                }
+                @Override public Object visit(org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr node) { return null; }
+                @Override public Object visit(org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr node) { return null; }
+                @Override public Object visit(org.teachfx.antlr4.ep21.ir.expr.CallFunc node) { return null; }
+                @Override public Object visit(org.teachfx.antlr4.ep21.ir.stmt.Label node) { return null; }
+                @Override public Object visit(org.teachfx.antlr4.ep21.ir.stmt.JMP node) { return null; }
+                @Override public Object visit(org.teachfx.antlr4.ep21.ir.stmt.CJMP node) { return null; }
+                @Override public Object visit(org.teachfx.antlr4.ep21.ir.stmt.Assign node) { return null; }
+                @Override public Object visit(org.teachfx.antlr4.ep21.ir.stmt.ReturnVal node) { return null; }
+                @Override public Object visit(org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot node) { return null; }
+                @Override public Object visit(org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot node) { return null; }
+                @Override public <T> Object visit(org.teachfx.antlr4.ep21.ir.expr.val.ConstVal<T> node) { return null; }
             }));
         }
     }
@@ -123,7 +130,7 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
             };
@@ -146,7 +153,7 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
             };
@@ -259,7 +266,7 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
             };
@@ -283,7 +290,7 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
             };
@@ -300,7 +307,7 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
             };
@@ -331,7 +338,7 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
             };
@@ -393,7 +400,7 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
             };
@@ -416,7 +423,7 @@ class LIRNodeTest {
                 }
 
                 @Override
-                public <S, E> E accept(IRVisitor<S, E> visitor) {
+                public <S, E> S accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
             };

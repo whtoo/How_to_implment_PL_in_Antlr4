@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep21.ir.lir;
 
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
+import org.teachfx.antlr4.ep21.ir.IRVisitor;
 
 /**
  * LIR赋值指令，低层表示，便于平台相关优化
@@ -71,5 +72,11 @@ public class LIRAssign extends LIRNode {
     
     public RegisterType getRegisterType() {
         return registerType;
+    }
+
+    @Override
+    public <S, E> S accept(IRVisitor<S, E> visitor) {
+        // LIRAssign暂不支持IRVisitor访问者模式
+        return null;
     }
 }

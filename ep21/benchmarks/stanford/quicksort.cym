@@ -1,0 +1,54 @@
+/**
+ * Stanford Benchmark: Quicksort
+ * Tests recursion and array operations
+ */
+
+void swap(int[] arr, int i, int j) {
+    int temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+}
+
+int partition(int[] arr, int low, int high) {
+    int pivot = arr[high];
+    int i = low - 1;
+    int j;
+
+    for (j = low; j < high; j = j + 1) {
+        if (arr[j] <= pivot) {
+            i = i + 1;
+            swap(arr, i, j);
+        }
+    }
+    swap(arr, i + 1, high);
+    return i + 1;
+}
+
+void quicksort(int[] arr, int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+        quicksort(arr, low, pi - 1);
+        quicksort(arr, pi + 1, high);
+    }
+}
+
+int main() {
+    int[1000] arr;
+    int i;
+
+    // Initialize array with decreasing values
+    for (i = 0; i < 1000; i = i + 1) {
+        arr[i] = 999 - i;
+    }
+
+    quicksort(arr, 0, 999);
+
+    // Verify sorted
+    for (i = 1; i < 1000; i = i + 1) {
+        if (arr[i - 1] > arr[i]) {
+            return -1; // Error
+        }
+    }
+
+    return arr[500]; // Return middle element
+}

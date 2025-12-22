@@ -1,0 +1,22 @@
+/**
+ * Optimization Test: Constant Propagation
+ * Test for propagating constant values
+ */
+
+int constant_propagation_test() {
+    int a = 10;
+    int b = 20;
+    int c = a + b;  // Should be constant folded to 30
+
+    int d = c * 2;  // Should be constant folded to 60
+
+    if (d > 50) {   // Condition always true, should be eliminated
+        return 1;
+    } else {
+        return 0;   // Dead code
+    }
+}
+
+int main() {
+    return constant_propagation_test();
+}

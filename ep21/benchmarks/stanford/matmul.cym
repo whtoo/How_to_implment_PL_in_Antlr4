@@ -1,0 +1,35 @@
+/**
+ * Stanford Benchmark: Matrix Multiplication
+ * Tests loop optimization and arithmetic performance
+ */
+
+int[100][100] multiply(int[100][100] a, int[100][100] b) {
+    int[100][100] c;
+    int i, j, k;
+
+    for (i = 0; i < 100; i = i + 1) {
+        for (j = 0; j < 100; j = j + 1) {
+            c[i][j] = 0;
+            for (k = 0; k < 100; k = k + 1) {
+                c[i][j] = c[i][j] + a[i][k] * b[k][j];
+            }
+        }
+    }
+    return c;
+}
+
+int main() {
+    int[100][100] a, b, c;
+    int i, j;
+
+    // Initialize matrices
+    for (i = 0; i < 100; i = i + 1) {
+        for (j = 0; j < 100; j = j + 1) {
+            a[i][j] = i + j;
+            b[i][j] = i - j;
+        }
+    }
+
+    c = multiply(a, b);
+    return c[0][0];
+}

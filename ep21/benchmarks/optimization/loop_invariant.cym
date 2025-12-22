@@ -1,0 +1,22 @@
+/**
+ * Optimization Test: Loop Invariant Code Motion
+ * Test for detecting and moving invariant code out of loops
+ */
+
+int compute_invariant() {
+    int x = 10;
+    int y = 20;
+    int z = x * y + 100; // Invariant expression
+
+    int i, sum = 0;
+    for (i = 0; i < 1000; i = i + 1) {
+        // z is invariant, should be moved out of loop
+        sum = sum + z + i;
+    }
+
+    return sum;
+}
+
+int main() {
+    return compute_invariant();
+}

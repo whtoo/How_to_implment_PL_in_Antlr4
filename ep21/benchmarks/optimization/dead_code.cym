@@ -1,0 +1,20 @@
+/**
+ * Optimization Test: Dead Code Elimination
+ * Test for eliminating unused computations
+ */
+
+int dead_code_test() {
+    int a = 10;
+    int b = 20;
+    int c = a + b;  // Used
+    int d = a * b;  // Not used - should be eliminated
+
+    int e = c * 2;  // Used
+    int f = c + 1;  // Not used - should be eliminated
+
+    return e;
+}
+
+int main() {
+    return dead_code_test();
+}

@@ -5,7 +5,6 @@ import org.teachfx.antlr4.ep21.ir.expr.Operand;
 import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep21.ir.stmt.Assign;
-import org.teachfx.antlr4.ep21.ir.stmt.JMP;
 import org.teachfx.antlr4.ep21.ir.stmt.CJMP;
 import org.teachfx.antlr4.ep21.pass.cfg.BasicBlock;
 import org.teachfx.antlr4.ep21.pass.cfg.CFG;
@@ -15,6 +14,13 @@ import java.util.*;
 
 /**
  * SSA图生成器 - 生成静态单赋值形式的控制流图
+ * EP21 SSA扩展支持 (2025-12-23):
+ * - TASK-3.2.5.1: CallFunc指令支持 (待分析 - 当前设计中CallFunc不直接包含变量引用)
+ * - TASK-3.2.5.2: ReturnVal指令支持 ✅
+ * - TASK-3.2.5.3: CJMP指令支持 ✅
+ * - TASK-3.2.5.4: JMP指令支持 ✅
+ * - TASK-3.2.5.5: 表达式重命名 - BinExpr/UnaryExpr在前端被转换为简单赋值，无需特殊处理 ✅
+ * - TASK-3.2.5.6: SSA验证器 (待实现)
  */
 public class SSAGraph {
     private final CFG<IRNode> originalCFG;
@@ -187,6 +193,7 @@ public class SSAGraph {
 
     /**
      * 在基本块中递归执行变量重命名
+     * 支持的指令类型: Assign, CJMP, ReturnVal (TASK-3.2.5.2, TASK-3.2.5.3)
      */
     private void renameInBlock(int blockId, Map<Integer, List<Integer>> domChildren) {
         BasicBlock<IRNode> block = originalCFG.getBlock(blockId);
@@ -248,7 +255,39 @@ public class SSAGraph {
                 renamedNodes.put(instr, renamedAssign);
                 block.codes.set(i, new Loc<>(renamedAssign));
             }
-            // TODO: 处理其他类型的指令（如函数调用、返回等）
+            // TASK-3.2.5.3: 处理CJMP指令 - 重命名条件变量
+            else if (instr instanceof CJMP cjmp) {
+                // 重命名条件变量（使用）
+                Operand renamedCond = renameOperand(cjmp.cond);
+                // 创建新的CJMP指令，保持跳转目标不变
+                CJMP renamedCjmp = new CJMP(
+                    (VarSlot)renamedCond,
+                    cjmp.getThenBlock(),
+                    cjmp.getElseBlock()
+                );
+                renamedNodes.put(instr, renamedCjmp);
+                block.codes.set(i, new Loc<>(renamedCjmp));
+            }
+            // TASK-3.2.5.2: 处理ReturnVal指令 - 重命名返回值变量
+            else if (instr instanceof org.teachfx.antlr4.ep21.ir.stmt.ReturnVal retVal) {
+                // 重命名返回值变量（使用）
+                VarSlot retValSlot = retVal.getRetVal();
+                if (retValSlot != null) {
+                    Operand renamedRetVal = renameOperand(retValSlot);
+                    // 创建新的ReturnVal指令
+                    // retFuncLabel是公共字段，直接访问其scope
+                    org.teachfx.antlr4.ep21.ir.stmt.ReturnVal renamedRetValStmt =
+                        new org.teachfx.antlr4.ep21.ir.stmt.ReturnVal(
+                            (VarSlot)renamedRetVal,
+                            retVal.retFuncLabel.getScope()
+                        );
+                    renamedRetValStmt.setMainEntry(retVal.isMainEntry());
+                    renamedNodes.put(instr, renamedRetValStmt);
+                    block.codes.set(i, new Loc<>(renamedRetValStmt));
+                }
+            }
+            // TASK-3.2.5.4: JMP指令不需要特殊处理，跳过
+            // 其他指令类型（Label等）不需要重命名，跳过
         }
 
         // 步骤3：为后继基本块的Phi函数填充参数
@@ -284,6 +323,7 @@ public class SSAGraph {
         for (int i = blockPhis.size(); i < block.codes.size(); i++) {
             Loc<IRNode> loc = block.codes.get(i);
             IRNode instr = loc.getInstruction();
+            // 只处理Assign指令，因为它定义了新变量
             if (instr instanceof Assign assign) {
                 String varName = getVariableName(assign.getLhs());
                 Stack<Integer> stack = varStacks.get(varName);
@@ -291,6 +331,7 @@ public class SSAGraph {
                     stack.pop();
                 }
             }
+            // 注意：CJMP和ReturnVal只是使用变量，不定义新变量，所以不需要弹栈
         }
     }
 
@@ -350,6 +391,9 @@ public class SSAGraph {
     /**
      * 重命名操作数中的变量使用
      * 将变量引用替换为对应的版本号
+     *
+     * 只处理 Operand 类型（包括 VarSlot）
+     * BinExpr 和 UnaryExpr 不会被分解，它们会在前端被转换为简单赋值
      */
     private Operand renameOperand(Operand operand) {
         if (operand instanceof VarSlot varSlot) {
@@ -360,7 +404,7 @@ public class SSAGraph {
                 return new SSARegister(varName + "_" + currentVer);
             }
         }
-        // 对于非VarSlot的操作数（如常量），直接返回
+        // 对于非VarSlot的操作数（如常量）或其他类型，直接返回
         return operand;
     }
 
@@ -493,6 +537,250 @@ public class SSAGraph {
         public <S,E> E accept(org.teachfx.antlr4.ep21.ir.IRVisitor<S,E> visitor) {
             // 简化实现，返回null
             return null;
+        }
+    }
+
+    /**
+     * SSA验证器 (TASK-3.2.5.6)
+     * 验证SSA形式的正确性
+     */
+    public static class SSAValidator {
+
+        /**
+         * 验证SSA图
+         */
+        public ValidationResult validate(SSAGraph ssaGraph) {
+            List<String> errors = new ArrayList<>();
+
+            // 1. 验证变量版本一致性
+            validateVariableConsistency(ssaGraph, errors);
+
+            // 2. 验证Φ函数参数
+            validatePhiFunctions(ssaGraph, errors);
+
+            // 3. 验证变量使用在定义之后
+            validateUseBeforeDef(ssaGraph, errors);
+
+            return new ValidationResult(errors.isEmpty(), errors);
+        }
+
+        /**
+         * 验证变量版本一致性
+         * 每个变量定义应该只有一个版本号
+         */
+        private void validateVariableConsistency(SSAGraph ssaGraph, List<String> errors) {
+            Map<String, Set<Integer>> varVersions = new HashMap<>();
+
+            for (BasicBlock<IRNode> block : ssaGraph.originalCFG.nodes) {
+                for (Loc<IRNode> loc : block.codes) {
+                    IRNode instr = loc.getInstruction();
+
+                    // 收集Phi函数定义的变量版本
+                    if (instr instanceof SSAPhiFunction phi) {
+                        String varName = extractVarName(phi.result);
+                        Integer version = extractVersionNumber(phi.result);
+                        if (varName != null && version != null) {
+                            varVersions.computeIfAbsent(varName, k -> new HashSet<>()).add(version);
+                        }
+                    }
+                    // 收集Assign定义的变量版本
+                    else if (instr instanceof Assign assign) {
+                        String varName = extractVarNameFromOperand(assign.getLhs());
+                        // 检查rhs是否是SSARegister
+                        if (assign.getRhs() instanceof SSARegister) {
+                            Integer version = extractVersionNumber(assign.getRhs().toString());
+                            if (version != null) {
+                                varVersions.computeIfAbsent(varName, k -> new HashSet<>()).add(version);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 检查是否有缺失的版本号
+            for (Map.Entry<String, Set<Integer>> entry : varVersions.entrySet()) {
+                int maxVersion = getMaxVersion(entry.getValue());
+                for (int v = 1; v <= maxVersion; v++) {
+                    if (!entry.getValue().contains(v)) {
+                        errors.add(String.format("变量 %s 缺少版本 %d", entry.getKey(), v));
+                    }
+                }
+            }
+        }
+
+        /**
+         * 验证Φ函数参数
+         * Φ函数的参数数量应该与前驱块数量一致
+         */
+        private void validatePhiFunctions(SSAGraph ssaGraph, List<String> errors) {
+            for (BasicBlock<IRNode> block : ssaGraph.originalCFG.nodes) {
+                // 从 edges 列表中计算前驱块数量
+                Set<Integer> predecessors = new HashSet<>();
+                for (var edge : ssaGraph.originalCFG.edges) {
+                    if (edge.getMiddle() == block.getId()) {
+                        predecessors.add(edge.getLeft());
+                    }
+                }
+                int predCount = predecessors.size();
+
+                for (Loc<IRNode> loc : block.codes) {
+                    IRNode instr = loc.getInstruction();
+                    if (instr instanceof SSAPhiFunction phi) {
+                        if (phi.arguments.size() != predCount) {
+                            errors.add(String.format(
+                                "基本块 %d 的Φ函数参数数量不匹配: 期望 %d (前驱数量), 实际 %d",
+                                block.getId(), predCount, phi.arguments.size()
+                            ));
+                        }
+                    } else {
+                        // Phi函数都在开头，遇到非Phi函数时停止
+                        break;
+                    }
+                }
+            }
+        }
+
+        /**
+         * 验证变量使用在定义之后
+         */
+        private void validateUseBeforeDef(SSAGraph ssaGraph, List<String> errors) {
+            Map<String, Integer> definedVersions = new HashMap<>();
+
+            for (BasicBlock<IRNode> block : ssaGraph.originalCFG.nodes) {
+                for (Loc<IRNode> loc : block.codes) {
+                    IRNode instr = loc.getInstruction();
+
+                    // 处理Phi函数定义
+                    if (instr instanceof SSAPhiFunction phi) {
+                        String varName = extractVarName(phi.result);
+                        Integer version = extractVersionNumber(phi.result);
+                        if (varName != null && version != null) {
+                            definedVersions.put(varName, version);
+                        }
+
+                        // 检查Phi函数参数是否已定义
+                        for (String arg : phi.arguments) {
+                            String argVarName = extractVarName(arg);
+                            Integer argVersion = extractVersionNumber(arg);
+                            if (argVarName != null && argVersion != null) {
+                                Integer currentVersion = definedVersions.get(argVarName);
+                                if (currentVersion == null || argVersion > currentVersion) {
+                                    errors.add(String.format(
+                                        "Phi函数使用了未定义的变量: %s (当前已定义版本: %s)",
+                                        arg, currentVersion
+                                    ));
+                                }
+                            }
+                        }
+                    }
+                    // 处理Assign指令
+                    else if (instr instanceof Assign assign) {
+                        // 检查rhs使用的变量是否已定义
+                        if (assign.getRhs() instanceof SSARegister rhsReg) {
+                            String varName = extractVarName(rhsReg.toString());
+                            Integer version = extractVersionNumber(rhsReg.toString());
+                            if (varName != null && version != null) {
+                                Integer currentVersion = definedVersions.get(varName);
+                                if (currentVersion == null || version > currentVersion) {
+                                    errors.add(String.format(
+                                        "变量使用在定义之前: %s (当前已定义版本: %s)",
+                                        rhsReg.toString(), currentVersion
+                                    ));
+                                }
+                            }
+                        }
+
+                        // 记录新定义的变量
+                        String varName = extractVarNameFromOperand(assign.getLhs());
+                        if (assign.getRhs() instanceof SSARegister rhsReg) {
+                            Integer version = extractVersionNumber(rhsReg.toString());
+                            if (varName != null && version != null) {
+                                definedVersions.put(varName, version);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * 从Operand提取变量名
+         */
+        private String extractVarNameFromOperand(Operand operand) {
+            if (operand instanceof VarSlot varSlot) {
+                if (varSlot instanceof FrameSlot frameSlot) {
+                    String name = frameSlot.getVariableName();
+                    if (name != null) {
+                        return name;
+                    }
+                }
+                return varSlot.toString();
+            }
+            return operand.toString();
+        }
+
+        /**
+         * 从SSA变量名中提取变量名
+         * 例如: "x_1" -> "x"
+         */
+        private String extractVarName(String ssaVarName) {
+            int underscoreIndex = ssaVarName.lastIndexOf('_');
+            if (underscoreIndex > 0) {
+                return ssaVarName.substring(0, underscoreIndex);
+            }
+            return null;
+        }
+
+        /**
+         * 从SSA变量名中提取版本号
+         * 例如: "x_1" -> 1
+         */
+        private Integer extractVersionNumber(String ssaVarName) {
+            int underscoreIndex = ssaVarName.lastIndexOf('_');
+            if (underscoreIndex > 0 && underscoreIndex < ssaVarName.length() - 1) {
+                try {
+                    return Integer.parseInt(ssaVarName.substring(underscoreIndex + 1));
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        /**
+         * 获取版本号集合中的最大值
+         */
+        private int getMaxVersion(Set<Integer> versions) {
+            return versions.stream().max(Integer::compareTo).orElse(0);
+        }
+    }
+
+    /**
+     * SSA验证结果 (TASK-3.2.5.6)
+     */
+    public static class ValidationResult {
+        private final boolean valid;
+        private final List<String> errors;
+
+        public ValidationResult(boolean valid, List<String> errors) {
+            this.valid = valid;
+            this.errors = new ArrayList<>(errors);
+        }
+
+        public boolean isValid() {
+            return valid;
+        }
+
+        public List<String> getErrors() {
+            return new ArrayList<>(errors);
+        }
+
+        public String getSummary() {
+            if (valid) {
+                return "SSA验证通过";
+            } else {
+                return String.format("SSA验证失败: %d 个错误", errors.size());
+            }
         }
     }
 }

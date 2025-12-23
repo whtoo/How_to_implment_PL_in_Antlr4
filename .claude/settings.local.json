@@ -67,7 +67,9 @@
       "mcp__serena__think_about_collected_information",
       "mcp__serena__onboarding",
       "mcp__serena__think_about_task_adherence",
-      "mcp__serena__edit_memory"
+      "mcp__serena__edit_memory",
+      "mcp__serena__replace_symbol_body",
+      "mcp__serena__think_about_whether_you_are_done"
     ]
   },
   "enableAllProjectMcpServers": true,

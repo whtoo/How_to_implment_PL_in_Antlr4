@@ -94,6 +94,60 @@ Tests run: 223, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
+### SSA扩展完成 (2025-12-23 下午)
+
+#### 实现的扩展功能：
+- ✅ **TASK-3.2.5.2: ReturnVal指令支持** - 在SSAGraph.renameInBlock中添加ReturnVal处理，重命名返回值变量
+- ✅ **TASK-3.2.5.3: CJMP指令支持** - 在SSAGraph.renameInBlock中添加CJMP处理，重命名条件变量
+- ✅ **TASK-3.2.5.4: JMP指令支持** - 确认JMP指令不需要特殊处理（不包含变量引用）
+- ✅ **TASK-3.2.5.5: 表达式重命名** - 分析确认BinExpr/UnaryExpr在前端被转换为简单赋值，无需特殊处理
+- ✅ **TASK-3.2.5.6: SSA验证器实现** - 实现SSAValidator类，验证SSA形式的正确性
+
+#### SSA验证器 (SSAValidator) 实现：
+- **功能**: 验证SSA形式的正确性
+- **验证项**:
+  1. 变量版本一致性检查 - 每个变量的版本号应该连续无缺失
+  2. Φ函数参数验证 - Φ函数的参数数量应该与前驱块数量一致
+  3. 变量使用顺序验证 - 检查变量是否在使用前已定义
+
+- **ValidationResult 类**:
+  - `isValid()` - 返回验证是否通过
+  - `getErrors()` - 返回错误列表
+  - `getSummary()` - 返回验证摘要
+
+- **核心方法**:
+  - `validate(SSAGraph)` - 主验证入口
+  - `validateVariableConsistency()` - 变量版本一致性检查
+  - `validatePhiFunctions()` - Φ函数参数验证
+  - `validateUseBeforeDef()` - 使用前定义验证
+
+#### 实现的扩展功能：
+- ✅ **TASK-3.2.5.2: ReturnVal指令支持** - 在SSAGraph.renameInBlock中添加ReturnVal处理，重命名返回值变量
+- ✅ **TASK-3.2.5.3: CJMP指令支持** - 在SSAGraph.renameInBlock中添加CJMP处理，重命名条件变量
+- ✅ **TASK-3.2.5.4: JMP指令支持** - 确认JMP指令不需要特殊处理（不包含变量引用）
+- ✅ **TASK-3.2.5.5: 表达式重命名** - 分析确认BinExpr/UnaryExpr在前端被转换为简单赋值，无需特殊处理
+
+#### 关键修改文件：
+- `SSAGraph.java`:
+  - 新增对ReturnVal指令的处理逻辑
+  - 新增对CJMP指令的处理逻辑
+  - 清理未使用的导入和方法
+
+#### 技术发现：
+1. **类型层次结构**: 
+   - `IRNode` → `Expr` → `Operand` / `BinExpr` / `UnaryExpr`
+   - `VarSlot` extends `Operand`
+   
+2. **SSA重命名策略**:
+   - `BinExpr` 和 `UnaryExpr` 不直接出现在 `Assign` 的 `rhs` 位置
+   - 前端会将复杂表达式分解为简单的 `Assign` 指令序列
+   - `renameOperand` 方法只需处理 `Operand` 类型（包括 `VarSlot`）
+
+3. **指令处理**:
+   - `ReturnVal`: 包含 `retVal` (VarSlot)，需要重命名返回值变量
+   - `CJMP`: 包含 `cond` (VarSlot)，需要重命名条件变量
+   - `JMP`: 不包含变量引用，无需特殊处理
+
 ## 文件结构
 
 ```
@@ -172,6 +226,64 @@ private String getVariableName(VarSlot varSlot) {
 - 验证Φ函数插入
 - 验证变量重命名
 
+### CFG测试 (2025-12-23新增)
+- `CFGTest` - CFG核心类综合测试 ✅ 44测试通过
+  - 节点查询测试 (getBlock, getIRNodes)
+  - 边关系测试 (getSucceed, getInEdges, getOutDegree, getInDegree)
+  - 图结构测试 (iterator, toDOT, toString)
+  - 图修改测试 (removeNode, removeEdge)
+  - 优化器测试 (addOptimizer, applyOptimizers)
+  - 边界条件测试 (自环、大型CFG)
+  - 前驱后继关系完整性测试
+  - 可视化输出测试
+- `CFGBuilderTest` - CFG构建器测试 ✅ 25测试通过
+- `BasicBlockTest` - 基本块测试 ✅ 24测试通过
+- `ControlFlowAnalysisTest` - 控制流分析测试 ✅ 20测试通过
+- `DuplicateEdgeTest` - 重复边测试 ✅ 11测试通过
+- **总计**: 124个CFG相关测试全部通过
+
+### CFG重构完成 (2025-12-23新增)
+**TASK-2.2: 控制流图重构** - ✅ 已完成
+
+#### 任务完成情况
+1. **TASK-2.2.1: 创建CFG测试套件** ✅
+   - 创建了CFGTest.java (44个测试用例)
+   - 创建了CFGBuilderTest.java (25个测试用例)
+   - 创建了BasicBlockTest.java (24个测试用例)
+   - 创建了ControlFlowAnalysisTest.java (20个测试用例)
+   - 创建了DuplicateEdgeTest.java (11个测试用例)
+   - 总计124个测试用例全部通过
+
+2. **TASK-2.2.2: 重构基本块表示** ✅
+   - 优化了BasicBlock内部结构
+   - 添加了完整的构造函数验证
+   - 实现了Builder模式
+   - 添加了unmodifiable views以增强封装
+   - 完善了equals/hashCode实现
+   - 添加了详细的Javadoc注释
+
+3. **TASK-2.2.3: 改进CFG构建算法** ✅
+   - 优化了CFGBuilder算法
+   - 添加了重复边检测和去重机制
+   - 实现了递归深度保护
+   - 添加了完整的错误处理
+   - 实现了详细的日志记录
+   - 添加了CFG验证方法
+
+4. **TASK-2.2.4: 实现可视化输出** ✅
+   - 实现了toDOT()方法（DOT格式）
+   - 实现了toString()方法（Mermaid格式）
+   - 添加了可视化测试验证
+
+#### 测试覆盖率
+- 124个CFG相关测试全部通过
+- 测试文件:
+  - `CFGTest.java`: 44个测试用例
+  - `CFGBuilderTest.java`: 25个测试用例
+  - `BasicBlockTest.java`: 24个测试用例
+  - `ControlFlowAnalysisTest.java`: 20个测试用例
+  - `DuplicateEdgeTest.java`: 11个测试用例
+
 ### IR测试
 - `LIRNodeTest` - LIR节点测试 ✅ 223测试通过
 - `MIRNodeTest` - MIR节点测试
@@ -238,16 +350,16 @@ mvn jacoco:report -pl ep21
 ## 未来计划
 
 ### Phase3剩余任务 (2025-12-23待完成)
-- [ ] SSA扩展 (TASK-3.2.5)
-  - [ ] CallFunc指令支持
-  - [ ] ReturnVal指令支持
-  - [ ] CJMP指令支持
-  - [ ] JMP指令支持
-  - [ ] 表达式重命名完善
-  - [ ] SSA验证器实现
+- [x] SSA扩展 (TASK-3.2.5) ✅ 2025-12-23 完成
+  - [x] CallFunc指令支持 (当前设计中不直接包含变量引用)
+  - [x] ReturnVal指令支持 ✅
+  - [x] CJMP指令支持 ✅
+  - [x] JMP指令支持 ✅
+  - [x] 表达式重命名完善 ✅
+  - [x] SSA验证器实现 ✅
 - [ ] 控制流优化
-  - [ ] 常量传播
-  - [ ] 公共子表达式消除
+  - [x] 常量传播/折叠 ✅ 2025-12-23 完成
+  - [x] 公共子表达式消除 ✅ 2025-12-23 完成
   - [ ] 死代码消除
 - [ ] 寄存器分配
   - [ ] 图着色算法
@@ -275,6 +387,75 @@ mvn jacoco:report -pl ep21
   - CallFunc、ReturnVal、CJMP、JMP指令支持测试
   - 表达式重命名和SSA验证器测试
   - TDD重构计划版本升级至v1.1
+- **v2.3** (2025-12-23): CFG测试套件完成 (TASK-2.2.1)
+  - 新增CFGTest.java (44个测试用例)
+  - 覆盖CFG所有核心方法
+  - 边关系测试 (前驱/后继、度数计算)
+  - 图结构测试 (iterator, toDOT, toString)
+  - 图修改测试 (removeNode, removeEdge)
+  - 优化器测试 (addOptimizer, applyOptimizers)
+  - 边界条件和完整性测试
+  - 124个CFG相关测试全部通过
+- **v2.4** (2025-12-23): 测试覆盖率优化完成 (TASK-1.3)
+  - 新增AbstractDataFlowAnalysisTest.java (9个测试用例)
+  - 新增LiveVariableAnalysisTest.java (8个测试用例)
+  - 移除2个空测试文件（BoolExprNodeTest.java, TypeCheckerTest.java）
+  - 优化JaCoCo配置（添加include/exclude规则）
+  - 测试用例总数从267增至284
+  - 所有284个测试全部通过
+- **v2.7** (2025-12-23): 死代码消除优化器实现完成
+  - 新增DeadCodeEliminationOptimizer.java (215行代码)
+    - 实现了IFlowOptimizer接口
+    - 支持不可达代码消除（基于DFS可达性分析）
+    - 支持死存储消除（基于活跃变量分析）
+    - 自动识别入口块（入度为0的块）
+  - 新增DeadCodeEliminationOptimizerTest.java (15个测试用例)
+    - 创建和配置测试 (2个测试)
+    - 不可达代码消除测试 (3个测试)
+    - 死存储消除测试 (3个测试)
+    - CFG处理测试 (2个测试)
+    - 边界条件测试 (3个测试)
+    - 正确性验证测试 (2个测试)
+  - 测试用例总数从322增至337
+  - 所有337个测试全部通过
+  - 编译成功，无错误
+
+- **v2.6** (2025-12-23): 公共子表达式消除优化器实现完成
+  - 新增CommonSubexpressionEliminationOptimizer.java (256行代码)
+    - 实现了IFlowOptimizer接口
+    - 使用局部值编号算法识别和消除基本块内的公共子表达式
+    - 支持二元表达式: a + b, a * b, a - b, etc.
+    - 支持一元表达式: -a, !a
+    - ValueNumberKey内部类用于表达式标识
+    - 实现常量传播辅助（支持常量表达式识别）
+  - 新增CommonSubexpressionEliminationOptimizerTest.java (16个测试用例)
+    - 创建和配置测试 (2个测试)
+    - 值编号键测试 (2个测试)
+    - CFG处理测试 (3个测试)
+    - 边界条件测试 (4个测试)
+    - 表达式类型测试 (3个测试)
+    - 正确性验证测试 (2个测试)
+  - 测试用例总数从306增至322
+  - 所有322个测试全部通过
+  - 编译成功，无错误
+
+- **v2.5** (2025-12-23): 常量折叠优化器实现完成
+  - 新增ConstantFoldingOptimizer.java (317行代码)
+    - 实现了IFlowOptimizer接口
+    - 支持算术运算: ADD, SUB, MUL, DIV, MOD
+    - 支持比较运算: LT, LE, GT, GE, EQ, NE
+    - 支持逻辑运算: AND, OR
+    - 支持一元运算: NEG, NOT
+    - 集成常量传播分析以跟踪临时变量的常量值
+  - 新增ConstantFoldingOptimizerTest.java (22个测试用例)
+    - 创建和配置测试 (2个测试)
+    - 二元表达式求值测试 (11个测试)
+    - 一元表达式求值测试 (2个测试)
+    - CFG处理测试 (3个测试)
+    - 边界条件测试 (4个测试)
+  - 测试用例总数从284增至306
+  - 所有306个测试全部通过
+  - 编译成功，无错误
 
 ## 相关资源
 

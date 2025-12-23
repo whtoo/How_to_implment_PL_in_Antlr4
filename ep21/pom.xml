@@ -88,12 +88,40 @@
                 <version>0.8.12</version>
                 <configuration>
                     <skip>${jacoco.skip}</skip>
+                    <!-- 包含所有生成的类文件 -->
+                    <includes>
+                        <include>**/*.class</include>
+                    </includes>
+                    <!-- 排除ANTLR生成的解析器代码 -->
+                    <excludes>
+                        <exclude>**/parser/**</exclude>
+                        <exclude>**/*Parser*.class</exclude>
+                        <exclude>**/*Lexer*.class</exclude>
+                        <exclude>**/*BaseVisitor*.class</exclude>
+                        <exclude>**/*Visitor*.class</exclude>
+                    </excludes>
+                    <!-- 生成HTML和XML报告 -->
+                    <formats>
+                        <format>HTML</format>
+                        <format>XML</format>
+                    </formats>
                 </configuration>
                 <executions>
                     <execution>
+                        <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
+                        <configuration>
+                            <!-- 包含所有项目类 -->
+                            <includes>
+                                <include>**/*</include>
+                            </includes>
+                            <!-- 排除ANTLR生成的代码 -->
+                            <excludes>
+                                <exclude>**/parser/**</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>report</id>
@@ -113,9 +141,14 @@
                                     <element>BUNDLE</element>
                                     <limits>
                                         <limit>
-                                            <counter>COMPLEXITY</counter>
+                                            <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.0</minimum>
+                                            <minimum>0.60</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.50</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

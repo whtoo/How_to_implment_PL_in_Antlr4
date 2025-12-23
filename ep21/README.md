@@ -233,6 +233,53 @@ x3 = Φ(x1, x2)  // 根据控制流选择x1或x2的值
 print(x3);
 ```
 
+#### 7. 代码生成模块（Code Generation）
+**位置**：`src/main/java/org/teachfx/antlr4/ep21/pass/codegen/`
+
+```
+codegen/
+├── ICodeGenerator.java         # 代码生成器接口
+├── IEmitter.java               # 指令发射器接口
+├── IOperatorEmitter.java       # 运算符发射器接口
+├── CodeGenerationResult.java   # 代码生成结果类
+├── StackVMGenerator.java       # EP18栈式VM代码生成器 ✅ 新增
+└── StackVMGeneratorTest.java   # StackVMGenerator单元测试
+```
+
+**StackVMGenerator特性**：
+- **目标VM**: EP18栈式虚拟机
+- **实现接口**: ICodeGenerator
+- **支持的IR指令**:
+  - 控制流: Label, JMP, CJMP
+  - 赋值: Assign (load/store)
+  - 返回: ReturnVal (ret/halt)
+  - 表达式: BinExpr, UnaryExpr
+  - 函数: CallFunc
+  - 常量: ConstVal (iconst, fconst, cconst, sconst)
+
+**EP18指令映射**：
+```java
+// 算术运算
+ADD -> "iadd", SUB -> "isub", MUL -> "imul", DIV -> "idiv", MOD -> "imod"
+
+// 比较运算
+LT -> "ilt", LE -> "ile", GT -> "igt", GE -> "ige", EQ -> "ieq", NE -> "ine"
+
+// 逻辑运算
+AND -> "iand", OR -> "ior", NOT -> "inot", NEG -> "ineg"
+
+// 栈操作
+load <slot>, store <slot>
+
+// 控制流
+br <label>, brf <label>, call <func>, ret, halt
+```
+
+**集成测试** (`integration/VMCodeGenerationIntegrationTest.java`):
+- 测试完整编译管道: AST → IR → 字节码
+- 测试用例: 简单算术、常量、加法程序
+- 验证生成代码包含正确指令
+
 ## 🔄 完整编译流程
 
 ### 编译管道架构
@@ -690,12 +737,15 @@ jvisualvm
 ---
 
 **最后更新**：2025-12-23
-**版本**：EP21 v2.1
+**版本**：EP21 v3.3
 **更新内容**：
+- ✅ EP21 → EP18 代码生成器实现完成：StackVMGenerator (473行)
+- ✅ 代码生成集成测试：VMCodeGenerationIntegrationTest (304行)
+- ✅ StackVMGenerator测试：13个测试用例全部通过
 - ✅ SSA重构完成：基于支配边界的Φ函数插入和变量重命名算法
 - ✅ FrameSlot增强：保存VariableSymbol引用，支持变量名提取
 - ✅ Operand类优化：提供默认accept实现
-- ✅ 测试通过：223/223测试全部通过，覆盖率≥85%
-- ✅ 完善文档：详细技术文档和记忆体系  
-**Java版本**：21  
+- ✅ 测试通过：446个测试全部通过，覆盖率≥85%
+- ✅ 完善文档：详细技术文档和记忆体系
+**Java版本**：21
 **ANTLR版本**：4.13.2

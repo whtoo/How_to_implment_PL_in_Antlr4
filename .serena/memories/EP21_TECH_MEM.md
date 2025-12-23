@@ -179,8 +179,12 @@ ep21/
 │       ├── codegen/       # 代码生成
 │       └── symtab/        # 符号表
 └── src/test/
-    └── test/
-        └── LIRNodeTest.java ✅ 2025-12-23修复
+    ├── java/org/teachfx/antlr4/ep21/
+    │   ├── integration/          ✅ 新增
+    │   │   └── VMCodeGenerationIntegrationTest.java
+    │   └── pass/codegen/
+    │       └── StackVMGeneratorTest.java ✅ 2025-12-23更新
+    └── resources/                ✅ 新增测试资源目录
 ```
 
 ## 关键技术特性
@@ -343,6 +347,12 @@ private String getVariableName(VarSlot varSlot) {
   - `BasicBlockTest.java`: 24个测试用例
   - `ControlFlowAnalysisTest.java`: 20个测试用例
   - `DuplicateEdgeTest.java`: 11个测试用例
+
+### 集成测试
+- `VMCodeGenerationIntegrationTest` - VM代码生成集成测试 ✅ 新增
+  - 测试完整编译管道: AST → IR → 字节码
+  - 测试用例: 简单算术、常量、加法程序 (8个测试)
+  - 验证生成代码包含正确指令
 
 ### IR测试
 - `LIRNodeTest` - LIR节点基类测试 ✅ 434测试通过
@@ -529,6 +539,29 @@ a50d349 feat(vm-adapter): 完成三路并行VM适配任务
 - [ ] 自动并行化
 
 ## 版本历史
+
+- **v3.3** (2025-12-23): EP21 → EP18 代码生成器实现完成
+  - 新增StackVMGenerator.java (473行)
+    - 实现ICodeGenerator接口
+    - 支持IR指令到EP18字节码的转换
+    - 内部IRGeneratorVisitor使用访问者模式遍历IR
+  - 新增VMCodeGenerationIntegrationTest.java (304行)
+    - 集成测试: AST → IR → 字节码
+    - 测试用例: 简单算术、常量、加法程序
+  - 修改StackVMGeneratorTest.java (13个测试用例)
+  - EP18指令映射: iadd, isub, imul, load, store, br, brf, call, ret, halt等
+
+- **v3.3** (2025-12-23): EP21 → EP18 代码生成器实现完成
+  - 新增StackVMGenerator.java (473行)
+    - 实现ICodeGenerator接口
+    - 支持IR指令到EP18字节码的转换
+    - 内部IRGeneratorVisitor使用访问者模式遍历IR
+  - 新增VMCodeGenerationIntegrationTest.java (304行)
+    - 集成测试: AST → IR → 字节码
+    - 测试用例: 简单算术、常量、加法程序
+  - 修改StackVMGeneratorTest.java (13个测试用例)
+  - EP18指令映射: iadd, isub, imul, load, store, br, brf, call, ret, halt等
+  - **测试状态**: 452个测试, 1个失败 (LoopAnalysisTest.testLoopNodes - 预存问题)
 
 - **v3.2** (2025-12-23): 控制流优化测试套件
   - 新增条件常量传播分析 (ConditionConstantPropagation.java)
@@ -717,6 +750,51 @@ a50d349 feat(vm-adapter): 完成三路并行VM适配任务
 
 ## VM目标适配任务状态 (2025-12-23 更新)
 
+### EP21 → EP18 代码生成器实现完成 ✅
+
+**新增文件**:
+- `StackVMGenerator.java` - EP18栈式VM代码生成器 (473行)
+  - 实现ICodeGenerator接口
+  - 支持IR指令到EP18字节码的转换
+  - 内部IRGeneratorVisitor使用访问者模式遍历IR
+  - StackVMEmitter: 默认指令发射器
+  - StackVMOperatorEmitter: 运算符指令发射器
+
+- `VMCodeGenerationIntegrationTest.java` - 集成测试 (304行)
+  - 测试完整编译管道: AST → IR → 字节码
+  - 测试用例: 简单算术、常量、加法程序
+  - 验证生成代码包含正确指令
+
+**修改文件**:
+- `StackVMGeneratorTest.java` - 单元测试更新
+  - 13个测试用例
+  - 测试ICodeGenerator接口契约
+  - 测试CodeGenerationResult元数据
+
+**代码生成器特性**:
+1. 支持的IR指令:
+   - Label, JMP, CJMP (控制流)
+   - Assign (赋值: load/store)
+   - ReturnVal (返回: ret/halt)
+   - BinExpr, UnaryExpr (表达式运算)
+   - CallFunc (函数调用)
+   - ConstVal (常量: iconst, fconst, cconst, sconst)
+
+2. EP18指令映射:
+   - 算术: iadd, isub, imul, idiv, imod
+   - 比较: ilt, ile, igt, ige, ieq, ine
+   - 逻辑: iand, ior, inot
+   - 一元: ineg
+   - 栈操作: load, store
+   - 控制: br, brf, call, ret, halt
+
+3. 接口实现:
+   - `generate(Prog)` → CodeGenerationResult
+   - `generateFromInstructions(List<IRNode>)` → CodeGenerationResult
+   - `getTargetVM()` → "EP18"
+   - `getEmitter()` → IEmitter
+   - `configure(Map<String, Object>)` → 配置支持
+
 ### 三路并行Agent工作状态 ✅ 全部完成
 
 **Agent 1: TASK-VM-01 - 统一代码生成接口** ✅ 完成
@@ -761,4 +839,4 @@ a50d349 feat(vm-adapter): 完成三路并行VM适配任务
 
 **维护者**: Claude Code
 **联系方式**: 通过GitHub Issues
-**最后验证**: 2025-12-23 (条件常量传播16测试通过, 循环分析13测试, 1个预存在失败)
+**最后验证**: 2025-12-23 (EP21→EP18代码生成器完成, StackVMGenerator 473行, 集成测试8个测试通过)

@@ -92,17 +92,7 @@ public class StackVMGeneratorTest {
     @Test
     public void testWithCustomEmitterAndOperatorEmitter() {
         IEmitter customEmitter = new AssemblyEmitterImpl();
-        IOperatorEmitter customOperatorEmitter = new IOperatorEmitter() {
-            @Override
-            public String emitBinaryOp(org.teachfx.antlr4.ep21.symtab.type.OperatorType.BinaryOpType binaryOpType) {
-                return "custom_binop";
-            }
-
-            @Override
-            public String emitUnaryOp(org.teachfx.antlr4.ep21.symtab.type.OperatorType.UnaryOpType unaryOpType) {
-                return "custom_unop";
-            }
-        };
+        IOperatorEmitter customOperatorEmitter = new CustomOperatorEmitter();
 
         StackVMGenerator customGenerator = new StackVMGenerator(customEmitter, customOperatorEmitter);
         assertNotNull(customGenerator);
@@ -145,17 +135,7 @@ public class StackVMGeneratorTest {
     @Test
     public void testConfigureWithOperatorEmitter() {
         Map<String, Object> config = new HashMap<>();
-        IOperatorEmitter customOperatorEmitter = new IOperatorEmitter() {
-            @Override
-            public String emitBinaryOp(org.teachfx.antlr4.ep21.symtab.type.OperatorType.BinaryOpType binaryOpType) {
-                return "custom";
-            }
-
-            @Override
-            public String emitUnaryOp(org.teachfx.antlr4.ep21.symtab.type.OperatorType.UnaryOpType unaryOpType) {
-                return "custom";
-            }
-        };
+        IOperatorEmitter customOperatorEmitter = new CustomOperatorEmitter();
         config.put("operatorEmitter", customOperatorEmitter);
 
         generator.configure(config);
@@ -222,6 +202,21 @@ public class StackVMGeneratorTest {
         @Override
         public void setIndentLevel(int level) {
             this.indentLevel = level;
+        }
+    }
+
+    /**
+     * Custom IOperatorEmitter implementation for testing.
+     */
+    private static class CustomOperatorEmitter implements IOperatorEmitter {
+        @Override
+        public String emitBinaryOp(org.teachfx.antlr4.ep21.symtab.type.OperatorType.BinaryOpType binaryOpType) {
+            return "custom";
+        }
+
+        @Override
+        public String emitUnaryOp(org.teachfx.antlr4.ep21.symtab.type.OperatorType.UnaryOpType unaryOpType) {
+            return "custom";
         }
     }
 }

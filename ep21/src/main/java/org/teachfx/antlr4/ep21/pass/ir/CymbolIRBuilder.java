@@ -75,11 +75,15 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         curNode = funcDeclNode;
         var methodSymbol = (MethodSymbol) funcDeclNode.getRefSymbol();
         var entryLabel = new FuncEntryLabel(methodSymbol.getName(),methodSymbol.getArgs(),methodSymbol.getLocals(),methodSymbol);
-        // Expand
-        forkNewBlock(methodSymbol);
-        var startBlock = currentBlock;
+        // Expand - create block without automatic label for functions
+        currentBlock = new LinearIRBlock();
+        currentBlock.setScope(methodSymbol);
 
         evalExprStack = new Stack<>();
+        breakStack = new Stack<>();
+        continueStack = new Stack<>();
+
+        var startBlock = currentBlock;
         getCurrentBlock().addStmt(entryLabel);
 
         var exitBlock = new LinearIRBlock();

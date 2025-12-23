@@ -427,7 +427,13 @@ public class RegisterVMGenerator implements ICodeGenerator {
 
         @Override
         public void emitLabel(String label) {
-            instructions.add(label + ":");
+            // Function definition labels (.def) already contain proper format
+            if (label.startsWith(".def")) {
+                instructions.add(label);
+            } else {
+                // Regular labels need colon suffix
+                instructions.add(label + ":");
+            }
         }
 
         @Override

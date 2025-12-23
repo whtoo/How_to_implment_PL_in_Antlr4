@@ -14,6 +14,7 @@ import org.teachfx.antlr4.ep21.pass.ast.CymbolASTBuilder;
 import org.teachfx.antlr4.ep21.pass.cfg.CFG;
 import org.teachfx.antlr4.ep21.pass.cfg.ControlFlowAnalysis;
 import org.teachfx.antlr4.ep21.pass.cfg.LivenessAnalysis;
+import org.teachfx.antlr4.ep21.pass.cfg.TailRecursionOptimizer;
 import org.teachfx.antlr4.ep21.pass.codegen.CodeGenerationResult;
 import org.teachfx.antlr4.ep21.pass.codegen.StackVMGenerator;
 import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
@@ -264,6 +265,10 @@ public class Compiler {
                                     
                                     // 应用控制流优化
                                     cfg.addOptimizer(new ControlFlowAnalysis<>());
+                                    // 应用尾递归优化
+                                    System.out.println("添加TailRecursionOptimizer到CFG...");
+                                    cfg.addOptimizer(new TailRecursionOptimizer());
+                                    System.out.println("应用优化器...");
                                     cfg.applyOptimizers();
                                     
                                     // 保存优化后的控制流图

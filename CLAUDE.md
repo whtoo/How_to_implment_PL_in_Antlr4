@@ -221,6 +221,10 @@ mvn jacoco:report            # 覆盖率报告
 ---
 
 **状态更新** (2025-12-23):
-- EP21: 404测试通过 ✅ | 常量折叠测试增强至30个
+- EP21: 464测试通过 ✅ | Benchmarks VM 测试完成
+- EP18: 298测试通过 ✅ | 栈式VM稳定运行
+- EP21→EP18: 代码生成器集成完成，支持 .vm 字节码生成
+- EP21→EP18R: RegisterVMGenerator 创建完成，支持 .vmr 汇编生成
+- 修复问题: CJMP OperandSlot 支持、函数定义格式、emitLabel 处理、重复标签
 
 **维护原则**: 每完成一个EP，更新EP依赖图和模块映射表。

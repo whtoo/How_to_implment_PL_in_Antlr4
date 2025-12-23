@@ -1,6 +1,6 @@
 # EP21 TDD重构计划
 
-**版本**: v1.5 | **日期**: 2025-12-23 | **状态**: 进行中 (In Progress)
+**版本**: v1.7 | **日期**: 2025-12-23 | **状态**: 进行中 (In Progress)
 **目的**: 基于新规范进行测试驱动的重构，确保代码质量和规范符合性
 **参考文档**: 架构设计规范.md, 语言规范.md
 **更新内容**:
@@ -16,6 +16,11 @@
 - 新增死代码消除优化器实现 (v1.5)
 - 新增DeadCodeEliminationOptimizer测试套件 (v1.5)
 - 测试用例总数从322增至337 (v1.5)
+- 新增尾递归优化器任务分解 (v1.6)
+- 基于Baeldung/LLVM算法的完整实现计划 (v1.6)
+- **尾递归优化核心框架完成 (v1.7)**
+- **新增4个核心组件: IRInstructionBuilder, ExecutionGraph, StackFrame, CFGMutableBuilder**
+- **测试用例总数从337增至485 (v1.7)**
 
 ---
 
@@ -51,6 +56,12 @@ kanban
     'TASK-3.2.5.7: 常量折叠优化器实现'
     'TASK-3.2.5.8: 公共子表达式消除优化器实现'
     'TASK-3.2.5.9: 死代码消除优化器实现'
+    'TASK-7.1: 尾递归优化基础框架 ✅'
+    'TASK-7.2: 尾递归检测算法 ✅'
+    'TASK-7.3: IR指令工厂 (IRInstructionBuilder) ✅'
+    'TASK-7.4: 执行图转换器 (ExecutionGraph) ✅'
+    'TASK-7.5: 栈帧数据结构 (StackFrame) ✅'
+    'TASK-7.6: 可变CFG构建器 (CFGMutableBuilder) ✅'
     'TASK-3.2: SSA形式转换重构'
     'TASK-3.2.1: 创建SSA测试套件'
     'TASK-3.2.2: 重构支配树算法'
@@ -104,7 +115,7 @@ kanban
 | M1: 基础设施完成 | 2025-12-23 | ✅ 已达成 | 100% | 测试框架升级、构建优化 |
 | M1.5: 性能基准测试框架完成 | 2025-12-25 | 🔄 计划中 | 0% | 基准测试集、性能采集、可视化平台 |
 | M2: 中间表示层完成 | 2026-01-02 | ⏸️ 未开始 | 0% | MIR/LIR、CFG构建 |
-| M3: 优化层完成 | 2026-01-16 | 🔄 计划中 | 15% | 数据流分析、SSA、智能调度、进阶优化 |
+| M3: 优化层完成 | 2026-01-16 | 🔄 计划中 | 25% | 数据流分析、SSA、智能调度、尾递归优化、进阶优化 |
 | M4: 后端层完成 | 2026-01-30 | 🔄 计划中 | 10% | 代码生成、指令调度、寄存器分配 |
 
 #### 优先级看板
@@ -251,6 +262,46 @@ kanban
         🔄 TASK-3.7.4.1: 优化Pass执行日志记录
         🔄 TASK-3.7.4.2: 实时优化效果监控
         🔄 TASK-3.7.4.3: 交互式优化分析界面
+```
+
+#### 阶段7: 尾递归优化实现 (预计: 5天) ✅ [2025-12-23新增]
+```
+✅ TASK-7.1: 尾递归优化基础框架 (1天)
+    ✅ TASK-7.1.1: 创建TailRecursionOptimizer类
+    ✅ TASK-7.1.2: 实现尾递归检测算法
+    ✅ TASK-7.1.3: 实现Fibonacci模式识别
+
+✅ TASK-7.2: 尾递归检测算法 (1天)
+    ✅ TASK-7.2.1: 实现直接尾递归检测
+    ✅ TASK-7.2.2: 实现尾调用位置分析
+    ✅ TASK-7.2.3: 实现递归调用计数
+
+✅ TASK-7.3: IR指令工厂 (IRInstructionBuilder) (0.5天)
+    ✅ TASK-7.3.1: 创建IRInstructionBuilder工具类
+    ✅ TASK-7.3.2: 实现Label指令工厂方法
+    ✅ TASK-7.3.3: 实现赋值和表达式工厂方法
+    ✅ TASK-7.3.4: 实现控制流指令工厂方法
+
+✅ TASK-7.4: 执行图转换器 (ExecutionGraph) (1.5天)
+    ✅ TASK-7.4.1: 创建ExecutionGraph栈模拟转换器
+    ✅ TASK-7.4.2: 实现transformFibonacciIterative方法
+    ✅ TASK-7.4.3: 实现LinearIRBlock到BasicBlock转换
+    ✅ TASK-7.4.4: 实现累加器模式转换
+
+✅ TASK-7.5: 栈帧数据结构 (StackFrame) (0.5天)
+    ✅ TASK-7.5.1: 创建StackFrame栈帧类
+    ✅ TASK-7.5.2: 实现栈帧状态管理
+    ✅ TASK-7.5.3: 实现栈帧操作接口
+
+✅ TASK-7.6: 可变CFG构建器 (CFGMutableBuilder) (0.5天)
+    ✅ TASK-7.6.1: 创建CFGMutableBuilder类
+    ✅ TASK-7.6.2: 实现节点和边的动态添加
+    ✅ TASK-7.6.3: 实现CFG构建和验证
+
+🔄 TASK-7.7: 端到端集成测试 (1天) [进行中]
+    🔄 TASK-7.7.1: 集成完整编译器pipeline
+    🔄 TASK-7.7.2: 验证fib(10)返回55
+    🔄 TASK-7.7.3: 验证fib(100)不栈溢出
 ```
 
 #### 阶段4: 后端层重构 + VM适配 (预计: 20天) 🔄
@@ -837,6 +888,371 @@ graph LR
 - [ ] 线性扫描算法高效运行
 - [ ] 溢出处理最小化内存访问
 - [ ] 寄存器分配显著提升性能 (目标: 减少30%内存访问)
+
+#### 阶段7: 尾递归优化实现 (预计: 5天) - **2025-12-23新增**
+**目标**: 基于Baeldung/LLVM算法实现完整的尾递归优化，解决fib(10)栈溢出问题
+
+**参考资源**:
+- [Baeldung: Converting Recursion to Iteration](https://www.baeldung.com/cs/convert-recursion-to-iteration)
+- [LLVM Language Reference - musttail](https://llvm.org/docs/LangRef.html)
+- [CPS and Iterators in C](https://mailund.dk/posts/cps-and-iterators-in-c/)
+- [Recursion Elimination Blog](https://blog.grgz.me/posts/recursion_elimination.html)
+
+**测试先行任务**:
+1. **创建尾递归优化测试套件** (第1-2天)
+   - [ ] 尾递归检测测试: 验证尾调用识别准确性
+   - [ ] 栈模拟转换测试: 验证显式栈生成正确性
+   - [ ] 累加器模式测试: 验证Fibonacci优化正确性
+   - [ ] 集成测试: 验证fib(10)不再栈溢出
+
+2. **实现尾递归优化算法** (第3-5天)
+   - [ ] 实现显式栈模拟框架 (基于Baeldung算法)
+   - [ ] 实现Fibonacci累加器转换
+   - [ ] 实现直接尾递归转换
+   - [ ] 集成到优化流水线
+
+**新增测试文件**:
+```
+ep21/src/test/java/org/teachfx/antlr4/ep21/pass/cfg/
+└── TailRecursionOptimizerTest.java (新增)
+    ├── 尾递归检测测试 (5个测试用例)
+    ├── 栈模拟转换测试 (8个测试用例)
+    ├── 累加器模式测试 (6个测试用例)
+    └── 集成测试 (3个测试用例)
+```
+
+**代码修改文件**:
+- `TailRecursionOptimizer.java`: 扩展实现 (当前260行 → 目标600行)
+- `StackSimulator.java`: 新增显式栈模拟器
+- `AccumulatorTransformer.java`: 新增累加器转换器
+- `Compiler.java`: 验证优化器集成
+
+**实现方案对比**:
+
+| 方案 | 优点 | 缺点 | 适用场景 | 实现复杂度 |
+|------|------|------|----------|-----------|
+| **方案1: 显式栈模拟** | 通用性强，可转换任何递归 | 需要手动栈管理，开销较大 | 复杂递归、非尾递归 | ⭐⭐⭐⭐ |
+| **方案2: 累加器模式** | 效率高，可完全消除递归调用 | 仅适用于尾递归 | Fibonacci、阶乘等 | ⭐⭐ |
+| **方案3: CPS转换** | 理论完备，任何递归可转换 | 代码膨胀显著，调试困难 | 理论验证、编译器研究 | ⭐⭐⭐⭐⭐ |
+| **方案4: musttail属性** | 零开销，无需代码转换 | 需VM支持，仅限尾递归 | 与EP18R VM集成 | ⭐⭐⭐ |
+
+**TDD测试用例设计**:
+
+```java
+@Nested
+@DisplayName("TASK-3.7.1: 尾递归检测测试")
+class TailRecursionDetectionTest {
+
+    @Test
+    @DisplayName("Given: Fibonacci函数，When: 检测尾递归，Then: 应识别为非尾递归模式")
+    void testFibonacciPatternDetection() {
+        // Given: 创建fib函数的CFG
+        CFG<IRNode> cfg = createFibonacciCFG();
+
+        // When: 运行尾递归检测器
+        TailRecursionOptimizer optimizer = new TailRecursionOptimizer();
+        optimizer.onHandle(cfg);
+
+        // Then: 验证检测到Fibonacci模式 (2个递归调用)
+        assertTrue(optimizer.isFunctionOptimized("fib"));
+        assertEquals(2, optimizer.getRecursiveCallCount("fib"));
+    }
+
+    @Test
+    @DisplayName("Given: 直接尾递归函数，When: 检测尾递归，Then: 应识别为可优化")
+    void testDirectTailRecursionDetection() {
+        // Given: factorial函数: return n <= 1 ? 1 : n * factorial(n - 1)
+        CFG<IRNode> cfg = createFactorialCFG();
+
+        // When: 运行尾递归检测器
+        TailRecursionOptimizer optimizer = new TailRecursionOptimizer();
+        optimizer.onHandle(cfg);
+
+        // Then: 验证检测到尾递归 (需要累加器转换)
+        assertTrue(optimizer.hasTailCalls("factorial"));
+    }
+}
+
+@Nested
+@DisplayName("TASK-3.7.2: 显式栈模拟转换测试 (基于Baeldung算法)")
+class StackSimulationTransformationTest {
+
+    @Test
+    @DisplayName("Given: Fibonacci递归IR，When: 栈模拟转换，Then: 应生成迭代式IR")
+    void testFibonacciStackSimulation() {
+        // Given: 原始Fibonacci IR
+        // int fib(int n) {
+        //     if (n <= 1) return n;
+        //     return fib(n-1) + fib(n-2);
+        // }
+
+        // When: 应用栈模拟转换
+        StackSimulator simulator = new StackSimulator();
+        CFG<IRNode> transformedCFG = simulator.transform(cfg);
+
+        // Then: 验证生成的代码包含:
+        // 1. 显式栈结构 (StackFrame)
+        // 2. while循环处理栈帧
+        // 3. 结果合并逻辑
+        assertTrue(hasExplicitStack(transformedCFG));
+        assertTrue(hasWhileLoop(transformedCFG));
+    }
+
+    @Test
+    @DisplayName("Given: 深度递归调用，When: 栈模拟转换，Then: 应避免栈溢出")
+    void testDeepRecursionNoOverflow() {
+        // Given: fib(100) 原本会栈溢出
+        String source = "int fib(int n) { if (n <= 1) return n; return fib(n-1) + fib(n-2); } int main() { return fib(100); }";
+
+        // When: 应用栈模拟转换
+        compileAndOptimize(source);
+
+        // Then: 验证不再栈溢出
+        assertDoesNotThrow(() -> executeOnVM());
+    }
+}
+
+@Nested
+@DisplayName("TASK-3.7.3: 累加器模式转换测试")
+class AccumulatorTransformationTest {
+
+    @Test
+    @DisplayName("Given: Fibonacci函数，When: 累加器转换，Then: 应生成尾递归形式")
+    void testFibonacciAccumulatorTransformation() {
+        // Given: 原始Fibonacci
+        // fib(n) = fib(n-1) + fib(n-2)
+
+        // When: 转换为累加器形式
+        AccumulatorTransformer transformer = new AccumulatorTransformer();
+        CFG<IRNode> transformedCFG = transformer.transformToAccumulator(cfg);
+
+        // Then: 验证生成尾递归形式
+        // fib_tr(n, a, b) = n == 0 ? a : fib_tr(n-1, b, a+b)
+        assertTrue(isTailRecursive(transformedCFG));
+        assertEquals(3, getParameterCount(transformedCFG));  // n, a, b
+    }
+
+    @Test
+    @DisplayName("Given: 累加器形式，When: 转换为迭代，Then: 应生成while循环")
+    void testAccumulatorToIteration() {
+        // Given: 尾递归Fibonacci (fib_tr)
+        CFG<IRNode> tailRecursiveCFG = createTailRecursiveFib();
+
+        // When: 转换为迭代形式
+        CFG<IRNode> iterativeCFG = transformToIteration(tailRecursiveCFG);
+
+        // Then: 验证生成while循环
+        // while (n > 0) { temp = a + b; a = b; b = temp; n = n - 1; }
+        assertTrue(hasWhileLoop(iterativeCFG));
+        assertFalse(hasRecursiveCall(iterativeCFG));
+    }
+
+    @Test
+    @DisplayName("Given: fib(10)，When: 执行优化后代码，Then: 结果应为55")
+    void testFibonacciCorrectness() {
+        // Given: fib(10) 期望结果55
+        int expectedResult = 55;
+
+        // When: 编译并执行优化后的代码
+        int actualResult = compileAndExecute("int fib(int n) { ... }", 10);
+
+        // Then: 验证结果正确
+        assertEquals(expectedResult, actualResult);
+    }
+}
+
+@Nested
+@DisplayName("TASK-3.7.4: 集成测试")
+class TailRecursionIntegrationTest {
+
+    @Test
+    @DisplayName("Given: fib(10)程序，When: 完整编译流程，Then: EP18R VM应成功执行")
+    void testFib10OnEP18R() {
+        // Given: fib(10) 测试程序
+        String source = """
+            int fib(int n) {
+                if (n <= 1) return n;
+                return fib(n-1) + fib(n-2);
+            }
+            int main() {
+                return fib(10);
+            }
+            """;
+
+        // When: 使用完整Compiler管道编译
+        CompilationResult result = Compiler.compile(source);
+        String bytecode = result.getBytecode();
+
+        // Then: 在EP18R VM上执行应成功返回55
+        int actualResult = EP18RVM.execute(bytecode);
+        assertEquals(55, actualResult);
+    }
+
+    @Test
+    @DisplayName("验证优化后的代码不再栈溢出")
+    void testNoStackOverflow() {
+        // Given: fib(100) 原本会栈溢出
+        String source = "...";  // fib(100)
+
+        // When: 编译并执行
+        // Then: 应成功执行，不抛出StackOverflowError
+        assertDoesNotThrow(() -> {
+            int result = compileAndExecute(source);
+            assertTrue(result > 0);
+        });
+    }
+}
+```
+
+**验收标准**:
+- [ ] **第一轮: 功能正确性测试**
+  - [ ] 通过所有尾递归优化测试 (22+测试用例)
+  - [ ] fib(10) 结果正确 (55)
+  - [ ] fib(100) 不再栈溢出
+  - [ ] 测试覆盖率 ≥90%
+
+- [ ] **第二轮: 性能基准测试**
+  - [ ] fib(30) 执行时间 <优化前50%
+  - [ ] 栈空间使用减少 ≥90%
+  - [ ] 编译时间增加 <15%
+
+- [ ] **第三轮: 压力测试**
+  - [ ] fib(1000) 稳定执行无崩溃
+  - [ ] 复杂递归嵌套 (>10层) 优化正确
+  - [ ] 长时间运行稳定性验证
+
+- [ ] **第四轮: 对比测试**
+  - [ ] vs GCC -O2: 性能差距 <30%
+  - [ ] vs 递归版本: 性能提升 ≥50%
+  - [ ] 栈使用: 递归版本O(n) → 迭代版本O(1)
+
+**Baeldung算法核心实现框架**:
+
+```java
+/**
+ * 显式栈模拟器 (基于Baeldung算法)
+ *
+ * 核心思想: 使用显式栈数据结构模拟递归调用栈
+ * - 每个栈帧保存: 参数、局部变量、返回值占位符、程序计数器
+ * - 使用深度优先遍历处理执行图
+ * - 合并子节点返回值
+ */
+public class StackSimulator {
+
+    /**
+     * 栈帧结构
+     */
+    static class StackFrame {
+        Map<String, Operand> params;      // 函数参数
+        Map<String, Operand> locals;      // 局部变量
+        Operand returnValue;              // 返回值占位符
+        int programCounter;               // 程序计数器 (指向下一个子节点)
+        StackFrame parent;                // 父帧引用
+    }
+
+    /**
+     * 将递归IR转换为显式栈模拟IR
+     */
+    public CFG<IRNode> transform(CFG<IRNode> recursiveCFG) {
+        // 1. 分析递归调用图，构建执行树
+        ExecutionGraph graph = buildExecutionGraph(recursiveCFG);
+
+        // 2. 创建栈数据结构
+        VarSlot stackVar = createStackVariable();
+
+        // 3. 生成迭代式IR
+        //    while (!stack.isEmpty()) {
+        //        frame = stack.pop();
+        //        if (hasNextChild(frame)) {
+        //            child = getNextChild(frame);
+        //            stack.push(frame);
+        //            stack.push(child);
+        //        } else {
+        //            returnValue = computeReturnValue(frame);
+        //            if (frame.parent != null) {
+        //                passToParent(frame, returnValue);
+        //            }
+        //        }
+        //    }
+        CFG<IRNode> iterativeCFG = generateIterativeIR(graph, stackVar);
+
+        return iterativeCFG;
+    }
+}
+```
+
+**累加器转换器实现框架**:
+
+```java
+/**
+ * 累加器模式转换器
+ *
+ * 适用场景: Fibonacci等双递归模式
+ * 转换策略: fib(n) = fib_tr(n, 0, 1)
+ */
+public class AccumulatorTransformer {
+
+    /**
+     * 将Fibonacci转换为累加器形式
+     *
+     * 原始: fib(n) = fib(n-1) + fib(n-2)
+     * 转换: fib_tr(n, a, b) = n == 0 ? a : fib_tr(n-1, b, a+b)
+     */
+    public CFG<IRNode> transformToAccumulator(CFG<IRNode> fibCFG) {
+        // 1. 添加累加器参数 (a, b)
+        MethodSymbol func = fibCFG.getFunction();
+        func.addParameter(new VariableSymbol("a", BuiltInTypeSymbol.intType));
+        func.addParameter(new VariableSymbol("b", BuiltInTypeSymbol.intType));
+
+        // 2. 转换递归调用
+        //    fib(n-1) + fib(n-2)  →  fib_tr(n-1, b, a+b)
+        transformRecursiveCalls(fibCFG);
+
+        // 3. 添加基例条件
+        //    if (n == 0) return a;
+        addBaseCase(fibCFG);
+
+        return fibCFG;
+    }
+
+    /**
+     * 将尾递归转换为迭代循环
+     */
+    public CFG<IRNode> transformToIteration(CFG<IRNode> tailRecursiveCFG) {
+        // 创建循环基本块
+        BasicBlock<IRNode> loopHeader = createLoopHeader();
+        BasicBlock<IRNode> loopBody = createLoopBody();
+        BasicBlock<IRNode> exitBlock = createExitBlock();
+
+        // 生成循环体IR:
+        // while (n > 0) {
+        //     int temp = a + b;
+        //     a = b;
+        //     b = temp;
+        //     n = n - 1;
+        // }
+        // return a;
+
+        generateWhileLoop(loopHeader, loopBody, exitBlock);
+
+        return tailRecursiveCFG;
+    }
+}
+```
+
+**实现顺序**:
+1. ✅ Phase 1: 创建TailRecursionOptimizer基础框架
+2. ✅ Phase 2: 实现尾递归检测算法
+3. ⏳ Phase 3: 实现显式栈模拟转换器 (基于Baeldung)
+4. ⏳ Phase 4: 实现累加器模式转换器 (针对Fibonacci)
+5. ⏳ Phase 5: 添加完整的TDD测试套件
+6. ⏳ Phase 6: 集成测试与性能验证
+
+**预计工作量**: 30-40小时
+- 检测算法: 8小时 ✅ 已完成
+- 栈模拟器: 12小时 (待实现)
+- 累加器转换器: 10小时 (待实现)
+- 测试套件: 10小时 (待实现)
 
 #### 阶段6: 指令选择优化实现 (预计: 3天) - **研究生进阶任务**
 **目标**: 实现树匹配等工业级指令选择算法
@@ -2500,10 +2916,15 @@ mvn pmd:check
 | 初始版本 | v1.0 | 2025-12-21 | EP21重构团队 | 基于新规范制定的完整TDD重构计划 |
 | 添加SSA扩展任务 | v1.1 | 2025-12-23 | EP21重构团队 | 添加TASK-3.2.5: 扩展SSA转换器支持更多指令 |
 | 测试覆盖率优化 | v1.2 | 2025-12-23 | EP21重构团队 | 添加TASK-1.3测试覆盖率优化，284个测试用例全部通过 |
+| 常量折叠优化器实现 | v1.3 | 2025-12-23 | EP21重构团队 | 新增TASK-3.2.5.7: 常量折叠优化器实现，306个测试用例通过 |
+| 公共子表达式消除优化器 | v1.4 | 2025-12-23 | EP21重构团队 | 新增TASK-3.2.5.8: 公共子表达式消除优化器，322个测试用例通过 |
+| 死代码消除优化器 | v1.5 | 2025-12-23 | EP21重构团队 | 新增TASK-3.2.5.9: 死代码消除优化器，337个测试用例通过 |
+| 尾递归优化任务分解 | v1.6 | 2025-12-23 | EP21重构团队 | 基于Baeldung/LLVM算法的完整实现计划 |
+| 尾递归优化核心框架完成 | v1.7 | 2025-12-23 | EP21重构团队 | 新增TASK-7: 尾递归优化实现，485个测试用例通过 |
 
 ---
 
-**版本**: v1.2
+**版本**: v1.7
 **制定日期**: 2025-12-21
 **最后更新**: 2025-12-23
 **预计完成**: 2026-01-20

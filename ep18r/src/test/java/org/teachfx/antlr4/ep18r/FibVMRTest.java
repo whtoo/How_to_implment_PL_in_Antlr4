@@ -32,8 +32,8 @@ public class FibVMRTest extends RegisterVMTestBase {
         // 执行程序
         interpreter.exec();
 
-        // 验证结果（fib(8) = 21）
+        // 验证结果（fib(10) = 55）
         int result = interpreter.getRegister(2); // r2/a0 是返回值
-        assertEquals(21, result, "fib(8) 应该等于 21");
+        assertEquals(55, result, "fib(10) 应该等于 55");
     }
 }

@@ -2,17 +2,19 @@ package org.teachfx.antlr4.ep18.gc;
 
 /**
  * 垃圾回收对象头部信息
- * 跟踪对象的元数据，包括引用计数和大小
+ * 跟踪对象的元数据，包括引用计数、大小和偏移量
  */
 public class GCObjectHeader {
     private int refCount;      // 引用计数
     private int size;          // 对象大小
+    private int offset;        // 对象在堆中的偏移量
     private boolean marked;    // 标记位（用于标记-清除算法）
     private boolean alive;     // 是否存活
 
     public GCObjectHeader(int size) {
         this.refCount = 0;
         this.size = size;
+        this.offset = -1;  // 初始化为-1，表示未分配
         this.marked = false;
         this.alive = true;
     }
@@ -44,6 +46,14 @@ public class GCObjectHeader {
         return size;
     }
 
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
     public boolean isMarked() {
         return marked;
     }
@@ -62,7 +72,7 @@ public class GCObjectHeader {
 
     @Override
     public String toString() {
-        return String.format("GCObjectHeader{size=%d, refCount=%d, marked=%s, alive=%s}",
-            size, refCount, marked, alive);
+        return String.format("GCObjectHeader{size=%d, refCount=%d, offset=%d, marked=%s, alive=%s}",
+            size, refCount, offset, marked, alive);
     }
 }

@@ -230,23 +230,22 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
         @DisplayName("应该正确减少引用计数")
         void testDecrementReferenceCount() throws Exception {
             // Given: 分配的对象并增加引用
-            int objectId = gc.allocate(100);
-            gc.incrementRef(objectId);
-            gc.incrementRef(objectId);
+            int objectId = gc.allocate(100);  // refCount=1
+            gc.incrementRef(objectId);  // refCount=2
+            gc.incrementRef(objectId);  // refCount=3
 
             // When: 减少引用计数
-            gc.decrementRef(objectId);
+            gc.decrementRef(objectId);  // refCount: 3 -> 2
 
             // Then: 对象应该仍然存活
             assertThat(gc.isObjectAlive(objectId)).isTrue();
 
             // When: 减少到0
-            gc.decrementRef(objectId);
+            gc.decrementRef(objectId);  // refCount: 2 -> 1
+            gc.decrementRef(objectId);  // refCount: 1 -> 0 (触发回收)
 
             // Then: 对象应该被回收
-            // 注意：引用计数为0时，对象可能不会立即被回收
-            // 等待垃圾回收
-            gc.collect();
+            // 注意：引用计数为0时，对象会被立即回收
             assertThat(gc.isObjectAlive(objectId)).isFalse();
         }
 
@@ -308,12 +307,12 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
             int[] objectIds = new int[objectCount];
             for (int i = 0; i < objectCount; i++) {
                 objectIds[i] = gc.allocate(100);
-                gc.incrementRef(objectIds[i]); // 增加引用
+                // allocate() 已设置 refCount=1（分配者持有）
             }
 
             // When: 移除所有引用并执行垃圾回收
             for (int objectId : objectIds) {
-                gc.decrementRef(objectId);
+                gc.decrementRef(objectId); // refCount: 1 -> 0
             }
             gc.collect();
 
@@ -330,13 +329,18 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
             int objectCount = 10;
             int[] objectIds = new int[objectCount];
             for (int i = 0; i < objectCount; i++) {
-                objectIds[i] = gc.allocate(100);
+                objectIds[i] = gc.allocate(100);  // refCount=1
                 if (i % 2 == 0) { // 偶数索引的对象保留引用
-                    gc.incrementRef(objectIds[i]);
+                    gc.incrementRef(objectIds[i]);  // refCount: 1 -> 2
                 }
             }
 
-            // When: 执行垃圾回收
+            // When: 释放所有对象的初始引用，然后执行垃圾回收
+            for (int i = 0; i < objectCount; i++) {
+                gc.decrementRef(objectIds[i]);
+                // 偶数索引: refCount: 2 -> 1 (仍然存活)
+                // 奇数索引: refCount: 1 -> 0 (被回收)
+            }
             gc.collect();
 
             // Then: 有引用的对象应该存活，无引用的对象应该被回收
@@ -358,8 +362,9 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
             long initialAllocatedMemory = initialStats.getTotalAllocatedMemory();
 
             // When: 分配和回收对象
+            // allocate() 已设置 refCount=1（分配者持有引用）
             int objectId = gc.allocate(1000);
-            gc.incrementRef(objectId);
+            // decrementRef() 将 refCount: 1 -> 0，触发回收
             gc.decrementRef(objectId);
             gc.collect();
 
@@ -373,8 +378,9 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
         @DisplayName("应该正确重置统计信息")
         void testResetStatistics() throws Exception {
             // Given: 执行一些操作
+            // allocate() 已设置 refCount=1（分配者持有引用）
             int objectId = gc.allocate(100);
-            gc.incrementRef(objectId);
+            // decrementRef() 将 refCount: 1 -> 0，触发回收
             gc.decrementRef(objectId);
             gc.collect();
 
@@ -398,14 +404,13 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
             int objectCount = 1000;
             int[] objectIds = new int[objectCount];
             for (int i = 0; i < objectCount; i++) {
-                objectIds[i] = gc.allocate(100);
-                gc.incrementRef(objectIds[i]);
+                objectIds[i] = gc.allocate(100);  // refCount=1
             }
 
             // When & Then: 垃圾回收应该在合理时间内完成
             assertThatCode(() -> {
                 for (int objectId : objectIds) {
-                    gc.decrementRef(objectId);
+                    gc.decrementRef(objectId);  // refCount: 1 -> 0
                 }
                 gc.collect();
             }).doesNotThrowAnyException();
@@ -423,28 +428,33 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
         @Test
         @DisplayName("应该检测到未释放的对象")
         void testDetectUnreleasedObjects() throws Exception {
-            // Given: 分配对象但不释放
+            // Given: 分配对象，偶数索引保留额外引用
             int objectCount = 100;
             int[] objectIds = new int[objectCount];
             for (int i = 0; i < objectCount; i++) {
-                objectIds[i] = gc.allocate(100);
-                gc.incrementRef(objectIds[i]);
+                objectIds[i] = gc.allocate(100);  // refCount=1
+                if (i % 2 == 0) {
+                    // 偶数索引：保留额外引用，模拟内存泄漏
+                    gc.incrementRef(objectIds[i]);  // refCount: 1 -> 2
+                }
             }
 
-            // When: 只释放部分对象
-            for (int i = 0; i < objectCount / 2; i++) {
+            // When: 释放所有对象的初始引用
+            for (int i = 0; i < objectCount; i++) {
                 gc.decrementRef(objectIds[i]);
+                // 偶数索引: refCount: 2 -> 1 (仍然存活，内存泄漏)
+                // 奇数索引: refCount: 1 -> 0 (被回收)
             }
             gc.collect();
 
-            // Then: 部分对象应该仍然存活（内存泄漏）
+            // Then: 偶数索引的对象应该仍然存活（内存泄漏）
             int leakedCount = 0;
             for (int i = 0; i < objectCount; i++) {
                 if (gc.isObjectAlive(objectIds[i])) {
                     leakedCount++;
                 }
             }
-            assertThat(leakedCount).isEqualTo(objectCount / 2);
+            assertThat(leakedCount).isEqualTo(objectCount / 2);  // 50个偶数索引的对象
         }
 
         @Test
@@ -509,9 +519,9 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
             // When: 执行多次分配
             long startTime = System.nanoTime();
             for (int i = 0; i < iterations; i++) {
-                int objectId = gc.allocate(objectSize);
-                gc.incrementRef(objectId);
-                gc.decrementRef(objectId);
+                int objectId = gc.allocate(objectSize);  // refCount=1
+                // 不调用 incrementRef，直接释放
+                gc.decrementRef(objectId);  // refCount: 1 -> 0，触发回收
             }
             gc.collect();
             long endTime = System.nanoTime();
@@ -533,14 +543,13 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
             int[] objectIds = new int[objectCount];
 
             for (int i = 0; i < objectCount; i++) {
-                objectIds[i] = gc.allocate(objectSize);
-                gc.incrementRef(objectIds[i]);
+                objectIds[i] = gc.allocate(objectSize);  // refCount=1
             }
 
             // When: 测量垃圾回收时间
             long startTime = System.nanoTime();
             for (int objectId : objectIds) {
-                gc.decrementRef(objectId);
+                gc.decrementRef(objectId);  // refCount: 1 -> 0
             }
             gc.collect();
             long endTime = System.nanoTime();
@@ -615,8 +624,7 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
             // When: 分配大量对象
             int[] objectIds = new int[objectCount];
             for (int i = 0; i < objectCount; i++) {
-                objectIds[i] = gc.allocate(objectSize);
-                gc.incrementRef(objectIds[i]);
+                objectIds[i] = gc.allocate(objectSize);  // refCount=1
             }
 
             // Then: 所有对象应该正确分配
@@ -626,7 +634,7 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
 
             // When: 释放所有对象
             for (int objectId : objectIds) {
-                gc.decrementRef(objectId);
+                gc.decrementRef(objectId);  // refCount: 1 -> 0
             }
             gc.collect();
 
@@ -649,9 +657,9 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
                 threads[i] = new Thread(() -> {
                     try {
                         for (int j = 0; j < operationsPerThread; j++) {
-                            int objectId = gc.allocate(100);
-                            gc.incrementRef(objectId);
-                            gc.decrementRef(objectId);
+                            int objectId = gc.allocate(100);  // refCount=1
+                            // 不调用 incrementRef，直接释放
+                            gc.decrementRef(objectId);  // refCount: 1 -> 0
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -683,7 +691,8 @@ public class CymbolStackVMGCIntegrationTest extends VMTestBase {
             // When: 长时间运行GC操作
             for (int i = 0; i < iterations; i++) {
                 int objectId = gc.allocate(objectSize);
-                gc.incrementRef(objectId);
+                // allocate() 已设置引用计数为1（分配者持有）
+                // decrementRef() 将引用计数减为0，触发回收
                 gc.decrementRef(objectId);
 
                 // 定期执行垃圾回收

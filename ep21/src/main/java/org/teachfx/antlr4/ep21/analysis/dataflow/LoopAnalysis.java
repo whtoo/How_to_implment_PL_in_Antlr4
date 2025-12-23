@@ -213,9 +213,6 @@ public class LoopAnalysis<I extends IRNode> {
             return loop;
         }
 
-        // 添加回边源
-        loop.addBackEdgeSource(sourceId);
-
         // 循环必须包含循环头
         loop.addLoopNode(headerId);
 
@@ -227,7 +224,8 @@ public class LoopAnalysis<I extends IRNode> {
         while (!workList.isEmpty()) {
             int current = workList.remove(0);
 
-            if (loop.contains(current)) {
+            // 如果 current 已经在循环中（除了 sourceId 初始加入的情况），跳过
+            if (current != sourceId && loop.contains(current)) {
                 continue;
             }
 

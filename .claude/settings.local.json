@@ -77,7 +77,11 @@
       "Bash(uv list)",
       "Bash(git branch:*)",
       "mcp__serena__initial_instructions",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(powershell -Command:*)",
+      "Skill(compiler-dev)",
+      "mcp__web-search-prime__webSearchPrime",
+      "Bash(findstr:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

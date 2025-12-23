@@ -76,16 +76,17 @@ public class MemoryLeakDetectionTest {
             int[] objectIds = new int[objectCount];
             for (int i = 0; i < objectCount; i++) {
                 objectIds[i] = gc.allocate(100);
-                gc.incrementRef(objectIds[i]);
+                gc.incrementRef(objectIds[i]);  // refCount=2
             }
 
             // 记录初始内存使用
             int initialHeapUsage = gc.getHeapUsage();
 
-            // When: 只释放部分对象
+            // When: 只释放部分对象（需要两次decrement才能真正释放）
             int releasedCount = objectCount / 2;
             for (int i = 0; i < releasedCount; i++) {
-                gc.decrementRef(objectIds[i]);
+                gc.decrementRef(objectIds[i]);  // refCount: 2 -> 1 (not collected yet)
+                gc.decrementRef(objectIds[i]);  // refCount: 1 -> 0 (will be collected)
             }
             gc.collect();
 
@@ -219,15 +220,16 @@ public class MemoryLeakDetectionTest {
                 // 分配新对象
                 for (int j = 0; j < objectsPerIteration; j++) {
                     int objectId = gc.allocate(100);
-                    gc.incrementRef(objectId);
+                    gc.incrementRef(objectId);  // refCount=2
                     allObjectIds.add(objectId);
                 }
 
-                // 只释放一半的对象
+                // 只释放一半的对象（需要两次decrement才能真正释放）
                 int objectsToRelease = objectsPerIteration / 2;
                 for (int j = 0; j < objectsToRelease; j++) {
                     int index = allObjectIds.size() - 1 - j;
-                    gc.decrementRef(allObjectIds.get(index));
+                    gc.decrementRef(allObjectIds.get(index));  // refCount: 2 -> 1
+                    gc.decrementRef(allObjectIds.get(index));  // refCount: 1 -> 0
                 }
 
                 // 执行垃圾回收
@@ -253,15 +255,16 @@ public class MemoryLeakDetectionTest {
             int[] tempObjectIds = new int[temporaryObjects];
             for (int i = 0; i < temporaryObjects; i++) {
                 tempObjectIds[i] = gc.allocate(100);
-                gc.incrementRef(tempObjectIds[i]);
+                gc.incrementRef(tempObjectIds[i]);  // refCount=2
             }
 
             // 记录峰值内存使用
             int peakHeapUsage = gc.getHeapUsage();
 
-            // 释放所有临时对象
+            // 释放所有临时对象（需要两次decrement才能真正释放）
             for (int objectId : tempObjectIds) {
-                gc.decrementRef(objectId);
+                gc.decrementRef(objectId);  // refCount: 2 -> 1
+                gc.decrementRef(objectId);  // refCount: 1 -> 0
             }
             gc.collect();
 
@@ -284,15 +287,17 @@ public class MemoryLeakDetectionTest {
             for (int i = 0; i < totalIterations; i++) {
                 // 分配临时对象
                 int tempObjectId = gc.allocate(50);
-                gc.incrementRef(tempObjectId);
+                gc.incrementRef(tempObjectId);  // refCount=2
 
                 // 定期泄漏对象
                 if (i % leakEveryNIterations == 0) {
-                    // 不释放这个对象，造成泄漏
+                    // 不释放这个对象，造成泄漏（只释放incrementRef产生的引用）
+                    gc.decrementRef(tempObjectId);  // refCount: 2 -> 1 (leaked!)
                     leakedObjects.add(tempObjectId);
                 } else {
-                    // 正常释放
-                    gc.decrementRef(tempObjectId);
+                    // 正常释放（需要两次decrement）
+                    gc.decrementRef(tempObjectId);  // refCount: 2 -> 1
+                    gc.decrementRef(tempObjectId);  // refCount: 1 -> 0
                 }
 
                 // 定期执行垃圾回收
@@ -334,7 +339,8 @@ public class MemoryLeakDetectionTest {
             WeakReference<Object> weakRef = new WeakReference<>(new Object());
 
             // When: 移除强引用，执行垃圾回收
-            gc.decrementRef(objectId);
+            gc.decrementRef(objectId);  // refCount: 2 -> 1 (分配时是1, increment后是2)
+            gc.decrementRef(objectId);  // refCount: 1 -> 0
             gc.collect();
 
             // Then: 对象应该被回收
@@ -348,17 +354,16 @@ public class MemoryLeakDetectionTest {
         @DisplayName("应该检测到只有弱引用的对象")
         void testDetectObjectsWithOnlyWeakReferences() throws Exception {
             // Given: 创建对象并建立弱引用关系
-            int objectId = gc.allocate(100);
+            int objectId = gc.allocate(100);  // refCount=1
 
             // 注意：这里的弱引用是Java的WeakReference，不是GC的
             // GC本身不支持弱引用，这是引用计数算法的限制
-            // 测试GC在只有弱引用时的行为
 
-            // When: 不增加强引用，执行垃圾回收
+            // When: 不增加强引用，直接释放分配时的引用
+            gc.decrementRef(objectId);  // refCount: 1 -> 0
             gc.collect();
 
             // Then: 对象应该被立即回收（因为没有强引用）
-            // 引用计数算法：初始引用计数为0，应该被回收
             assertThat(gc.isObjectAlive(objectId)).isFalse();
         }
     }
@@ -376,15 +381,16 @@ public class MemoryLeakDetectionTest {
         void testVerifyMemoryLeakFix() throws Exception {
             // Given: 创建内存泄漏场景
             int objectId = gc.allocate(100);
-            gc.incrementRef(objectId);
+            gc.incrementRef(objectId);  // refCount=2
 
             // 验证泄漏存在
             gc.collect();
             assertThat(gc.isObjectAlive(objectId)).isTrue();
             int leakedHeapUsage = gc.getHeapUsage();
 
-            // When: 修复泄漏（释放对象）
-            gc.decrementRef(objectId);
+            // When: 修复泄漏（释放对象，需要两次decrement）
+            gc.decrementRef(objectId);  // refCount: 2 -> 1
+            gc.decrementRef(objectId);  // refCount: 1 -> 0
             gc.collect();
 
             // Then: 泄漏应该被修复
@@ -453,11 +459,10 @@ public class MemoryLeakDetectionTest {
 
             long startTimeWithLeak = System.nanoTime();
 
-            // 模拟有内存泄漏的操作
+            // 模拟有内存泄漏的操作 - 不释放对象
             for (int i = 0; i < leakIterations; i++) {
-                int objectId = gc.allocate(100);
-                gc.incrementRef(objectId);
-                leakedObjects.add(objectId); // 不释放，造成泄漏
+                int objectId = gc.allocate(100);  // refCount=1（分配者持有）
+                leakedObjects.add(objectId); // 不调用decrementRef，造成泄漏
 
                 // 执行一些操作
                 if (i % 100 == 0) {
@@ -466,21 +471,20 @@ public class MemoryLeakDetectionTest {
             }
 
             long endTimeWithLeak = System.nanoTime();
-            long timeWithLeak = endTimeWithLeak - startTimeWithLeak();
+            long timeWithLeak = endTimeWithLeak - startTimeWithLeak;
 
             // 清理泄漏，重新测试
             for (int objectId : leakedObjects) {
-                gc.decrementRef(objectId);
+                gc.decrementRef(objectId);  // refCount: 1 -> 0
             }
             gc.clearAll();
 
             long startTimeWithoutLeak = System.nanoTime();
 
-            // 模拟没有内存泄漏的操作
+            // 模拟没有内存泄漏的操作 - 立即释放对象
             for (int i = 0; i < leakIterations; i++) {
-                int objectId = gc.allocate(100);
-                gc.incrementRef(objectId);
-                gc.decrementRef(objectId); // 及时释放
+                int objectId = gc.allocate(100);  // refCount=1
+                gc.decrementRef(objectId);  // refCount: 1 -> 0 及时释放
 
                 if (i % 100 == 0) {
                     gc.collect();

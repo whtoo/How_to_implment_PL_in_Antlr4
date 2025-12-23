@@ -134,13 +134,17 @@ class LinearScanAllocatorTest {
                 allocator.allocate("var" + i);
             }
 
-            // Next allocation should fail/spill
-            assertThatThrownBy(() -> allocator.allocate("overflow"))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("No available registers");
+            // Next allocation should automatically spill an existing variable
+            int reg = allocator.allocate("overflow");
 
-            // Variable should be spilled
-            assertThat(allocator.isSpilled("overflow")).isTrue();
+            // Variable should be in a register (after spilling another)
+            // or spilled to stack (if no registers available)
+            assertThat(reg).isNotEqualTo(0); // Never allocate r0
+            assertThat(reg).isNotEqualTo(13); // Never allocate r13 (sp)
+            assertThat(reg).isNotEqualTo(14); // Never allocate r14 (fp)
+
+            // At least one variable should be spilled
+            assertThat(allocator.getSpilledVariables().size()).isGreaterThan(0);
         }
 
         @Test
@@ -560,13 +564,27 @@ class LinearScanAllocatorTest {
                 alloc.allocate("local" + i);
             }
 
-            // First 13 should be in registers
-            for (int i = 0; i < 13; i++) {
-                assertThat(alloc.getRegister("local" + i)).isNotEqualTo(-1);
+            // First 13 should be in registers initially, then some get spilled
+            // After all allocations, some variables should be in registers
+            // and some should be spilled to stack
+            int inRegisters = 0;
+            int spilled = 0;
+            for (int i = 0; i < 20; i++) {
+                int reg = alloc.getRegister("local" + i);
+                if (reg != -1) {
+                    // Verify it's not a reserved register
+                    assertThat(reg).isNotIn(0, 13, 14);
+                    inRegisters++;
+                }
+                if (alloc.isSpilled("local" + i)) {
+                    spilled++;
+                }
             }
 
-            // Rest should be spilled or failed
-            // Note: Current implementation throws exception on overflow
+            // Should have some in registers and some spilled
+            assertThat(inRegisters).isGreaterThan(0);
+            assertThat(spilled).isGreaterThan(0);
+            assertThat(inRegisters + spilled).isEqualTo(20);
         }
 
         @Test

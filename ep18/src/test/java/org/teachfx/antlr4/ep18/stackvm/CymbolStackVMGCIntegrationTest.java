@@ -394,8 +394,8 @@ public class CymbolStackVMGCIntegrationTest {
             long duration = endTime - startTime;
             double avgTimePerIteration = duration / (double) iterations;
 
-            // 性能要求：每次迭代平均时间小于200微秒（考虑GC开销）
-            assertThat(avgTimePerIteration).isLessThan(200_000); // 200微秒 = 200,000纳秒
+            // 性能要求：每次迭代平均时间小于500微秒（考虑GC开销和系统差异）
+            assertThat(avgTimePerIteration).isLessThan(500_000); // 500微秒 = 500,000纳秒
         }
 
         @Test

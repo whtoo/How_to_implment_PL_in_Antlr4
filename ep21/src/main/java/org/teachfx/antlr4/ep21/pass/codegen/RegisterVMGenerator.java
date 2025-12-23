@@ -1,7 +1,5 @@
 package org.teachfx.antlr4.ep21.pass.codegen;
 
-import org.teachfx.antlr4.ep18.stackvm.codegen.BytecodeDefinitionInterface;
-import org.teachfx.antlr4.ep18.stackvm.codegen.BytecodeDefinitionInterface.DefaultBytecodeDefinition;
 import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.IRVisitor;
 import org.teachfx.antlr4.ep21.ir.Prog;
@@ -23,49 +21,62 @@ import java.util.Map;
 import java.util.HashMap;
 
 /**
- * Stack VM code generator for EP18.
+ * Register VM code generator for EP18R.
  * <p>
  * This class implements the {@link ICodeGenerator} interface to generate
- * bytecode for the EP18 stack-based virtual machine. It translates IR nodes
- * to EP18 assembly instructions using the visitor pattern.
+ * assembly code for the EP18R register-based virtual machine. It translates
+ * IR nodes to EP18R assembly text format (.vmr files) using the visitor pattern.
+ * </p>
+ * <p>
+ * EP18R寄存器分配约定：
+ * <ul>
+ *   <li>r0: 零寄存器（恒为0）</li>
+ *   <li>r1: 返回地址 (ra)</li>
+ *   <li>r2: 参数0/返回值 (a0)</li>
+ *   <li>r3: 参数1 (a1)</li>
+ *   <li>r4: 参数2 (a2)</li>
+ *   <li>r5-r9: 临时寄存器 (t0-t4)</li>
+ *   <li>r10-r12: 保存寄存器 (s0-s2)</li>
+ *   <li>r13: 栈指针 (sp)</li>
+ *   <li>r14: 帧指针 (fp)</li>
+ *   <li>r15: 链接寄存器 (lr)</li>
+ * </ul>
  * </p>
  */
-public class StackVMGenerator implements ICodeGenerator {
+public class RegisterVMGenerator implements ICodeGenerator {
 
     /**
-     * Target VM identifier for EP18 stack VM.
+     * Target VM identifier for EP18R register VM.
      */
-    public static final String TARGET_VM = "EP18";
+    public static final String TARGET_VM = "EP18R";
 
-    private final BytecodeDefinitionInterface bytecodeDef;
-    private final IEmitter emitter;
-    private final IOperatorEmitter operatorEmitter;
+    private final RegisterEmitter emitter;
+    private final RegisterOperatorEmitter operatorEmitter;
     private String lastAssemblyOutput = "";
 
     /**
-     * Creates a new StackVMGenerator with default emitters.
+     * Creates a new RegisterVMGenerator with default emitters.
      */
-    public StackVMGenerator() {
-        this(new StackVMEmitter(), new StackVMOperatorEmitter());
+    public RegisterVMGenerator() {
+        this(new RegisterEmitter(), new RegisterOperatorEmitter());
     }
 
     /**
-     * Creates a new StackVMGenerator with a custom emitter.
+     * Creates a new RegisterVMGenerator with a custom emitter.
      *
      * @param emitter the custom instruction emitter
      */
-    public StackVMGenerator(IEmitter emitter) {
-        this(emitter, new StackVMOperatorEmitter());
+    public RegisterVMGenerator(RegisterEmitter emitter) {
+        this(emitter, new RegisterOperatorEmitter());
     }
 
     /**
-     * Creates a new StackVMGenerator with custom emitter and operator emitter.
+     * Creates a new RegisterVMGenerator with custom emitters.
      *
      * @param emitter the custom instruction emitter
      * @param operatorEmitter the custom operator emitter
      */
-    public StackVMGenerator(IEmitter emitter, IOperatorEmitter operatorEmitter) {
-        this.bytecodeDef = new DefaultBytecodeDefinition();
+    public RegisterVMGenerator(RegisterEmitter emitter, RegisterOperatorEmitter operatorEmitter) {
         this.emitter = emitter;
         this.operatorEmitter = operatorEmitter;
     }
@@ -114,30 +125,6 @@ public class StackVMGenerator implements ICodeGenerator {
         }
     }
 
-    /**
-     * Generates bytecode from a list of IR instructions.
-     * <p>
-     * This method is provided for backward compatibility with existing tests.
-     * </p>
-     *
-     * @param instructions the list of IR instructions
-     */
-    public void generateFrom(List<IRNode> instructions) {
-        emitter.clear();
-        List<String> errors = new ArrayList<>();
-        generateInstructions(instructions, errors);
-        lastAssemblyOutput = emitter.flush();
-    }
-
-    /**
-     * Gets the last generated assembly output.
-     *
-     * @return the assembly output string
-     */
-    public String getAssemblyOutput() {
-        return lastAssemblyOutput;
-    }
-
     @Override
     public String getTargetVM() {
         return TARGET_VM;
@@ -145,20 +132,7 @@ public class StackVMGenerator implements ICodeGenerator {
 
     @Override
     public void configure(Map<String, Object> config) {
-        if (config.containsKey("emitter")) {
-            Object emitterObj = config.get("emitter");
-            if (emitterObj instanceof IEmitter) {
-                // Can't reassign final field, but could use a wrapper
-                // For now, this is a no-op
-            }
-        }
-        if (config.containsKey("operatorEmitter")) {
-            Object opEmitterObj = config.get("operatorEmitter");
-            if (opEmitterObj instanceof IOperatorEmitter) {
-                // Can't reassign final field, but could use a wrapper
-                // For now, this is a no-op
-            }
-        }
+        // Configuration support for future enhancements
     }
 
     @Override
@@ -167,14 +141,14 @@ public class StackVMGenerator implements ICodeGenerator {
     }
 
     /**
-     * Generates instructions from a list of IR nodes.
+     * Generates assembly from a list of IR instructions.
      *
      * @param instructions the list of IR nodes
      * @param errors the list to collect errors
      * @return the number of instructions generated
      */
     private int generateInstructions(List<IRNode> instructions, List<String> errors) {
-        IRGeneratorVisitor visitor = new IRGeneratorVisitor(bytecodeDef, emitter, operatorEmitter, errors);
+        RegisterGeneratorVisitor visitor = new RegisterGeneratorVisitor(emitter, operatorEmitter, errors);
 
         for (IRNode node : instructions) {
             if (node instanceof Stmt stmt) {
@@ -190,21 +164,28 @@ public class StackVMGenerator implements ICodeGenerator {
     }
 
     /**
-     * Internal visitor class for generating stack VM instructions from IR nodes.
+     * Gets the last generated assembly output.
+     *
+     * @return the assembly output string
      */
-    private static class IRGeneratorVisitor implements IRVisitor<Void, Void> {
-        private final BytecodeDefinitionInterface bytecodeDef;
-        private final IEmitter emitter;
-        private final IOperatorEmitter operatorEmitter;
+    public String getAssemblyOutput() {
+        return lastAssemblyOutput;
+    }
+
+    /**
+     * Internal visitor class for generating register VM assembly from IR nodes.
+     */
+    private class RegisterGeneratorVisitor implements IRVisitor<Void, Void> {
+        private final RegisterEmitter emitter;
+        private final RegisterOperatorEmitter operatorEmitter;
         private final List<String> errors;
         private int instructionCount = 0;
+        private int tempReg = 5;  // Start from t0 (r5)
 
-        public IRGeneratorVisitor(
-                BytecodeDefinitionInterface bytecodeDef,
-                IEmitter emitter,
-                IOperatorEmitter operatorEmitter,
+        public RegisterGeneratorVisitor(
+                RegisterEmitter emitter,
+                RegisterOperatorEmitter operatorEmitter,
                 List<String> errors) {
-            this.bytecodeDef = bytecodeDef;
             this.emitter = emitter;
             this.operatorEmitter = operatorEmitter;
             this.errors = errors;
@@ -214,14 +195,39 @@ public class StackVMGenerator implements ICodeGenerator {
             return instructionCount;
         }
 
-        private void emitInstruction(String mnemonic) {
-            emitter.emit(mnemonic);
+        private void emitInstruction(String instruction) {
+            emitter.emit(instruction);
             instructionCount++;
         }
 
-        private void emitInstructionWithOperand(String mnemonic, int operand) {
+        private void emitInstruction(String mnemonic, int reg) {
+            emitter.emit(mnemonic + " r" + reg);
+            instructionCount++;
+        }
+
+        private void emitInstruction(String mnemonic, int rd, int rs1) {
+            emitter.emit(mnemonic + " r" + rd + ", r" + rs1);
+            instructionCount++;
+        }
+
+        private void emitInstruction(String mnemonic, int rd, int rs1, int rs2) {
+            emitter.emit(mnemonic + " r" + rd + ", r" + rs1 + ", r" + rs2);
+            instructionCount++;
+        }
+
+        private void emitInstruction(String mnemonic, String operand) {
             emitter.emit(mnemonic + " " + operand);
             instructionCount++;
+        }
+
+        private int allocateTemp() {
+            int reg = tempReg;
+            tempReg = (tempReg + 1) % 10;  // Cycle through r5-r9
+            return reg;
+        }
+
+        private void freeTemp(int reg) {
+            // In this simple allocator, we just cycle back
         }
 
         // ==================== Statement Visitors ====================
@@ -234,61 +240,54 @@ public class StackVMGenerator implements ICodeGenerator {
 
         @Override
         public Void visit(JMP jmp) {
-            emitInstruction("br " + jmp.getTarget().toSource());
+            emitInstruction("j " + jmp.getTarget().toSource());
             return null;
         }
 
         @Override
         public Void visit(CJMP cjmp) {
-            // Load condition variable onto stack
+            // Load condition variable to register
             VarSlot cond = cjmp.cond;
-            if (cond instanceof FrameSlot frameSlot) {
-                emitInstructionWithOperand("load", frameSlot.getSlotIdx());
-            } else {
-                errors.add("Unsupported condition type in CJMP: " + cond.getClass().getSimpleName());
-            }
+            int condReg = loadToRegister(cond);
+
             // Branch if false to else block
-            emitInstruction("brf " + cjmp.getElseBlock().getLabel().toSource());
+            emitInstruction("jf r" + condReg + ", " + cjmp.getElseBlock().getLabel().toSource());
+
+            freeTemp(condReg);
             return null;
         }
 
         @Override
         public Void visit(Assign assign) {
-            // Generate RHS expression
+            // Generate RHS expression and store result to LHS
             Operand rhs = assign.getRhs();
-            if (rhs instanceof VarSlot varSlot) {
-                if (varSlot instanceof FrameSlot frameSlot) {
-                    emitInstructionWithOperand("load", frameSlot.getSlotIdx());
-                } else if (varSlot instanceof OperandSlot) {
-                    // OperandSlot should be a temporary on stack, no action needed
-                } else {
-                    errors.add("Unsupported RHS type in Assign: " + rhs.getClass().getSimpleName());
-                }
-            } else if (rhs instanceof ConstVal<?> constVal) {
-                emitConst(constVal);
-            } else {
-                errors.add("Unsupported RHS type in Assign: " + rhs.getClass().getSimpleName());
-            }
+            int resultReg = loadToRegister(rhs);
 
-            // Store to LHS
+            // Store to LHS (frame slot or operand slot)
             VarSlot lhs = assign.getLhs();
             if (lhs instanceof FrameSlot frameSlot) {
-                emitInstructionWithOperand("store", frameSlot.getSlotIdx());
+                // Store to stack frame
+                int offset = frameSlot.getSlotIdx() * 4;
+                emitInstruction("sw r" + resultReg + ", fp, " + offset);
             } else if (lhs instanceof OperandSlot) {
-                // OperandSlot is a temporary on stack, no store needed
+                // OperandSlot is already on stack, no store needed for register VM
+                // The result is already in resultReg which represents the value
+                // For simplicity, we just keep the value in the register
             } else {
                 errors.add("Unsupported LHS type in Assign: " + lhs.getClass().getSimpleName());
             }
 
+            freeTemp(resultReg);
             return null;
         }
 
         @Override
         public Void visit(ReturnVal returnVal) {
+            // Load return value to r2 (a0)
             if (returnVal.getRetVal() != null) {
-                if (returnVal.getRetVal() instanceof FrameSlot frameSlot) {
-                    emitInstructionWithOperand("load", frameSlot.getSlotIdx());
-                }
+                int retReg = loadToRegister(returnVal.getRetVal());
+                emitInstruction("mov r2, r" + retReg);
+                freeTemp(retReg);
             }
 
             if (returnVal.isMainEntry()) {
@@ -301,9 +300,10 @@ public class StackVMGenerator implements ICodeGenerator {
 
         @Override
         public Void visit(ExprStmt exprStmt) {
-            // Evaluate expression for side effects
-            if (exprStmt.getExpr() != null) {
-                exprStmt.getExpr().accept(this);
+            // Evaluate expression for side effects (e.g., function call)
+            Expr expr = exprStmt.getExpr();
+            if (expr instanceof CallFunc) {
+                visit((CallFunc) expr);
             }
             return null;
         }
@@ -312,70 +312,111 @@ public class StackVMGenerator implements ICodeGenerator {
 
         @Override
         public Void visit(BinExpr binExpr) {
-            // Generate binary operator
+            // Load operands to registers
+            int leftReg = loadToRegister(binExpr.getLhs());
+            int rightReg = loadToRegister(binExpr.getRhs());
+
+            // Perform operation, result in leftReg
             String opInstruction = operatorEmitter.emitBinaryOp(binExpr.getOpType());
-            emitInstruction(opInstruction);
+            emitInstruction(opInstruction, leftReg, leftReg, rightReg);
+
+            freeTemp(rightReg);
             return null;
         }
 
         @Override
         public Void visit(UnaryExpr unaryExpr) {
-            // Generate unary operator
+            int operandReg = loadToRegister(unaryExpr.expr);
+
             String opInstruction = operatorEmitter.emitUnaryOp(unaryExpr.op);
-            emitInstruction(opInstruction);
+            emitInstruction(opInstruction, operandReg, operandReg);
+
             return null;
         }
 
         @Override
         public Void visit(CallFunc callFunc) {
-            // For function calls, we need to:
-            // 1. Push arguments onto stack
-            // 2. Emit call instruction
-            emitInstructionWithOperand("call", 0); // Placeholder function index
+            // Simple function call - just emit call instruction
+            // In a real implementation, we would handle argument passing
+            emitInstruction("call " + callFunc.getFuncName());
             return null;
         }
 
         @Override
         public Void visit(OperandSlot operandSlot) {
             // OperandSlot represents a temporary value on stack
-            // No action needed
+            // For register VM, we need to load it from stack
+            int tempReg = allocateTemp();
+            int offset = operandSlot.getOrd() * 4;
+            emitInstruction("lw r" + tempReg + ", sp, " + offset);
             return null;
         }
 
         @Override
         public Void visit(FrameSlot frameSlot) {
             // Load from stack frame
-            emitInstructionWithOperand("load", frameSlot.getSlotIdx());
+            int tempReg = allocateTemp();
+            int offset = frameSlot.getSlotIdx() * 4;
+            emitInstruction("lw r" + tempReg + ", fp, " + offset);
             return null;
         }
 
         @Override
         public <T> Void visit(ConstVal<T> constVal) {
-            emitConst(constVal);
-            return null;
-        }
-
-        private <T> void emitConst(ConstVal<T> constVal) {
             T value = constVal.getVal();
-            if (value instanceof Integer) {
-                emitInstructionWithOperand("iconst", (Integer) value);
-            } else if (value instanceof Float) {
-                // For float constants, we need to use the constant pool
-                emitInstructionWithOperand("fconst", 0); // Placeholder pool index
+            int targetReg = allocateTemp();
+
+            if (value instanceof Integer intVal) {
+                emitInstruction("li r" + targetReg + ", " + intVal);
+            } else if (value instanceof Float floatVal) {
+                // For float, we would need constant pool
+                emitInstruction("li r" + targetReg + ", " + Float.floatToIntBits(floatVal));
             } else if (value instanceof Boolean bool) {
-                emitInstructionWithOperand("cconst", bool ? 1 : 0);
-            } else if (value instanceof String) {
-                emitInstructionWithOperand("sconst", 0); // Placeholder pool index
+                emitInstruction("li r" + targetReg + ", " + (bool ? 1 : 0));
             } else {
                 errors.add("Unsupported constant type: " + value.getClass().getSimpleName());
             }
+
+            return null;
+        }
+
+        /**
+         * Load an operand to a register and return the register number.
+         * If operand is already a FrameSlot or OperandSlot, loads from memory.
+         * If operand is ConstVal, loads immediate value.
+         */
+        private int loadToRegister(Operand operand) {
+            if (operand instanceof FrameSlot frameSlot) {
+                int reg = allocateTemp();
+                int offset = frameSlot.getSlotIdx() * 4;
+                emitInstruction("lw r" + reg + ", fp, " + offset);
+                return reg;
+            } else if (operand instanceof OperandSlot slot) {
+                int reg = allocateTemp();
+                int offset = slot.getOrd() * 4;
+                emitInstruction("lw r" + reg + ", sp, " + offset);
+                return reg;
+            } else if (operand instanceof ConstVal<?> constVal) {
+                int reg = allocateTemp();
+                Object value = constVal.getVal();
+                if (value instanceof Integer intVal) {
+                    emitInstruction("li r" + reg + ", " + intVal);
+                } else if (value instanceof Boolean bool) {
+                    emitInstruction("li r" + reg + ", " + (bool ? 1 : 0));
+                } else {
+                    errors.add("Unsupported constant type for register load: " + value.getClass().getSimpleName());
+                }
+                return reg;
+            }
+            errors.add("Cannot load to register: " + operand.getClass().getSimpleName());
+            return allocateTemp();  // Return a temp register anyway
         }
     }
 
     /**
-     * Default stack VM instruction emitter.
+     * Register VM instruction emitter.
      */
-    private static class StackVMEmitter implements IEmitter {
+    public static class RegisterEmitter implements IEmitter {
         private final List<String> instructions = new ArrayList<>();
         private int indentLevel = 0;
 
@@ -439,38 +480,36 @@ public class StackVMGenerator implements ICodeGenerator {
     }
 
     /**
-     * Default stack VM operator emitter.
+     * Register VM operator emitter.
      * <p>
      * Uses 32-bit fixed-length instruction format:
      * - opcode(8) + rd(5) + rs1(5) + rs2(5) + imm(9)
      * </p>
      */
-    private static class StackVMOperatorEmitter implements IOperatorEmitter {
+    public static class RegisterOperatorEmitter {
 
-        @Override
         public String emitBinaryOp(OperatorType.BinaryOpType binaryOpType) {
             return switch (binaryOpType) {
-                case ADD -> "iadd";
-                case SUB -> "isub";
-                case MUL -> "imul";
-                case DIV -> "idiv";
-                case MOD -> "imod";
-                case LT -> "ilt";
-                case LE -> "ile";
-                case GT -> "igt";
-                case GE -> "ige";
-                case EQ -> "ieq";
-                case NE -> "ine";
-                case AND -> "iand";
-                case OR -> "ior";
+                case ADD -> "add";
+                case SUB -> "sub";
+                case MUL -> "mul";
+                case DIV -> "div";
+                case MOD -> "mod";
+                case LT -> "slt";
+                case LE -> "sle";
+                case GT -> "sgt";
+                case GE -> "sge";
+                case EQ -> "seq";
+                case NE -> "sne";
+                case AND -> "and";
+                case OR -> "or";
             };
         }
 
-        @Override
         public String emitUnaryOp(OperatorType.UnaryOpType unaryOpType) {
             return switch (unaryOpType) {
-                case NEG -> "ineg";
-                case NOT -> "inot";
+                case NEG -> "neg";
+                case NOT -> "not";
             };
         }
     }

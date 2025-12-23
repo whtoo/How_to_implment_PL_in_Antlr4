@@ -45,6 +45,20 @@ public class LabelSymbol {
     }
 
     /**
+     * Resolve forward references for 32-bit instruction array
+     *
+     * @param code 32-bit instruction array
+     */
+    public void resolveForwardReferences(int[] code) {
+        isForwardRef = false;
+        Vector<Integer> operandsToPath = forwardRefs;
+        for (int addrToPath : operandsToPath) {
+            // For 32-bit format, write the address as immediate value
+            code[addrToPath] = InstructionEncoder.encodeImm(InstructionEncoder.OP_J, address);
+        }
+    }
+
+    /**
      * Get the label name
      */
     public String getName() {

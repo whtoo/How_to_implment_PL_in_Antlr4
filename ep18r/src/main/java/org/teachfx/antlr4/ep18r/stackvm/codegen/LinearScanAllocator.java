@@ -131,10 +131,28 @@ public class LinearScanAllocator implements IRegisterAllocator {
         // 查找可用的物理寄存器
         int reg = findAvailableRegister();
         if (reg == -1) {
-            // 没有可用寄存器，自动溢出到栈
+            // 没有可用寄存器，从已分配的变量中选择一个进行溢出
+            // 选择第一个已分配的变量（不在spillSlots中的）进行溢出
+            String varToSpill = null;
+            for (Map.Entry<String, Integer> entry : varToReg.entrySet()) {
+                if (!spillSlots.containsKey(entry.getKey())) {
+                    varToSpill = entry.getKey();
+                    break;
+                }
+            }
+
+            if (varToSpill != null) {
+                // 溢出该变量，释放其寄存器
+                spillToStack(varToSpill);
+                // 现在可以找到可用寄存器
+                reg = findAvailableRegister();
+            }
+        }
+
+        // 如果仍然没有可用寄存器，将新变量溢出到栈
+        if (reg == -1) {
             spillToStack(varName);
-            throw new IllegalStateException("No available registers for variable: " + varName +
-                    ". Variable has been spilled to stack.");
+            return -1;  // 返回-1表示在栈上
         }
 
         // 标记寄存器为占用
@@ -220,6 +238,15 @@ public class LinearScanAllocator implements IRegisterAllocator {
     public int getSpillSlot(String varName) {
         Integer slot = spillSlots.get(varName);
         return slot != null ? slot : -1;
+    }
+
+    /**
+     * 获取溢出槽位的数量
+     *
+     * @return 溢出槽位数量
+     */
+    public int getSpillSlotCount() {
+        return spillSlots.size();
     }
 
     @Override

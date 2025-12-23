@@ -833,10 +833,147 @@ a50d349 feat(vm-adapter): 完成三路并行VM适配任务
 1. **Compiler.java** - 代码生成功能暂时禁用
    - 原因: CymbolAssembler 已删除，需迁移到新的 ICodeGenerator 接口
    - 位置: `ep21/src/main/java/org/teachfx/antlr4/ep21/Compiler.java:280-285`
-   - TODO: 使用新的 ICodeGenerator 接口重新实现代码生成
+   - 状态: ✅ 已解决 - 已集成 StackVMGenerator
+
+---
+
+## 2025-12-23 下半日更新：EP18/EP18R 交叉VM测试与修复
+
+### LoopAnalysis 修复 ✅
+
+**问题**: `LoopAnalysis.buildNaturalLoop()` 方法中，`sourceId` 先被添加到 `loopNodes`，然后又被添加到 `workList`。循环开始时检查 `loop.contains(current)` 为 true 就跳过了，导致节点 2 无法被添加到循环中。
+
+**修复**: 修改循环检查条件，允许 `sourceId` 第一次被处理时继续遍历：
+
+```java
+// 修改前
+if (loop.contains(current)) {
+    continue;
+}
+
+// 修改后
+if (current != sourceId && loop.contains(current)) {
+    continue;
+}
+```
+
+**结果**: LoopAnalysisTest 全部 13 个测试通过
+
+---
+
+### Compiler.java 集成 StackVMGenerator ✅
+
+**变更位置**: `ep21/src/main/java/org/teachfx/antlr4/ep21/Compiler.java`
+
+**修改内容**:
+- 添加了 `StackVMGenerator` 和 `CodeGenerationResult` 导入
+- 替换了原来禁用的代码生成占位符，集成新的 `ICodeGenerator` 接口实现
+- 现在使用 `StackVMGenerator.generateFromInstructions()` 生成 EP18 字节码
+- 成功生成后自动保存到文件
+
+---
+
+### RegisterVMGenerator 创建 ✅ (新增)
+
+**文件**: `ep21/src/main/java/org/teachfx/antlr4/ep21/pass/codegen/RegisterVMGenerator.java`
+
+**功能**: 为 EP18R 寄存器虚拟机生成汇编代码（.vmr 格式）
+
+**特性**:
+- 实现 `ICodeGenerator` 接口
+- 简单循环寄存器分配器 (r5-r9 作为临时寄存器)
+- 支持的指令:
+  - 算术: add, sub, mul, div, mod
+  - 比较: slt, sle, sgt, sge, seq, sne
+  - 逻辑: and, or, xor, neg, not
+  - 内存: lw (load word), sw (store word)
+  - 控制: j, jf, call, ret, halt
+  - 常量: li (load immediate)
+
+**寄存器分配约定**:
+- r0: 零寄存器（恒为0）
+- r1: 返回地址 (ra)
+- r2: 参数0/返回值 (a0)
+- r3-r4: 参数1-2 (a1-a2)
+- r5-r9: 临时寄存器 (t0-t4)
+- r13: 栈指针 (sp)
+- r14: 帧指针 (fp)
+- r15: 链接寄存器 (lr)
+
+---
+
+### EP18/EP18R 交叉VM测试 ✅ (新增)
+
+**文件**: `ep21/src/test/java/org/teachfx/antlr4/ep21/integration/EP18EP18RCrossVMTest.java`
+
+**测试用例** (7个):
+
+| 测试名称 | 描述 | EP18 | EP18R |
+|---------|------|------|-------|
+| testSimpleAdditionCodeGeneration | 10+20=30 | ✅ | ✅ |
+| testDivisionCodeGeneration | 100/4=25 | ✅ | ✅ |
+| testFunctionCallCodeGeneration | doubleIt(21)=42 | ✅ | ✅ |
+| testComplexExpressionCodeGeneration | ((3+5)*2-4)/2=8 | ✅ | ✅ |
+| testWhileLoopCodeGeneration | while循环 (EP18R only*) | ⚠️ | ✅ |
+| testBothGeneratorsProduceOutput | 多程序批量验证 | ✅ | ✅ |
+| testWriteBytecodeToFiles | 写.vm/.vmr文件 | ✅ | ✅ |
+
+*注: EP18 的 while 循环在 IR 生成阶段有已知问题，待后续修复
+
+**附加测试文件**:
+- `RegisterVMGeneratorTest.java` - 单元测试 (4个测试)
+- `RegisterVMGeneratorIntegrationTest.java` - 集成测试 (1个测试)
+
+---
+
+### 测试结果汇总
+
+```
+Tests run: 464, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+---
+
+### 新增文件清单
+
+| 文件 | 路径 | 行数 | 描述 |
+|------|------|------|------|
+| RegisterVMGenerator.java | pass/codegen/ | ~506行 | EP18R代码生成器 |
+| EP18EP18RCrossVMTest.java | integration/ | ~405行 | 交叉VM集成测试 |
+| RegisterVMGeneratorTest.java | pass/codegen/ | ~45行 | 单元测试 |
+| RegisterVMGeneratorIntegrationTest.java | pass/codegen/ | ~90行 | 集成测试 |
+
+---
+
+### 关于32位定长指令的专业建议
+
+**问题**: EP18和EP18R是否应该统一为32位定长指令？
+
+**优点**:
+1. **调试友好** - 每条指令固定长度，PC计算简单，调试器更容易显示当前指令
+2. **流水线友好** - 取指阶段不需要变长指令解析
+3. **内存对齐** - 更容易实现内存对齐优化
+4. **实现简单** - 解码逻辑统一，无需复杂的状态机
+
+**缺点**:
+1. **代码密度** - 定长指令可能浪费空间（如nop填充）
+2. **指令编码效率** - 对于需要大量立即数的场景可能不够灵活
+3. **历史兼容性** - EP18已是栈式变长指令，修改需要迁移成本
+
+**专业建议**: 推荐采用32位定长指令
+- 现代RISC-V、MIPS等架构都采用32位定长指令
+- 便于实现微架构优化（超标量、超流水线）
+- 调试体验显著提升（单步执行、断点设置更精确）
+- 对于教学目的的VM，简洁性比极致的代码密度更重要
+
+**渐进式方案**:
+1. 新增一套32位定长指令集（作为EP18R2）
+2. 保持向后兼容性
+3. 统一 assembler/disassembler
 
 ---
 
 **维护者**: Claude Code
 **联系方式**: 通过GitHub Issues
-**最后验证**: 2025-12-23 (EP21→EP18代码生成器完成, StackVMGenerator 473行, 集成测试8个测试通过)
+**最后验证**: 2025-12-23 (EP18/EP18R交叉VM测试通过, 464测试全部成功, RegisterVMGenerator创建完成)

@@ -38,37 +38,45 @@ public class GarbageCollectorTest {
     void testReferenceCounting() throws Exception {
         int objectId = gc.allocate(100);
 
-        // 初始引用计数为0
+        // 初始引用计数为1（分配者持有引用）
         assertThat(gc.isObjectAlive(objectId)).isTrue();
 
-        // 增加引用
+        // 增加引用：refCount=1+2=3
         gc.incrementRef(objectId);
         gc.incrementRef(objectId);
 
-        // 减少引用
+        // 减少引用：refCount=3-1=2，仍然存活
         gc.decrementRef(objectId);
-        assertThat(gc.isObjectAlive(objectId)).isTrue(); // 仍然存活
+        assertThat(gc.isObjectAlive(objectId)).isTrue();
 
-        // 减少到0，应该触发回收
+        // 再减少一次：refCount=2-1=1，仍然存活
         gc.decrementRef(objectId);
-        assertThat(gc.isObjectAlive(objectId)).isFalse(); // 应该被回收
+        assertThat(gc.isObjectAlive(objectId)).isTrue();
+
+        // 再减少一次到0，应该触发回收：refCount=0
+        gc.decrementRef(objectId);
+        assertThat(gc.isObjectAlive(objectId)).isFalse();
     }
 
     @Test
     @DisplayName("应该正确执行垃圾回收")
     void testGarbageCollection() throws Exception {
-        // 分配多个对象
+        // 分配多个对象（每个初始refCount=1）
         int[] objectIds = new int[10];
         for (int i = 0; i < 10; i++) {
             objectIds[i] = gc.allocate(100);
-            gc.incrementRef(objectIds[i]); // 增加引用，防止被回收
+            // 增加引用（现在refCount=2）
+            gc.incrementRef(objectIds[i]);
         }
 
         assertThat(gc.getObjectCount()).isEqualTo(10);
 
-        // 减少所有引用
+        // 减少所有引用：先减少分配时的引用(refCount=1)，再减少测试添加的引用(refCount=0)
         for (int objectId : objectIds) {
-            gc.decrementRef(objectId);
+            gc.decrementRef(objectId); // refCount: 2 -> 1
+        }
+        for (int objectId : objectIds) {
+            gc.decrementRef(objectId); // refCount: 1 -> 0
         }
 
         // 手动触发垃圾回收
@@ -150,9 +158,10 @@ public class GarbageCollectorTest {
     @Test
     @DisplayName("应该正确执行强制垃圾回收")
     void testForceGC() throws Exception {
-        int objectId = gc.allocate(100);
-        gc.incrementRef(objectId);
-        gc.decrementRef(objectId); // 引用计数为0，应该被回收
+        int objectId = gc.allocate(100);  // refCount=1
+        gc.incrementRef(objectId);         // refCount=2
+        gc.decrementRef(objectId);         // refCount=1
+        gc.decrementRef(objectId);         // refCount=0，应该被回收
 
         // 强制垃圾回收
         gc.forceGC();
@@ -163,7 +172,8 @@ public class GarbageCollectorTest {
     @Test
     @DisplayName("应该正确重置统计信息")
     void testResetStats() throws Exception {
-        gc.allocate(100);
+        int objectId = gc.allocate(100);  // refCount=1
+        gc.decrementRef(objectId);         // refCount=0
         gc.collect();
 
         GCStats stats = gc.getStats();
@@ -221,9 +231,10 @@ public class GarbageCollectorTest {
     void testMultipleGCCycles() throws Exception {
         // 分配和回收多次
         for (int cycle = 0; cycle < 3; cycle++) {
-            int objectId = gc.allocate(100);
-            gc.incrementRef(objectId);
-            gc.decrementRef(objectId);
+            int objectId = gc.allocate(100);  // refCount=1
+            gc.incrementRef(objectId);         // refCount=2
+            gc.decrementRef(objectId);         // refCount=1
+            gc.decrementRef(objectId);         // refCount=0
             gc.collect();
 
             assertThat(gc.getObjectCount()).isEqualTo(0);

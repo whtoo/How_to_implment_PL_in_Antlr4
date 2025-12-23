@@ -14,8 +14,8 @@ import org.teachfx.antlr4.ep21.pass.ast.CymbolASTBuilder;
 import org.teachfx.antlr4.ep21.pass.cfg.CFG;
 import org.teachfx.antlr4.ep21.pass.cfg.ControlFlowAnalysis;
 import org.teachfx.antlr4.ep21.pass.cfg.LivenessAnalysis;
-// TODO: 重新实现代码生成器，使用新的 ICodeGenerator 接口
-// import org.teachfx.antlr4.ep21.pass.codegen.CymbolAssembler;
+import org.teachfx.antlr4.ep21.pass.codegen.CodeGenerationResult;
+import org.teachfx.antlr4.ep21.pass.codegen.StackVMGenerator;
 import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep21.pass.symtab.LocalDefine;
 import org.teachfx.antlr4.ep21.utils.StreamUtils;
@@ -278,11 +278,29 @@ public class Compiler {
                                     return a;
                                 })
                 )
-                // TODO: 重新实现代码生成器，使用新的 ICodeGenerator 接口
-                // 旧的 CymbolAssembler 已被删除，需要迁移到新的统一接口
                 .forEach(irNodeList -> {
-                    logger.info("代码生成功能暂时禁用，等待 ICodeGenerator 迁移完成");
+                    // 使用新的 ICodeGenerator 接口进行代码生成
+                    logger.info("开始为 EP18 栈式虚拟机生成字节码");
                     logger.debug("IR节点数量: {}", irNodeList.size());
+
+                    // 创建代码生成器并生成字节码
+                    StackVMGenerator generator = new StackVMGenerator();
+                    CodeGenerationResult result = generator.generateFromInstructions(irNodeList);
+
+                    if (result.isSuccess()) {
+                        logger.info("字节码生成成功");
+                        logger.info("目标虚拟机: {}", result.getTargetVM());
+                        logger.info("生成指令数: {}", result.getInstructionCount());
+                        logger.info("生成耗时: {}ms", result.getGenerationTimeMs());
+
+                        // 保存生成的字节码
+                        saveVMCode(result.getOutput());
+                    } else {
+                        logger.error("字节码生成失败");
+                        for (String error : result.getErrors()) {
+                            logger.error("  - {}", error);
+                        }
+                    }
                 });
     }
 

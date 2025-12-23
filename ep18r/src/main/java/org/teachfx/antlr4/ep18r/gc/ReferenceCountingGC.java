@@ -2,24 +2,26 @@ package org.teachfx.antlr4.ep18r.gc;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 引用计数垃圾回收器
- * 使用引用计数算法进行自动内存管理
+ * 使用空闲链表管理的引用计数算法进行自动内存管理
+ *
+ * 设计改进（2025-12-23）：
+ * - 使用TreeMap管理的空闲链表，支持内存重用
+ * - 首次适应（First-Fit）分配算法
+ * - 空闲块自动合并（简单实现）
  */
 public class ReferenceCountingGC implements GarbageCollector {
     private final int heapSize;
     private final byte[] heap;
     private final Map<Integer, GCObjectHeader> objectHeaders;
-    private final Queue<Integer> freeList;
     private final AtomicInteger nextObjectId;
     private final GCStats stats;
 
-    // 内存管理
-    private int heapUsed;
-    private int nextFreeOffset;
+    // 空闲链表管理（按偏移量排序的TreeMap）
+    private final TreeMap<Integer, FreeBlock> freeList;
 
     public ReferenceCountingGC(int heapSize) {
         if (heapSize <= 0) {
@@ -29,22 +31,35 @@ public class ReferenceCountingGC implements GarbageCollector {
         this.heapSize = heapSize;
         this.heap = new byte[heapSize];
         this.objectHeaders = new ConcurrentHashMap<>();
-        this.freeList = new ConcurrentLinkedQueue<>();
+        this.freeList = new TreeMap<>();
         this.nextObjectId = new AtomicInteger(1);
         this.stats = new GCStats();
-        this.heapUsed = 0;
-        this.nextFreeOffset = 0;
 
-        // 初始化空闲链表
-        initializeFreeList();
+        // 初始化空闲链表：整个堆是一个大空闲块
+        freeList.put(0, new FreeBlock(0, heapSize));
     }
 
     /**
-     * 初始化空闲链表
+     * 空闲块表示
      */
-    private void initializeFreeList() {
-        // 将整个堆空间加入空闲链表
-        freeList.offer(0);
+    private static class FreeBlock implements Comparable<FreeBlock> {
+        final int offset;
+        final int size;
+
+        FreeBlock(int offset, int size) {
+            this.offset = offset;
+            this.size = size;
+        }
+
+        @Override
+        public int compareTo(FreeBlock other) {
+            return Integer.compare(this.offset, other.offset);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("FreeBlock{offset=%d, size=%d}", offset, size);
+        }
     }
 
     @Override
@@ -57,35 +72,63 @@ public class ReferenceCountingGC implements GarbageCollector {
             throw new OutOfMemoryError("Object size exceeds heap size");
         }
 
-        // 检查是否有足够的空间
-        if (heapUsed + size > heapSize) {
-            // 尝试垃圾回收
+        // 尝试垃圾回收以释放更多空间
+        if (!hasFreeBlockFor(size)) {
             collect();
         }
 
-        if (heapUsed + size > heapSize) {
+        // 使用首次适应算法查找合适的空闲块
+        Integer offset = findFreeBlock(size);
+        if (offset == null) {
             throw new OutOfMemoryError("Out of memory after garbage collection");
         }
 
+        // 从空闲链表中移除该块
+        FreeBlock block = freeList.remove(offset);
+
+        // 如果块太大，分裂它
+        if (block.size > size) {
+            int remainingSize = block.size - size;
+            int remainingOffset = offset + size;
+            freeList.put(remainingOffset, new FreeBlock(remainingOffset, remainingSize));
+        }
+
+        // 创建对象ID和头部
         int objectId = nextObjectId.getAndIncrement();
-        int offset = nextFreeOffset;
-
-        // 分配内存
-        heapUsed += size;
-        nextFreeOffset += size;
-
-        // 创建对象头部
         GCObjectHeader header = new GCObjectHeader(size);
+        header.setOffset(offset);  // 记录偏移量
+        header.incrementRef();  // 分配者持有引用，引用计数=1
         objectHeaders.put(objectId, header);
 
         // 记录统计信息
         stats.recordAllocation(size);
 
-        if (offset >= heapSize) {
-            throw new OutOfMemoryError("Out of memory: unable to allocate " + size + " bytes");
-        }
-
         return objectId;
+    }
+
+    /**
+     * 检查是否有足够大小的空闲块
+     */
+    private boolean hasFreeBlockFor(int size) {
+        for (FreeBlock block : freeList.values()) {
+            if (block.size >= size) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 使用首次适应算法查找合适的空闲块
+     * @return 空闲块的偏移量，如果没有找到返回null
+     */
+    private Integer findFreeBlock(int size) {
+        for (Map.Entry<Integer, FreeBlock> entry : freeList.entrySet()) {
+            if (entry.getValue().size >= size) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 
     @Override
@@ -152,17 +195,51 @@ public class ReferenceCountingGC implements GarbageCollector {
         }
 
         int size = header.getSize();
-        heapUsed -= size;
+        int offset = header.getOffset();
+
+        // 将内存块加入空闲链表
+        addFreeBlock(offset, size);
+
         objectHeaders.remove(objectId);
         header.setAlive(false);
 
         return size;
     }
 
+    /**
+     * 将空闲块加入空闲链表，尝试合并相邻的空闲块
+     */
+    private void addFreeBlock(int offset, int size) {
+        // 检查是否可以与前一个块合并
+        Map.Entry<Integer, FreeBlock> prevEntry = freeList.floorEntry(offset);
+        if (prevEntry != null) {
+            FreeBlock prevBlock = prevEntry.getValue();
+            if (prevEntry.getKey() + prevBlock.size == offset) {
+                // 可以合并，移除前一个块，创建更大的块
+                freeList.remove(prevEntry.getKey());
+                offset = prevEntry.getKey();
+                size += prevBlock.size;
+            }
+        }
+
+        // 检查是否可以与后一个块合并
+        Map.Entry<Integer, FreeBlock> nextEntry = freeList.higherEntry(offset);
+        if (nextEntry != null && nextEntry.getKey() == offset + size) {
+            // 可以合并，移除后一个块，扩展当前块
+            FreeBlock nextBlock = nextEntry.getValue();
+            freeList.remove(nextEntry.getKey());
+            size += nextBlock.size;
+        }
+
+        // 添加合并后的空闲块
+        freeList.put(offset, new FreeBlock(offset, size));
+    }
+
     @Override
     public boolean isObjectAlive(int objectId) {
         GCObjectHeader header = objectHeaders.get(objectId);
-        return header != null && header.isAlive();
+        boolean alive = header != null && header.isAlive();
+        return alive;
     }
 
     @Override
@@ -180,9 +257,21 @@ public class ReferenceCountingGC implements GarbageCollector {
      * @return 堆使用信息
      */
     public String getHeapInfo() {
-        double usagePercent = (double) heapUsed / heapSize * 100;
-        return String.format("Heap: %d/%d bytes (%.2f%% used)",
-            heapUsed, heapSize, usagePercent);
+        int totalUsed = heapSize - getTotalFreeSize();
+        double usagePercent = (double) totalUsed / heapSize * 100;
+        return String.format("Heap: %d/%d bytes (%.2f%% used), objects: %d, free blocks: %d",
+            totalUsed, heapSize, usagePercent, objectHeaders.size(), freeList.size());
+    }
+
+    /**
+     * 获取空闲块总大小
+     */
+    private int getTotalFreeSize() {
+        int total = 0;
+        for (FreeBlock block : freeList.values()) {
+            total += block.size;
+        }
+        return total;
     }
 
     /**
@@ -209,9 +298,10 @@ public class ReferenceCountingGC implements GarbageCollector {
      */
     public void clearAll() {
         objectHeaders.clear();
-        heapUsed = 0;
-        nextFreeOffset = 0;
+        freeList.clear();
         nextObjectId.set(1);
+        // 重新初始化空闲链表
+        freeList.put(0, new FreeBlock(0, heapSize));
     }
 
     /**
@@ -219,7 +309,7 @@ public class ReferenceCountingGC implements GarbageCollector {
      * @return 使用的内存量
      */
     public int getHeapUsage() {
-        return heapUsed;
+        return heapSize - getTotalFreeSize();
     }
 
     /**
@@ -240,7 +330,7 @@ public class ReferenceCountingGC implements GarbageCollector {
 
     @Override
     public String toString() {
-        return String.format("ReferenceCountingGC{heapSize=%d, used=%d, objects=%d, collections=%d}",
-            heapSize, heapUsed, objectHeaders.size(), stats.getTotalCollections());
+        return String.format("ReferenceCountingGC{heapSize=%d, used=%d, objects=%d, collections=%d, freeBlocks=%d}",
+            heapSize, getHeapUsage(), objectHeaders.size(), stats.getTotalCollections(), freeList.size());
     }
 }

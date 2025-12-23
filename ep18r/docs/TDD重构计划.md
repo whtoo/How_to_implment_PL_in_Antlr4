@@ -34,13 +34,15 @@
 | TASK-013 | 实现完整栈参数传递（第7+个参数） | ✅ 已完成 | 高 | Claude Code | 2025-12-31 | 已在ControlFlowExecutors.CALL中实现栈参数复制逻辑：调用者将栈参数存储到sp+16开始的位置，CALL指令将其复制到被调用者栈帧参数区域（fp+16）。ABI测试`testStackArgumentPassing`验证通过，返回正确结果16。 |
 | TASK-014 | 修复递归函数实现（如fib函数） | ✅ 已完成 | 中 | Claude Code | 2025-12-29 | 已修复递归函数实现：重写fib函数逻辑，修正递归调用参数错误，使用局部变量保存中间结果。ABI测试`testRecursiveReturnValue`验证fib(5)返回5，通过率100%。 |
 | TASK-015 | 集成自动序言/尾声生成到汇编器 | ⏸️ 未开始 | 中 | | 2025-12-28 | CallingConventionUtils已提供生成函数，需要集成到VMAssembler中，自动为函数生成标准序言和尾声代码。 |
-
-**状态说明**：
-- **⏸️ 未执行**：任务尚未开始
-- **🔄 进行中/部分完成**：任务已部分实现，但需要修复或完善
-- **✅ 已完成**：任务已完成并通过测试验证
+| TASK-18R-VM-01 | 寄存器分配器接口 IRegisterAllocator | ⏸️ 未开始 | 🔴 **高** | EP21团队 | 2026-01-10 | 定义寄存器分配器接口，支持简单分配和线性扫描两种实现。EP21代码生成依赖此接口。 |
+| TASK-18R-VM-02 | 线性扫描寄存器分配器 LinearScanAllocator | ⏸️ 未开始 | 🔴 **高** | EP21团队 | 2026-01-15 | 实现线性扫描寄存器分配算法，正确处理16个物理寄存器溢出。EP21 RegisterVMGenerator需要此实现。 |
+| TASK-18R-VM-03 | EP18R代码生成器 RegisterAssembler | ⏸️ 未开始 | 🔴 **高** | EP21团队 | 2026-01-20 | 实现EP18R字节码生成器，生成符合32位固定格式的字节码。EP21 RegisterVMGenerator需要此生成器。 |
+| TASK-18R-VM-04 | 32位字节码编码器 ByteCodeEncoder | ⏸️ 未开始 | 高 | EP21团队 | 2026-01-12 | 将指令编码为32位固定长度字节码，支持R-type、I-type、J-type指令格式。 |
+| TASK-18R-VM-05 | EP18R调用约定实现 RegisterCallingConvention | ⏸️ 未开始 | 中 | EP21团队 | 2026-01-18 | 实现寄存器VM调用约定工具，与现有CallingConventionUtils兼容，提供参数传递/返回值位置标准化接口。 |
+| TASK-18R-VM-06 | EP18R→EP21适配器接口 RegisterVMAdapter | ⏸️ 未开始 | 中 | EP21团队 | 2026-01-22 | 定义EP18R与EP21代码生成的接口适配，EP21可通过接口调用EP18R代码生成。 |
 
 **整体进度**：13/15任务已完成或部分完成（87%），12个任务完全完成（80%）
++ 6个VM适配高优先级任务待开始
 
 ## 2. 重构方法和目标
 

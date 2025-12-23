@@ -9,10 +9,12 @@ import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep21.ir.stmt.Assign;
 import org.teachfx.antlr4.ep21.ir.stmt.Label;
+import org.teachfx.antlr4.ep21.pass.cfg.Loc;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType;
 import org.teachfx.antlr4.ep21.utils.Kind;
 
 import java.util.*;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -296,6 +298,242 @@ class ConstantFoldingOptimizerTest {
             assertThrows(UnsupportedOperationException.class, () -> {
                 constantMap.put(createMockVarSlot("test"), ConstVal.valueOf(42));
             });
+        }
+    }
+
+    @Nested
+    @DisplayName("实际常量折叠测试")
+    class ActualFoldingTests {
+
+        @Test
+        @DisplayName("应该能够折叠两个常量相加的表达式")
+        void testFoldConstantAddition() {
+            // 创建包含常量赋值的CFG:
+            // t1 = 10
+            // t2 = 20
+            // expr1 = t1 + t2  (应该折叠为30)
+
+            // 创建常量赋值
+            OperandSlot temp1 = OperandSlot.genTemp();
+            OperandSlot temp2 = OperandSlot.genTemp();
+
+            Assign assign1 = new Assign(temp1, ConstVal.valueOf(10));
+            Assign assign2 = new Assign(temp2, ConstVal.valueOf(20));
+            BinExpr addExpr = BinExpr.with(OperatorType.BinaryOpType.ADD, temp1, temp2);
+
+            // 创建基本块
+            List<Loc<IRNode>> codes = List.of(
+                new Loc<>(assign1),
+                new Loc<>(assign2),
+                new Loc<>(addExpr)
+            );
+            BasicBlock<IRNode> block = new BasicBlock<>(
+                Kind.CONTINUOUS, codes, new Label("test", null), 0
+            );
+
+            CFG<IRNode> cfg = new CFG<>(List.of(block), new ArrayList<>());
+
+            // Act
+            optimizer.onHandle(cfg);
+
+            // Assert
+            assertEquals(3, optimizer.getProcessedCount());
+            assertEquals(1, optimizer.getFoldedCount()); // 应该折叠1个表达式
+        }
+
+        @Test
+        @DisplayName("应该能够折叠嵌套的常量表达式")
+        void testFoldNestedConstantExpressions() {
+            // t1 = 5
+            // t2 = 3
+            // t3 = t1 + t2    -> 8 (折叠)
+            // 注意：当前优化器不记录BinExpr结果到常量映射
+
+            OperandSlot t1 = OperandSlot.genTemp();
+            OperandSlot t2 = OperandSlot.genTemp();
+            OperandSlot t3 = OperandSlot.genTemp();
+
+            Assign a1 = new Assign(t1, ConstVal.valueOf(5));
+            Assign a2 = new Assign(t2, ConstVal.valueOf(3));
+            BinExpr e1 = BinExpr.with(OperatorType.BinaryOpType.ADD, t1, t2);
+            BinExpr e2 = BinExpr.with(OperatorType.BinaryOpType.MUL, t3, t2);
+
+            List<Loc<IRNode>> codes = List.of(
+                new Loc<>(a1),
+                new Loc<>(a2),
+                new Loc<>(e1),
+                new Loc<>(e2)
+            );
+            BasicBlock<IRNode> block = new BasicBlock<>(
+                Kind.CONTINUOUS, codes, new Label("nested", null), 0
+            );
+
+            CFG<IRNode> cfg = new CFG<>(List.of(block), new ArrayList<>());
+
+            optimizer.onHandle(cfg);
+
+            // 只有e1能被折叠(t1和t2都是常量)，e2的t3不是常量
+            assertEquals(4, optimizer.getProcessedCount());
+            assertEquals(1, optimizer.getFoldedCount());
+        }
+
+        @Test
+        @DisplayName("应该能够折叠一元负表达式")
+        void testFoldUnaryNegExpression() {
+            OperandSlot t1 = OperandSlot.genTemp();
+
+            Assign a1 = new Assign(t1, ConstVal.valueOf(42));
+            UnaryExpr negExpr = UnaryExpr.with(OperatorType.UnaryOpType.NEG, t1);
+
+            List<Loc<IRNode>> codes = List.of(
+                new Loc<>(a1),
+                new Loc<>(negExpr)
+            );
+            BasicBlock<IRNode> block = new BasicBlock<>(
+                Kind.CONTINUOUS, codes, new Label("unary", null), 0
+            );
+
+            CFG<IRNode> cfg = new CFG<>(List.of(block), new ArrayList<>());
+
+            optimizer.onHandle(cfg);
+
+            assertEquals(2, optimizer.getProcessedCount());
+            assertEquals(1, optimizer.getFoldedCount());
+        }
+
+        @Test
+        @DisplayName("应该能够折叠比较表达式")
+        void testFoldComparisonExpression() {
+            OperandSlot t1 = OperandSlot.genTemp();
+            OperandSlot t2 = OperandSlot.genTemp();
+
+            Assign a1 = new Assign(t1, ConstVal.valueOf(10));
+            Assign a2 = new Assign(t2, ConstVal.valueOf(20));
+            BinExpr cmpExpr = BinExpr.with(OperatorType.BinaryOpType.LT, t1, t2);
+
+            List<Loc<IRNode>> codes = List.of(
+                new Loc<>(a1),
+                new Loc<>(a2),
+                new Loc<>(cmpExpr)
+            );
+            BasicBlock<IRNode> block = new BasicBlock<>(
+                Kind.CONTINUOUS, codes, new Label("cmp", null), 0
+            );
+
+            CFG<IRNode> cfg = new CFG<>(List.of(block), new ArrayList<>());
+
+            optimizer.onHandle(cfg);
+
+            assertEquals(1, optimizer.getFoldedCount());
+        }
+
+        @Test
+        @DisplayName("应该能够折叠逻辑与表达式")
+        void testFoldLogicalAndExpression() {
+            OperandSlot t1 = OperandSlot.genTemp();
+            OperandSlot t2 = OperandSlot.genTemp();
+
+            Assign a1 = new Assign(t1, ConstVal.valueOf(true));
+            Assign a2 = new Assign(t2, ConstVal.valueOf(false));
+            BinExpr andExpr = BinExpr.with(OperatorType.BinaryOpType.AND, t1, t2);
+
+            List<Loc<IRNode>> codes = List.of(
+                new Loc<>(a1),
+                new Loc<>(a2),
+                new Loc<>(andExpr)
+            );
+            BasicBlock<IRNode> block = new BasicBlock<>(
+                Kind.CONTINUOUS, codes, new Label("and", null), 0
+            );
+
+            CFG<IRNode> cfg = new CFG<>(List.of(block), new ArrayList<>());
+
+            optimizer.onHandle(cfg);
+
+            assertEquals(1, optimizer.getFoldedCount());
+        }
+
+        @Test
+        @DisplayName("不应该折叠包含变量的表达式")
+        void testNotFoldVariableExpressions() {
+            // t1 = 10
+            // expr1 = t1 + x   (x不是常量，不应该折叠)
+
+            OperandSlot t1 = OperandSlot.genTemp();
+            OperandSlot x = OperandSlot.genTemp(); // 未赋值的变量
+
+            Assign a1 = new Assign(t1, ConstVal.valueOf(10));
+            BinExpr addExpr = BinExpr.with(OperatorType.BinaryOpType.ADD, t1, x);
+
+            List<Loc<IRNode>> codes = List.of(
+                new Loc<>(a1),
+                new Loc<>(addExpr)
+            );
+            BasicBlock<IRNode> block = new BasicBlock<>(
+                Kind.CONTINUOUS, codes, new Label("var", null), 0
+            );
+
+            CFG<IRNode> cfg = new CFG<>(List.of(block), new ArrayList<>());
+
+            optimizer.onHandle(cfg);
+
+            // 不应该折叠，因为x不是常量
+            assertEquals(0, optimizer.getFoldedCount());
+            assertEquals(2, optimizer.getProcessedCount());
+        }
+
+        @Test
+        @DisplayName("应该能够折叠混合类型表达式")
+        void testFoldMixedTypeExpressions() {
+            // 字符串拼接
+            OperandSlot s1 = OperandSlot.genTemp();
+            OperandSlot s2 = OperandSlot.genTemp();
+
+            Assign a1 = new Assign(s1, ConstVal.valueOf("Hello"));
+            Assign a2 = new Assign(s2, ConstVal.valueOf("World"));
+            BinExpr concatExpr = BinExpr.with(OperatorType.BinaryOpType.ADD, s1, s2);
+
+            List<Loc<IRNode>> codes = List.of(
+                new Loc<>(a1),
+                new Loc<>(a2),
+                new Loc<>(concatExpr)
+            );
+            BasicBlock<IRNode> block = new BasicBlock<>(
+                Kind.CONTINUOUS, codes, new Label("str", null), 0
+            );
+
+            CFG<IRNode> cfg = new CFG<>(List.of(block), new ArrayList<>());
+
+            optimizer.onHandle(cfg);
+
+            assertEquals(1, optimizer.getFoldedCount());
+        }
+
+        @Test
+        @DisplayName("应该正确记录常量映射")
+        void testConstantMapRecording() {
+            OperandSlot t1 = OperandSlot.genTemp();
+            OperandSlot t2 = OperandSlot.genTemp();
+
+            Assign a1 = new Assign(t1, ConstVal.valueOf(100));
+            Assign a2 = new Assign(t2, ConstVal.valueOf(200));
+
+            List<Loc<IRNode>> codes = List.of(
+                new Loc<>(a1),
+                new Loc<>(a2)
+            );
+            BasicBlock<IRNode> block = new BasicBlock<>(
+                Kind.CONTINUOUS, codes, new Label("map", null), 0
+            );
+
+            CFG<IRNode> cfg = new CFG<>(List.of(block), new ArrayList<>());
+
+            optimizer.onHandle(cfg);
+
+            Map<VarSlot, ConstVal<?>> constantMap = optimizer.getConstantMap();
+            assertEquals(2, constantMap.size());
+            assertEquals(100, constantMap.get(t1).getVal());
+            assertEquals(200, constantMap.get(t2).getVal());
         }
     }
 

@@ -71,7 +71,10 @@
       "mcp__serena__replace_symbol_body",
       "mcp__serena__think_about_whether_you_are_done",
       "Bash(for:*)",
-      "mcp__serena__find_referencing_symbols"
+      "mcp__serena__find_referencing_symbols",
+      "Bash(pip show:*)",
+      "Bash(pip3 show:*)",
+      "Bash(uv list)"
     ]
   },
   "enableAllProjectMcpServers": true,

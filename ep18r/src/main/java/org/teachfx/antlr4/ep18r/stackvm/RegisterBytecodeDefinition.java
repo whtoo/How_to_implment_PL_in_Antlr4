@@ -151,7 +151,7 @@ public class RegisterBytecodeDefinition {
 
     // 指令信息类
     public static class Instruction {
-        String name;
+        public String name;  // Public for external access
         int[] type = new int[3];  // 操作数类型: REG, INT, POOL, FUNC
         int n = 0;                // 操作数数量
         int format = FORMAT_R;    // 指令格式

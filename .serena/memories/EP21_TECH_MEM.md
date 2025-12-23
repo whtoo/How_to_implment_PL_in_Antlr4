@@ -420,6 +420,46 @@ mvn jacoco:report -pl ep21
 - SSA图Mermaid输出: `ssaGraph.toMermaid()`
 - CFG可视化: `cfg.toDOT()`
 
+## VM目标适配任务状态 (2025-12-23)
+
+### 三路并行Agent工作状态
+
+**Agent 1: TASK-VM-01 - 统一代码生成接口** (分支: ep21-codegen-interfaces)
+- 状态: ✅ 已完成
+- Agent ID: ac93a6f
+- 创建文件:
+  - `IEmitter.java` - 指令发射器接口 (84行)
+  - `IOperatorEmitter.java` - 运算符发射器接口 (31行)
+  - `CodeGenerationResult.java` - 代码生成结果类 (159行)
+  - `ICodeGenerator.java` - 已存在，验证完整
+
+**Agent 2: TASK-18R-VM-02 - 线性扫描寄存器分配器** (分支: ep18r-regalloc)
+- 状态: ✅ 已完成
+- Agent ID: a58d01c
+- 创建文件:
+  - `IRegisterAllocator.java` - 寄存器分配器接口 (103行)
+  - `LinearScanAllocator.java` - 线性扫描实现 (499行)
+  - `LinearScanAllocatorTest.java` - 单元测试 (593行)
+- 总代码量: 1195行
+
+**Agent 3: TASK-18R-VM-03 - EP18R代码生成器** (分支: ep18r-assembler)
+- 状态: ✅ 已完成
+- Agent ID: a64f743
+- 创建文件:
+  - `ByteCodeEncoder.java` - 32位字节码编码器 (356行)
+  - `RegisterAssembler.java` - 寄存器VM代码生成器 (495行)
+  - `BasicRegisterAllocator.java` - 基础寄存器分配器
+- 总代码量: ~900行
+
+### 待处理编译错误
+
+| 文件 | 错误类型 | 严重程度 |
+|------|----------|----------|
+| LinearScanAllocatorTest.java | getAllocatedVariables() 未定义 | 🔴 严重 |
+| LinearScanAllocatorTest.java | getSpilledVariables() 未定义 | 🔴 严重 |
+| RegisterBytecodeDefinition.java | VMAssemblerParser 无法解析 | 🔴 严重 |
+| LinearScanAllocator.java | 未使用字段警告 | ⚠️ 轻微 |
+
 ## 未来计划
 
 ### Phase3剩余任务 (2025-12-23待完成)
@@ -632,6 +672,56 @@ mvn jacoco:report -pl ep21
   - 添加TASK-3.2.5: 扩展SSA转换器支持更多指令
   - 详细TDD测试用例模板 (4.5.6.1-4.5.6.6)
   - 项目看板和任务追踪表已更新
+
+---
+
+**维护者**: Claude Code
+**联系方式**: 通过GitHub Issues
+**最后验证**: 2025-12-23 (3路并行Agent任务完成, EP21/EP18R编译通过)
+
+---
+
+## VM目标适配任务状态 (2025-12-23 更新)
+
+### 三路并行Agent工作状态 ✅ 全部完成
+
+**Agent 1: TASK-VM-01 - 统一代码生成接口** ✅ 完成
+- Agent ID: ac93a6f
+- 创建文件:
+  - `IEmitter.java` - 指令发射器接口 (84行)
+  - `IOperatorEmitter.java` - 运算符发射器接口 (31行)
+  - `CodeGenerationResult.java` - 代码生成结果类 (159行)
+- 总代码量: ~274行
+
+**Agent 2: TASK-18R-VM-02 - 线性扫描寄存器分配器** ✅ 完成
+- Agent ID: a58d01c
+- 创建文件:
+  - `IRegisterAllocator.java` - 寄存器分配器接口 (118行)
+  - `LinearScanAllocator.java` - 线性扫描实现 (499行)
+  - `LinearScanAllocatorTest.java` - 单元测试 (593行)
+- 总代码量: 1210行
+
+**Agent 3: TASK-18R-VM-03 - EP18R代码生成器** ✅ 完成
+- Agent ID: a64f743
+- 创建文件:
+  - `ByteCodeEncoder.java` - 32位字节码编码器 (356行)
+  - `RegisterAssembler.java` - 寄存器VM代码生成器 (495行)
+  - `BasicRegisterAllocator` - 基础寄存器分配器
+- 总代码量: ~900行
+
+### 编译验证结果
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| EP21 | ✅ 编译通过 | 已修复 CymbolAssembler 引用问题 |
+| EP18R | ✅ 编译通过 | 已修复测试代码 AssertJ 兼容问题 |
+
+### 待处理问题
+
+1. **Compiler.java** - 代码生成功能暂时禁用
+   - 原因: CymbolAssembler 已删除，需迁移到新的 ICodeGenerator 接口
+   - 位置: `ep21/src/main/java/org/teachfx/antlr4/ep21/Compiler.java:280-285`
+   - TODO: 使用新的 ICodeGenerator 接口重新实现代码生成
 
 ---
 

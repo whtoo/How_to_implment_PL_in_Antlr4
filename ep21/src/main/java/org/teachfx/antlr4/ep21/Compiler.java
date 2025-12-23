@@ -14,7 +14,8 @@ import org.teachfx.antlr4.ep21.pass.ast.CymbolASTBuilder;
 import org.teachfx.antlr4.ep21.pass.cfg.CFG;
 import org.teachfx.antlr4.ep21.pass.cfg.ControlFlowAnalysis;
 import org.teachfx.antlr4.ep21.pass.cfg.LivenessAnalysis;
-import org.teachfx.antlr4.ep21.pass.codegen.CymbolAssembler;
+// TODO: 重新实现代码生成器，使用新的 ICodeGenerator 接口
+// import org.teachfx.antlr4.ep21.pass.codegen.CymbolAssembler;
 import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep21.pass.symtab.LocalDefine;
 import org.teachfx.antlr4.ep21.utils.StreamUtils;
@@ -277,14 +278,11 @@ public class Compiler {
                                     return a;
                                 })
                 )
-                .map(irNodeList -> {
-                    var assembler = new CymbolAssembler();
-                    assembler.visit(irNodeList);
-                    return assembler;
-                })
-                .forEach(assembler -> {
-                    saveVMCode(assembler.getAsmInfo());
-                    logger.debug("\n%s".formatted(assembler.getAsmInfo()));
+                // TODO: 重新实现代码生成器，使用新的 ICodeGenerator 接口
+                // 旧的 CymbolAssembler 已被删除，需要迁移到新的统一接口
+                .forEach(irNodeList -> {
+                    logger.info("代码生成功能暂时禁用，等待 ICodeGenerator 迁移完成");
+                    logger.debug("IR节点数量: {}", irNodeList.size());
                 });
     }
 

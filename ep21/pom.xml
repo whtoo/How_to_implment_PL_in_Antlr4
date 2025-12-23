@@ -25,13 +25,31 @@
     
     <!-- 运行测试 -->
     <dependencies>
+        <!-- EP18: 栈式虚拟机 (运行时目标) -->
+        <dependency>
+            <groupId>org.teachfx</groupId>
+            <artifactId>ep18</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
 
+        <!-- EP18R: 寄存器虚拟机 (运行时目标) -->
+        <dependency>
+            <groupId>org.teachfx</groupId>
+            <artifactId>ep18r</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- JGraphT: 图算法库 (CFG, SSA等) -->
         <dependency>
             <groupId>org.jgrapht</groupId>
             <artifactId>jgrapht-core</artifactId>
             <version>${jgrapht.version}</version>
             <scope>compile</scope>
         </dependency>
+
+        <!-- JetBrains Annotations: 注解支持 -->
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>

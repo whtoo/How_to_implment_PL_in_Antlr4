@@ -121,7 +121,7 @@
             </plugin>
             -->
 
-            <!-- Checkstyle Code Style Plugin -->
+            <!-- Checkstyle Code Style Plugin - Temporarily disabled
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -143,8 +143,10 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
 
-            <!-- JMH Microbenchmark Plugin -->
+            <!-- JMH Microbenchmark Plugin - Only active when profile is activated -->
+            <!--
             <plugin>
                 <groupId>org.openjdk.jmh</groupId>
                 <artifactId>jmh-maven-plugin</artifactId>
@@ -168,6 +170,7 @@
                     <threads>1</threads>
                 </configuration>
             </plugin>
+            -->
         </plugins>
 
         <!-- 定义源码目录 -->

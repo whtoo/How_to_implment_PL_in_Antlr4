@@ -424,9 +424,9 @@ class MIRTest {
             public String toString() {
                 return value;
             }
-            
+
             @Override
-            public <S, E> E accept(org.teachfx.antlr4.ep21.ir.IRVisitor<S, E> visitor) {
+            public <S, E> S accept(org.teachfx.antlr4.ep21.ir.IRVisitor<S, E> visitor) {
                 return null;
             }
         };

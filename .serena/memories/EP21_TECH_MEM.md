@@ -285,9 +285,22 @@ private String getVariableName(VarSlot varSlot) {
   - `DuplicateEdgeTest.java`: 11个测试用例
 
 ### IR测试
-- `LIRNodeTest` - LIR节点测试 ✅ 223测试通过
-- `MIRNodeTest` - MIR节点测试
-- `IRConversionTest` - IR转换测试
+- `LIRNodeTest` - LIR节点基类测试 ✅ 434测试通过
+- `MIRNodeTest` - MIR节点基类测试 ✅ 395测试通过
+- `LIRInstructionTest` - LIR指令测试 ✅ 38测试通过 (2025-12-23新增)
+  - LIRBinaryOp二元运算指令测试 (17个测试)
+  - LIRUnaryOp一元运算指令测试 (3个测试)
+  - LIRCall函数调用指令测试 (5个测试)
+  - LIRJump无条件跳转指令测试 (4个测试)
+  - LIRCondJump条件跳转指令测试 (4个测试)
+  - LIRReturn返回指令测试 (5个测试)
+- `MIRToLIRConverterTest` - MIR到LIR转换器测试 ✅ 9测试通过 (2025-12-23新增)
+  - 基本转换测试 (3个测试)
+  - 表达式转换测试 (2个测试)
+  - LIR指令类型验证测试 (1个测试)
+  - 错误处理测试 (2个测试)
+  - 转换上下文测试 (1个测试)
+- `IRConversionTest` - IR转换测试 (占位符，待完善)
 
 ## 性能指标
 
@@ -357,10 +370,18 @@ mvn jacoco:report -pl ep21
   - [x] JMP指令支持 ✅
   - [x] 表达式重命名完善 ✅
   - [x] SSA验证器实现 ✅
-- [ ] 控制流优化
+- [x] 控制流优化 ✅ 2025-12-23 完成
   - [x] 常量传播/折叠 ✅ 2025-12-23 完成
   - [x] 公共子表达式消除 ✅ 2025-12-23 完成
-  - [ ] 死代码消除
+  - [x] 死代码消除 ✅ 2025-12-23 完成
+- [x] IR类型层次统一 (TASK-2.1.4) ✅ 2025-12-23 完成
+  - [x] 统一IRNode基类接口
+  - [x] 修复Expr/Stmt accept方法签名
+  - [x] 新增IRHierarchyTest测试套件 (12测试)
+- [x] 数据流分析框架重构 (TASK-3.1) ✅ 2025-12-23 完成
+  - [x] 移除死代码 (LiveVariableAnalyzer, DataFlowFramework)
+  - [x] 保留统一框架 (DataFlowAnalysis接口 + AbstractDataFlowAnalysis基类)
+  - [x] 验证LiveVariableAnalysis和ReachingDefinitionAnalysis工作正常
 - [ ] 寄存器分配
   - [ ] 图着色算法
   - [ ] 线性扫描
@@ -374,6 +395,50 @@ mvn jacoco:report -pl ep21
 - [ ] 自动并行化
 
 ## 版本历史
+
+- **v3.0** (2025-12-23): 数据流分析框架重构完成 (TASK-3.1)
+  - 移除死代码: `LiveVariableAnalyzer.java`, `DataFlowFramework.java`
+  - 保留统一框架:
+    - `DataFlowAnalysis<T, I extends IRNode>` 接口
+    - `AbstractDataFlowAnalysis<T, I extends IRNode>` 抽象基类
+    - `LiveVariableAnalysis` 活跃变量分析实现
+    - `ReachingDefinitionAnalysis` 到达定义分析实现
+  - 验证17个数据流分析测试全部通过
+  - 框架现在支持前向/后向数据流分析
+  - 所有396个测试全部通过
+
+- **v2.9** (2025-12-23): IR类型层次统一完成 (TASK-2.1.4)
+  - 增强`IRNode`基类，添加统一接口:
+    - `getComplexityLevel()` - 复杂度级别推断
+    - `isBasicBlockEntry()` - 基本块入口判断
+    - `getUsedVariables()` - 获取使用变量集合
+    - `getDefinedVariables()` - 获取定义变量集合
+    - `getIRNodeType()` - IR节点类型枚举
+  - 移除`IRNode`的抽象`accept()`方法，允许各子类定义自己的签名:
+    - `Expr.accept()` 返回 `E` (表达式类型)
+    - `Stmt.accept()` 返回 `S` (语句类型)
+    - `MIRNode` 提供 `accept(MIRVisitor)` 和 `accept(IRVisitor)`
+  - 移除死代码: `LiveVariableAnalyzer.java`, `DataFlowFramework.java`
+  - 新增`IRHierarchyTest.java`测试套件 (12个测试用例)
+  - 测试用例总数从384增至396
+  - 所有396个测试全部通过
+
+- **v2.8** (2025-12-23): MIR/LIR系统重构完成 (TASK-2.1)
+  - 新增6个LIR指令类:
+    - `LIRBinaryOp` - 二元运算指令 (ADD, SUB, MUL, DIV, MOD等)
+    - `LIRUnaryOp` - 一元运算指令 (NEG, NOT等)
+    - `LIRCall` - 函数调用指令
+    - `LIRJump` - 无条件跳转指令
+    - `LIRCondJump` - 条件跳转指令
+    - `LIRReturn` - 返回指令
+  - 新增`MIRToLIRConverter`转换器
+    - 实现MIRFunction到LIR指令序列的转换
+    - 支持MIRAssignStmt转换为LIRAssign
+    - 提供转换上下文管理（临时变量、标签生成）
+  - 新增`LIRInstructionTest`测试套件 (38个测试用例)
+  - 新增`MIRToLIRConverterTest`测试套件 (9个测试用例)
+  - 测试用例总数从337增至384
+  - 所有384个测试全部通过
 
 - **v2.0** (2025-12-22): 数据流分析框架实现
 - **v2.1** (2025-12-23): SSA重构完成，变量重命名优化

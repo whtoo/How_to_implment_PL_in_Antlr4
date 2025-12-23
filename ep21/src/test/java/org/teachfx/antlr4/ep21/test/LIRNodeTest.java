@@ -167,7 +167,7 @@ class LIRNodeTest {
             // LIRAssign覆盖了这些方法
             Operand mockTarget = new Operand() {
                 @Override
-                public <S, E> S accept(IRVisitor<S, E> visitor) {
+                public <S, E> E accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
 
@@ -179,7 +179,7 @@ class LIRNodeTest {
 
             Operand mockSource = new Operand() {
                 @Override
-                public <S, E> S accept(IRVisitor<S, E> visitor) {
+                public <S, E> E accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
 
@@ -351,7 +351,7 @@ class LIRNodeTest {
         void testLIRAssignInheritance() {
             Operand mockTarget = new Operand() {
                 @Override
-                public <S, E> S accept(IRVisitor<S, E> visitor) {
+                public <S, E> E accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
 
@@ -363,7 +363,7 @@ class LIRNodeTest {
 
             Operand mockSource = new Operand() {
                 @Override
-                public <S, E> S accept(IRVisitor<S, E> visitor) {
+                public <S, E> E accept(IRVisitor<S, E> visitor) {
                     return null;
                 }
 

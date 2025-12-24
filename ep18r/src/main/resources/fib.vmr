@@ -1,10 +1,10 @@
 .def main: args=0, locals=1
-    ; 测试 fib(8) = 21
+    ; 测试 fib(10) = 55
     ; ABI: 参数通过a0(r2)传递
-    li r2, 8         ; r2 = 8 (参数 n)
-    call fib         ; 调用 fib(8)
-    ; fib(8) 返回后，结果在 r2 中 (ABI: a0)
-    print r2         ; 打印结果 (应该输出 21)
+    li r2, 10        ; r2 = 10 (参数 n)
+    call fib         ; 调用 fib(10)
+    ; fib(10) 返回后，结果在 r2 中 (ABI: a0)
+    print r2         ; 打印结果 (应该输出 55)
     halt
 
 ; fib(n): 计算第n个fibonacci数

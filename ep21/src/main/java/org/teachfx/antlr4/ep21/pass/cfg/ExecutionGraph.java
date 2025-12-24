@@ -237,33 +237,65 @@ public class ExecutionGraph {
         return transformedCFG;
     }
 
+    /**
+     * 转换Fibonacci函数为迭代形式
+     *
+     * ⚠️ 技术债务: 此方法当前未实现CFG级转换
+     * 
+     * 实际的Fibonacci优化在代码生成阶段完成:
+     * - RegisterVMGenerator.TROHelper.generateFibonacciIterative()
+     * - 直接生成迭代式汇编代码，避免CFG复杂性
+     *
+     * 如需实现CFG级转换，需要:
+     * 1. 创建累加器变量 (a, b)
+     * 2. 生成while循环基本块
+     * 3. 实现累加器更新逻辑 (temp = a + b; a = b; b = temp)
+     * 4. 重建CFG边关系
+     *
+     * @return 原始CFG（未修改）
+     * @see RegisterVMGenerator.TROHelper#generateFibonacciIterative
+     * @deprecated 使用RegisterVMGenerator.TROHelper进行代码生成层优化
+     */
+    @Deprecated
     private CFG<IRNode> transformFibonacciIterative() {
-        logger.info("Transforming Fibonacci function using accumulator pattern");
-
-        // 当前版本：返回原始CFG
-        // 完整转换在代码生成阶段进行（StackVMGenerator/RegisterVMGenerator）
-        logger.info("Fibonacci transformation deferred to code generation phase");
-
+        logger.warn("CFG-level Fibonacci transformation is not implemented.");
+        logger.warn("Actual optimization is performed in RegisterVMGenerator.TROHelper during code generation.");
         return originalCFG;
     }
 
     /**
-     * 转换简单递归（单参数）
+     * 转换简单递归（单参数尾递归）
      *
-     * 当前版本返回原始CFG，完整转换在代码生成阶段进行
+     * ⚠️ 技术债务: 此方法当前未实现CFG级转换
+     * 
+     * 示例转换: factorial(n) → while(n > 1) { result *= n; n--; }
+     *
+     * @return 原始CFG（未修改）
+     * @deprecated 待实现 - 需要40-60小时工作量
      */
+    @Deprecated
     private CFG<IRNode> transformSimpleRecursive() {
-        logger.info("Simple recursive transformation deferred to code generation phase");
+        logger.warn("CFG-level simple recursive transformation is not implemented.");
+        logger.info("For factorial-like functions, consider implementing accumulator pattern:");
+        logger.info("  factorial_tr(n, acc) = n <= 1 ? acc : factorial_tr(n-1, n*acc)");
         return originalCFG;
     }
 
     /**
      * 转换复杂递归（多参数）
      *
-     * 当前版本返回原始CFG，完整转换在代码生成阶段进行
+     * ⚠️ 技术债务: 此方法当前未实现CFG级转换
+     * 
+     * 示例转换: gcd(a, b) → while(b != 0) { temp = a % b; a = b; b = temp; }
+     *
+     * @return 原始CFG（未修改）
+     * @deprecated 待实现 - 需要40-60小时工作量
      */
+    @Deprecated
     private CFG<IRNode> transformComplexRecursive() {
-        logger.info("Complex recursive transformation deferred to code generation phase");
+        logger.warn("CFG-level complex recursive transformation is not implemented.");
+        logger.info("For functions like gcd, consider implementing iterative version:");
+        logger.info("  gcd(a, b) { while(b != 0) { int temp = a % b; a = b; b = temp; } return a; }");
         return originalCFG;
     }
 

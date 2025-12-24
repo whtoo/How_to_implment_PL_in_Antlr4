@@ -81,7 +81,12 @@
       "Bash(powershell -Command:*)",
       "Skill(compiler-dev)",
       "mcp__web-search-prime__webSearchPrime",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "mcp__plugin_serena_serena__read_file",
+      "mcp__plugin_serena_serena__activate_project",
+      "mcp__plugin_serena_serena__search_for_pattern",
+      "mcp__plugin_serena_serena__replace_content",
+      "mcp__plugin_serena_serena__find_symbol"
     ]
   },
   "enableAllProjectMcpServers": true,

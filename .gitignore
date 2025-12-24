@@ -27,3 +27,4 @@ machinet.conf
 .checkstyle
 .checkstyle_suppressions.xml
 .jdtls-workspace
+mcp.json

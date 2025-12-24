@@ -3076,11 +3076,398 @@ mvn pmd:check
 
 ---
 
-**版本**: v1.8
+**版本**: v1.9
 **制定日期**: 2025-12-21
-**最后更新**: 2025-12-23
-**预计完成**: 2026-01-20
+**最后更新**: 2025-12-24
+**预计完成**: 2026-01-25
 **负责人**: EP21重构团队
+
+---
+
+## 阶段8: TODO转换任务 - 从代码注释到TDD任务 (预计: 6天) 🔄 [2025-12-24新增]
+
+### 概述
+
+**目标**: 将代码中的TODO注释转换为正式的TDD任务，确保所有未完成功能都有明确的测试和实现计划。
+
+**来源**: 通过搜索代码库中的TODO/FIXME/XXX注释，共发现**38个TODO**，分布在以下测试文件中：
+
+| 文件 | TODO数量 | 优先级 | 类别 |
+|------|---------|-------|------|
+| IRConversionTest.java | 20 | P1 | IR转换测试 |
+| TailRecursionOptimizerTest.java | 13 | P0 | 尾递归优化测试 |
+| FibonacciTailRecursionEndToEndTest.java | 5 | P0 | 端到端集成测试 |
+
+### 8.1 IR转换测试任务 (TASK-8.1)
+
+**文件**: `ep21/src/test/java/org/teachfx/antlr4/ep21/test/IRConversionTest.java`
+**TODO数量**: 20
+**优先级**: 中 (P1)
+**预计工作量**: 3-4天
+
+#### TDD测试用例设计
+
+```java
+@Nested
+@DisplayName("TASK-8.1: IR转换测试套件")
+class IRConversionTest {
+
+    // TASK-8.1.1: 实现AST到MIR转换测试
+    @Test
+    @DisplayName("Given: Cymbol AST，When: 转换为MIR，Then: 应生成正确的MIR节点")
+    void testASTToMIRConversion() {
+        // TODO: 实现具体的AST到MIR转换测试
+    }
+
+    // TASK-8.1.2: 实现AST表达式到MIR表达式的转换测试
+    @Test
+    @DisplayName("Given: Cymbol表达式AST，When: 转换为MIR表达式，Then: 类型信息应保持")
+    void testExprASTToMIRExprConversion() {
+        // TODO: 实现AST表达式到MIR表达式的转换测试
+    }
+
+    // TASK-8.1.3: 实现AST语句到MIR语句的转换测试
+    @Test
+    @DisplayName("Given: Cymbol语句AST，When: 转换为MIR语句，Then: 语义应保持")
+    void testStmtASTToMIRStmtConversion() {
+        // TODO: 实现AST语句到MIR语句的转换测试
+    }
+
+    // TASK-8.1.4: 实现语义保持性测试
+    @Test
+    @DisplayName("Given: 优化前后代码，When: 执行，Then: 结果应一致")
+    void testSemanticPreservation() {
+        // TODO: 实现语义保持性测试
+    }
+
+    // TASK-8.1.5: 实现MIR到LIR转换测试
+    @Test
+    @DisplayName("Given: MIR IR，When: 转换为LIR，Then: 应生成正确的LIR指令序列")
+    void testMIRToLIRConversion() {
+        // TODO: 实现MIR到LIR转换测试
+    }
+
+    // TASK-8.1.6: 实现MIR表达式到LIR操作数的转换测试
+    @Test
+    @DisplayName("Given: MIR表达式，When: 转换为LIR操作数，Then: 应正确分解复杂表达式")
+    void testMIRExprToLIROperandConversion() {
+        // TODO: 实现MIR表达式到LIR操作数的转换测试
+    }
+
+    // TASK-8.1.7: 实现指令选择优化测试
+    @Test
+    @DisplayName("Given: LIR IR，When: 指令选择优化，Then: 应选择最优指令")
+    void testInstructionSelection() {
+        // TODO: 实现指令选择优化测试
+    }
+
+    // TASK-8.1.8: 实现寄存器分配提示测试
+    @Test
+    @DisplayName("Given: LIR IR，When: 寄存器分配，Then: 应正确分配寄存器")
+    void testRegisterAllocationHints() {
+        // TODO: 实现寄存器分配提示测试
+    }
+
+    // TASK-8.1.9: 实现端到端转换测试
+    @Test
+    @DisplayName("Given: Cymbol源代码，When: 完整转换，Then: 应生成可执行字节码")
+    void testEndToEndConversion() {
+        // TODO: 实现端到端转换测试
+    }
+
+    // TASK-8.1.10: 实现复杂控制流转换测试
+    @Test
+    @DisplayName("Given: 复杂控制流代码，When: 转换，Then: CFG应保持正确")
+    void testComplexControlFlowConversion() {
+        // TODO: 实现复杂控制流转换测试
+    }
+
+    // TASK-8.1.11: 实现嵌套作用域转换测试
+    @Test
+    @DisplayName("Given: 嵌套作用域代码，When: 转换，Then: 作用域信息应保持")
+    void testNestedScopeConversion() {
+        // TODO: 实现嵌套作用域转换测试
+    }
+
+    // TASK-8.1.12: 实现函数调用转换测试
+    @Test
+    @DisplayName("Given: 函数调用代码，When: 转换，Then: 调用约定应正确")
+    void testFunctionCallConversion() {
+        // TODO: 实现函数调用转换测试
+    }
+
+    // TASK-8.1.13: 实现转换器配置测试
+    @Test
+    @DisplayName("Given: 不同配置，When: 转换，Then: 应按配置转换")
+    void testConverterConfiguration() {
+        // TODO: 实现转换器配置测试
+    }
+
+    // TASK-8.1.14: 实现优化级别影响测试
+    @Test
+    @DisplayName("Given: 不同优化级别，When: 转换，Then: 优化效果应符合预期")
+    void testOptimizationLevelImpact() {
+        // TODO: 实现优化级别影响测试
+    }
+
+    // TASK-8.1.15: 实现目标架构处理测试
+    @Test
+    @DisplayName("Given: 不同目标架构，When: 转换，Then: 应生成目标特定代码")
+    void testTargetArchitectureHandling() {
+        // TODO: 实现目标架构处理测试
+    }
+
+    // TASK-8.1.16: 实现无效输入处理测试
+    @Test
+    @DisplayName("Given: 无效输入，When: 转换，Then: 应优雅处理")
+    void testInvalidInputHandling() {
+        // TODO: 实现无效输入处理测试
+    }
+
+    // TASK-8.1.17: 实现错误报告测试
+    @Test
+    @DisplayName("Given: 转换失败，When: 报告错误，Then: 错误信息应清晰")
+    void testErrorReporting() {
+        // TODO: 实现错误报告测试
+    }
+
+    // TASK-8.1.18: 实现极端情况测试
+    @Test
+    @DisplayName("Given: 极端输入，When: 转换，Then: 应稳定处理")
+    void testEdgeCases() {
+        // TODO: 实现极端情况测试
+    }
+
+    // TASK-8.1.19: 实现时间复杂度测试
+    @Test
+    @DisplayName("Given: 大规模代码，When: 转换，Then: 时间应在可接受范围")
+    void testTimeComplexity() {
+        // TODO: 实现时间复杂度测试
+    }
+
+    // TASK-8.1.20: 实现空间复杂度测试
+    @Test
+    @DisplayName("Given: 大规模代码，When: 转换，Then: 空间使用应合理")
+    void testSpaceComplexity() {
+        // TODO: 实现空间复杂度测试
+    }
+
+    // TASK-8.1.21: 实现可扩展性测试
+    @Test
+    @DisplayName("Given: 新功能需求，When: 扩展，Then: 应易于添加")
+    void testScalability() {
+        // TODO: 实现可扩展性测试
+    }
+}
+```
+
+### 8.2 尾递归优化测试任务 (TASK-8.2)
+
+**文件**: `ep21/src/test/java/org/teachfx/antlr4/ep21/pass/cfg/TailRecursionOptimizerTest.java`
+**TODO数量**: 13
+**优先级**: 高 (P0) - 核心功能
+**预计工作量**: 2-3天
+**依赖**: TASK-7 (尾递归优化基础框架)
+
+#### TDD测试用例设计
+
+```java
+@Nested
+@DisplayName("TASK-8.2: 尾递归优化测试套件")
+class TailRecursionOptimizerTest {
+
+    // TASK-8.2.1: 实现Fibonacci模式识别测试
+    @Test
+    @DisplayName("Given: Fibonacci函数，When: 检测模式，Then: 应识别为Fibonacci模式")
+    void testFibonacciPatternDetection() {
+        // TODO: 实现测试
+    }
+
+    // TASK-8.2.2: 实现直接尾递归检测测试
+    @Test
+    @DisplayName("Given: 尾递归函数，When: 检测，Then: 应识别为可优化")
+    void testDirectTailRecursionDetection() {
+        // TODO: 实现测试
+    }
+
+    // TASK-8.2.3: 实现尾调用位置分析测试
+    @Test
+    @DisplayName("Given: 函数代码，When: 分析尾调用位置，Then: 位置应准确")
+    void testTailCallPositionAnalysis() {
+        // TODO: 实现测试
+    }
+
+    // TASK-8.2.4: 实现递归调用计数测试
+    @Test
+    @DisplayName("Given: 递归函数，When: 计数递归调用，Then: 数量应正确")
+    void testRecursiveCallCounting() {
+        // TODO: 实现测试
+    }
+
+    // TASK-8.2.5: 实现栈模拟转换测试
+    @Test
+    @DisplayName("Given: 递归CFG，When: 栈模拟转换，Then: 应生成迭代式CFG")
+    void testStackSimulationTransformation() {
+        // TODO: 实现测试 - 需要先实现StackSimulator
+    }
+
+    // TASK-8.2.6: 实现累加器转换测试
+    @Test
+    @DisplayName("Given: Fibonacci函数，When: 累加器转换，Then: 应生成尾递归形式")
+    void testAccumulatorTransformation() {
+        // TODO: 实现测试 - 需要先实现AccumulatorTransformer
+    }
+
+    // TASK-8.2.7: 实现转换正确性验证测试
+    @Test
+    @DisplayName("Given: 优化后代码，When: 执行，Then: 结果应与原始代码一致")
+    void testTransformationCorrectness() {
+        // TODO: 实现测试
+    }
+
+    // TASK-8.2.8: 实现CFG结构测试
+    @Test
+    @DisplayName("Given: 转换后CFG，When: 分析结构，Then: 应符合预期")
+    void testCFGStructure() {
+        // TODO: 实现测试
+    }
+
+    // TASK-8.2.9: 实现语义保持测试
+    @Test
+    @DisplayName("Given: 优化前后代码，When: 对比语义，Then: 应等价")
+    void testSemanticPreservation() {
+        // TODO: 实现测试
+    }
+
+    // TASK-8.2.10: 实现性能测试
+    @Test
+    @DisplayName("Given: 优化前后代码，When: 对比性能，Then: 优化后应更快")
+    void testPerformance() {
+        // TODO: 实现测试
+    }
+
+    // TASK-8.2.11: 实现集成测试
+    @Test
+    @DisplayName("Given: 完整编译流程，When: 优化Fibonacci，Then: 应成功执行")
+    void testIntegration() {
+        // TODO: 实现测试 - 需要设置完整的编译测试环境
+    }
+
+    // TASK-8.2.12: 实现边界情况测试
+    @Test
+    @DisplayName("Given: 边界情况，When: 处理，Then: 应稳定")
+    void testEdgeCases() {
+        // TODO: 实现测试
+    }
+
+    // TASK-8.2.13: 实现错误处理测试
+    @Test
+    @DisplayName("Given: 错误输入，When: 处理，Then: 应优雅降级")
+    void testErrorHandling() {
+        // TODO: 实现测试
+    }
+}
+```
+
+### 8.3 端到端集成测试任务 (TASK-8.3)
+
+**文件**: `ep21/src/test/java/org/teachfx/antlr4/ep21/pass/cfg/FibonacciTailRecursionEndToEndTest.java`
+**TODO数量**: 5
+**优先级**: 高 (P0) - 系统级验证
+**预计工作量**: 1-2天
+**依赖**: TASK-8.2 (尾递归优化测试)
+
+#### TDD测试用例设计
+
+```java
+@Nested
+@DisplayName("TASK-8.3: 端到端集成测试套件")
+class FibonacciTailRecursionEndToEndTest {
+
+    // TASK-8.3.1: 实现IR级集成测试
+    @Test
+    @DisplayName("Given: Cymbol源码，When: 完整编译，Then: IR应正确")
+    void testIRLevelIntegration() {
+        // TODO: 集成完整的编译pipeline
+    }
+
+    // TASK-8.3.2: 实现CFG级集成测试
+    @Test
+    @DisplayName("Given: Cymbol源码，When: CFG优化，Then: 结构应正确")
+    void testCFGLevelIntegration() {
+        // TODO: 集成完整的编译pipeline
+    }
+
+    // TASK-8.3.3: 实现VMR代码生成测试
+    @Test
+    @DisplayName("Given: 优化后IR，When: 生成VMR，Then: 格式应正确")
+    void testVMRCodeGeneration() {
+        // TODO: 生成VMR代码并验证
+    }
+
+    // TASK-8.3.4: 实现VM执行测试
+    @Test
+    @DisplayName("Given: VMR代码，When: 在EP18R VM执行，Then: fib(10)应返回55")
+    void testVMExecution() {
+        // TODO: 验证VM执行结果
+    }
+
+    // TASK-8.3.5: 实现完整系统测试
+    @Test
+    @DisplayName("Given: fib(100)程序，When: 执行，Then: 不应栈溢出")
+    void testFullSystem() {
+        // TODO: 构建测试CFG并验证转换
+    }
+}
+```
+
+### 8.4 验收标准
+
+#### 第一轮: 功能正确性测试
+- [ ] 通过所有38个测试用例
+- [ ] 测试覆盖率 ≥90%
+- [ ] 无编译警告
+
+#### 第二轮: 性能基准测试
+- [ ] IR转换时间 <编译时间的20%
+- [ ] 端到端编译时间可接受
+
+#### 第三轮: 压力测试
+- [ ] 处理大规模代码(>10000行)
+- [ ] 复杂递归嵌套(>10层)
+
+#### 第四轮: 对比测试
+- [ ] 与手写代码性能对比
+
+### 8.5 实施优先级
+
+**立即执行** (P0):
+- TASK-8.2: 尾递归优化测试 (核心功能)
+- TASK-8.3: 端到端集成测试 (系统验证)
+
+**高优先级** (P1):
+- TASK-8.1: IR转换测试 (基础功能)
+
+### 8.6 更新项目看板
+
+```mermaid
+kanban
+  title EP21 TODO转换任务看板 (v1.9)
+
+  column '🔄 进行中'
+    'TASK-8: TODO转换任务<当前>'
+    'TASK-8.1: IR转换测试 (20个TODO)<当前>'
+
+  column '⏸️ 未开始'
+    'TASK-8.2: 尾递归优化测试 (13个TODO)'
+    'TASK-8.3: 端到端集成测试 (5个TODO)'
+```
+
+### 8.7 更新版本历史
+
+| 变更 | 版本 | 日期 | 说明 |
+|------|------|------|------|
+| TODO转换任务 | v1.9 | 2025-12-24 | 新增阶段8: TODO转换任务，38个TODO转换为TDD任务 |
 
 ---
 *本计划是EP21重构工作的指导文档，所有重构活动应遵循本计划。计划将根据实际情况进行适当调整。*

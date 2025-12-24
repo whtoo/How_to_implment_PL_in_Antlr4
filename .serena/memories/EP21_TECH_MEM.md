@@ -980,6 +980,58 @@ BUILD SUCCESS
 
 ---
 
+## 2025-12-24 诚实状态回顾：尾递归优化真实实现状态
+
+### 核心发现
+
+**EP21尾递归优化(TRO)的真实完成度: 60%** (而非之前记录的100%)
+
+### 实际完成状态
+
+| 组件 | 状态 | 完成度 |
+|------|------|--------|
+| TailRecursionOptimizer | 🟡 检测完成 | 80% |
+| ExecutionGraph | 🔴 仅框架 | 30% |
+| IRInstructionBuilder | 🟢 完成 | 100% |
+| StackFrame | 🟢 完成 | 100% |
+| CFGMutableBuilder | 🟢 完成 | 100% |
+| RegisterVMGenerator.TROHelper | 🟢 完成 | 100% |
+
+### 关键代码证据
+
+**ExecutionGraph.java** - 所有transform方法返回原始CFG:
+```java
+private CFG<IRNode> transformFibonacciIterative() {
+    logger.info("Fibonacci transformation deferred to code generation phase");
+    return originalCFG;  // ❌ 未实际转换
+}
+```
+
+### 实现路径对比
+
+| 维度 | Path A: IR层CFG转换 | Path B: 代码生成层优化 |
+|------|---------------------|----------------------|
+| 当前状态 | 🔴 未实现 | ✅ **已实现** |
+| 工作量 | 40-60小时 | ✅ 已完成 |
+| 推荐用途 | 编译器研究 | 实际编译器项目 |
+
+**当前选择**: Path B (代码生成层优化) ✅
+
+### 技术债务
+
+1. ExecutionGraph.transform()方法返回原始CFG (高)
+2. Assign.withExpr()使用反射绕过类型系统 (中)
+3. 文档不一致性 (高)
+
+### 推荐决策
+
+**选项1**: 接受Path B - 实用性强，测试通过
+**选项2**: 完成Path A - 学术价值高，需40-60小时
+
+**当前推荐**: 选项1
+
+---
+
 ## 2025-12-23 深夜更新：尾递归优化核心框架实现 (Option 2: Full CFG API Adaptation)
 
 ### 实现方案总览

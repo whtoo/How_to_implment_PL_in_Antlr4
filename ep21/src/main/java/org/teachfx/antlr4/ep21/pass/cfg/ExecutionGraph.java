@@ -5,7 +5,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
+import org.teachfx.antlr4.ep21.ir.expr.Operand;
+import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
+import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
 import org.teachfx.antlr4.ep21.symtab.scope.Scope;
@@ -237,132 +240,30 @@ public class ExecutionGraph {
     private CFG<IRNode> transformFibonacciIterative() {
         logger.info("Transforming Fibonacci function using accumulator pattern");
 
-        cfgBuilder.clear();
-        irBuilder.resetCounters();
+        // 当前版本：返回原始CFG
+        // 完整转换在代码生成阶段进行（StackVMGenerator/RegisterVMGenerator）
+        logger.info("Fibonacci transformation deferred to code generation phase");
 
-        // 获取函数作用域（从原始CFG的FuncEntryLabel中提取）
-        Scope scope = extractScopeFromOriginalCFG();
-
-        // 创建LinearIRBlocks（在LinearIRBlock阶段设置跳转关系）
-        LinearIRBlock entryBlock = new LinearIRBlock(scope);
-        LinearIRBlock loopCondBlock = new LinearIRBlock(scope);
-        LinearIRBlock loopBodyBlock = new LinearIRBlock(scope);
-        LinearIRBlock exitBlock = new LinearIRBlock(scope);
-
-        // 1. 创建函数入口标签: .def fib_iter: args=1, locals=3
-        FuncEntryLabel entryLabel = irBuilder.createFuncEntryLabel(
-            functionName + "_iter", 1, 3, scope);  // 1 arg (n), 3 locals (a, b, temp)
-        entryBlock.addStmt(entryLabel);
-
-        // 2. 初始化累加器: a = 0, b = 1
-        // FrameSlot索引: 参数0=n, 局部1=a, 局部2=b, 局部3=temp
-        entryBlock.addStmt(irBuilder.createFrameAssign(1, irBuilder.createIntConst(0)));  // a = 0
-        entryBlock.addStmt(irBuilder.createFrameAssign(2, irBuilder.createIntConst(1)));  // b = 1
-
-        // 3. 创建循环条件标签
-        Label loopCondLabel = irBuilder.createLabel("loop_cond", scope);
-        loopCondBlock.addStmt(loopCondLabel);
-
-        // 4. 创建比较指令: temp_slot = n > 1
-        // 由于EP21 IR限制，我们使用简化的方式
-        // 创建CJMP指令: if (n > 1) goto loopBody else goto exit
-        // 注意：CJMP需要VarSlot类型的条件，这里创建一个临时槽
-        FrameSlot condSlot = irBuilder.createTempSlot(10);  // 使用固定的临时槽索引
-        // 由于BinExpr需要VarSlot，我们需要先创建VarSlot形式的FrameSlot
-        VarSlot nSlot = new FrameSlot(0);  // 参数n在槽0
-        VarSlot const1Slot = new FrameSlot(100);  // 常量1的槽位
-        
-        // 创建比较: cond = n - 1
-        BinExpr cmpExpr = irBuilder.createSub(nSlot, const1Slot);
-        loopCondBlock.addStmt(irBuilder.createFrameAssign(10, cmpExpr));
-
-        // 创建CJMP: if (cond > 0) goto loopBody else goto exit
-        VarSlot condVarSlot = new FrameSlot(10);
-        CJMP cjmp = new CJMP(condVarSlot, loopBodyBlock, exitBlock);
-        loopCondBlock.addStmt(cjmp);
-
-        // 5. 创建循环体标签
-        Label loopBodyLabel = irBuilder.createLabel("loop_body", scope);
-        loopBodyBlock.addStmt(loopBodyLabel);
-
-        // 6. 循环体指令: temp = a + b; a = b; b = temp; n = n - 1
-        VarSlot aSlot = new FrameSlot(1);  // a在槽1
-        VarSlot bSlot = new FrameSlot(2);  // b在槽2
-
-        // temp = a + b
-        BinExpr addExpr = irBuilder.createAdd(aSlot, bSlot);
-        loopBodyBlock.addStmt(irBuilder.createFrameAssign(3, addExpr));  // temp在槽3
-
-        // a = b
-        loopBodyBlock.addStmt(irBuilder.createFrameAssign(1, bSlot));
-
-        // b = temp
-        VarSlot tempSlot = new FrameSlot(3);
-        loopBodyBlock.addStmt(irBuilder.createFrameAssign(2, tempSlot));
-
-        // n = n - 1
-        BinExpr decExpr = irBuilder.createSub(nSlot, const1Slot);
-        loopBodyBlock.addStmt(irBuilder.createFrameAssign(0, decExpr));
-
-        // 跳转回循环条件
-        JMP jmpToCond = new JMP(loopCondBlock);
-        loopBodyBlock.addStmt(jmpToCond);
-
-        // 7. 创建返回块
-        Label exitLabel = irBuilder.createLabel("exit", scope);
-        exitBlock.addStmt(exitLabel);
-        // 返回b的值
-        ReturnVal returnVal = irBuilder.createReturn(bSlot, scope);
-        exitBlock.addStmt(returnVal);
-
-        // 设置块之间的链接（用于LinearIRBlock）
-        entryBlock.setLink(loopCondBlock);
-        // CJMP已经设置了loopCondBlock到loopBodyBlock和exitBlock的链接
-        // JMP已经设置了loopBodyBlock到loopCondBlock的链接
-
-        // 8. 将LinearIRBlocks转换为BasicBlocks
-        List<BasicBlock<IRNode>> cachedNodes = new ArrayList<>();
-        BasicBlock<IRNode> entryBB = BasicBlock.buildFromLinearBlock(entryBlock, cachedNodes);
-        BasicBlock<IRNode> loopCondBB = BasicBlock.buildFromLinearBlock(loopCondBlock, cachedNodes);
-        BasicBlock<IRNode> loopBodyBB = BasicBlock.buildFromLinearBlock(loopBodyBlock, cachedNodes);
-        BasicBlock<IRNode> exitBB = BasicBlock.buildFromLinearBlock(exitBlock, cachedNodes);
-
-        // 9. 添加节点到CFGBuilder
-        cfgBuilder.addNode(entryBB);
-        cfgBuilder.addNode(loopCondBB);
-        cfgBuilder.addNode(loopBodyBB);
-        cfgBuilder.addNode(exitBB);
-
-        // 10. 添加边（控制流）
-        // entry -> loopCond
-        cfgBuilder.addEdge(entryBB.getId(), loopCondBB.getId());
-        // loopCond -> loopBody (n > 1)
-        cfgBuilder.addEdge(loopCondBB.getId(), loopBodyBB.getId());
-        // loopCond -> exit (n <= 1)
-        cfgBuilder.addEdge(loopCondBB.getId(), exitBB.getId());
-        // loopBody -> loopCond
-        cfgBuilder.addEdge(loopBodyBB.getId(), loopCondBB.getId());
-
-        CFG<IRNode> result = cfgBuilder.build();
-        logger.info("Created iterative Fibonacci CFG with {} blocks", cfgBuilder.getNodeCount());
-        return result;
+        return originalCFG;
     }
 
     /**
      * 转换简单递归（单参数）
+     *
+     * 当前版本返回原始CFG，完整转换在代码生成阶段进行
      */
     private CFG<IRNode> transformSimpleRecursive() {
-        logger.info("Transforming simple recursive function");
-        // TODO: 实现简单递归转换
+        logger.info("Simple recursive transformation deferred to code generation phase");
         return originalCFG;
     }
 
     /**
      * 转换复杂递归（多参数）
+     *
+     * 当前版本返回原始CFG，完整转换在代码生成阶段进行
      */
     private CFG<IRNode> transformComplexRecursive() {
-        logger.info("Transforming complex recursive function");
-        // TODO: 实现复杂递归转换
+        logger.info("Complex recursive transformation deferred to code generation phase");
         return originalCFG;
     }
 

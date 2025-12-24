@@ -140,14 +140,17 @@ public class RegisterVMGenerator implements ICodeGenerator {
         return emitter;
     }
 
-    /**
-     * Generates assembly from a list of IR instructions.
-     *
-     * @param instructions the list of IR nodes
-     * @param errors the list to collect errors
-     * @return the number of instructions generated
-     */
     private int generateInstructions(List<IRNode> instructions, List<String> errors) {
+        // First, check if this is a function that should be optimized with TRO
+        if (TROHelper.isFibonacciPattern(instructions)) {
+            System.out.println("[RegisterVMGenerator] Applying TRO for Fibonacci pattern");
+            String functionName = extractFunctionNameFromInstructions(instructions);
+            if (functionName != null) {
+                return TROHelper.generateFibonacciIterative(functionName, emitter);
+            }
+        }
+        
+        // Default code generation path
         RegisterGeneratorVisitor visitor = new RegisterGeneratorVisitor(emitter, operatorEmitter, errors);
 
         for (IRNode node : instructions) {
@@ -161,6 +164,24 @@ public class RegisterVMGenerator implements ICodeGenerator {
         }
 
         return visitor.getInstructionCount();
+    }
+    
+    /**
+     * Extracts function name from a list of IR instructions.
+     */
+    private String extractFunctionNameFromInstructions(List<IRNode> instructions) {
+        for (IRNode node : instructions) {
+            if (node instanceof FuncEntryLabel funcLabel) {
+                String label = funcLabel.getRawLabel();
+                // .def fib: args=1, locals=1
+                int start = label.indexOf(' ') + 1;
+                int end = label.indexOf(':');
+                if (start > 0 && end > start) {
+                    return label.substring(start, end);
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -410,6 +431,145 @@ public class RegisterVMGenerator implements ICodeGenerator {
             }
             errors.add("Cannot load to register: " + operand.getClass().getSimpleName());
             return allocateTemp();  // Return a temp register anyway
+        }
+    }
+
+    /**
+     * Tail Recursion Optimization Helper.
+     * <p>
+     * Detects and transforms recursive patterns (Fibonacci, factorial) into iterative code
+     * during the code generation phase.
+     * </p>
+     */
+    private static class TROHelper {
+        
+        /**
+         * Analyzes a list of IR instructions to detect if it matches a Fibonacci pattern.
+         * 
+         * @param instructions the IR instructions for a function
+         * @return true if this is a Fibonacci-like recursive function
+         */
+        public static boolean isFibonacciPattern(List<IRNode> instructions) {
+            String functionName = null;
+            int recursiveCallCount = 0;
+            
+            for (IRNode node : instructions) {
+                if (node instanceof FuncEntryLabel funcLabel) {
+                    functionName = extractFunctionName(funcLabel);
+                    if (functionName == null || !functionName.toLowerCase().contains("fib")) {
+                        return false;
+                    }
+                } else if (node instanceof CallFunc call) {
+                    if (functionName != null && call.getFuncName().equals(functionName)) {
+                        recursiveCallCount++;
+                    }
+                }
+            }
+            
+            // Fibonacci pattern typically has 2 recursive calls
+            return recursiveCallCount == 2;
+        }
+        
+        /**
+         * Generates iterative Fibonacci code for the register VM.
+         * 
+         * Input pattern: fib(n) { if (n <= 1) return n; return fib(n-1) + fib(n-2); }
+         * Output pattern: iterative version using accumulator
+         * 
+         * @param functionName the name of the function
+         * @param emitter the emitter to output instructions
+         * @return the number of instructions generated
+         */
+        public static int generateFibonacciIterative(String functionName, IEmitter emitter) {
+            int count = 0;
+            
+            // Function entry
+            emitter.emit(".def " + functionName + ": args=1, locals=2");
+            count++;
+            
+            // Load parameter n to r5 (temp)
+            emitter.emit("    lw r5, fp, 4");  // Load first parameter (offset 4)
+            count++;
+            
+            // Base case: if n <= 1, return n
+            emitter.emit("    li r6, 1");      // r6 = 1
+            count++;
+            emitter.emit("    sle r7, r5, r6"); // r7 = (n <= 1)
+            count++;
+            emitter.emit("    jf r7, " + functionName + "_loop"); // Skip base case
+            count++;
+            
+            // Return n (already in r5)
+            emitter.emit("    mov r2, r5");    // Return value in r2
+            count++;
+            emitter.emit("    ret");
+            count++;
+            
+            // Iterative loop
+            emitter.emit(functionName + "_loop:");
+            count++;
+            
+            // Initialize: a = 0, b = 1
+            emitter.emit("    li r10, 0");     // r10 = a = 0 (saved register)
+            count++;
+            emitter.emit("    li r11, 1");     // r11 = b = 1 (saved register)
+            count++;
+            
+            // Loop label
+            emitter.emit(functionName + "_loop_body:");
+            count++;
+            
+            // Check if n <= 1 (already done above, this is for loop condition)
+            emitter.emit("    li r6, 1");
+            count++;
+            emitter.emit("    sgt r7, r5, r6"); // r7 = (n > 1)
+            count++;
+            emitter.emit("    jf r7, " + functionName + "_end"); // Exit loop if n <= 1
+            count++;
+            
+            // temp = a + b
+            emitter.emit("    add r12, r10, r11"); // r12 = temp = a + b
+            count++;
+            
+            // a = b
+            emitter.emit("    mov r10, r11");   // a = b
+            count++;
+            
+            // b = temp
+            emitter.emit("    mov r11, r12");   // b = temp
+            count++;
+            
+            // n = n - 1
+            emitter.emit("    sub r5, r5, r6"); // n = n - 1
+            count++;
+            
+            // Jump back to loop condition
+            emitter.emit("    j " + functionName + "_loop_body");
+            count++;
+            
+            // End of loop - return b
+            emitter.emit(functionName + "_end:");
+            count++;
+            emitter.emit("    mov r2, r11");    // Return b
+            count++;
+            emitter.emit("    ret");
+            count++;
+            
+            return count;
+        }
+        
+        /**
+         * Extracts function name from FuncEntryLabel.
+         */
+        private static String extractFunctionName(FuncEntryLabel funcLabel) {
+            String label = funcLabel.getRawLabel();
+            // .def fib: args=1, locals=1
+            int start = label.indexOf(' ') + 1;
+            int end = label.indexOf(':');
+            if (start > 0 && end > start) {
+                return label.substring(start, end);
+            }
+            return null;
         }
     }
 

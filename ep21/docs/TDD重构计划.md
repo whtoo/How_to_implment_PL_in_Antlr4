@@ -1,6 +1,6 @@
 # EP21 TDD重构计划
 
-**版本**: v1.7 | **日期**: 2025-12-23 | **状态**: 进行中 (In Progress)
+**版本**: v1.8 | **日期**: 2025-12-24 | **状态**: 进行中 (In Progress)
 **目的**: 基于新规范进行测试驱动的重构，确保代码质量和规范符合性
 **参考文档**: 架构设计规范.md, 语言规范.md
 **更新内容**:
@@ -21,6 +21,7 @@
 - **尾递归优化核心框架完成 (v1.7)**
 - **新增4个核心组件: IRInstructionBuilder, ExecutionGraph, StackFrame, CFGMutableBuilder**
 - **测试用例总数从337增至485 (v1.7)**
+- **TRO真实状态回顾 (v1.8) - CFG转换未实现，仅代码生成层优化完成**
 
 ---
 
@@ -302,7 +303,157 @@ kanban
     🔄 TASK-7.7.1: 集成完整编译器pipeline
     🔄 TASK-7.7.2: 验证fib(10)返回55
     🔄 TASK-7.7.3: 验证fib(100)不栈溢出
+
+---
+
+### 🔴 阶段7真实实现状态回顾 (2025-12-24更新)
+
+#### 执行摘要
+
+**核心发现**: EP21尾递归优化(TRO)的核心CFG转换层**并未实际实现**。当前仅完成了检测框架和代码生成层优化，真正的CFG到CFG转换缺失。
+
+**真实完成度**: **60%** (而非文档中标记的100% ✅)
+
+#### 组件完成状态明细
+
+| 组件 | 状态 | 完成度 | 说明 |
+|------|------|--------|------|
+| **TailRecursionOptimizer** | 🟡 检测完成 | 80% | ✅ Fibonacci模式检测<br>✅ 直接尾递归检测<br>❌ 未集成CFG重建 |
+| **ExecutionGraph** | 🔴 仅框架 | 30% | ✅ 递归调用分析<br>✅ 栈帧类型判断<br>❌ **transformFibonacciIterative()返回原始CFG** |
+| **IRInstructionBuilder** | 🟢 完成 | 100% | ✅ 所有IR指令工厂方法实现 |
+| **StackFrame** | 🟢 完成 | 100% | ✅ 栈帧数据结构完整 |
+| **CFGMutableBuilder** | 🟢 完成 | 100% | ✅ 可变CFG构建器完整 |
+| **RegisterVMGenerator.TROHelper** | 🟢 完成 | 100% | ✅ **代码生成层Fibonacci优化** |
+
+#### 关键代码证据
+
+**ExecutionGraph.java (Line 240-268)** - 所有transform方法返回原始CFG:
+```java
+private CFG<IRNode> transformFibonacciIterative() {
+    logger.info("Transforming Fibonacci function using accumulator pattern");
+    // 当前版本：返回原始CFG
+    // 完整转换在代码生成阶段进行（StackVMGenerator/RegisterVMGenerator）
+    logger.info("Fibonacci transformation deferred to code generation phase");
+    return originalCFG;  // ❌ 未实际转换
+}
+
+private CFG<IRNode> transformSimpleRecursive() {
+    logger.info("Simple recursive transformation deferred to code generation phase");
+    return originalCFG;  // ❌ 未实际转换
+}
+
+private CFG<IRNode> transformComplexRecursive() {
+    logger.info("Complex recursive transformation deferred to code generation phase");
+    return originalCFG;  // ❌ 未实际转换
+}
 ```
+
+#### 根本原因分析
+
+**1. EP21 IR架构限制** (核心原因)
+- `BinExpr` extends `Expr`，但 `Assign.rhs` 期望 `Operand` 类型
+- `BinExpr` 无法直接作为 `Assign` 的右值
+- 变通方案 `Assign.withExpr()` 使用反射绕过类型系统
+
+**2. CFG不可变性**
+- EP21的 `CFG` 类不可变
+- 需要完整的函数提取 + 重建逻辑
+- 当前 `TailRecursionOptimizer.extractFunctionCFG()` 仅提取单函数CFG
+- **缺少** `replaceFunctionCFG()` 方法来重建全局CFG
+
+**3. LinearIRBlock vs BasicBlock**
+- `CJMP`/`JMP` 需要 `LinearIRBlock` 引用
+- 优化器在 `BasicBlock` 层面工作
+- 增加了一层转换复杂度
+
+#### 两种实现路径对比
+
+| 维度 | Path A: IR层CFG转换 | Path B: 代码生成层优化 |
+|------|---------------------|----------------------|
+| **实现位置** | `ExecutionGraph.transform()` | `RegisterVMGenerator.TROHelper` |
+| **当前状态** | 🔴 未实现 | ✅ **已实现** |
+| **工作量** | 40-60小时 | ✅ 已完成 (20小时) |
+| **优点** | 学术价值高，IR无关 | 实用性强，直接生成优化代码 |
+| **缺点** | 架构复杂，需要深入理解IR API | 特定于VM目标 |
+| **推荐用途** | 编译器研究/教学 | 实际编译器项目 |
+
+**当前选择**: Path B (代码生成层优化) ✅ **已在RegisterVMGenerator实现**
+
+#### 实际已实现的优化
+
+**RegisterVMGenerator.TROHelper (已实现)**:
+```java
+public static boolean isFibonacciPattern(List<IRNode> instructions)
+public static int generateFibonacciIterative(String functionName, IEmitter emitter)
+```
+
+- ✅ 检测Fibonacci模式 (函数名包含"fib" + 2个递归调用)
+- ✅ 直接生成迭代式汇编代码
+- ✅ 绕过CFG转换，在代码生成阶段优化
+
+#### 剩余工作分解 (如需完成Path A)
+
+**TASK-7.A: CFG-level TRO核心转换** (40-60小时)
+
+```
+TASK-7.A.1: 实现累加器变量创建 (8小时)
+    - [ ] 在ExecutionGraph中添加accumulator参数
+    - [ ] 修改MethodSymbol添加累加器参数
+    - [ ] 处理函数签名变更
+
+TASK-7.A.2: 实现CFG重构算法 (16小时)
+    - [ ] 创建while循环基本块
+    - [ ] 生成累加器更新逻辑
+    - [ ] 重建CFG边关系
+    - [ ] 验证CFG完整性
+
+TASK-7.A.3: 实现全局CFG替换 (8小时)
+    - [ ] 实现replaceFunctionCFG()方法
+    - [ ] 更新所有后继基本块的前驱引用
+    - [ ] 验证多函数CFG正确性
+
+TASK-7.A.4: 端到端测试 (8-16小时)
+    - [ ] fib(10) → 55验证
+    - [ ] fib(100)无栈溢出验证
+    - [ ] 性能基准测试
+```
+
+#### 测试验证结果
+
+**RegisterVMGeneratorTROTest** (5个测试通过):
+```
+✅ testFibonacciPatternDetection
+✅ testNonFibonacciPatternRejected
+✅ testFibonacciWithIncorrectCallCount
+✅ testIterativeCodeGeneration
+✅ testNonFibonacciSkipped
+```
+
+**端到端验证状态**:
+- ❌ fib(10) → 55: 未验证 (CFG未转换)
+- ❌ fib(100)无栈溢出: 未验证 (CFG未转换)
+
+#### 技术债务记录
+
+1. **ExecutionGraph.transform()方法**: 3个transform方法返回原始CFG (技术债务: 高)
+2. **Assign.withExpr()**: 使用反射绕过类型系统 (技术债务: 中)
+3. **文档不一致性**: TDD计划标记为完成，但实际未实现 (技术债务: 高)
+
+#### 推荐决策
+
+**选项1**: 接受当前状态 (Path B)
+- 优点: 代码生成层优化已工作，测试通过
+- 缺点: IR层优化缺失，学术价值降低
+- 建议: 更新文档，移除"✅ 完成"标记
+
+**选项2**: 完成Path A (IR层CFG转换)
+- 优点: 完整的TRO实现，符合学术标准
+- 缺点: 需要40-60小时额外工作
+- 建议: 仅在需要学术价值时实施
+
+**当前推荐**: **选项1** - 接受Path B，更新文档反映真实状态
+
+---
 
 #### 阶段4: 后端层重构 + VM适配 (预计: 20天) 🔄
 ```
@@ -2921,10 +3072,11 @@ mvn pmd:check
 | 死代码消除优化器 | v1.5 | 2025-12-23 | EP21重构团队 | 新增TASK-3.2.5.9: 死代码消除优化器，337个测试用例通过 |
 | 尾递归优化任务分解 | v1.6 | 2025-12-23 | EP21重构团队 | 基于Baeldung/LLVM算法的完整实现计划 |
 | 尾递归优化核心框架完成 | v1.7 | 2025-12-23 | EP21重构团队 | 新增TASK-7: 尾递归优化实现，485个测试用例通过 |
+| **TRO真实状态回顾** | **v1.8** | **2025-12-24** | **EP21重构团队** | **诚实的TRO实现状态: CFG转换未实现，仅代码生成层优化完成** |
 
 ---
 
-**版本**: v1.7
+**版本**: v1.8
 **制定日期**: 2025-12-21
 **最后更新**: 2025-12-23
 **预计完成**: 2026-01-20

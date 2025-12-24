@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep21.pass.cfg;
 
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.teachfx.antlr4.ep21.ir.IRNode;
@@ -168,7 +169,7 @@ public class TailRecursionOptimizer implements IFlowOptimizer<IRNode> {
         // 首先收集所有可达的节点ID
         while (!queue.isEmpty()) {
             Integer currentId = queue.poll();
-            for (Triple<Integer, Integer, Integer> edge : currentCFG.getEdges()) {
+            for (Triple<Integer, Integer, Integer> edge : currentCFG.edges) {
                 if (edge.getLeft().equals(currentId)) {
                     Integer targetId = edge.getMiddle();
                     if (!visited.contains(targetId)) {
@@ -184,7 +185,7 @@ public class TailRecursionOptimizer implements IFlowOptimizer<IRNode> {
             if (visited.contains(block.getId())) {
                 // 创建新的BasicBlock，使用新的ID
                 BasicBlock<IRNode> newBlock = new BasicBlock<>(
-                    block.getKind(),
+                    block.kind,
                     block.getInstructionsView(),
                     block.getLabel(),
                     newId
@@ -197,7 +198,7 @@ public class TailRecursionOptimizer implements IFlowOptimizer<IRNode> {
 
         // 转换边，使用新的ID
         List<Triple<Integer, Integer, Integer>> newEdges = new ArrayList<>();
-        for (Triple<Integer, Integer, Integer> edge : currentCFG.getEdges()) {
+        for (Triple<Integer, Integer, Integer> edge : currentCFG.edges) {
             Integer from = edge.getLeft();
             Integer to = edge.getMiddle();
             if (visited.contains(from) && visited.contains(to)) {

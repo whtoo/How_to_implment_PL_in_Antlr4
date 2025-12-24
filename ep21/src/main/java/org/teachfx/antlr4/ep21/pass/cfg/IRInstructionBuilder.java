@@ -93,13 +93,22 @@ public class IRInstructionBuilder {
     /**
      * 创建FrameSlot赋值
      * @param slotIdx 槽位索引
-     * @param rhs 右值
+     * @param rhs 右值（Operand类型：VarSlot, ConstVal等）
      */
     public Assign createFrameAssign(int slotIdx, Operand rhs) {
-        // Directly create Assign to avoid type inference issues
         FrameSlot frameSlot = new FrameSlot(slotIdx);
         Assign assign = new Assign(frameSlot, rhs);
         return assign;
+    }
+
+    /**
+     * 创建FrameSlot赋值（支持表达式）
+     * @param slotIdx 槽位索引
+     * @param rhs 右值（Expr类型：BinExpr, UnaryExpr等）
+     */
+    public Assign createFrameAssign(int slotIdx, org.teachfx.antlr4.ep21.ir.expr.Expr rhs) {
+        FrameSlot frameSlot = new FrameSlot(slotIdx);
+        return Assign.withExpr(frameSlot, rhs);
     }
 
     // ==================== Binary Expression ====================

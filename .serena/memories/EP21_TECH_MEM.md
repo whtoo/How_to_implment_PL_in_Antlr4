@@ -2106,3 +2106,165 @@ RegisterVMGenerator.generateInstructions()
 
 ---
 
+
+## 2025-12-26 SSA验证器测试实现完成 (EP21)
+
+### 实现内容
+
+**文件**: `ep21/src/test/java/org/teachfx/antlr4/ep21/ep21/analysis/ssa/SSAValidatorTest.java`
+
+**测试覆盖**:
+1. `testValidSSAGraph()` - 验证有效的SSA图
+2. `testVariableConsistency()` - 变量版本一致性验证
+3. `testPhiFunctionParameterCount()` - Phi函数参数数量验证
+4. `testUseBeforeDefDetection()` - 使用前定义验证
+5. `testValidationResultStructure()` - ValidationResult结构验证
+6. `testMinimalCFG()` - 最小CFG处理
+7. `testCFGWithoutPhi()` - 无Phi函数的CFG验证
+8. `testCFGWithLoops()` - 包含循环的CFG验证
+9. `testMultipleVariables()` - 多变量验证
+10. `testNestedScopes()` - 嵌套作用域验证
+
+### SSA验证器功能
+
+**位置**: `ep21/src/main/java/org/teachfx/antlr4/ep21/analysis/ssa/SSAGraph.java`
+
+**验证项**:
+1. **变量版本一致性** (`validateVariableConsistency`)
+   - 检查每个变量的版本号连续
+   - 确保没有缺失的版本号
+
+2. **Phi函数参数** (`validatePhiFunctions`)
+   - Phi函数参数数量应与前驱块数量一致
+   - 参数变量应已定义
+
+3. **使用前定义** (`validateUseBeforeDef`)
+   - 检查变量使用是否在定义之后
+   - 检测版本号溢出
+
+**ValidationResult类**:
+```java
+public static class ValidationResult {
+    public boolean isValid()           // 验证是否通过
+    public List<String> getErrors()    // 错误列表
+    public String getSummary()         // 验证摘要
+}
+```
+
+### 测试结果
+
+```
+Tests run: 507, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+### 测试用例说明
+
+| 测试名称 | 描述 | 状态 |
+|---------|------|------|
+| testValidSSAGraph | 有效SSA图应通过验证 | ✅ |
+| testVariableConsistency | 变量版本一致性检查 | ✅ |
+| testPhiFunctionParameterCount | Phi函数参数验证 | ✅ |
+| testUseBeforeDefDetection | 使用前定义检测 | ✅ |
+| testValidationResultStructure | ValidationResult结构 | ✅ |
+| testMinimalCFG | 最小CFG处理 | ✅ |
+| testCFGWithoutPhi | 无Phi函数CFG | ✅ |
+| testCFGWithLoops | 循环CFG验证 | ✅ |
+| testMultipleVariables | 多变量验证 | ✅ |
+| testNestedScopes | 嵌套作用域验证 | ✅ |
+
+---
+
+
+## 2025-12-26 性能比较测试实现完成 (EP21 TRO)
+
+### 实现内容
+
+**文件**: `ep21/src/test/java/org/teachfx/antlr4/ep21/pass/cfg/FibonacciTailRecursionEndToEndTest.java`
+
+**测试**: `testPerformanceComparison()` - 性能比较测试
+
+### 验证内容
+
+**代码结构分析** (非实际执行):
+1. **递归调用计数** - 验证fib函数内无递归调用
+2. **循环结构验证** - 确认使用迭代 (loop标签存在)
+3. **栈空间复杂度** - O(1) 常数栈空间 (无递归)
+4. **时间复杂度** - O(n) 单层循环
+5. **指令计数** - 统计生成指令数量
+
+### 测试结果
+
+```
+Tests run: 507, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+### 性能指标
+
+**优化前 (递归版本)**:
+- 时间复杂度: O(2^n) - 指数级 (fib(n) 调用 fib(n-1) + fib(n-2))
+- 栈空间复杂度: O(n) - 每次递归调用消耗栈帧
+
+**优化后 (迭代版本)**:
+- 时间复杂度: O(n) - 线性级
+- 栈空间复杂度: O(1) - 常数级 (使用固定寄存器)
+
+### 验证断言
+
+```java
+// 1. 无递归调用
+assertEquals(0, callFibInFibFunction, "Optimized fib should have 0 recursive calls");
+
+// 2. 使用迭代
+assertTrue(optimizedLoopCount > 0, "Should use iteration (loop labels)");
+
+// 3. 常数栈空间
+assertTrue(optimizedCode.contains("r10") || optimizedCode.contains("r11"),
+              "Uses accumulator registers (constant stack space)");
+```
+
+---
+
+## 2025-12-26 EP21 TRO 实现总结
+
+### 完成状态
+
+**Path B (代码生成层优化)** - ✅ 完全实现
+
+| 组件 | 状态 | 描述 |
+|------|------|------|
+| Fibonacci模式优化 | ✅ | 2个递归调用 → 累加器迭代 |
+| 直接尾递归优化 | ✅ | 1个尾调用 → while循环 |
+| 端到端测试 | ✅ | testFib10, testFib100NoOverflow |
+| 性能比较测试 | ✅ | 代码结构分析 |
+| SSA验证器测试 | ✅ | 10个测试用例 |
+
+### 测试覆盖
+
+```
+总测试数: 507
+- TRO检测测试: 14 (TailRecursionOptimizerTest)
+- TRO代码生成测试: 9 (RegisterVMGeneratorTROTest)
+- 端到端测试: 6 (FibonacciTailRecursionEndToEndTest)
+- SSA验证器测试: 10 (SSAValidatorTest)
+- 其他测试: 468
+```
+
+### 核心文件
+
+**TRO实现**:
+- `TailRecursionOptimizer.java` - 检测层
+- `RegisterVMGenerator.TROHelper` - 转换层
+  - `isFibonacciPattern()`
+  - `isDirectTailRecursive()`
+  - `generateFibonacciIterative()`
+  - `generateDirectTailRecursiveIterative()`
+
+**测试文件**:
+- `TailRecursionOptimizerTest.java` - 检测测试
+- `RegisterVMGeneratorTROTest.java` - 代码生成测试
+- `FibonacciTailRecursionEndToEndTest.java` - 端到端测试
+- `SSAValidatorTest.java` - SSA验证测试
+
+---

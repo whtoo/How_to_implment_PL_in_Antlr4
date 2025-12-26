@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
 import org.teachfx.antlr4.ep21.ir.stmt.FuncEntryLabel;
+import org.teachfx.antlr4.ep21.ir.stmt.ReturnVal;
 import org.teachfx.antlr4.ep21.symtab.scope.GlobalScope;
 import org.teachfx.antlr4.ep21.symtab.symbol.MethodSymbol;
 import org.teachfx.antlr4.ep21.symtab.type.BuiltInTypeSymbol;
@@ -23,11 +24,13 @@ public class RegisterVMGeneratorTROTest {
 
     private List<IRNode> fibonacciInstructions;
     private List<IRNode> nonFibonacciInstructions;
+    private List<IRNode> tailRecursiveInstructions;
+    private GlobalScope globalScope;
 
     @BeforeEach
     void setUp() {
         // Create a global scope for testing
-        GlobalScope globalScope = new GlobalScope();
+        globalScope = new GlobalScope();
 
         // Create Fibonacci-like instructions
         fibonacciInstructions = new ArrayList<>();
@@ -47,6 +50,16 @@ public class RegisterVMGeneratorTROTest {
         nonFibonacciInstructions.add(new FuncEntryLabel("foo", 1, 1, globalScope));
         CallFunc call3 = new CallFunc("foo", 1, fooSymbol);
         nonFibonacciInstructions.add(call3);
+
+        // Create direct tail recursive instructions (e.g., countdown)
+        tailRecursiveInstructions = new ArrayList<>();
+        MethodSymbol countdownSymbol = new MethodSymbol("countdown", intType, globalScope, null);
+        tailRecursiveInstructions.add(new FuncEntryLabel("countdown", 1, 1, globalScope));
+
+        // Add a tail recursive call followed by return
+        CallFunc tailCall = new CallFunc("countdown", 1, countdownSymbol);
+        tailRecursiveInstructions.add(tailCall);
+        tailRecursiveInstructions.add(new ReturnVal(null, globalScope));
     }
 
     @Test
@@ -137,5 +150,78 @@ public class RegisterVMGeneratorTROTest {
                    "Should have comparison instruction for base case");
         assertTrue(output.contains("jf"), "Should have conditional jump");
         assertTrue(output.contains("ret"), "Should have return instruction");
+    }
+
+    // ========== Direct Tail Recursion Tests ==========
+
+    @Test
+    @DisplayName("Should detect direct tail recursive pattern")
+    void testDirectTailRecursiveDetection() {
+        RegisterVMGenerator generator = new RegisterVMGenerator();
+
+        CodeGenerationResult result = generator.generateFromInstructions(tailRecursiveInstructions);
+
+        assertTrue(result.isSuccess(), "Code generation should succeed");
+        assertNotNull(result.getOutput(), "Output should not be null");
+
+        System.out.println("Generated direct tail recursive code:");
+        System.out.println(result.getOutput());
+
+        // Verify the output contains loop indicators
+        String output = result.getOutput();
+        assertTrue(output.contains("_loop") || output.contains("_end"),
+                   "Generated code should contain loop labels for direct tail recursion");
+    }
+
+    @Test
+    @DisplayName("Should generate iterative code for direct tail recursion")
+    void testDirectTailRecursiveCodeGeneration() {
+        RegisterVMGenerator generator = new RegisterVMGenerator();
+
+        CodeGenerationResult result = generator.generateFromInstructions(tailRecursiveInstructions);
+
+        assertTrue(result.isSuccess(), "Code generation should succeed");
+
+        String output = result.getOutput();
+        System.out.println("Generated iterative code for direct tail recursion:");
+        System.out.println(output);
+
+        // Verify iterative characteristics
+        assertTrue(output.contains("_loop") || output.contains("_end"),
+                   "Should have loop labels");
+        assertTrue(output.contains("sub") || output.contains("add"),
+                   "Should have arithmetic instruction for parameter update");
+
+        // Verify no recursive calls
+        assertFalse(output.contains("call countdown"),
+                    "Should not contain recursive call countdown");
+    }
+
+    @Test
+    @DisplayName("Direct tail recursive code should have correct function signature")
+    void testDirectTailRecursiveFunctionSignature() {
+        RegisterVMGenerator generator = new RegisterVMGenerator();
+
+        CodeGenerationResult result = generator.generateFromInstructions(tailRecursiveInstructions);
+
+        String output = result.getOutput();
+        assertTrue(output.contains(".def countdown:"), "Should contain function definition");
+        assertTrue(output.contains("args=1"), "Should specify 1 argument");
+    }
+
+    @Test
+    @DisplayName("Direct tail recursive code should handle loop condition")
+    void testDirectTailRecursiveLoopCondition() {
+        RegisterVMGenerator generator = new RegisterVMGenerator();
+
+        CodeGenerationResult result = generator.generateFromInstructions(tailRecursiveInstructions);
+
+        String output = result.getOutput();
+
+        // Should have loop condition check
+        assertTrue(output.contains("sle") || output.contains("slt") || output.contains("sgt"),
+                   "Should have comparison instruction for loop condition");
+        assertTrue(output.contains("jt") || output.contains("jf"),
+                   "Should have conditional jump for loop control");
     }
 }

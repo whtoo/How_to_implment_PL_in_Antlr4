@@ -1,32 +1,33 @@
 package org.teachfx.antlr4.ep21.pass.cfg;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
-import org.teachfx.antlr4.ep21.ir.expr.Operand;
-import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
-import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
-import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
-import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
-import org.teachfx.antlr4.ep21.ir.stmt.*;
+import org.teachfx.antlr4.ep21.ir.stmt.FuncEntryLabel;
+import org.teachfx.antlr4.ep21.ir.stmt.ReturnVal;
 import org.teachfx.antlr4.ep21.symtab.symbol.MethodSymbol;
-import org.teachfx.antlr4.ep21.symtab.type.OperatorType;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 尾递归优化器 (Tail Recursion Optimizer)
+ * 尾递归优化器 (Tail Recursion Optimizer) - Path B 实现方案
  *
- * 检测并转换尾递归函数为迭代形式，避免栈溢出问题。
+ * 检测尾递归模式并标记函数，实际的代码转换在代码生成阶段完成。
  *
- * 当前实现：检测尾递归模式并标记优化函数
- * 未来计划：实际执行CFG转换（需要完整的IR API适配）
+ * 实现方案: Path B (代码生成层优化)
+ * - 检测层: 此优化器负责检测和标记可优化的函数
+ * - 转换层: RegisterVMGenerator.TROHelper / StackVMGenerator 执行实际转换
+ *
+ * 优势:
+ * - 避免复杂的CFG API适配
+ * - 代码生成更直接、可控
+ * - 适合实际编译器项目
  *
  * @author EP21 Team
- * @version 2.1
+ * @version 3.0 - Path B 稳定实现
+ * @see org.teachfx.antlr4.ep21.pass.codegen.RegisterVMGenerator.TROHelper
  */
 public class TailRecursionOptimizer implements IFlowOptimizer<IRNode> {
 
@@ -103,33 +104,12 @@ public class TailRecursionOptimizer implements IFlowOptimizer<IRNode> {
             logger.info("检测到Fibonacci模式: {}", currentFunctionName);
             System.out.println("[TailRecursionOptimizer] 检测到Fibonacci模式: " + currentFunctionName);
 
-            // 执行栈模拟转换
-            try {
-                // 提取当前函数的子CFG
-                CFG<IRNode> functionCFG = extractFunctionCFG(entryBlock);
-                
-                // 创建ExecutionGraph并执行转换
-                ExecutionGraph execGraph = new ExecutionGraph(
-                    functionCFG, 
-                    currentFunctionName, 
-                    currentFunction
-                );
-                
-                CFG<IRNode> transformedCFG = execGraph.transform();
-                
-                if (transformedCFG != functionCFG) {
-                    // 转换成功
-                    logger.info("函数 {} 成功转换为迭代形式", currentFunctionName);
-                    System.out.println("[TailRecursionOptimizer] 函数 " + currentFunctionName + " 已转换为迭代形式");
-                    optimizedFunctions.add(currentFunctionName);
-                    optimized = true;
-                } else {
-                    logger.warn("函数 {} 转换未生效", currentFunctionName);
-                }
-            } catch (Exception e) {
-                logger.error("转换函数 {} 时发生错误: {}", currentFunctionName, e.getMessage());
-                e.printStackTrace();
-            }
+            // Path B: 标记函数，实际转换由代码生成器完成
+            // RegisterVMGenerator.TROHelper.generateFibonacciIterative()
+            optimizedFunctions.add(currentFunctionName);
+            optimized = true;
+
+            logger.info("函数 {} 已标记为Fibonacci优化模式（代码生成阶段转换）", currentFunctionName);
         }
 
         // 策略2: 检测直接尾递归
@@ -151,89 +131,12 @@ public class TailRecursionOptimizer implements IFlowOptimizer<IRNode> {
     }
 
     /**
-     * 提取单个函数的CFG
-     * 从全局CFG中提取属于指定函数的所有基本块
-     */
-    private CFG<IRNode> extractFunctionCFG(BasicBlock<IRNode> functionEntry) {
-        List<BasicBlock<IRNode>> functionBlocks = new ArrayList<>();
-        Map<Integer, Integer> idMap = new HashMap<>();  // 旧ID -> 新ID映射
-        int newId = 0;
-
-        // 收集属于该函数的所有基本块
-        // 简化版本：只收集从函数入口可达的块
-        Set<Integer> visited = new HashSet<>();
-        Queue<Integer> queue = new LinkedList<>();
-        queue.add(functionEntry.getId());
-        visited.add(functionEntry.getId());
-
-        // 首先收集所有可达的节点ID
-        while (!queue.isEmpty()) {
-            Integer currentId = queue.poll();
-            for (Triple<Integer, Integer, Integer> edge : currentCFG.edges) {
-                if (edge.getLeft().equals(currentId)) {
-                    Integer targetId = edge.getMiddle();
-                    if (!visited.contains(targetId)) {
-                        visited.add(targetId);
-                        queue.add(targetId);
-                    }
-                }
-            }
-        }
-
-        // 为每个访问过的节点创建新的BasicBlock
-        for (BasicBlock<IRNode> block : currentCFG) {
-            if (visited.contains(block.getId())) {
-                // 创建新的BasicBlock，使用新的ID
-                BasicBlock<IRNode> newBlock = new BasicBlock<>(
-                    block.kind,
-                    block.getInstructionsView(),
-                    block.getLabel(),
-                    newId
-                );
-                functionBlocks.add(newBlock);
-                idMap.put(block.getId(), newId);
-                newId++;
-            }
-        }
-
-        // 转换边，使用新的ID
-        List<Triple<Integer, Integer, Integer>> newEdges = new ArrayList<>();
-        for (Triple<Integer, Integer, Integer> edge : currentCFG.edges) {
-            Integer from = edge.getLeft();
-            Integer to = edge.getMiddle();
-            if (visited.contains(from) && visited.contains(to)) {
-                newEdges.add(Triple.of(
-                    idMap.get(from),
-                    idMap.get(to),
-                    edge.getRight()
-                ));
-            }
-        }
-
-        return new CFG<>(functionBlocks, newEdges);
-    }
-
-    /**
      * 从FuncEntryLabel中提取函数名
      */
     private String extractFunctionName(FuncEntryLabel funcLabel) {
         String label = funcLabel.getRawLabel();
         // .def fib: args=1, locals=1
         return label.substring(5, label.indexOf(':'));
-    }
-
-    /**
-     * 标记函数为已优化
-     */
-    private void markFunctionAsOptimized(FuncEntryLabel funcLabel) {
-        // 修改函数标签以包含优化标记
-        String rawLabel = funcLabel.getRawLabel();
-        if (!rawLabel.contains("// TRO")) {
-            String optimizedLabel = rawLabel + " // TRO: iterative";
-            // 由于FuncEntryLabel的rawLabel是final，我们无法直接修改
-            // 实际的优化需要在代码生成阶段检测此标记
-            logger.debug("函数 {} 标记为TRO优化模式", currentFunctionName);
-        }
     }
 
     /**

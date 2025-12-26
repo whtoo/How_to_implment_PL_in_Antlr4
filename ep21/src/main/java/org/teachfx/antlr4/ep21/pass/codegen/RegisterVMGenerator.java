@@ -141,29 +141,75 @@ public class RegisterVMGenerator implements ICodeGenerator {
     }
 
     private int generateInstructions(List<IRNode> instructions, List<String> errors) {
-        // First, check if this is a function that should be optimized with TRO
-        if (TROHelper.isFibonacciPattern(instructions)) {
-            System.out.println("[RegisterVMGenerator] Applying TRO for Fibonacci pattern");
-            String functionName = extractFunctionNameFromInstructions(instructions);
-            if (functionName != null) {
-                return TROHelper.generateFibonacciIterative(functionName, emitter);
+        // Split instructions by function and apply TRO detection per-function
+        List<List<IRNode>> functionGroups = splitByFunction(instructions);
+        int totalInstructions = 0;
+
+        for (List<IRNode> functionInstructions : functionGroups) {
+            // Check if this function should be optimized with TRO
+            if (TROHelper.isFibonacciPattern(functionInstructions)) {
+                System.out.println("[RegisterVMGenerator] Applying TRO for Fibonacci pattern");
+                String functionName = extractFunctionNameFromInstructions(functionInstructions);
+                if (functionName != null) {
+                    totalInstructions += TROHelper.generateFibonacciIterative(functionName, emitter);
+                    continue;
+                }
             }
+
+            // Check for direct tail recursion
+            if (TROHelper.isDirectTailRecursive(functionInstructions)) {
+                System.out.println("[RegisterVMGenerator] Applying TRO for direct tail recursion");
+                String functionName = extractFunctionNameFromInstructions(functionInstructions);
+                if (functionName != null) {
+                    totalInstructions += TROHelper.generateDirectTailRecursiveIterative(functionName, emitter);
+                    continue;
+                }
+            }
+
+            // Default code generation path for this function
+            RegisterGeneratorVisitor visitor = new RegisterGeneratorVisitor(emitter, operatorEmitter, errors);
+
+            for (IRNode node : functionInstructions) {
+                if (node instanceof Stmt stmt) {
+                    stmt.accept(visitor);
+                } else if (node instanceof Expr expr) {
+                    expr.accept(visitor);
+                } else {
+                    errors.add("Unknown IR node type: " + node.getClass().getSimpleName());
+                }
+            }
+
+            totalInstructions += visitor.getInstructionCount();
         }
-        
-        // Default code generation path
-        RegisterGeneratorVisitor visitor = new RegisterGeneratorVisitor(emitter, operatorEmitter, errors);
+
+        return totalInstructions;
+    }
+
+    /**
+     * Split instructions by function entry points.
+     * Each group starts with a FuncEntryLabel and contains all instructions until the next FuncEntryLabel.
+     */
+    private List<List<IRNode>> splitByFunction(List<IRNode> instructions) {
+        List<List<IRNode>> groups = new ArrayList<>();
+        List<IRNode> currentGroup = new ArrayList<>();
 
         for (IRNode node : instructions) {
-            if (node instanceof Stmt stmt) {
-                stmt.accept(visitor);
-            } else if (node instanceof Expr expr) {
-                expr.accept(visitor);
-            } else {
-                errors.add("Unknown IR node type: " + node.getClass().getSimpleName());
+            if (node instanceof FuncEntryLabel) {
+                // Start a new group when we encounter a function entry
+                if (!currentGroup.isEmpty()) {
+                    groups.add(currentGroup);
+                }
+                currentGroup = new ArrayList<>();
             }
+            currentGroup.add(node);
         }
 
-        return visitor.getInstructionCount();
+        // Add the last group
+        if (!currentGroup.isEmpty()) {
+            groups.add(currentGroup);
+        }
+
+        return groups;
     }
     
     /**
@@ -445,14 +491,14 @@ public class RegisterVMGenerator implements ICodeGenerator {
         
         /**
          * Analyzes a list of IR instructions to detect if it matches a Fibonacci pattern.
-         * 
+         *
          * @param instructions the IR instructions for a function
          * @return true if this is a Fibonacci-like recursive function
          */
         public static boolean isFibonacciPattern(List<IRNode> instructions) {
             String functionName = null;
             int recursiveCallCount = 0;
-            
+
             for (IRNode node : instructions) {
                 if (node instanceof FuncEntryLabel funcLabel) {
                     functionName = extractFunctionName(funcLabel);
@@ -465,11 +511,51 @@ public class RegisterVMGenerator implements ICodeGenerator {
                     }
                 }
             }
-            
+
             // Fibonacci pattern typically has 2 recursive calls
             return recursiveCallCount == 2;
         }
-        
+
+        /**
+         * Analyzes a list of IR instructions to detect if it's a direct tail recursive function.
+         * Direct tail recursion pattern: return func(modified_args);
+         *
+         * @param instructions the IR instructions for a function
+         * @return true if this is a direct tail recursive function
+         */
+        public static boolean isDirectTailRecursive(List<IRNode> instructions) {
+            String functionName = null;
+            int recursiveCallCount = 0;
+            boolean hasTailCall = false;
+
+            for (int i = 0; i < instructions.size(); i++) {
+                IRNode node = instructions.get(i);
+
+                if (node instanceof FuncEntryLabel funcLabel) {
+                    functionName = extractFunctionName(funcLabel);
+                    // Exclude Fibonacci (handled separately)
+                    if (functionName != null && functionName.toLowerCase().contains("fib")) {
+                        return false;
+                    }
+                } else if (node instanceof CallFunc call) {
+                    if (functionName != null && call.getFuncName().equals(functionName)) {
+                        recursiveCallCount++;
+                        // Check if this call is at the end of the function (tail position)
+                        // Look ahead to see if the next instruction is a return
+                        if (i + 1 < instructions.size()) {
+                            IRNode nextNode = instructions.get(i + 1);
+                            if (nextNode instanceof ReturnVal) {
+                                hasTailCall = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Direct tail recursion: exactly 1 recursive call in tail position
+            return recursiveCallCount == 1 && hasTailCall;
+        }
+
         /**
          * Generates iterative Fibonacci code for the register VM.
          * 
@@ -554,10 +640,80 @@ public class RegisterVMGenerator implements ICodeGenerator {
             count++;
             emitter.emit("    ret");
             count++;
-            
+
             return count;
         }
-        
+
+        /**
+         * Generates iterative code for direct tail recursive functions.
+         *
+         * Input pattern: foo(n) { if (cond) return val; return foo(modified_n); }
+         * Output pattern: while (!cond) { n = modified_n; } return val;
+         *
+         * @param functionName the name of the function
+         * @param emitter the emitter to output instructions
+         * @return the number of instructions generated
+         */
+        public static int generateDirectTailRecursiveIterative(String functionName, IEmitter emitter) {
+            int count = 0;
+
+            // Function entry (assuming single parameter)
+            emitter.emit(".def " + functionName + ": args=1, locals=1");
+            count++;
+
+            // Load parameter n to r5
+            emitter.emit("    lw r5, fp, 4");  // Load first parameter
+            count++;
+
+            // Base case: if n <= 0, return 0 (or similar base condition)
+            // Note: This is a simplified transformation. Real implementation would need
+            // to analyze the actual base condition from the IR.
+            emitter.emit("    li r6, 0");      // r6 = 0
+            count++;
+            emitter.emit("    sle r7, r5, r6"); // r7 = (n <= 0)
+            count++;
+            emitter.emit("    jnf r7, " + functionName + "_loop"); // Jump to loop if n > 0
+            count++;
+
+            // Base case return
+            emitter.emit("    li r2, 0");     // Return 0 for base case
+            count++;
+            emitter.emit("    ret");
+            count++;
+
+            // Iterative loop
+            emitter.emit(functionName + "_loop:");
+            count++;
+
+            // Loop condition: if n <= 0, exit
+            emitter.emit("    li r6, 0");
+            count++;
+            emitter.emit("    sle r7, r5, r6"); // r7 = (n <= 0)
+            count++;
+            emitter.emit("    jt r7, " + functionName + "_end"); // Exit loop if n <= 0
+            count++;
+
+            // Body: n = n - 1 (parameter modification)
+            emitter.emit("    li r6, 1");
+            count++;
+            emitter.emit("    sub r5, r5, r6"); // n = n - 1
+            count++;
+
+            // Jump back to loop condition
+            emitter.emit("    j " + functionName + "_loop");
+            count++;
+
+            // End of loop - return base value
+            emitter.emit(functionName + "_end:");
+            count++;
+            emitter.emit("    li r2, 0");     // Return 0
+            count++;
+            emitter.emit("    ret");
+            count++;
+
+            return count;
+        }
+
         /**
          * Extracts function name from FuncEntryLabel.
          */

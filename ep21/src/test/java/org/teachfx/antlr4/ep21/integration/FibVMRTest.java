@@ -125,4 +125,49 @@ public class FibVMRTest {
         vmrCode.lines().filter(line -> line.contains(".def"))
             .forEach(line -> System.out.println("  " + line.trim()));
     }
+
+    /**
+     * Debug test: Analyze IR structure from full compilation
+     */
+    @Test
+    @DisplayName("Debug: Analyze IR structure for TRO detection")
+    void debugIRStructure() throws IOException {
+        ASTNode astRoot = parseToAST(FIB_PROGRAM);
+        astRoot.accept(new LocalDefine());
+
+        CymbolIRBuilder irBuilder = new CymbolIRBuilder();
+        astRoot.accept(irBuilder);
+        Prog prog = irBuilder.prog;
+        prog.optimizeBasicBlock();
+
+        // Generate code and check if TRO was applied
+        CodeGenerationResult result = generator.generateFromInstructions(prog.linearInstrs());
+
+        String output = result.getOutput();
+        System.out.println("=== Checking for TRO in generated code ===");
+
+        // Count recursive calls
+        long callFibCount = output.lines()
+            .filter(line -> line.trim().startsWith("call fib"))
+            .count();
+
+        System.out.println("Recursive 'call fib' count: " + callFibCount);
+        System.out.println("Contains loop labels: " + output.contains("_loop"));
+        System.out.println("Contains _end label: " + output.contains("_end"));
+
+        // Print the generated fib function for inspection
+        System.out.println("\n=== Generated fib function ===");
+        boolean inFib = false;
+        for (String line : output.lines().toList()) {
+            if (line.contains(".def fib:")) {
+                inFib = true;
+            }
+            if (inFib) {
+                System.out.println(line);
+                if (inFib && line.trim().startsWith(".def ") && !line.contains(".def fib:")) {
+                    break;
+                }
+            }
+        }
+    }
 }

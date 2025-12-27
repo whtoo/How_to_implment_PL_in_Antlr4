@@ -134,7 +134,9 @@ public class ASTBaseVisitor implements ASTVisitor<Void,Void> {
 
     @Override
     public Void visit(ReturnStmtNode returnStmtNode) {
-        returnStmtNode.getRetNode().accept(this);
+        if (returnStmtNode.getRetNode() != null) {
+            returnStmtNode.getRetNode().accept(this);
+        }
         return null;
     }
 

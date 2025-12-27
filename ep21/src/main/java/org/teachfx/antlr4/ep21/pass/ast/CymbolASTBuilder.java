@@ -55,7 +55,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
         var typeNode = (TypeNode)visit(ctx.primaryType());
         var symbol = new VariableSymbol(ctx.ID().getText(),typeNode.getBaseType());
         var assignNode  = (ExprNode) visit(ctx.expr());
-        var idExprNode = new IDExprNode(ctx.ID().getText(),null);
+        var idExprNode = new IDExprNode(ctx.ID().getText(), ctx);
         idExprNode.setRefSymbol(symbol);
 
         return new VarDeclNode(symbol,assignNode,idExprNode,ctx);
@@ -81,6 +81,11 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
         var funcName = ctx.funcName.getText();
 
         var bodyStmt = (BlockStmtNode) (ctx.blockDef != null ? visit(ctx.blockDef) : null);
+
+        // Ensure bodyStmt is never null - if it is, create an empty block
+        if (bodyStmt == null) {
+            bodyStmt = new BlockStmtNode(List.of(), ctx);
+        }
 
         return new FuncDeclNode(retType,funcName,paramSlots,bodyStmt,ctx);
     }
@@ -112,6 +117,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
     @Override
     public ASTNode visitStatBlock(CymbolParser.StatBlockContext ctx) {
         var stmtList = ctx.block().statement().stream().map((stmtCtx)-> (StmtNode)visit(stmtCtx))
+                .filter(Objects::nonNull)
                 .toList();
         var stmtNode = new BlockStmtNode(stmtList,ctx);
         stmtNode.setParentScopeType(ScopeType.BlockScope);
@@ -126,7 +132,10 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitStatReturn(CymbolParser.StatReturnContext ctx) {
-        var retVal = (ExprNode)visit(ctx.expr());
+        ExprNode retVal = null;
+        if (ctx.expr() != null) {
+            retVal = (ExprNode)visit(ctx.expr());
+        }
         return new ReturnStmtNode(retVal,ctx);
     }
 
@@ -135,6 +144,15 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
         ExprNode condNode = (ExprNode) visit(ctx.cond);
         StmtNode thenBlock = (StmtNode) visit(ctx.then);
         StmtNode elseBlock = (StmtNode) (ctx.elseDo != null ? visit(ctx.elseDo) : null);
+
+        // Ensure thenBlock is never null - if it is, create an empty block
+        if (thenBlock == null) {
+            thenBlock = new BlockStmtNode(List.of(), ctx.then);
+        }
+        // Ensure elseBlock is never null if else exists - if it is, create an empty block
+        if (ctx.elseDo != null && elseBlock == null) {
+            elseBlock = new BlockStmtNode(List.of(), ctx.elseDo);
+        }
 
         return new IfStmtNode(condNode,thenBlock,elseBlock,ctx);
     }

@@ -43,6 +43,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     private Stack<VarSlot> evalExprStack = null; // 显式初始化为null
 
     private ASTNode curNode = null;
+    private MethodSymbol currentMethodSymbol = null;
     @Override
     public Void visit(CompileUnit compileUnit) {
         prog = new Prog();
@@ -62,7 +63,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
             var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
             varDeclNode.getAssignExprNode().accept(this);
             var rhs = peekEvalOperand();
-            addInstr(Assign.with(lhs,rhs));
+            addInstr(Assign.with(lhs, rhs));
             popEvalOperand();
         }
         return null;
@@ -73,11 +74,11 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         logger.debug("visit %s".formatted(funcDeclNode.toString()));
 
         curNode = funcDeclNode;
-        var methodSymbol = (MethodSymbol) funcDeclNode.getRefSymbol();
-        var entryLabel = new FuncEntryLabel(methodSymbol.getName(),methodSymbol.getArgs(),methodSymbol.getLocals(),methodSymbol);
+        currentMethodSymbol = (MethodSymbol) funcDeclNode.getRefSymbol();
+        var entryLabel = new FuncEntryLabel(currentMethodSymbol.getName(),currentMethodSymbol.getArgs(),currentMethodSymbol.getLocals(),currentMethodSymbol);
         // Expand - create block without automatic label for functions
         currentBlock = new LinearIRBlock();
-        currentBlock.setScope(methodSymbol);
+        currentBlock.setScope(currentMethodSymbol);
 
         evalExprStack = new Stack<>();
         breakStack = new Stack<>();
@@ -86,21 +87,25 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         var startBlock = currentBlock;
         getCurrentBlock().addStmt(entryLabel);
 
-        var exitBlock = new LinearIRBlock();
-        exitBlock.setScope(methodSymbol);
-        var exitEntry = new ReturnVal(null,methodSymbol);
+        // Process function body
+        if (funcDeclNode.getBody() != null) {
+            funcDeclNode.getBody().accept(this);
+        }
 
-        setExitHook(exitEntry,methodSymbol);
+        // If no ReturnVal was added (empty body or no return statements), add one at the end
+        // Check if the last statement is ReturnVal
+        boolean hasReturnVal = getCurrentBlock().getStmts().stream()
+            .anyMatch(stmt -> stmt instanceof ReturnVal);
+        if (!hasReturnVal) {
+            var exitEntry = new ReturnVal(null, currentMethodSymbol);
+            setExitHook(exitEntry, currentMethodSymbol);
+            getCurrentBlock().addStmt(exitEntry);
+        }
 
-        exitBlock.addStmt(exitEntry);
-        this.exitBlock = exitBlock;
-
-        funcDeclNode.getBody().accept(this);
-
+        // Add only the startBlock (function entry block) to prog
         prog.addBlock(startBlock);
 
-        setCurrentBlock(exitBlock);
-
+        currentMethodSymbol = null; // Reset after function processing
         clearBlock();
         return null;
     }
@@ -222,12 +227,17 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public Void visit(ReturnStmtNode returnStmtNode) {
         curNode = returnStmtNode;
+        VarSlot retValue = null;
         if (returnStmtNode.getRetNode() != null) {
             returnStmtNode.getRetNode().accept(this);
-            popEvalOperand();
+            retValue = popEvalOperand();
         }
 
-        jump(exitBlock);
+        // Add ReturnVal directly to current block instead of jumping to exitBlock
+        // This ensures ReturnVal is in the block that's added to prog
+        ReturnVal retVal = new ReturnVal(retValue, currentMethodSymbol);
+        setExitHook(retVal, currentMethodSymbol);
+        addInstr(retVal);
         return null;
     }
 
@@ -237,6 +247,11 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         var condBlock = new LinearIRBlock(currentBlock.getScope());
         var doBlock = new LinearIRBlock(currentBlock.getScope());
         var endBlock = new LinearIRBlock(currentBlock.getScope());
+
+        // Add all blocks to prog
+        prog.addBlock(condBlock);
+        prog.addBlock(doBlock);
+        prog.addBlock(endBlock);
 
         jump(condBlock);
 
@@ -270,12 +285,16 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         var thenBlock = new LinearIRBlock(currentBlock.getScope());
         var endBlock = new LinearIRBlock(currentBlock.getScope());
 
+        prog.addBlock(thenBlock);
+        prog.addBlock(endBlock);
+
         if (ifStmtNode.getElseBlock().isEmpty()) {
             jumpIf(cond,thenBlock,endBlock);
             setCurrentBlock(thenBlock);
             ifStmtNode.getThenBlock().accept(this);
         }else {
             var elseBlock = new LinearIRBlock(currentBlock.getScope());
+            prog.addBlock(elseBlock);
             jumpIf(cond,thenBlock,elseBlock);
             setCurrentBlock(thenBlock);
             ifStmtNode.getThenBlock().accept(this);

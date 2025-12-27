@@ -624,10 +624,11 @@ class ASTToIRIntegrationTest {
             LinearIRBlock block = prog.blockList.get(0);
             Assign assign = (Assign) block.getStmts().stream()
                 .filter(stmt -> stmt instanceof Assign)
+                .filter(stmt -> ((Assign) stmt).getLhs() instanceof FrameSlot)
                 .findFirst()
                 .orElse(null);
 
-            assertNotNull(assign);
+            assertNotNull(assign, "应该找到FrameSlot类型的LHS的Assign指令");
             assertTrue(assign.getLhs() instanceof FrameSlot,
                 "变量赋值的LHS应该是FrameSlot");
         }

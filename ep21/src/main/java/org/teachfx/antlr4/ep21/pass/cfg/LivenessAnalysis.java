@@ -23,8 +23,10 @@ import java.util.stream.Collectors;
 /**
  * 活性分析类 - 实现数据流分析中的活性分析算法
  * 用于计算每个基本块的活性变量集合，为寄存器分配等优化提供基础
+ *
+ * 实现IFlowOptimizer接口以统一CFG模块抽象。
  */
-public class LivenessAnalysis implements IRVisitor<Void, Void> {
+public class LivenessAnalysis implements IRVisitor<Void, Void>, IFlowOptimizer<IRNode> {
     private static final Logger logger = LogManager.getLogger(LivenessAnalysis.class);
     
     // 当前正在分析的基本块
@@ -37,6 +39,19 @@ public class LivenessAnalysis implements IRVisitor<Void, Void> {
     public LivenessAnalysis() {
         this.blockLiveInMap = new HashMap<>();
         this.blockLiveOutMap = new HashMap<>();
+    }
+
+    // IFlowOptimizer接口实现
+
+    /**
+     * IFlowOptimizer接口方法：对CFG执行活性分析。
+     * 此方法将CFG作为优化Pass运行，并存储分析结果供后续优化使用。
+     *
+     * @param cfg 待分析的控制流图
+     */
+    @Override
+    public void onHandle(CFG<IRNode> cfg) {
+        analyze(cfg);
     }
     
     /**

@@ -60,6 +60,170 @@ graph TB
     S -.-> A
 ```
 
+### 📐 核心类图
+
+```mermaid
+classDiagram
+    %% 编译器核心类关系
+    class Compiler {
+        +compile(sourceFile: File) CompilationResult
+        +parse(): ASTNode
+        +analyzeSemantic(): SymbolTable
+        +buildIR(): IRNode
+        +optimize(): IRNode
+        +generateCode(): Bytecode
+    }
+
+    %% AST节点层次
+    class ASTNode {
+        #location: Location
+        +accept(visitor: ASTVisitor) ASTNode
+    }
+
+    class ExprNode {
+        +type: Type
+    }
+
+    class StmtNode {
+    }
+
+    class DeclNode {
+    }
+
+    ASTNode <|-- ExprNode
+    ASTNode <|-- StmtNode
+    ASTNode <|-- DeclNode
+
+    %% IR层次
+    class IRNode {
+        +accept(IRVisitor) IRNode
+    }
+
+    class MIRNode {
+        +function: MIRFunction
+    }
+
+    class LIRNode {
+    }
+
+    IRNode <|-- MIRNode
+    IRNode <|-- LIRNode
+
+    %% 符号表
+    class SymbolTable {
+        +lookup(name: String) Symbol
+        +enterScope(Scope) void
+        +exitScope() void
+    }
+
+    class Scope {
+        +resolve(name: String) Symbol
+    }
+
+    class Symbol {
+        +name: String
+        +type: Type
+    }
+
+    SymbolTable o-- Scope
+    Scope --> Symbol
+
+    %% 控制流图
+    class CFG~T~ {
+        +addBlock(block: BasicBlock) void
+        +addEdge(from: BasicBlock, to: BasicBlock) void
+        +getEntryBlock() BasicBlock
+        +getExitBlocks() List~BasicBlock~
+    }
+
+    class BasicBlock {
+        +instructions: List~IRNode~
+        +preds: List~BasicBlock~
+        +succs: List~BasicBlock~
+    }
+
+    CFG *-- BasicBlock
+
+    %% 编译器组件关系
+    Compiler --> ASTNode : 构建
+    Compiler --> SymbolTable : 语义分析
+    Compiler --> CFG : 控制流分析
+    Compiler --> IRNode : IR生成/优化
+```
+
+### 🔄 编译器状态图
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE: 开始编译
+
+    IDLE --> PARSING: parse()
+    PARSING --> AST_BUILT: 词法+语法分析完成
+
+    AST_BUILT --> SEMANTIC_ANALYSIS: analyze()
+    SEMANTIC_ANALYSIS --> SYMBOL_TABLE_BUILT: 符号表构建完成
+
+    SYMBOL_TABLE_BUILT --> IR_GENERATION: buildIR()
+    IR_GENERATION --> MIR_BUILT: MIR生成完成
+
+    MIR_BUILT --> IR_OPTIMIZATION: optimize()
+    IR_OPTIMIZATION --> OPTIMIZED_IR: 优化完成
+
+    OPTIMIZED_IR --> CONTROL_FLOW_ANALYSIS: buildCFG()
+    CONTROL_FLOW_ANALYSIS --> CFG_BUILT: CFG构建完成
+
+    CFG_BUILT --> SSA_CONVERSION: toSSA()
+    SSA_CONVERSION --> SSA_FORM: SSA转换完成
+
+    SSA_FORM --> CODE_GENERATION: generateCode()
+    CODE_GENERATION --> BYTECODE_EMITTED: 字节码生成完成
+
+    BYTECODE_EMITTED --> IDLE: 编译完成
+
+    PARSING --> ERROR: 语法错误
+    SEMANTIC_ANALYSIS --> ERROR: 语义错误
+    IR_GENERATION --> ERROR: IR构建错误
+    CONTROL_FLOW_ANALYSIS --> ERROR: CFG构建错误
+    CODE_GENERATION --> ERROR: 代码生成错误
+
+    ERROR --> [*]: 报告错误
+```
+
+### 📊 编译器管线活动图
+```mermaid
+graph TD
+    A[用户输入源代码] --> B[词法分析 Lexer]
+    B --> C[语法分析 Parser]
+    C --> D[AST构建 AST Builder]
+    D --> E[语义分析 TypeChecker]
+    E --> F[符号表构建 SymbolTable]
+    
+    F --> G
+    
+    subgraph G[并行处理]
+        direction TB
+        H[MIR生成 AST→MIR] --> I[MIR优化 常量折叠]
+        J[LIR转换 MIR→LIR] --> K[SSA转换 Φ函数插入]
+    end
+    
+    I --> L[CFG构建 基本块划分]
+    K --> L
+    L --> M[数据流分析 活跃变量]
+    M --> N[优化Pass 死代码删除]
+    
+    N --> O
+    
+    subgraph O[代码生成]
+        direction TB
+        P[StackVMGenerator] --> Q[EP18字节码 .vm]
+        R[RegisterVMGenerator] --> S[EP18R汇编 .vmr]
+    end
+    
+    Q --> T[虚拟机执行]
+    S --> T
+    T --> U[输出结果]
+```
+
 ### 核心模块详解
 
 #### 1. 前端模块（Frontend）
@@ -150,11 +314,12 @@ symtab/
 
 ```
 cfg/
+├── ICFGBuilder.java       # CFG构建器接口 ✅ v4.0新增
 ├── BasicBlock.java       # 基本块定义
 ├── CFG.java             # 控制流图
-├── CFGBuilder.java      # CFG构建器
+├── CFGBuilder.java      # CFG构建器（实现ICFGBuilder）
 ├── ControlFlowAnalysis.java # 控制流分析
-├── LivenessAnalysis.java # 活跃变量分析
+├── LivenessAnalysis.java # 活跃变量分析（实现IFlowOptimizer）
 └── LinearIRBlock.java   # 线性IR块
 ```
 
@@ -163,6 +328,11 @@ cfg/
 - **控制流边建立**：建立基本块之间的跳转关系
 - **活跃变量分析**：计算变量的活跃区间
 - **优化支持**：为优化Pass提供数据流信息
+
+**v4.0 抽象一致性改进**：
+- 新增 `ICFGBuilder` 接口，统一所有CFG构建器的抽象
+- `CFGBuilder` 实现 `ICFGBuilder` 接口
+- `LivenessAnalysis` 实现 `IFlowOptimizer` 接口，支持通过 `CFG.addOptimizer()` 注册
 
 #### 5. 数据流分析框架（Data Flow Analysis）
 **位置**：`src/main/java/org/teachfx/antlr4/ep21/analysis/dataflow/`
@@ -736,16 +906,21 @@ jvisualvm
 
 ---
 
-**最后更新**：2025-12-23
-**版本**：EP21 v3.3
+**最后更新**：2025-12-28
+**版本**：EP21 v4.0
 **更新内容**：
-- ✅ EP21 → EP18 代码生成器实现完成：StackVMGenerator (473行)
+- ✅ **抽象一致性重构** (v4.0)
+  - 新增 `ICFGBuilder` 接口，统一 CFG 构建器抽象
+  - `CFGBuilder` 实现 `ICFGBuilder` 接口
+  - `LivenessAnalysis` 实现 `IFlowOptimizer` 接口
+  - `ASTBaseVisitor` 添加工厂方法和架构文档
+  - 507个测试全部通过 ✅
+- ✅ EP21 → EP18 代码生成器：StackVMGenerator (473行)
+- ✅ EP21 → EP18R 代码生成器：RegisterVMGenerator (支持 .vmr 汇编)
 - ✅ 代码生成集成测试：VMCodeGenerationIntegrationTest (304行)
 - ✅ StackVMGenerator测试：13个测试用例全部通过
 - ✅ SSA重构完成：基于支配边界的Φ函数插入和变量重命名算法
 - ✅ FrameSlot增强：保存VariableSymbol引用，支持变量名提取
 - ✅ Operand类优化：提供默认accept实现
-- ✅ 测试通过：446个测试全部通过，覆盖率≥85%
-- ✅ 完善文档：详细技术文档和记忆体系
 **Java版本**：21
 **ANTLR版本**：4.13.2

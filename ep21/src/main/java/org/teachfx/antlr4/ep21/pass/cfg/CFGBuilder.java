@@ -13,7 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Control Flow Graph Builder for converting LinearIRBlock to BasicBlock CFG.
  * This class handles the traversal and edge construction for building a complete CFG.
- * 
+ *
+ * Implements ICFGBuilder interface to resolve abstraction inconsistency.
+ *
  * Improvements made:
  * 1. Enhanced code readability and maintainability
  * 2. Performance optimization with better data structures
@@ -21,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 4. Comprehensive error handling and edge case management
  * 5. Professional logging with Log4j2
  */
-public class CFGBuilder {
+public class CFGBuilder implements ICFGBuilder {
     private static final Logger logger = LogManager.getLogger(CFGBuilder.class);
     
     // 使用CFGConstants中的常量，避免重复定义魔法数字
@@ -66,6 +68,32 @@ public class CFGBuilder {
         this.cfg = new CFG<>(basicBlocks, edges);
         logger.info("CFG built successfully: {} blocks, {} edges",
                    basicBlocks.size(), edges.size());
+    }
+
+    // ICFGBuilder接口实现
+
+    /**
+     * 从起始线性IR块构建控制流图。
+     * 这是ICFGBuilder接口的实现方法。
+     *
+     * @param startBlock 起始基本块
+     * @return 构建完成的CFG实例
+     */
+    @Override
+    public CFG<IRNode> buildFrom(LinearIRBlock startBlock) {
+        // 构造函数已处理构建逻辑
+        return getCFG();
+    }
+
+    /**
+     * 静态工厂方法：从起始块创建CFG。
+     * 提供更语义化的API。
+     *
+     * @param startBlock 起始基本块
+     * @return 构建完成的CFG实例
+     */
+    public static CFG<IRNode> build(LinearIRBlock startBlock) {
+        return new CFGBuilder(startBlock).getCFG();
     }
     
     private void checkForDuplicateEdges() {
@@ -338,10 +366,11 @@ public class CFGBuilder {
 
     /**
      * Gets statistics about the built CFG for debugging and monitoring purposes.
-     * 
+     *
      * @return a map containing CFG statistics
      */
-    public Map<String, Object> getCFGStatistics() {
+    @Override
+    public Map<String, Object> getStatistics() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("basicBlockCount", basicBlocks.size());
         stats.put("edgeCount", edges.size());

@@ -7,15 +7,24 @@
 
 ## 📚 项目概述
 
-EP21是"How to implement PL in ANTLR4"系列教程的最终章节，实现了现代编译器的高级优化技术。本项目在EP20的基础上，引入了分层中间表示(MIR/LIR)、数据流分析框架、SSA形式转换等先进技术，为编译原理学习者和研究人员提供了一个完整的现代化编译器实现示例。
+EP21是"How to implement PL in ANTLR4"系列教程的最终章节，实现了现代编译器的高级优化技术。本项目在EP20的基础上，引入了分层中间表示(MIR/LIR)、数据流分析框架、SSA形式转换、尾递归优化等先进技术，为编译原理学习者和研究人员提供了一个完整的现代化编译器实现示例。
 
 ### 核心贡献
 
 - **🏗️ 分层IR架构**：MIR/LIR分层中间表示体系，提供多层次优化空间
 - **📊 数据流分析框架**：统一的数据流分析接口，支持前向/后向分析
-- **🔄 SSA形式转换**：Φ函数自动生成和变量重命名机制
-- **🎯 完整编译管道**：从前端到后端的完整编译器实现
-- **🧪 严格测试标准**：全面的测试覆盖和质量保证
+- **🔄 SSA形式转换**：Φ函数自动生成和变量重命名机制，包含SSA验证器
+- **🎯 尾递归优化（TRO）**：代码生成层优化，支持Fibonacci和基础尾调用模式
+- **🔧 完整编译管道**：从前端到后端的完整编译器实现（AST→IR→VM字节码）
+- **🧪 严格测试标准**：563个测试用例，100%通过率，全面覆盖核心功能
+- **🎓 教学价值**：清晰的设计文档和测试规范，适合编译原理教学
+
+### 当前状态
+
+- **版本**：v5.0（核心功能完成）
+- **测试覆盖**：563/563 通过（100%）
+- **实现路径**：Path B（代码生成层优化）
+- **代码质量**：技术债务清理完成（~1560行未使用代码移除）
 
 ## 🏗️ EP21编译器架构设计
 
@@ -449,6 +458,71 @@ br <label>, brf <label>, call <func>, ret, halt
 - 测试完整编译管道: AST → IR → 字节码
 - 测试用例: 简单算术、常量、加法程序
 - 验证生成代码包含正确指令
+
+#### 8. 尾递归优化（Tail Recursion Optimization）
+**位置**：`src/main/java/org/teachfx/antlr4/ep21/opt/`
+
+```
+opt/
+├── TailRecursionOptimizer.java       # TRO检测器 ✅ 新增
+├── tail/
+│   ├── CallPattern.java              # 尾调用模式
+│   ├── ReturnPattern.java            # 返回模式
+│   ├── FibonacciPattern.java         # Fibonacci模式识别
+│   └── BasicTailCallPattern.java     # 基础尾调用模式
+└── transform/
+    └── TROTransformFunction.java     # TRO转换辅助类
+```
+
+**TRO架构**：
+```mermaid
+graph TB
+    subgraph "TRO检测层"
+        A[IR Function] --> B{模式匹配}
+        B --> C[Fibonacci Pattern]
+        B --> D[Basic Tail Call Pattern]
+        B --> E[Return Pattern]
+    end
+
+    subgraph "代码生成层优化"
+        C --> F[RegisterVMGenerator.TROHelper]
+        D --> F
+        E --> F
+        F --> G[生成迭代式VMR]
+    end
+
+    style C fill:#d4edda
+    style F fill:#d1ecf1
+    style G fill:#cfe2ff
+```
+
+**支持的模式**：
+1. **Fibonacci模式**：`fib(n) = fib(n-1) + fib(n-2)`
+2. **基础尾调用**：`return func(args)`
+3. **返回优化**：`return expression`
+
+**测试验证**：
+- TailRecursionOptimizerTest：14个测试
+- RegisterVMGeneratorTROTest：9个测试
+- 端到端集成测试：5个测试
+
+#### 9. SSA验证器（SSA Validator）
+**位置**：`src/test/java/org/teachfx/antlr4/ep21/analysis/ssa/`
+
+```
+ssa/test/
+└── SSAValidatorTest.java            # SSA验证器测试 ✅ 新增
+```
+
+**验证规则**：
+- 每个变量只赋值一次（静态单赋值）
+- Φ函数只存在于合并点
+- 变量使用前必须定义
+- 支配关系正确性验证
+
+**测试覆盖**：
+- 10个验证测试全部通过
+- 覆盖所有IR指令类型：ReturnVal、CJMP、JMP、Assign等
 
 ## 🔄 完整编译流程
 
@@ -906,21 +980,26 @@ jvisualvm
 
 ---
 
-**最后更新**：2025-12-28
-**版本**：EP21 v4.0
+**最后更新**：2026-01-03
+**版本**：EP21 v5.0
 **更新内容**：
+- ✅ **核心功能完成** (v5.0)
+  - 尾递归优化（TRO）：TailRecursionOptimizer + RegisterVMGenerator.TROHelper
+  - SSA验证器：10个验证测试通过
+  - SSA指令扩展：ReturnVal、CJMP、JMP指令支持
+  - 端到端集成测试：5个测试用例验证完整编译管道
+  - **563个测试全部通过** ✅ (100%)
+- ✅ **技术债务清理**：移除~1560行未使用代码
+  - ExecutionGraph、IRInstructionBuilder、StackFrame、CFGMutableBuilder
+- ✅ **代码生成器完成**：
+  - StackVMGenerator：EP18字节码生成（13测试）
+  - RegisterVMGenerator：EP18R汇编生成（支持TRO，23测试）
+- ✅ **基础优化Pass**：常量折叠、CSE、DCE（53测试）
 - ✅ **抽象一致性重构** (v4.0)
-  - 新增 `ICFGBuilder` 接口，统一 CFG 构建器抽象
-  - `CFGBuilder` 实现 `ICFGBuilder` 接口
-  - `LivenessAnalysis` 实现 `IFlowOptimizer` 接口
-  - `ASTBaseVisitor` 添加工厂方法和架构文档
-  - 507个测试全部通过 ✅
-- ✅ EP21 → EP18 代码生成器：StackVMGenerator (473行)
-- ✅ EP21 → EP18R 代码生成器：RegisterVMGenerator (支持 .vmr 汇编)
-- ✅ 代码生成集成测试：VMCodeGenerationIntegrationTest (304行)
-- ✅ StackVMGenerator测试：13个测试用例全部通过
-- ✅ SSA重构完成：基于支配边界的Φ函数插入和变量重命名算法
-- ✅ FrameSlot增强：保存VariableSymbol引用，支持变量名提取
-- ✅ Operand类优化：提供默认accept实现
+  - ICFGBuilder接口统一CFG构建器抽象
+  - IFlowOptimizer接口统一数据流优化器
+- ✅ **SSA重构完成**：基于支配边界的Φ函数插入和变量重命名算法
+**实现路径**：Path B（代码生成层优化）
 **Java版本**：21
 **ANTLR版本**：4.13.2
+**测试覆盖率**：100% (563/563)

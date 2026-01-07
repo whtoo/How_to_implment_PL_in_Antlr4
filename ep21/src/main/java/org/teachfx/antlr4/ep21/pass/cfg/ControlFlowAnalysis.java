@@ -282,16 +282,8 @@ public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> 
      * 优化后更新基本块类型
      */
     private void updateBlockKindAfterOptimization(@NotNull BasicBlock<I> block) {
-        // 如果基本块现在没有跳转指令，更新其类型为连续执行模式
         if (!block.hasJumpInstruction()) {
-            try {
-                // 使用反射或直接访问来更新 kind 字段
-                var kindField = BasicBlock.class.getDeclaredField("kind");
-                kindField.setAccessible(true);
-                kindField.set(block, Kind.CONTINUOUS);
-            } catch (Exception e) {
-                logger.debug("更新基本块类型失败，但这不是严重错误", e);
-            }
+            block.kind = Kind.CONTINUOUS;
         }
     }
     

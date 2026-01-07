@@ -113,13 +113,11 @@ public class LivenessAnalysis implements IRVisitor<Void, Void>, IFlowOptimizer<I
      * 处理赋值语句的def和use
      */
     private void handleAssign(@NotNull Assign assign) {
-        // 处理右值（使用）
-        Operand rhs = assign.getRhs();
+        Expr rhs = assign.getRhs();
         if (rhs instanceof VarSlot varSlot && !isConst(varSlot)) {
             currentBlock.liveUse.add(varSlot);
         }
-        
-        // 处理左值（定义）
+
         VarSlot lhs = assign.getLhs();
         if (!isConst(lhs)) {
             currentBlock.def.add(lhs);

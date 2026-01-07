@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep21.analysis.ssa;
 
 import org.teachfx.antlr4.ep21.ir.IRNode;
+import org.teachfx.antlr4.ep21.ir.expr.Expr;
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
 import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
@@ -9,7 +10,6 @@ import org.teachfx.antlr4.ep21.ir.stmt.CJMP;
 import org.teachfx.antlr4.ep21.pass.cfg.BasicBlock;
 import org.teachfx.antlr4.ep21.pass.cfg.CFG;
 import org.teachfx.antlr4.ep21.pass.cfg.Loc;
-
 import java.util.*;
 
 /**
@@ -247,10 +247,14 @@ public class SSAGraph {
                 currentVersion.put(varName, newVersion);
                 varStacks.computeIfAbsent(varName, k -> new Stack<>()).push(newVersion);
 
-                // 重命名源操作数（使用）
-                Operand renamedRhs = renameOperand(assign.getRhs());
+                Operand renamedRhs;
+                Expr rhs = assign.getRhs();
+                if (rhs instanceof Operand operand) {
+                    renamedRhs = renameOperand(operand);
+                } else {
+                    renamedRhs = (Operand) rhs;
+                }
 
-                // 创建重命名后的指令
                 IRNode renamedAssign = Assign.with(assign.getLhs(), renamedRhs);
                 renamedNodes.put(instr, renamedAssign);
                 block.codes.set(i, new Loc<>(renamedAssign));

@@ -326,20 +326,14 @@ public class RegisterVMGenerator implements ICodeGenerator {
 
         @Override
         public Void visit(Assign assign) {
-            // Generate RHS expression and store result to LHS
-            Operand rhs = assign.getRhs();
-            int resultReg = loadToRegister(rhs);
+            Expr rhs = assign.getRhs();
+            int resultReg = loadToRegister((Operand) rhs);
 
-            // Store to LHS (frame slot or operand slot)
             VarSlot lhs = assign.getLhs();
             if (lhs instanceof FrameSlot frameSlot) {
-                // Store to stack frame
                 int offset = frameSlot.getSlotIdx() * 4;
                 emitInstruction("sw r" + resultReg + ", fp, " + offset);
             } else if (lhs instanceof OperandSlot) {
-                // OperandSlot is already on stack, no store needed for register VM
-                // The result is already in resultReg which represents the value
-                // For simplicity, we just keep the value in the register
             } else {
                 errors.add("Unsupported LHS type in Assign: " + lhs.getClass().getSimpleName());
             }

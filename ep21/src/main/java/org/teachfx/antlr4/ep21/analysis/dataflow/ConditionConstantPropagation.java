@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep21.analysis.dataflow;
 
 import org.teachfx.antlr4.ep21.ir.IRNode;
+import org.teachfx.antlr4.ep21.ir.expr.Expr;
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
 import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
@@ -202,10 +203,9 @@ public class ConditionConstantPropagation extends AbstractDataFlowAnalysis<Map<V
 
         if (instr instanceof Assign assign) {
             VarSlot target = assign.getLhs();
-            Operand rhs = assign.getRhs();
+            Expr rhs = assign.getRhs();
 
             if (rhs instanceof ConstVal<?> constVal) {
-                // 常量赋值：变量变成已知常量
                 result.put(target, new KnownConstant(constVal));
             } else if (rhs instanceof VarSlot varSlot) {
                 // 变量赋值：如果rhs是常量，则target也变成常量；否则变成UNKNOWN

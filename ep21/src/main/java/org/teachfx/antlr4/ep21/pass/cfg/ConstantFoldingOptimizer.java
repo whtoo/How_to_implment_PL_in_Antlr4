@@ -3,6 +3,7 @@ package org.teachfx.antlr4.ep21.pass.cfg;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.teachfx.antlr4.ep21.ir.IRNode;
+import org.teachfx.antlr4.ep21.ir.expr.Expr;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
 import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
@@ -83,7 +84,7 @@ public class ConstantFoldingOptimizer implements IFlowOptimizer<IRNode> {
 
             // 处理常量赋值：跟踪哪些变量持有常量
             if (node instanceof Assign assign) {
-                Operand rhs = assign.getRhs();
+                Expr rhs = assign.getRhs();
                 if (rhs instanceof ConstVal<?> constVal) {
                     // 记录常量赋值: lhs = const
                     constantMap.put(assign.getLhs(), constVal);

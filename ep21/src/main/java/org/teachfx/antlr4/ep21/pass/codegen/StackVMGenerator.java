@@ -256,13 +256,11 @@ public class StackVMGenerator implements ICodeGenerator {
 
         @Override
         public Void visit(Assign assign) {
-            // Generate RHS expression
-            Operand rhs = assign.getRhs();
+            Expr rhs = assign.getRhs();
             if (rhs instanceof VarSlot varSlot) {
                 if (varSlot instanceof FrameSlot frameSlot) {
                     emitInstructionWithOperand("load", frameSlot.getSlotIdx());
                 } else if (varSlot instanceof OperandSlot) {
-                    // OperandSlot should be a temporary on stack, no action needed
                 } else {
                     errors.add("Unsupported RHS type in Assign: " + rhs.getClass().getSimpleName());
                 }

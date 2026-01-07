@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep21.analysis.dataflow;
 
 import org.teachfx.antlr4.ep21.ir.IRNode;
+import org.teachfx.antlr4.ep21.ir.expr.Expr;
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
 import org.teachfx.antlr4.ep21.ir.stmt.Assign;
 import org.teachfx.antlr4.ep21.pass.cfg.CFG;
@@ -58,7 +59,10 @@ public class LiveVariableAnalysis extends AbstractDataFlowAnalysis<Set<Operand>,
 
         if (instr instanceof Assign assign) {
             // 右边表达式的使用变量
-            gen.addAll(findUsedOperands(assign.getRhs()));
+            Expr rhs = assign.getRhs();
+            if (rhs instanceof Operand operand) {
+                gen.addAll(findUsedOperands(operand));
+            }
         }
         // 其他指令类型可以在这里扩展
 

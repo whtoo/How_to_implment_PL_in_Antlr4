@@ -1,8 +1,8 @@
 # EP18R TDD执行计划（精简版）
 
-**版本**: v1.0 | **日期**: 2026-01-07 | **状态**: 核心VM完成，VM适配任务待执行
-**目的**: 追踪EP18R寄存器VM开发进展，管理任务优先级
-**相关文档**: [TDD重构计划](TDD重构计划.md) | [EP18R核心设计文档](EP18R_核心设计文档.md) | [EP18R ABI设计文档](EP18R_ABI_设计文档.md) | [单元测试案例集](单元测试案例集.md)
+**版本**: v1.2 | **日期**: 2026-01-08 | **状态**: 核心VM完成，文档重构完成，架构优化+EP21联动计划已合并
+**目的**: 追踪EP18R TDD重构进展，管理任务优先级
+**相关文档**: [架构设计规范](架构设计规范.md) | [改进计划](改进计划.md) | [详细任务分解](详细任务分解.md) | [测试模板](测试模板.md) | [EP21-EP18R联动计划](EP21-EP18R联动计划.md)
 
 ---
 
@@ -10,10 +10,12 @@
 
 | 指标 | 值 | 状态 |
 |------|-----|------|
-| **核心VM功能** | 完成 | ✅ |
+| **核心功能** | 完成 | ✅ |
 | **测试通过率** | 100% (79/79) | ✅ |
 | **ABI规范实现** | 完成 | ✅ |
-| **VM适配任务** | 6个待完成 | ⏸️ |
+| **文档重构** | 完成 | ✅ |
+| **架构优化** | 计划完成 | ⏸️ |
+| **EP21联动** | 计划合并 | ⏸️ |
 
 ---
 
@@ -25,7 +27,7 @@
 - **TASK-008**: 更新VM设计文档与ABI一致
 
 ### ✅ Phase 2: 调用约定实现 (2025-12-25)
-- **TASK-002**: 实现标准栈帧布局
+- **TASK-002**: 实现标准栈帧布局（按ABI规范）
 - **TASK-006**: 实现帧指针完整支持
 - **TASK-007**: 统一调用约定（调用栈+LR双重机制）
 
@@ -40,138 +42,310 @@
 - **TASK-009**: 编写ABI一致性测试套件（11个测试，100%通过）
 - **TASK-010**: 重构汇编器支持自动序言/尾声生成（部分完成）
 
+### ✅ Phase 5: 文档重构 (2026-01-08)
+- **DOC-REFACTOR-007**: 创建 backup 目录，备份旧文档
+- **DOC-REFACTOR-001**: 合并核心设计和 ABI 文档为架构设计规范
+- **DOC-REFACTOR-003**: 创建架构优化计划文档
+- **DOC-REFACTOR-002**: 创建详细任务分解文档
+- **DOC-REFACTOR-004**: 创建测试模板文档
+- **DOC-REFACTOR-005**: 更新 TDD 执行计划，合并架构优化任务
+
 ---
 
-## 3. 进行中任务 (1个)
+## 3. EP21-EP18R联动任务 ⏸️
 
-### 🔄 TASK-015: 集成自动序言/尾声生成到汇编器
-- **状态**: 部分完成
-- **预计工时**: 4小时
-- **依赖**: CallingConventionUtils已实现，需要集成到VMAssembler
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 | 关联EP21任务 |
+|--------|------|--------|----------|------|------------------|
+| TASK-EP21-VM-01 | IRegisterAllocator (ep18r定义，ep21使用) | 🔴 高 | 4小时 | ⏸️ | EP21-CG-01 |
+| TASK-EP21-VM-02 | LinearScanAllocator (ep18r实现，ep21验证) | 🔴 高 | 12小时 | ⏸️ | EP21-CG-02 |
+| TASK-EP21-VM-03 | RegisterAssembler (ep18r实现，ep21使用) | 🔴 高 | 16小时 | ⏸️ | EP21-CG-03 |
+| TASK-EP21-VM-04 | ByteCodeEncoder (ep18r实现，ep21验证) | 🔴 高 | 8小时 | ⏸️ | EP21-CG-04 |
+| TASK-EP21-VM-05 | RegisterCallingConvention (ep18r实现，ep21使用) | 🟡 中 | 8小时 | ⏸️ | EP21-CG-05 |
+| TASK-EP21-VM-06 | RegisterVMAdapter (ep18r实现，ep21使用) | 🟡 中 | 8小时 | ⏸️ | EP21-VM-06 |
 
----
-
-## 4. 计划中任务
-
-### 🔴 VM适配高优先级任务（与EP21联动）
-
-#### TASK-18R-VM-01: 寄存器分配器接口
-- **预计工时**: 4小时
-- **优先级**: 🔴 高
-- **目标EP**: EP21
-- **验收标准**:
+**EP21-VM-01: IRegisterAllocator 接口**
+- **预计工时**: 4 小时
+- **改进方向**:
+  - 添加活跃区间查询接口 `getLiveInterval(String varName)`
+  - 添加溢出代价计算接口 `getSpillCost(String varName)`
+  - **验收标准**:
   - 接口扩展完成（活跃区间查询、溢出代价计算）
-  - Javadoc文档完整
+  - Javadoc 文档完整
   - 接口契约测试通过
-- **关键文件**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/stackvm/codegen/IRegisterAllocator.java`
+  - **关键文件**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/stackvm/codegen/IRegisterAllocator.java`
 
-#### TASK-18R-VM-02: 线性扫描寄存器分配器
-- **预计工时**: 12小时
-- **优先级**: 🔴 高
-- **目标EP**: EP21
-- **验收标准**:
+**EP21-VM-02: LinearScanAllocator 实现**
+- **预计工时**: 12 小时
+- **改进方向**:
+  - 正确处理16个物理寄存器溢出
+  - 实现活跃区间计算
+  - 实现溢出策略
+  - **验收标准**:
   - 正确处理16个物理寄存器
-  - 溢出指令占比 ≤15%
+  - 溢出指令占比 ≤ 15%
   - 算法复杂度 O(n log n)
-- **关键文件**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/stackvm/codegen/LinearScanAllocator.java`
+  - 关键文件**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/stackvm/codegen/LinearScanAllocator.java`
 
-#### TASK-18R-VM-03: EP18R代码生成器
-- **预计工时**: 16小时
-- **优先级**: 🔴 高
-- **目标EP**: EP21
-- **验收标准**:
+**EP21-VM-03: RegisterAssembler 实现**
+- **预计工时**: 16 小时
+- **改进方向**:
   - 生成可执行的32位字节码
-  - 支持完整的Cymbol语言
+  - 支持完整的 Cymbol 语言
   - 通过集成测试
-- **关键文件**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/pass/codegen/RegisterAssembler.java`
+  - **验收标准**:
+  - 生成可执行的 32 位字节码
+  - 支持完整的 Cymbol 语言
+  - 通过集成测试
+  - **关键文件**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/pass/codegen/RegisterAssembler.java`
 
-#### TASK-18R-VM-04: 32位字节码编码器
-- **预计工时**: 8小时
-- **优先级**: 高
-- **目标EP**: EP21
-- **验收标准**:
+**EP21-VM-04: ByteCodeEncoder 实现**
+- **预计工时**: 8 小时
+- **改进方向**:
   - 42条指令全部支持
-  - 编码正确性100%
+  - 编码正确性 100%
   - 单元测试覆盖
-- **关键文件**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/pass/codegen/ByteCodeEncoder.java`
+  - **验收标准**:
+  - 42 条指令全部支持
+  - 编码正确性 100%
+  - 单元测试覆盖
+  - **关键文件**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/pass/codegen/ByteCodeEncoder.java`
 
-#### TASK-18R-VM-05: EP18R调用约定实现
-- **预计工时**: 8小时
-- **优先级**: 中
-- **目标EP**: EP21
-- **验收标准**:
-  - 与ABI规范100%一致
-  - 提供清晰的API
+**EP21-VM-05: RegisterCallingConvention 实现**
+- **预计工时**: 8 小时
+- **改进方向**:
+  - 与 ABI 规范 100% 一致
+  - 提供清晰的 API
   - 完整的测试覆盖
-- **输出**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/stackvm/codegen/RegisterCallingConvention.java`
+  - **验收标准**:
+  - 与 ABI 规范 100% 一致
+  - 提供清晰的 API
+  - 完整的测试覆盖
+  - **输出**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/stackvm/codegen/RegisterCallingConvention.java`
 
-#### TASK-18R-VM-06: EP18R→EP21适配器接口
-- **预计工时**: 8小时
-- **优先级**: 中
-- **目标EP**: EP21
-- **验收标准**:
+**EP21-VM-06: RegisterVMAdapter 接口**
+- **预计工时**: 8 小时
+- **改进方向**:
   - 接口定义清晰
-  - EP21可无缝调用
+  - EP21 可无缝调用
   - 集成测试通过
-- **输出**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/pass/codegen/RegisterVMAdapter.java`
+  - **验收标准**:
+  - 接口定义清晰
+  - EP21 可无缝调用
+  - 集成测试通过
+  - **输出**: `/ep18r/src/main/java/org/teachfx/antlr4/ep18r/pass/codegen/RegisterVMAdapter.java`
 
-**VM适配任务总工时**: 56小时（~7天）
+**EP21-TEST-01: RegisterVMTestSuite**
+- **预计工时**: 16 小时
+- **任务类型**: 新增测试
+- **验收标准**:
+  - 新增 ≥ 50 个测试用例
+  - 覆盖寄存器分配功能
+  - 测试覆盖率 ≥ 90%
+  - **关键文件**: `/ep18r/src/test/java/org/teachfx/antlr4/ep18r/integration/EP18EP18RCrossVMTest.java`
 
-### 📝 文档完善任务
+**EP21-TEST-02: ABIComplianceTest**
+- **预计工时**: 12 小时
+- **任务类型**: 新增测试
+- **验收标准**:
+  - 验证 ABI 规范符合率 = 100%
+  - 包含 ≥ 20 个测试用例
+  - 所有测试通过
+  - **关键文件**: `/ep18r/src/test/java/org/teachfx/antlr4/ep18r/abi/ABIComplianceTest.java`
 
-#### TASK-DOC-01: 完善VM设计文档
-- **预计工时**: 4小时
-- **优先级**: 中
-- **内容**: 同步最新实现状态，更新接口说明
+**EP21-TEST-03: RegisterAllocationTestSuite**
+- **预计工时**: 16 小时
+- **任务类型**: 新增测试
+- **验收标准**:
+  - 测试寄存器分配策略
+  - 验证溢出处理
+  - 测试性能优化效果
+  - **关键文件**: `/ep18r/src/test/java/org/teachfx/antlr4/ep18r/codegen/RegisterAllocationTestSuite.java`
 
-#### TASK-DOC-02: 创建代码生成器文档
-- **预计工时**: 6小时
-- **优先级**: 中
-- **内容**: RegisterAssembler使用指南，寄存器分配策略说明
+**EP21-VM-01 到 EP21-VM-06 预计总工时**: 72 小时（~9 个工作日）
 
-### ⏸️ 低优先级任务
-
-#### TASK-PERF-01: 性能基准测试
-- **预计工时**: 8小时
-- **优先级**: 低
-- **内容**: 测量标准序言/尾声开销，建立性能基准
-
-#### TASK-015: 集成自动序言/尾声生成到汇编器
-- **状态**: 部分完成
-- **预计工时**: 4小时
-- **优先级**: 中
-
----
-
-## 5. 项目看板
-
-| 任务ID | 描述 | 状态 | 测试数 | 完成日期 |
-|--------|------|------|--------|----------|
-| TASK-001 | 统一寄存器命名 | ✅ | - | 2025-12-20 |
-| TASK-002 | 标准栈帧布局 | ✅ | - | 2025-12-25 |
-| TASK-003 | 栈帧8字节对齐 | ✅ | - | 2025-12-22 |
-| TASK-004 | 被调用者保存寄存器 | ✅ | - | 2025-12-28 |
-| TASK-005 | 局部变量堆内存 | ✅ | - | 2025-12-30 |
-| TASK-006 | 帧指针支持 | ✅ | - | 2025-12-23 |
-| TASK-007 | 调用约定统一 | ✅ | - | 2025-12-21 |
-| TASK-008 | VM文档更新 | ✅ | - | 2025-12-19 |
-| TASK-009 | ABI测试套件 | ✅ | 11 | 2025-12-31 |
-| TASK-010 | 自动序言/尾声 | 🔄 | - | 进行中 |
-| TASK-011 | 栈帧工具类 | ✅ | - | 2025-12-27 |
-| TASK-013 | 栈参数传递 | ✅ | - | 2025-12-31 |
-| TASK-014 | 递归函数修复 | ✅ | - | 2025-12-29 |
-
-**已完成**: 12/15任务（80%） + 6个VM适配任务待开始
+**验收标准**:
+- 所有 EP21-VM 接口定义完整
+- 所有 EP21-VM 实现类完成
+- 所有 EP21-TEST 测试套件创建完成
+- EP21 和 EP18R 集成测试全部通过
+- 文档同步更新
 
 ---
 
-## 6. 核心组件状态
+## 4. 架构优化路线图（更新）
+
+### Phase 6: 基础设施恢复（预计 2-3 天）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-BINFRA-001 | 恢复代码质量工具配置 | 🔴 高 | 4小时 | ⏸️ |
+| TASK-BINFRA-002 | 建立基线测试覆盖 | 🔴 高 | 6小时 | ⏸️ |
+
+### Phase 7: 代码重复消除（预计 3-5 天）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-DUPL-001 | 提取通用寄存器操作工具类 | 🔴 高 | 8小时 | ⏸️ |
+| TASK-DUPL-002 | 创建指令执行模板 | 🔴 高 | 12小时 | ⏸️ |
+| TASK-DUPL-003 | 合并相似指令执行器 | 🟡 中 | 8小时 | ⏸️ |
+
+### Phase 8: 上帝类拆分与复杂度降低（预计 4-6 天）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-GOD-001 | 拆分 CallingConventionUtils（607 行） | 🔴 高 | 16小时 | ⏸️ |
+| TASK-GOD-002 | 重构 executeInstruction() 方法 | 🔴 高 | 12小时 | ⏸️ |
+| TASK-GOD-003 | 引入指令工厂 | 🟡 中 | 8小时 | ⏸️ |
+
+### Phase 9: 接口抽象与包结构优化（预计 5-7 天）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-ABSTRACT-001 | 定义核心接口 | 🟡 中 | 10小时 | ⏸️ |
+| TASK-ABSTRACT-002 | 重构包结构 | 🟡 中 | 12小时 | ⏸️ |
+| TASK-ABSTRACT-003 | 实现依赖注入 | 🟡 中 | 8小时 | ⏸️ |
+
+### Phase 10: 测试增强与性能优化（预计 4-6 天）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-TEST-001 | 测试策略升级 | 🟡 中 | 16小时 | ⏸️ |
+| TASK-TEST-002 | 新增测试类 | 🟡 中 | 12小时 | ⏸️ |
+
+### Phase 11: 文档完善（预计 2-3 天）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-DOC-002 | 代码规范 | 🟢 低 | 6小时 | ⏸️ |
+
+### Phase 12: EP21-EP18R联动任务（预计 9 天）**
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-EP21-VM-01 | IRegisterAllocator (ep18r定义，ep21使用) | 🔴 高 | 4小时 | ⏸️ |
+| TASK-EP21-VM-02 | LinearScanAllocator (ep18r实现，ep21验证) | 🔴 高 | 12小时 | ⏸️ |
+| TASK-EP21-VM-03 | RegisterAssembler (ep18r实现，ep21使用) | 🔴 高 | 16小时 | ⏸️ |
+| TASK-EP21-VM-04 | ByteCodeEncoder (ep18r实现，ep21验证) | 🔴 高 | 8小时 | ⏸️ |
+| TASK-EP21-VM-05 | RegisterCallingConvention (ep18r实现，ep21使用) | 🟡 中 | 8 小时 | ⏸️ |
+| TASK-EP21-VM-06 | RegisterVMAdapter (ep18r实现，ep21使用) | 🟡 中 | 8 小时 | ⏸️ |
+| TASK-EP21-TEST-01 | RegisterVMTestSuite | 🟡 中 | 16小时 | ⏸️ |
+| TASK-EP21-TEST-02 | ABIComplianceTest | 🟡 中 | 12 小时 | ⏸️ |
+| TASK-EP21-TEST-03 | RegisterAllocationTestSuite | 🟡 中 | 16 小时 | ⏸️ |
+
+**EP21-EP18R联动任务总工时**: 72 小时（~9 个工作日）
+
+---
+
+## 5. 进行中任务 (0个)
+
+当前无进行中任务。
+
+---
+
+## 6. 计划中任务（架构优化 + EP21联动）
+
+### 🔴 基础设施恢复（2个任务）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-BINFRA-001 | 恢复代码质量工具配置 | 🔴 高 | 4h | ⏸️ |
+| TASK-BINFRA-002 | 建立基线测试覆盖 | 🔴 高 | 6h | ⏸️ |
+
+### 🔴 代码重复消除（3个任务）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-DUPL-001 | 提取通用寄存器操作工具类 | 🔴 高 | 8h | ⏸️ |
+| TASK-DUPL-002 | 创建指令执行模板 | 🔴 高 | 12h | ⏸️ |
+| TASK-DUPL-003 | 合并相似指令执行器 | 🟡 中 | 8h | ⏸️ |
+
+### 🔴 上帝类拆分与复杂度降低（3个任务）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-GOD-001 | 拆分 CallingConventionUtils（607 行） | 🔴 高 | 16h | ⏸️ |
+| TASK-GOD-002 | 重构 executeInstruction() 方法 | 🔴 高 | 12h | ⏸️ |
+| TASK-GOD-003 | 引入指令工厂 | 🟡 中 | 8h | ⏸️ |
+
+### 🟡 接口抽象优化（3个任务）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-ABSTRACT-001 | 定义核心接口 | 🟡 中 | 10h | ⏸️ |
+| TASK-ABSTRACT-002 | 重构包结构 | 🟡 中 | 12h | ⏸️ |
+| TASK-ABSTRACT-003 | 实现依赖注入 | 🟡 中 | 8h | ⏸️ |
+
+### 🟡 测试增强（2个任务）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-TEST-001 | 测试策略升级 | 🟡 中 | 16h | ⏸️ |
+| TASK-TEST-002 | 新增测试类 | 🟡 中 | 12h | ⏸️ |
+
+### 🟡 文档完善（1个任务）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-DOC-002 | 代码规范 | 🟢 低 | 6h | ⏸️ |
+
+---
+
+### 🔴 EP21-EP18R联动任务（6个任务）
+
+| 任务ID | 描述 | 优先级 | 预计工时 | 状态 |
+|--------|------|--------|----------|------|
+| TASK-EP21-VM-01 | IRegisterAllocator (ep18r定义，ep21使用) | 🔴 高 | 4h | ⏸️ |
+| TASK-EP21-VM-02 | LinearScanAllocator (ep18r实现，ep21验证) | 🔴 高 | 12h | ⏸️ |
+| TASK-EP21-VM-03 | RegisterAssembler (ep18r实现，ep21使用) | 🔴 高 | 16h | ⏸️ |
+| TASK-EP21-VM-04 | ByteCodeEncoder (ep18r实现，ep21验证) | 🔴 高 | 8h | ⏸️ |
+| TASK-EP21-VM-05 | RegisterCallingConvention (ep18r实现，ep21使用) | 🟡 中 | 8h | ⏸️ |
+| TASK-EP21-VM-06 | RegisterVMAdapter (ep18r实现，ep21使用) | 🟡 中 | 8h | ⏸️ |
+| TASK-EP21-TEST-01 | RegisterVMTestSuite | 🟡 中 | 16h | ⏸️ |
+| TASK-EP21-TEST-02 | ABIComplianceTest | 🟡 中 | 12h | ⏸️ |
+| TASK-EP21-TEST-03 | RegisterAllocationTestSuite | 🟡 中 | 16h | ⏸️ |
+
+**EP21-EP18R联动任务总工时**: 72 小时（约 9 个工作日）
+
+---
+
+## 7. 项目看板
+
+### 已完成任务（15个核心任务 + 6个文档重构任务）
+
+| 任务ID | 描述 | 状态 | 完成日期 |
+|--------|------|------|----------|
+| TASK-001 | 统一寄存器命名 | ✅ | 2025-12-20 |
+| TASK-002 | 标准栈帧布局 | ✅ | 2025-12-25 |
+| TASK-003 | 栈帧8字节对齐 | ✅ | 2025-12-22 |
+| TASK-004 | 被调用者保存寄存器 | ✅ | 2025-12-28 |
+| TASK-005 | 局部变量堆内存 | ✅ | 2025-12-30 |
+| TASK-006 | 帧指针支持 | ✅ | 2025-12-23 |
+| TASK-007 | 调用约定统一 | ✅ | 2025-12-21 |
+| TASK-008 | VM文档更新 | ✅ | 2025-12-19 |
+| TASK-009 | ABI测试套件 | ✅ | 2025-12-31 |
+| TASK-010 | 自动序言/尾声 | 🔄 | 进行中 | - |
+| TASK-011 | 栈帧工具类 | ✅ | 2025-12-27 |
+| TASK-013 | 栈参数传递 | ✅ | 2025-12-31 |
+| TASK-014 | 递归函数修复 | ✅ | 2025-12-29 |
+| DOC-REFACTOR-001 | 合并架构文档 | ✅ | 2026-01-08 |
+| DOC-REFACTOR-002 | 创建任务分解 | ✅ | 2026-01-08 |
+| DOC-REFACTOR-003 | 创建改进计划 | ✅ | 2026-01-08 |
+| DOC-REFACTOR-004 | 创建测试模板 | ✅ | 2026-01-08 |
+| DOC-REFACTOR-005 | 更新 TDD 执行计划 | ✅ | 2026-01-08 |
+| DOC-REFACTOR-006 | 评估 OPENSPECKIT | ✅ | 2026-01-08 |
+| DOC-REFACTOR-007 | 备份旧文档 | ✅ | 2026-01-08 |
+
+**已完成**: 15/15核心任务 + 7个文档重构任务 + 1个进行中任务 + 14个计划中任务
+
+---
+
+## 8. 核心组件状态
 
 | 组件 | 状态 | 测试数 | 说明 |
 |------|------|--------|------|
 | **RegisterVMInterpreter** | ✅ 完成 | 79 | 寄存器VM解释器 |
 | **RegisterBytecodeDefinition** | ✅ 完成 | - | 42条指令定义 |
-| **CallingConventionUtils** | ✅ 完成 | - | 调用约定工具 |
+| **CallingConventionUtils** | ✅ 完成 | - | 调用约定工具（需拆分） |
 | **StackOffsets** | ✅ 完成 | - | 栈帧偏移计算 |
 | **RegisterByteCodeAssembler** | ✅ 完成 | - | 汇编器 |
 | **RegisterDisAssembler** | ✅ 完成 | - | 反汇编器 |
@@ -182,63 +356,119 @@
 
 ---
 
-## 7. EP21-EP18R联动说明
+## 9. 架构优化进度
 
-### 7.1 接口契约
+| 阶段 | 总任务 | 已完成 | 进行中 | 未开始 | 完成率 |
+|------|--------|--------|--------|--------|--------|
+| Phase 6: 基础设施恢复 | 2 | 0 | 0 | 2 | 0% |
+| Phase 7: 代码重复消除 | 3 | 0 | 0 | 3 | 0% |
+| Phase 8: 上帝类拆分 | 3 | 0 | 0 | 3 | 0% |
+| Phase 9: 接口抽象优化 | 3 | 0 | 0 | 3 | 0% |
+| Phase 10: 测试增强 | 2 | 0 | 0 | 2 | 0% |
+| Phase 11: 文档完善 | 1 | 1 | 0 | 0 | 100% |
+| **Phase 12: EP21-EP18R联动** | 6 | 0 | 0 | 6 | 0% |
+| **总计** | 20 | 1 | 0 | 19 | 5% |
 
-#### 契约1: IRegisterAllocator（EP18R定义）
-```java
-public interface IRegisterAllocator {
-    int allocate(String varName);
-    void free(String varName);
-    int getRegister(String varName);
-    Map<String, Integer> getAllocation();
-}
-```
-- **定义位置**: EP18R
-- **实现者**: EP18R (LinearScanAllocator, GraphColoringAllocator)
-- **使用者**: EP21 RegisterVMGenerator (可选集成)
-
-#### 契约2: IR格式（EP21定义）
-- **定义**: LIR节点体系
-- **传递方向**: EP21 → EP18R
-- **验证**: 语义等价性测试
-
-### 7.2 里程碑
-
-| 里程碑 | 时间 | EP18R标志 | EP21标志 | 验收标准 |
-|--------|------|-----------|----------|----------|
-| M1 | Week 2 | VM-01,02完成 | CG-01,02完成 | 测试通过 |
-| M2 | Week 3 | VM-03,04,05完成 | CG-03, TEST-01完成 | 接口可用 |
-| M3 | Week 4 | VM-06完成 | TEST-02完成 | 适配器集成 |
-| M4 | Week 5 | TEST-01,02完成 | DOC-01,02完成 | 文档同步 |
-
-### 7.3 同步机制
-
-- **双周同步会议**: 每两周周五
-- **接口变更通知**: 接口变更需提前1周通知
-- **集成测试触发**: 任一EP完成关键任务时运行完整集成测试
+**预计总工时**: 214 小时（约 27 个工作日）
+**预计完成时间**: 2026-02-26
 
 ---
 
-## 8. 成功标准
+## 10. 技术债务清理
 
-| 指标 | 目标值 | 当前值 | 状态 |
-|------|--------|--------|------|
-| **测试覆盖率** | ≥85% | 100% | ✅ |
-| **ABI规范符合率** | 100% | 100% | ✅ |
-| **VM适配任务完成率** | 100% | 0% | ⏸️ |
-| **文档完整性** | 100% | 80% | 🔄 |
+### 已清理 (2026-01-08)
+
+**文档重组完成**:
+- ✅ 文档结构重组完成：6 个精简文档 + 1 个架构规范
+- ✅ 旧文档备份到 `docs/backup/` 目录
+- ✅ 所有任务整合到改进计划和详细任务分解
+
+**待清理** (架构优化 + EP21联动):
+- ⏸️ 代码重复：重复的寄存器操作逻辑
+- ⏸️ 上帝类：CallingConventionUtils（607 行）
+- ⏸️ 高复杂度：executeInstruction() 方法（300+ 行）
+- ⏸️ 缺少接口：核心组件无接口抽象
+- ⏸️ 包结构混乱：stackvm 包职责不清晰
+- ⏸️ EP21 接口：需要定义接口让 EP21 可以调用 EP18R
+- ⏸️ EP21 适配器：需要实现适配器让 EP18R 能被 EP21 使用
+- ⏸️ 测试同步：需要创建 EP18R 专用测试供 EP21 验证
 
 ---
 
-## 9. 相关资源
+## 11. 成功标准
 
-- **详细TDD计划**: [TDD重构计划.md](TDD重构计划.md)
-- **核心设计文档**: [EP18R_核心设计文档.md](EP18R_核心设计文档.md)
-- **ABI设计文档**: [EP18R_ABI_设计文档.md](EP18R_ABI_设计文档.md)
-- **单元测试案例**: [单元测试案例集.md](单元测试案例集.md)
-- **OpenSpecKit规范**: [OPENSPECKIT_SPECIFICATION.md](OPENSPECKIT_SPECIFICATION.md)
+### 代码质量指标
+
+| 指标 | 当前值 | 目标值 | 测量方法 |
+|------|--------|--------|----------|
+| 代码重复率 | ~25% | < 15% | CPD（复制粘贴检测） |
+| 圈复杂度（平均） | 12.5 | ≤ 8.0 | JaCoCo 复杂度分析 |
+| 方法长度（平均） | 45 行 | ≤ 30 行 | CheckStyle 检查 |
+| 测试覆盖率 | 未测量 | ≥ 85% | JaCoCo 报告 |
+| SpotBugs 问题 | 未测量 | 0 严重问题 | SpotBugs 报告 |
+| CheckStyle 违规 | 未测量 | 0 错误级别违规 | CheckStyle 报告 |
+
+### 架构改进指标
+
+1. **接口抽象度**：核心组件接口抽象比例 ≥ 70%
+2. **包内聚性**：单个包职责单一，类数量 ≤ 15
+3. **依赖清晰度**：循环依赖数为 0，依赖方向明确
+4. **可测试性**：所有核心类可独立单元测试
+5. **EP21 集成**：EP21 可无缝使用 EP18R 组件
+
+### 性能指标
+
+1. **指令执行速度**：相比当前版本提升 ≥ 10%
+2. **内存使用**：峰值内存使用降低 ≥ 15%
+3. **启动时间**：虚拟机初始化时间减少 ≥ 20%
+4. **GC 开销**：垃圾回收暂停时间减少 ≥ 25%
+5. **EP21 联动集成**：EP21 可无缝使用 EP18R 组件
+
+---
+
+## 12. 下一步行动
+
+### 立即行动（本周）
+
+1. **开始 Phase 6: 基础设施恢复**
+   - TASK-BINFRA-001: 恢复代码质量工具配置
+   - TASK-BINFRA-002: 建立基线测试覆盖
+
+2. **准备 EP21 联动**
+   - 熟悉 TASK-EP21-VM-01 到 TASK-EP21-VM-06 的详细要求
+   - 与 EP21 团队沟通接口契约和验收标准
+   - 准备 EP18R 接口定义的基础框架
+
+### 短期行动（1-2 周）
+
+1. **开始 Phase 7: 代码重复消除**
+   - TASK-DUPL-001: 提取通用寄存器操作工具类
+   - TASK-DUPL-002: 创建指令执行模板
+
+2. **开始 Phase 8: 上帝类拆分**
+   - TASK-GOD-001: 拆分 CallingConventionUtils（607 行）
+
+3. **开始 EP21-EP18R联动**
+   - TASK-EP21--VM-01: 定义 IRegisterAllocator 接口
+   - TASK-EP21-VM-02: 实现 LinearScanAllocator
+   - 开始集成测试同步
+
+### 长期规划
+
+1. **完成所有架构优化阶段**（Phase 6-11）
+2. **完成所有 EP21-EP18R联动任务**（Phase 12）
+3. **实现性能优化目标**（指令速度≥10%，内存使用≥15%）
+
+---
+
+## 13. 相关资源
+
+- **架构设计规范**: [架构设计规范.md](架构设计规范.md)
+- **改进计划**: [改进计划.md](改进计划.md)
+- **详细任务分解**: [详细任务分解.md](详细任务分解.md)
+- **测试模板**: [测试模板.md](测试模板.md)
+- **OPENSPECKIT**: [OPENSPECKIT_SPECIFICATION.md](OPENSPECKIT_SPECIFICATION.md)
+- **EP21-EP18R联动计划**: [EP21/docs/EP21-EP18R联动计划.md](../ep21/docs/EP21-EP18R联动计划.md)
 
 ---
 
@@ -246,17 +476,22 @@ public interface IRegisterAllocator {
 
 ```bash
 # 项目构建
-mvn clean compile              # 编译EP18R
-mvn test -pl ep18r             # 测试EP18R
+mvn clean compile              # 编译 EP18R
+mvn test -pl ep18r             # 测试 EP18R
 mvn clean install            # 完整构建
 
 # 测试
-mvn test -Dtest=*RegisterVM*  # 运行RegisterVM测试
-mvn test -Dtest=*ABI*         # 运行ABI测试
+mvn test -Dtest=*RegisterVM*  # 运行 RegisterVM 测试
+mvn test -Dtest=*ABI*         # 运行 ABI 测试
 
 # 代码分析
 Serena:find_symbol("ClassName", "ep18r")
 Serena:search_for_pattern("pattern", "ep18r/src")
+
+# 代码质量检查（Phase 6 完成后可用）
+mvn checkstyle:check       # 代码风格检查
+mvn spotbugs:check          # 静态分析
+mvn jacoco:report          # 测试覆盖率报告
 ```
 
 ---
@@ -265,10 +500,11 @@ Serena:search_for_pattern("pattern", "ep18r/src")
 
 | 版本 | 日期 | 更新内容 |
 |------|------|----------|
-| v1.0 | 2026-01-07 | 创建精简版TDD执行计划，参考EP21格式，添加EP21联动说明 |
+| v1.0 | 2026-01-07 | 创建精简版 TDD 执行计划，参考 EP21 格式，添加 EP21 联动说明 |
+| v1.1 | 2026-01-08 | 合并架构优化路线图，更新任务状态，添加 EP21-EP18R 联动任务，更新文档重构完成状态 |
 
 ---
 
-**最后更新**: 2026-01-07
+**最后更新**: 2026-01-08
 **维护者**: Claude Code
-**状态**: ✅ 核心VM完成，⏸️ VM适配任务待执行
+**状态**: ✅ 核心功能完成，文档重构完成，架构优化计划 + EP21-EP18R联动计划准备执行

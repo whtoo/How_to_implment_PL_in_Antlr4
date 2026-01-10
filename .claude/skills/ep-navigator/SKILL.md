@@ -1,6 +1,6 @@
 ---
 name: ep-navigator
-description: EP项目导航专家，提供21个EP的依赖关系路由、快速定位和跨EP对比分析。
+description: EP项目导航专家，提供21个EP的依赖路由、快速定位和跨EP对比。
 version: v1.0
 tags: [navigation, routing, ep-relationship, cross-ep]
 allowed-tools: mcp__serena__read_memory, mcp__serena__list_memories, Read, Grep

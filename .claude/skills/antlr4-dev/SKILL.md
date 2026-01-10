@@ -1,6 +1,6 @@
 ---
 name: antlr4-dev
-description: ANTLR4前端开发专家，专注于词法/语法分析、AST构建、访问者模式实现。
+description: ANTLR4前端开发专家，专注于词法/语法分析、AST构建、访问者模式。
 version: v1.0
 tags: [antlr4, frontend, lexer, parser, ast]
 allowed-tools: mcp__serena__search_for_pattern, mcp__serena__find_symbol, Read, Bash

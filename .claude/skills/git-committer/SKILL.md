@@ -1,6 +1,6 @@
 ---
 name: git-committer
-description: Git提交专家，规范化提交信息和智能分主题提交。
+description: Git提交专家，规范化提交信息和分主题提交。
 version: v1.0
 tags: [git, commit, version-control]
 allowed-tools: Bash

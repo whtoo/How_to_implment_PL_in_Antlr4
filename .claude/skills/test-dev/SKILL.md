@@ -1,6 +1,6 @@
 ---
 name: test-dev
-description: 测试开发专家，基于JUnit 5 + AssertJ + Mockito + JaCoCo的标准化测试规范。
+description: 测试开发专家，基于JUnit 5 + AssertJ + Mockito + JaCoCo。
 version: v1.0
 tags: [testing, junit5, assertj, mockito, jacoco, coverage]
 allowed-tools: Read, Write, Edit, Bash

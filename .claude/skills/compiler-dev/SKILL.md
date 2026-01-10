@@ -1,6 +1,6 @@
 ---
 name: compiler-dev
-description: 编译器后端开发专家，专注于IR、CFG、SSA、数据流分析和优化Pass实现。
+description: 编译器后端开发专家，专注于IR、CFG、SSA、数据流分析和优化Pass。
 version: v1.0
 tags: [compiler, backend, ir, cfg, ssa, optimization]
 allowed-tools: mcp__serena__find_symbol, mcp__serena__replace_symbol_body, mcp__serena__search_for_pattern, Read, Bash

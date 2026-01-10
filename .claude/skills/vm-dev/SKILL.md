@@ -1,6 +1,6 @@
 ---
 name: vm-dev
-description: 虚拟机开发专家，专注于字节码设计、指令实现、栈帧管理、内存管理和垃圾回收。
+description: 虚拟机开发专家，专注于字节码、指令、栈帧、内存管理和垃圾回收。
 version: v1.0
 tags: [vm, bytecode, execution, stack, memory, gc]
 allowed-tools: mcp__serena__find_symbol, mcp__serena__replace_symbol_body, Read, Bash

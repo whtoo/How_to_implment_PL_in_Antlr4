@@ -1,5 +1,85 @@
 # EP18 - Cymbol 虚拟机与垃圾回收系统
 
+## 🤖 AI Agent 快速指南
+
+### 🎯 EP 概述
+- **主题**: 栈式虚拟机、引用计数垃圾回收、字节码汇编器、结构体统一实现、全局变量支持
+- **目标**: 实现完整的编译器后端执行引擎，支持字节码解释执行和内存管理
+- **在编译器流水线中的位置**: 后端执行引擎
+- **依赖关系**: 
+  - 内部依赖: 无
+  - 外部依赖: ANTLR4 4.13.2, Mockito (测试), JMH (性能测试)
+
+### 📁 项目结构
+```
+ep18/
+├── src/main/java/org/teachfx/antlr4/ep18/
+│   ├── stackvm/          # 虚拟机引擎 (CymbolStackVM, VMInterpreter, ByteCodeAssembler)
+│   ├── gc/              # 垃圾回收系统 (ReferenceCountingGC, GCObjectHeader, GCStats)
+│   ├── symtab/          # 类型系统 (StructType, StructSymbol, Scope)
+│   └── parser/          # ANTLR4 生成的 VM 汇编解析器
+├── src/main/antlr4/VMAssembler.g4   # VM 汇编语法定义
+├── docs/                # 详细设计文档
+└── examples/gc/         # GC 示例程序
+```
+
+### 🏗️ 核心组件
+- **虚拟机引擎**: CymbolStackVM (主引擎), VMInterpreter (字节码解释器), ByteCodeAssembler (字节码汇编器)
+- **垃圾回收系统**: ReferenceCountingGC (引用计数 GC), GCObjectHeader (GC 对象头), GCStats (统计信息)
+- **类型系统**: StructValue (统一结构体运行时表示), StructType (结构体类型定义)
+- **配置和异常**: VMConfig (配置管理), VMException 及其子类 (异常处理)
+
+### 🔧 构建与测试
+```bash
+# 进入 EP18 目录
+cd ep18
+
+# 构建项目
+mvn clean compile
+
+# 运行所有测试
+mvn test
+
+# 运行特定测试类
+mvn test -Dtest=CymbolStackVMTest
+mvn test -Dtest=VMInterpreterTest
+mvn test -Dtest=GarbageCollectorTest
+
+# 运行性能基准测试
+mvn test -Dtest=PerformanceBenchmark
+
+# 运行单个测试方法
+mvn test -Dtest=CymbolStackVMTest#testAddition
+```
+
+### 🚀 常用操作
+#### 编译运行示例
+```bash
+# 运行 VM 汇编代码
+mvn compile exec:java -Dexec.mainClass="org.teachfx.antlr4.ep18.VMRunner"
+
+# 使用 VMInterpreter 执行 VM 汇编文件
+mvn compile exec:java -Dexec.mainClass="org.teachfx.antlr4.ep18.VMInterpreter" -Dexec.args="program.vm"
+
+# 汇编 VM 汇编代码为字节码
+java -cp target/classes org.teachfx.antlr4.ep18.stackvm.ByteCodeAssembler input.vm output.cvm
+```
+
+### 📝 关键注意事项
+1. **指令集操作数顺序已修复**: ILT、IGT、ILE、IGE 和 FLT 指令的操作数比较顺序已修复
+2. **结构体统一实现**: 使用新的 StructValue 替代旧的 StructSpace 和 int[] 堆表示
+3. **全局变量支持**: 新增 `.global` 指令用于声明全局变量，使用 GLOAD/GSTORE 访问
+4. **异常处理**: 支持 VMDivisionByZeroException、VMOverflowException、VMStackOverflowException
+5. **GC 统计**: GCStats 提供详细的垃圾回收统计信息
+
+### 🔍 调试技巧
+1. **启用详细日志**: 使用 `VMConfig.setVerbose(true)` 启用详细执行日志
+2. **性能监控**: 使用 `VMStats` 监控指令执行统计和内存使用
+3. **GC 分析**: 使用 `GCStats` 分析垃圾回收性能
+4. **断点调试**: VMInterpreter 支持设置断点和单步执行
+
+---
+
 ## 概述
 
 EP18 实现了一个功能完整的 **Cymbol 虚拟机 (CymbolStackVM)**，包含**引用计数垃圾回收器**、**结构体统一实现**、**全局变量支持**和**性能监控**等高级特性。该模块是编译器后端执行引擎，支持字节码解释执行、内存管理和运行时优化。

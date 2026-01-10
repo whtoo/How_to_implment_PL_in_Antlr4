@@ -1,10 +1,6 @@
 package org.teachfx.antlr4.ep18r.stackvm;
 
-/**
- * VMConfig - 虚拟机配置类
- * 提供虚拟机的各种配置选项
- */
-public class VMConfig {
+public class VMConfig implements IVMConfig {
     // 内存配置
     private final int heapSize;
     private final int stackSize;

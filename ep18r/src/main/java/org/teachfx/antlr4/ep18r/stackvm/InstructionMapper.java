@@ -119,4 +119,55 @@ public class InstructionMapper {
             .sorted()
             .toArray();
     }
+
+    /**
+     * 动态注册指令执行器
+     *
+     * 允许在运行时添加或替换指令执行器，支持自定义指令扩展
+     *
+     * @param opcode 操作码（0-63）
+     * @param executor 指令执行器
+     * @throws IllegalArgumentException 如果操作码超出范围或executor为null
+     */
+    public void registerExecutor(int opcode, InstructionExecutor executor) {
+        if (executor == null) {
+            throw new IllegalArgumentException("Instruction executor cannot be null");
+        }
+        if (opcode < 0 || opcode > 63) {
+            throw new IllegalArgumentException(
+                "Invalid opcode: " + opcode + ", must be 0-63");
+        }
+        executors.put(opcode, executor);
+    }
+
+    /**
+     * 注销指令执行器
+     *
+     * 从映射中移除指定操作码的执行器
+     *
+     * @param opcode 要注销的操作码
+     * @return 被移除的执行器，如果不存在返回null
+     */
+    public InstructionExecutor unregisterExecutor(int opcode) {
+        return executors.remove(opcode);
+    }
+
+    /**
+     * 清空所有已注册的指令执行器
+     *
+     * 注意：此方法会移除所有指令，包括默认指令。调用后需要手动重新注册所有指令。
+     */
+    public void clear() {
+        executors.clear();
+    }
+
+    /**
+     * 重置为默认指令集
+     *
+     * 清空所有指令并重新注册默认的42条指令
+     */
+    public void resetToDefaults() {
+        executors.clear();
+        initializeExecutors();
+    }
 }

@@ -9,11 +9,7 @@ import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser;
 
 import java.io.InputStream;
 
-/**
- * 寄存器虚拟机解释器
- * 执行寄存器字节码指令，使用寄存器文件而非操作数栈
- */
-public class RegisterVMInterpreter {
+public class RegisterVMInterpreter implements IVirtualMachine {
     // 虚拟机配置
     private final VMConfig config;
 
@@ -186,134 +182,54 @@ public class RegisterVMInterpreter {
 
     /**
      * 从操作数中提取寄存器编号（5位字段）
-     * 假设操作数编码：rd在bits 21-25, rs1在bits 16-20, rs2在bits 11-15, 立即数在低16位
+     * 委托给RegisterOperandExtractor工具类处理
      */
     private int extractRd(int operand) {
-        return (operand >> 21) & 0x1F;
+        return RegisterOperandExtractor.extractRd(operand);
     }
 
     private int extractRs1(int operand) {
-        return (operand >> 16) & 0x1F;
+        return RegisterOperandExtractor.extractRs1(operand);
     }
 
     private int extractRs2(int operand) {
-        return (operand >> 11) & 0x1F;
+        return RegisterOperandExtractor.extractRs2(operand);
     }
 
     private int extractImm16(int operand) {
-        int imm = operand & 0xFFFF;
-        // 符号扩展：如果最高位为1，则扩展为负数
-        if ((imm & 0x8000) != 0) {
-            imm |= 0xFFFF0000;
-        }
-        return imm;
+        return RegisterOperandExtractor.extractImm16(operand);
     }
 
     private int extractImm26(int operand) {
-        int imm = operand & 0x3FFFFFF;
-        // 符号扩展：如果最高位为1，则扩展为负数
-        if ((imm & 0x2000000) != 0) {
-            imm |= 0xFC000000;
-        }
-        return imm;
+        return RegisterOperandExtractor.extractImm26(operand);
     }
 
     /**
      * 执行单条指令（使用策略模式）
      *
      * 大部分指令通过InstructionMapper委托给相应的执行器处理，
-     * 特殊指令（CALL, RET, HALT, J, JT, JF）由于需要访问VM内部状态（如codeSize），在此处直接处理。
+     * 特殊指令由于需要访问VM内部状态（如codeSize），在此处直接处理。
      */
     private void executeInstruction(int opcode, int operand) throws Exception {
-        // 特殊指令：需要访问VM调用栈、codeSize或控制running状态
         switch (opcode) {
-            case RegisterBytecodeDefinition.INSTR_J: {
-                // j target: 无条件跳转
-                int target = extractImm26(operand);
-
-                // 验证跳转目标
-                if (target < 0 || target >= codeSize || target % 4 != 0) {
-                    throw new IllegalArgumentException("Invalid jump target: " + target + " at PC=" + programCounter);
-                }
-
-                programCounter = target;
-                didJump = true;
+            case RegisterBytecodeDefinition.INSTR_J:
+                executeJump(operand);
                 return;
-            }
-            case RegisterBytecodeDefinition.INSTR_JT: {
-                // jt rs1, target: 条件为真跳转
-                int rs1 = extractRs1(operand);
-                int target = extractImm16(operand);
-
-                if (getRegister(rs1) != 0) {
-                    // 验证跳转目标
-                    if (target < 0 || target >= codeSize || target % 4 != 0) {
-                        throw new IllegalArgumentException("Invalid conditional jump target: " + target + " at PC=" + programCounter);
-                    }
-
-                    programCounter = target;
-                    didJump = true;
-                }
+            case RegisterBytecodeDefinition.INSTR_JT:
+                executeJumpIfTrue(operand);
                 return;
-            }
-            case RegisterBytecodeDefinition.INSTR_JF: {
-                // jf rs1, target: 条件为假跳转
-                int rs1 = extractRs1(operand);
-                int target = extractImm16(operand);
-
-                if (getRegister(rs1) == 0) {
-                    // 验证跳转目标
-                    if (target < 0 || target >= codeSize || target % 4 != 0) {
-                        throw new IllegalArgumentException("Invalid conditional jump target: " + target + " at PC=" + programCounter);
-                    }
-
-                    programCounter = target;
-                    didJump = true;
-                }
+            case RegisterBytecodeDefinition.INSTR_JF:
+                executeJumpIfFalse(operand);
                 return;
-            }
             case RegisterBytecodeDefinition.INSTR_HALT:
                 running = false;
                 return;
-            case RegisterBytecodeDefinition.INSTR_LF: {
-                // lf rd, pool_index: 需要访问constPool
-                int rd = extractRd(operand);
-                int poolIndex = extractImm16(operand);
-                if (poolIndex < 0 || poolIndex >= constPool.length) {
-                    throw new IndexOutOfBoundsException("Constant pool index out of bounds: " + poolIndex);
-                }
-                Object constant = constPool[poolIndex];
-                if (constant instanceof Float) {
-                    setRegister(rd, Float.floatToIntBits((Float) constant));
-                } else {
-                    throw new ClassCastException("Expected Float constant at pool index " + poolIndex);
-                }
+            case RegisterBytecodeDefinition.INSTR_LF:
+                executeLoadFloat(operand);
                 return;
-            }
-            case RegisterBytecodeDefinition.INSTR_LS: {
-                // ls rd, pool_index: 需要访问constPool和heap分配
-                int rd = extractRd(operand);
-                int poolIndex = extractImm16(operand);
-                if (poolIndex < 0 || poolIndex >= constPool.length) {
-                    throw new IndexOutOfBoundsException("Constant pool index out of bounds: " + poolIndex);
-                }
-                Object constant = constPool[poolIndex];
-                if (constant instanceof String) {
-                    String str = (String) constant;
-                    int address = heapAllocPointer;
-                    if (address + str.length() > heap.length) {
-                        throw new OutOfMemoryError("Not enough heap space for string");
-                    }
-                    for (int i = 0; i < str.length(); i++) {
-                        heap[address + i] = str.charAt(i);
-                    }
-                    heapAllocPointer += str.length();
-                    setRegister(rd, address);
-                } else {
-                    throw new ClassCastException("Expected String constant at pool index " + poolIndex);
-                }
+            case RegisterBytecodeDefinition.INSTR_LS:
+                executeLoadString(operand);
                 return;
-            }
         }
 
         // 使用策略模式执行其他指令
@@ -324,6 +240,76 @@ public class RegisterVMInterpreter {
             executor.execute(operand, context);
         } else {
             throw new UnsupportedOperationException("Unsupported opcode: " + opcode);
+        }
+    }
+
+    private void executeJump(int operand) throws Exception {
+        int target = extractImm26(operand);
+        validateJumpTarget(target);
+        programCounter = target;
+        didJump = true;
+    }
+
+    private void executeJumpIfTrue(int operand) throws Exception {
+        int rs1 = extractRs1(operand);
+        int target = extractImm16(operand);
+        if (getRegister(rs1) != 0) {
+            validateJumpTarget(target);
+            programCounter = target;
+            didJump = true;
+        }
+    }
+
+    private void executeJumpIfFalse(int operand) throws Exception {
+        int rs1 = extractRs1(operand);
+        int target = extractImm16(operand);
+        if (getRegister(rs1) == 0) {
+            validateJumpTarget(target);
+            programCounter = target;
+            didJump = true;
+        }
+    }
+
+    private void validateJumpTarget(int target) throws Exception {
+        if (target < 0 || target >= codeSize || target % 4 != 0) {
+            throw new IllegalArgumentException("Invalid jump target: " + target + " at PC=" + programCounter);
+        }
+    }
+
+    private void executeLoadFloat(int operand) {
+        int rd = extractRd(operand);
+        int poolIndex = extractImm16(operand);
+        if (poolIndex < 0 || poolIndex >= constPool.length) {
+            throw new IndexOutOfBoundsException("Constant pool index out of bounds: " + poolIndex);
+        }
+        Object constant = constPool[poolIndex];
+        if (constant instanceof Float) {
+            setRegister(rd, Float.floatToIntBits((Float) constant));
+        } else {
+            throw new ClassCastException("Expected Float constant at pool index " + poolIndex);
+        }
+    }
+
+    private void executeLoadString(int operand) {
+        int rd = extractRd(operand);
+        int poolIndex = extractImm16(operand);
+        if (poolIndex < 0 || poolIndex >= constPool.length) {
+            throw new IndexOutOfBoundsException("Constant pool index out of bounds: " + poolIndex);
+        }
+        Object constant = constPool[poolIndex];
+        if (constant instanceof String) {
+            String str = (String) constant;
+            int address = heapAllocPointer;
+            if (address + str.length() > heap.length) {
+                throw new OutOfMemoryError("Not enough heap space for string");
+            }
+            for (int i = 0; i < str.length(); i++) {
+                heap[address + i] = str.charAt(i);
+            }
+            heapAllocPointer += str.length();
+            setRegister(rd, address);
+        } else {
+            throw new ClassCastException("Expected String constant at pool index " + poolIndex);
         }
     }
 

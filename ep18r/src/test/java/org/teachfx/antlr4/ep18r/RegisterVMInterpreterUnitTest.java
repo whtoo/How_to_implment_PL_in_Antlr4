@@ -25,6 +25,43 @@ import static org.assertj.core.api.Assertions.*;
  * 4. 寄存器文件操作
  * 5. 内存访问
  * 6. 栈帧管理
+ *
+ * === ABI寄存器使用约定 ===
+ *
+ * 寄存器架构（16个通用寄存器）：
+ * - r0: 零寄存器（恒为0）
+ * - r1 (ra): 返回地址寄存器，由CALL/RET自动保存/恢复
+ * - r2 (a0): 第一个参数寄存器 / 返回值寄存器
+ * - r3-r7 (a1-a5): 参数寄存器，caller-saved
+ * - r8-r12 (s0-s4): 保存寄存器，callee-saved
+ * - r13 (sp): 栈指针
+ * - r14 (fp): 帧指针
+ * - r15 (lr): 链接寄存器，caller-saved
+ *
+ * 测试中的重要注意事项：
+ * 1. 避免在涉及函数调用的测试中使用r1作为通用数据寄存器
+ *    - r1在CALL时被保存，在RET时被恢复
+ *    - 函数内修改r1会在返回时丢失
+ * 2. 在函数调用场景中，使用r2-r7或r8-r12作为通用数据寄存器
+ * 3. 在没有函数调用的简单测试中，r1可以作为通用寄存器使用
+ *
+ * 示例（错误）：
+ * .def main: args=0, locals=0
+ *     li r1, 10
+ *     call func    ; r1会被保存
+ *     halt
+ * .def func: args=1, locals=0
+ *     add r1, r1, r1  ; 修改r1，但RET时会恢复为调用前值
+ *     ret
+ *
+ * 示例（正确）：
+ * .def main: args=0, locals=0
+ *     li r2, 10
+ *     call func
+ *     halt
+ * .def func: args=1, locals=0
+ *     add r2, r2, r2  ; r2在函数调用中正确传递和修改
+ *     ret
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("RegisterVMInterpreter单元测试套件")
@@ -725,30 +762,30 @@ public class RegisterVMInterpreterUnitTest {
         }
 
         @Test
-        @Disabled("需要review栈深度设置以确保测试有效")
+
         @DisplayName("应该处理复杂嵌套调用")
         void testNestedFunctionCalls() throws Exception {
             String program = """
                 .def main: args=0, locals=0
-                    li r1, 10
+                    li r2, 10
                     call level1
                     halt
                 .def level1: args=1, locals=0
-                    add r1, r1, r1
+                    add r2, r2, r2
                     call level2
                     ret
                 .def level2: args=1, locals=0
-                    add r1, r1, r1
+                    add r2, r2, r2
                     ret
                 """;
 
             loadAndExecute(program);
 
-            // main: r1=10
-            // level1: r1=20, call level2
-            // level2: r1=40, return
+            // main: r2=10
+            // level1: r2=20, call level2
+            // level2: r2=40, return
             // level1: return to main
-            assertThat(interpreter.getRegister(1)).isEqualTo(40);
+            assertThat(interpreter.getRegister(2)).isEqualTo(40);
         }
 
         @ParameterizedTest

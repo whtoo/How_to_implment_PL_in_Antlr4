@@ -19,7 +19,7 @@
         <run.main.entry>org.teachfx.antlr4.ep18.VMInterpreter</run.main.entry>
 
         <!-- TDD Refactoring - Version Management -->
-        <jacoco.version>0.8.11</jacoco.version>
+        <jacoco.version>0.8.13</jacoco.version>
         <spotbugs.version>4.8.0</spotbugs.version>
         <checkstyle.version>3.6.0</checkstyle.version>
         <jmh.version>1.37</jmh.version>
@@ -84,6 +84,14 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
+                <configuration>
+                    <!-- 排除Java内部类以避免Java 21上的Instrumentation错误 -->
+                    <excludes>
+                        <exclude>**/sun/**</exclude>
+                        <exclude>**/jdk/**</exclude>
+                        <exclude>**/java/lang/invoke/**</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>

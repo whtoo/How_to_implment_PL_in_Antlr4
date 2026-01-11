@@ -43,7 +43,15 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.10</version>
+                <version>0.8.13</version>
+                <configuration>
+                    <!-- 排除Java内部类以避免Java 21上的Instrumentation错误 -->
+                    <excludes>
+                        <exclude>**/sun/**</exclude>
+                        <exclude>**/jdk/**</exclude>
+                        <exclude>**/java/lang/invoke/**</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>

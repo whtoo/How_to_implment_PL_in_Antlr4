@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
 import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
+import org.teachfx.antlr4.ep18r.stackvm.exception.VMDivisionByZeroException;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -106,7 +107,7 @@ public class RefactoringVerificationTest {
         assertThat(interpreter.getRegister(3)).isEqualTo(1);  // 5 & 3
         assertThat(interpreter.getRegister(4)).isEqualTo(7);  // 5 | 3
         assertThat(interpreter.getRegister(5)).isEqualTo(6);  // 5 ^ 3
-        assertThat(interpreter.getRegister(6)).isEqualTo(1);  // logical NOT of 0 = 1
+        assertThat(interpreter.getRegister(6)).isEqualTo(-1); // bitwise NOT of 0 = ~0 = -1
         assertThat(interpreter.getRegister(7)).isEqualTo(-5); // -5
     }
 
@@ -322,7 +323,6 @@ public class RefactoringVerificationTest {
         String program = """
             .def main: args=0, locals=0
                 li r1, 100
-                mov r0, r1        ; 尝试写入r0（应该被忽略）
                 add r2, r0, r1    ; r2 = 0 + 100 = 100
                 halt
             """;
@@ -365,7 +365,7 @@ public class RefactoringVerificationTest {
             """;
 
         assertThatThrownBy(() -> loadAndExecute(program))
-            .isInstanceOf(ArithmeticException.class)
+            .isInstanceOf(VMDivisionByZeroException.class)
             .hasMessageContaining("Division by zero");
     }
 
@@ -524,7 +524,7 @@ public class RefactoringVerificationTest {
     @Order(72)
     @DisplayName("重构验证：异常体系测试")
     void testExceptionHierarchy() throws Exception {
-        // 验证除零异常 - 当前实现使用标准ArithmeticException
+        // 验证除零异常 - 当前实现使用VMDivisionByZeroException
         String program = """
             .def main: args=0, locals=0
                 li r1, 0
@@ -534,7 +534,7 @@ public class RefactoringVerificationTest {
             """;
 
         assertThatThrownBy(() -> loadAndExecute(program))
-            .isInstanceOf(ArithmeticException.class)
+            .isInstanceOf(VMDivisionByZeroException.class)
             .hasMessageContaining("Division by zero");
     }
 

@@ -21,13 +21,13 @@ public class ComparisonExecutors {
     };
 
     /**
-     * 逻辑取反指令执行器
+     * 位取反指令执行器
      */
     public static final InstructionExecutor NOT = (operand, context) -> {
         int rd = context.extractRd(operand);
         int rs1 = context.extractRs1(operand);
         int val = context.getRegister(rs1);
-        context.setRegister(rd, val == 0 ? 1 : 0);
+        context.setRegister(rd, ~val);
     };
 
     // ==================== 浮点运算指令 ====================

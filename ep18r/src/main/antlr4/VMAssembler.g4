@@ -25,11 +25,11 @@ functionDeclaration
 
 // START: instr
 instr
-    :   op=ID NEWLINE                         
+    :   op=ID NEWLINE
     |   op=ID a=temp NEWLINE
     |   op=ID a=temp ',' b=temp NEWLINE
     |   op=ID a=temp ',' b=temp ',' c=temp NEWLINE
-        
+    |   '.word' INT NEWLINE
     ;
 // END: instr
 

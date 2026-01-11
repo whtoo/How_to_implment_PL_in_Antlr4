@@ -2,6 +2,7 @@ package org.teachfx.antlr4.ep18r.stackvm.instructions.executors;
 
 import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionExecutor;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+import org.teachfx.antlr4.ep18r.stackvm.exception.VMDivisionByZeroException;
 
 import java.util.Map;
 import java.util.function.BinaryOperator;
@@ -87,11 +88,11 @@ public class ArithmeticExecutors {
         int rs2 = context.extractRs2(operand);
         int val1 = context.getRegister(rs1);
         int val2 = context.getRegister(rs2);
-
+        
         if (val2 == 0) {
-            throw new ArithmeticException("Division by zero at PC=" + context.getProgramCounter());
+            throw new VMDivisionByZeroException(context.getProgramCounter(), "DIV");
         }
-
+        
         int result = val1 / val2;
         context.setRegister(rd, result);
     };

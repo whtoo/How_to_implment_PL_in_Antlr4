@@ -1,5 +1,7 @@
 package org.teachfx.antlr4.ep18r.stackvm.exception;
 
+import org.teachfx.antlr4.ep18r.stackvm.ErrorCode;
+
 /**
  * VMException - 虚拟机异常基类
  * 所有虚拟机运行时异常的父类
@@ -18,6 +20,18 @@ public abstract class VMException extends RuntimeException {
         this.pc = pc;
         this.instruction = instruction;
         this.details = details;
+    }
+
+    protected VMException(ErrorCode code, int pc, String instruction, String details) {
+        this(code.getDescription(), pc, instruction, details);
+    }
+
+    protected VMException(ErrorCode code, int pc, String instruction) {
+        this(code.getDescription(), pc, instruction, null);
+    }
+
+    protected VMException(ErrorCode code, int pc) {
+        this(code.getDescription(), pc, null, null);
     }
 
     private static String formatMessage(String message, int pc, String instruction, String details) {
@@ -49,7 +63,7 @@ public abstract class VMException extends RuntimeException {
      * 获取简化的错误信息（不包含堆栈跟踪）
      */
     public String getSimpleMessage() {
-        return String.format("%s at PC=%d (instruction=%s)", 
+        return String.format("%s at PC=%d (instruction=%s)",
             getMessage().split(" at PC=")[0], pc, instruction);
     }
 }

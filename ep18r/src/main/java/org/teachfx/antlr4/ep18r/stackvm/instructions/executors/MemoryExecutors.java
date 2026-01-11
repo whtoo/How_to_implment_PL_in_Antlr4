@@ -101,35 +101,23 @@ public class MemoryExecutors {
      * 特殊处理：当基址寄存器是r13（SP）或r14（FP）时，访问栈帧局部变量
      */
     public static final InstructionExecutor SW = (operand, context) -> {
-        int rs = context.extractRd(operand);  // rs 在 rd 字段位置
+        int rs = context.extractRd(operand);
         int base = context.extractRs1(operand);
         int offset = context.extractImm16(operand);
-
+        int value = context.getRegister(rs);
         int baseAddr = context.getRegister(base);
 
-        // 检查是否是FP相对寻址（通过FP寄存器）
-        if (base == RegisterBytecodeDefinition.R14) { // FP寄存器
-            // FP相对寻址：地址 = FP + offset
-            // offset是字节偏移，需要转换为int数组索引（除以4）
+        if (base == RegisterBytecodeDefinition.R14) {
             int effectiveAddr = baseAddr + offset / 4;
-
-            // 检查地址有效性
             if (effectiveAddr < 0) {
                 throw new IllegalArgumentException("Invalid FP-relative address: " + effectiveAddr);
             }
-
-            int value = context.getRegister(rs);
             context.writeMemory(effectiveAddr, value);
         } else {
-            // 常规内存访问（offset是字节偏移，堆是int数组，需要除以4）
             int effectiveAddr = baseAddr + offset / 4;
-
-            // 检查地址有效性
             if (effectiveAddr < 0) {
                 throw new IllegalArgumentException("Invalid memory address: " + effectiveAddr);
             }
-
-            int value = context.getRegister(rs);
             context.writeMemory(effectiveAddr, value);
         }
     };
@@ -175,7 +163,6 @@ public class MemoryExecutors {
         // 计算字段地址（offset是字节偏移，堆是int数组，需要除以4）
         int fieldAddr = objPtr + offset / 4;
         int value = context.readMemory(fieldAddr);
-        System.out.printf("[LW_F] objPtr=%d, offset=%d, fieldAddr=%d, value=%d\n", objPtr, offset, fieldAddr, value);
         context.setRegister(rd, value);
     };
 

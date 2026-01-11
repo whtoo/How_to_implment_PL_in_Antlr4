@@ -338,6 +338,10 @@ public class RegisterAssembler {
     /**
      * 生成条件为真跳转指令: jt rs, target
      * 如果rs不为0，跳转到target
+     *
+     * @param rs     源寄存器，条件判断值
+     * @param target 目标标签名称
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitJt(int rs, String target) {
         int pos = emitIType(RegisterBytecodeDefinition.INSTR_JT, R0, rs, 0);
@@ -348,6 +352,10 @@ public class RegisterAssembler {
     /**
      * 生成条件为假跳转指令: jf rs, target
      * 如果rs为0，跳转到target
+     *
+     * @param rs     源寄存器，条件判断值
+     * @param target 目标标签名称
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitJf(int rs, String target) {
         int pos = emitIType(RegisterBytecodeDefinition.INSTR_JF, R0, rs, 0);
@@ -358,6 +366,10 @@ public class RegisterAssembler {
     /**
      * 生成mov指令: mov rd, rs
      * 使用add rd, rs, r0实现
+     *
+     * @param rd 目标寄存器，存储源寄存器值
+     * @param rs 源寄存器，要复制的值
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitMov(int rd, int rs) {
         return emitRType(RegisterBytecodeDefinition.INSTR_ADD, rd, rs, R0);
@@ -365,6 +377,10 @@ public class RegisterAssembler {
 
     /**
      * 生成取负指令: neg rd, rs
+     *
+     * @param rd 目标寄存器，存储取负结果
+     * @param rs 源寄存器，要取负的值
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitNeg(int rd, int rs) {
         return emitRType(RegisterBytecodeDefinition.INSTR_NEG, rd, rs, R0);
@@ -372,6 +388,10 @@ public class RegisterAssembler {
 
     /**
      * 生成逻辑非指令: not rd, rs
+     *
+     * @param rd 目标寄存器，存储按位非结果
+     * @param rs 源寄存器，要取非的值
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitNot(int rd, int rs) {
         return emitRType(RegisterBytecodeDefinition.INSTR_NOT, rd, rs, R0);
@@ -394,6 +414,9 @@ public class RegisterAssembler {
 
     /**
      * 生成无条件跳转指令: j target
+     *
+     * @param target 目标标签名称
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitJ(String target) {
         int pos = emitJType(RegisterBytecodeDefinition.INSTR_J, 0);
@@ -403,6 +426,9 @@ public class RegisterAssembler {
 
     /**
      * 生成函数调用指令: call target
+     *
+     * @param target 目标函数标签名称
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitCall(String target) {
         int pos = emitJType(RegisterBytecodeDefinition.INSTR_CALL, 0);
@@ -412,6 +438,8 @@ public class RegisterAssembler {
 
     /**
      * 生成返回指令: ret
+     *
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitRet() {
         return emitJType(RegisterBytecodeDefinition.INSTR_RET, 0);
@@ -419,6 +447,8 @@ public class RegisterAssembler {
 
     /**
      * 生成停机指令: halt
+     *
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitHalt() {
         return emitJType(RegisterBytecodeDefinition.INSTR_HALT, 0);
@@ -430,8 +460,12 @@ public class RegisterAssembler {
      * 定义一个标签位置。
      *
      * @param label 标签名
+     * @throws IllegalArgumentException 如果标签名为null或空
      */
     public void defineLabel(String label) {
+        if (label == null || label.trim().isEmpty()) {
+            throw new IllegalArgumentException("Label cannot be null or empty");
+        }
         int address = bytecode.size() * 4;  // 每条指令4字节
         labelMap.put(label, address);
 
@@ -478,7 +512,7 @@ public class RegisterAssembler {
     /**
      * 获取生成的字节码列表。
      *
-     * @return 32位指令字列表
+     * @return 32位指令字列表（不可修改的副本）
      */
     public List<Integer> getBytecode() {
         return new ArrayList<>(bytecode);
@@ -501,7 +535,7 @@ public class RegisterAssembler {
     /**
      * 获取当前代码大小（字节数）。
      *
-     * @return 代码大小
+     * @return 代码大小，单位为字节
      */
     public int getCodeSize() {
         return bytecode.size() * 4;
@@ -528,7 +562,7 @@ public class RegisterAssembler {
     /**
      * 获取未修复的标签列表。
      *
-     * @return 未修复标签名称列表
+     * @return 未修复标签名称列表（去重后的有序列表）
      */
     public List<String> getUnresolvedLabels() {
         List<String> result = new ArrayList<>();
@@ -542,6 +576,9 @@ public class RegisterAssembler {
 
     /**
      * 重置汇编器状态，清空所有代码和标签。
+     * 
+     * <p>此方法会清空字节码、标签映射、待修复项，并重置寄存器分配器状态。
+     * 通常在开始新的汇编任务前调用。</p>
      */
     public void reset() {
         bytecode.clear();

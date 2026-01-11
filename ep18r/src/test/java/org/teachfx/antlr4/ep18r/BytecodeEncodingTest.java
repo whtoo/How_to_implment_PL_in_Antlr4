@@ -7,9 +7,9 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
-public class BytecodeEncodingTest {
+@DisplayName("字节码编码测试")
+class BytecodeEncodingTest {
 
     @Test
     @DisplayName("检查简单跳转指令编码")
@@ -24,22 +24,10 @@ public class BytecodeEncodingTest {
         RegisterVMInterpreter interpreter = new RegisterVMInterpreter();
         InputStream input = new ByteArrayInputStream(program.getBytes());
         boolean hasErrors = RegisterVMInterpreter.load(interpreter, input);
-        assertThat(hasErrors).isFalse();
+        assertThat(hasErrors).as("Program should load without errors").isFalse();
 
-        byte[] code = interpreter.getCode();
-        System.out.println("=== 简单跳转程序字节码 ===");
-        for (int i = 0; i < code.length; i += 4) {
-            if (i + 3 < code.length) {
-                int instr = ((code[i] & 0xFF)) |
-                           ((code[i+1] & 0xFF) << 8) |
-                           ((code[i+2] & 0xFF) << 16) |
-                           ((code[i+3] & 0xFF) << 24);
-                System.out.printf("  [%d] 0x%08X\n", i, instr);
-            }
-        }
-
-        // 执行程序
-        assertDoesNotThrow(() -> interpreter.exec());
+        assertThatCode(() -> interpreter.exec()).doesNotThrowAnyException();
+        assertThat(interpreter.getRegister(1)).as("r1 should be 1 after li").isEqualTo(1);
     }
 
     @Test
@@ -60,24 +48,10 @@ public class BytecodeEncodingTest {
         RegisterVMInterpreter interpreter = new RegisterVMInterpreter();
         InputStream input = new ByteArrayInputStream(program.getBytes());
         boolean hasErrors = RegisterVMInterpreter.load(interpreter, input);
-        assertThat(hasErrors).isFalse();
+        assertThat(hasErrors).as("Program should load without errors").isFalse();
 
-        byte[] code = interpreter.getCode();
-        System.out.println("=== 结构体字段访问程序字节码 ===");
-        for (int i = 0; i < code.length; i += 4) {
-            if (i + 3 < code.length) {
-                int instr = ((code[i] & 0xFF)) |
-                           ((code[i+1] & 0xFF) << 8) |
-                           ((code[i+2] & 0xFF) << 16) |
-                           ((code[i+3] & 0xFF) << 24);
-                System.out.printf("  [%d] 0x%08X\n", i, instr);
-            }
-        }
-
-        // 执行程序
-        assertDoesNotThrow(() -> interpreter.exec());
-        System.out.println("r1 (struct) = " + interpreter.getRegister(1));
-        System.out.println("r4 (field[0]) = " + interpreter.getRegister(4));
-        System.out.println("r5 (field[1]) = " + interpreter.getRegister(5));
+        assertThatCode(() -> interpreter.exec()).doesNotThrowAnyException();
+        assertThat(interpreter.getRegister(4)).as("field[0] should be 10").isEqualTo(10);
+        assertThat(interpreter.getRegister(5)).as("field[1] should be 20").isEqualTo(20);
     }
 }

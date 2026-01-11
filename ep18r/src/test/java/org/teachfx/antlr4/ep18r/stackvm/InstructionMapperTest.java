@@ -2,21 +2,19 @@ package org.teachfx.antlr4.ep18r.stackvm;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
 import org.teachfx.antlr4.ep18r.stackvm.interpreter.ExecutionContext;
-import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionMapper;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionExecutor;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionMapper;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * InstructionMapper动态注册功能单元测试
  * 测试动态添加、替换、注销指令执行器的功能
  */
 @DisplayName("InstructionMapper动态注册测试")
-public class InstructionMapperTest {
+class InstructionMapperTest {
 
     @Test
     @DisplayName("应该正确注册新的指令执行器")
@@ -65,9 +63,8 @@ public class InstructionMapperTest {
     void testRejectNullExecutor() {
         InstructionMapper mapper = new InstructionMapper();
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            mapper.registerExecutor(10, null);
-        });
+        assertThatThrownBy(() -> mapper.registerExecutor(10, null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -81,9 +78,8 @@ public class InstructionMapperTest {
             }
         };
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            mapper.registerExecutor(-1, executor);
-        });
+        assertThatThrownBy(() -> mapper.registerExecutor(-1, executor))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -97,9 +93,8 @@ public class InstructionMapperTest {
             }
         };
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            mapper.registerExecutor(64, executor);
-        });
+        assertThatThrownBy(() -> mapper.registerExecutor(64, executor))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -113,13 +108,8 @@ public class InstructionMapperTest {
             }
         };
 
-        assertDoesNotThrow(() -> {
-            mapper.registerExecutor(0, executor);
-        });
-
-        assertDoesNotThrow(() -> {
-            mapper.registerExecutor(63, executor);
-        });
+        assertThatCode(() -> mapper.registerExecutor(0, executor)).doesNotThrowAnyException();
+        assertThatCode(() -> mapper.registerExecutor(63, executor)).doesNotThrowAnyException();
     }
 
     @Test

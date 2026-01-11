@@ -7,15 +7,14 @@ import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * 无限循环修复测试
  * 验证修复后的虚拟机能够正确处理可能导致无限循环的程序
  */
 @DisplayName("无限循环修复测试")
-public class InfiniteLoopFixTest extends RegisterVMTestBase {
+class InfiniteLoopFixTest extends RegisterVMTestBase {
 
     @Test
     @DisplayName("应该能正确执行简单循环而不陷入无限循环")
@@ -48,7 +47,7 @@ public class InfiniteLoopFixTest extends RegisterVMTestBase {
         assertThat(hasErrors).isFalse();
 
         // 执行程序（应该正常终止）
-        assertDoesNotThrow(() -> interpreter.exec());
+        assertThatCode(() -> interpreter.exec()).doesNotThrowAnyException();
 
         // 验证结果：r3应该是45 (0+1+2+...+9)
         assertThat(interpreter.getRegister(3)).isEqualTo(45);
@@ -71,9 +70,8 @@ public class InfiniteLoopFixTest extends RegisterVMTestBase {
         assertThat(hasErrors).isFalse();
 
         // 应该抛出无限循环检测异常
-        assertThrows(RuntimeException.class, () -> {
-            interpreter.exec();
-        }, "应该检测到无限循环并抛出异常");
+        assertThatThrownBy(() -> interpreter.exec())
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test
@@ -97,7 +95,7 @@ public class InfiniteLoopFixTest extends RegisterVMTestBase {
         assertThat(hasErrors).isFalse();
 
         // 执行程序（应该正常终止）
-        assertDoesNotThrow(() -> interpreter.exec());
+        assertThatCode(() -> interpreter.exec()).doesNotThrowAnyException();
     }
 
     @Test
@@ -122,7 +120,7 @@ public class InfiniteLoopFixTest extends RegisterVMTestBase {
         assertThat(hasErrors).isFalse();
 
         // 执行程序（应该正常终止）
-        assertDoesNotThrow(() -> interpreter.exec());
+        assertThatCode(() -> interpreter.exec()).doesNotThrowAnyException();
     }
 
     @Test
@@ -141,8 +139,7 @@ public class InfiniteLoopFixTest extends RegisterVMTestBase {
         assertThat(hasErrors).isFalse();
 
         // 应该抛出无效跳转目标异常
-        assertThrows(IllegalArgumentException.class, () -> {
-            interpreter.exec();
-        }, "应该检测到无效跳转目标并抛出异常");
+        assertThatThrownBy(() -> interpreter.exec())
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }

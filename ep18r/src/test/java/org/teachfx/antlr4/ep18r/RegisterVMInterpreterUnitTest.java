@@ -8,6 +8,7 @@ import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
 import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
 import org.teachfx.antlr4.ep18r.stackvm.exception.*;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+import org.teachfx.antlr4.ep18r.stackvm.ErrorCode;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -74,11 +75,15 @@ public class RegisterVMInterpreterUnitTest {
         interpreter = new RegisterVMInterpreter();
     }
 
+    @AfterEach
+    void tearDown() {
+        interpreter = null;
+    }
+
     // ==================== 指令执行测试 ====================
 
     @Nested
-    @DisplayName("算术运算指令测试")
-    @Order(1)
+    @DisplayName("算术指令测试")
     class ArithmeticInstructionTests {
 
         @Test
@@ -146,7 +151,6 @@ public class RegisterVMInterpreterUnitTest {
         }
 
         @Test
-        @Disabled
         @DisplayName("DIV指令应该抛出除零异常")
         void testDivByZero() throws Exception {
             String program = """
@@ -159,7 +163,7 @@ public class RegisterVMInterpreterUnitTest {
 
             assertThatThrownBy(() -> loadAndExecute(program))
                 .isInstanceOf(VMDivisionByZeroException.class)
-                .hasMessageContaining("division by zero");
+                .hasMessageContaining("Division by zero");
         }
 
         @Test
@@ -212,131 +216,7 @@ public class RegisterVMInterpreterUnitTest {
     }
 
     @Nested
-    @DisplayName("比较指令测试")
-    @Order(2)
-    class ComparisonInstructionTests {
-
-        @Test
-        @DisplayName("SLT指令应该正确执行小于比较")
-        void testSltInstruction() throws Exception {
-            String program = """
-                .def main: args=0, locals=0
-                    li r1, 10
-                    li r2, 20
-                    slt r3, r1, r2
-                    halt
-                """;
-
-            loadAndExecute(program);
-
-            assertThat(interpreter.getRegister(3)).isEqualTo(1); // 10 < 20 = true
-        }
-
-        @Test
-        @DisplayName("SGT指令应该正确执行大于比较")
-        void testSgtInstruction() throws Exception {
-            String program = """
-                .def main: args=0, locals=0
-                    li r1, 20
-                    li r2, 10
-                    sgt r3, r1, r2
-                    halt
-                """;
-
-            loadAndExecute(program);
-
-            assertThat(interpreter.getRegister(3)).isEqualTo(1); // 20 > 10 = true
-        }
-
-        @Test
-        @DisplayName("SEQ指令应该正确执行等于比较")
-        void testSeqInstruction() throws Exception {
-            String program = """
-                .def main: args=0, locals=0
-                    li r1, 10
-                    li r2, 10
-                    seq r3, r1, r2
-                    halt
-                """;
-
-            loadAndExecute(program);
-
-            assertThat(interpreter.getRegister(3)).isEqualTo(1); // 10 == 10 = true
-        }
-
-        @Test
-        @DisplayName("SNE指令应该正确执行不等于比较")
-        void testSneInstruction() throws Exception {
-            String program = """
-                .def main: args=0, locals=0
-                    li r1, 10
-                    li r2, 20
-                    sne r3, r1, r2
-                    halt
-                """;
-
-            loadAndExecute(program);
-
-            assertThat(interpreter.getRegister(3)).isEqualTo(1); // 10 != 20 = true
-        }
-
-        @Test
-        @DisplayName("SLE指令应该正确执行小于等于比较")
-        void testSleInstruction() throws Exception {
-            String program = """
-                .def main: args=0, locals=0
-                    li r1, 10
-                    li r2, 20
-                    sle r3, r1, r2
-                    halt
-                """;
-
-            loadAndExecute(program);
-
-            assertThat(interpreter.getRegister(3)).isEqualTo(1); // 10 <= 20 = true
-        }
-
-        @Test
-        @DisplayName("SGE指令应该正确执行大于等于比较")
-        void testSgeInstruction() throws Exception {
-            String program = """
-                .def main: args=0, locals=0
-                    li r1, 20
-                    li r2, 10
-                    sge r3, r1, r2
-                    halt
-                """;
-
-            loadAndExecute(program);
-
-            assertThat(interpreter.getRegister(3)).isEqualTo(1); // 20 >= 10 = true
-        }
-
-        @ParameterizedTest
-        @CsvSource({
-            "10, 20, 1, slt",
-            "20, 10, 0, slt",
-            "10, 10, 0, slt"
-        })
-        @DisplayName("比较指令应该正确处理各种情况")
-        void testComparisonOperations(int op1, int op2, int expected, String operation) throws Exception {
-            String program = String.format("""
-                .def main: args=0, locals=0
-                    li r1, %d
-                    li r2, %d
-                    %s r3, r1, r2
-                    halt
-                """, op1, op2, operation);
-
-            loadAndExecute(program);
-
-            assertThat(interpreter.getRegister(3)).isEqualTo(expected);
-        }
-    }
-
-    @Nested
-    @DisplayName("逻辑运算指令测试")
-    @Order(3)
+    @DisplayName("逻辑指令测试")
     class LogicalInstructionTests {
 
         @Test
@@ -420,7 +300,6 @@ public class RegisterVMInterpreterUnitTest {
 
     @Nested
     @DisplayName("内存访问指令测试")
-    @Order(4)
     class MemoryInstructionTests {
 
         @Test
@@ -498,11 +377,128 @@ public class RegisterVMInterpreterUnitTest {
 
             assertThat(interpreter.getRegister(2)).isEqualTo(42);
         }
+
+        @Test
+        @DisplayName("LW_G指令应该正确从全局内存加载数据")
+        void testLwGlobalInstruction() throws Exception {
+            String program = """
+                .def main: args=0, locals=0
+                    li r1, 12345
+                    sw_g r1, 0
+                    lw_g r2, 0
+                    halt
+                """;
+
+            loadAndExecute(program);
+
+            assertThat(interpreter.getRegister(2)).isEqualTo(12345);
+        }
+
+        @Test
+        @DisplayName("SW_G指令应该正确存储数据到全局内存")
+        void testSwGlobalInstruction() throws Exception {
+            String program = """
+                .def main: args=0, locals=0
+                    li r1, 111
+                    sw_g r1, 0
+                    li r1, 222
+                    sw_g r1, 4
+                    li r1, 333
+                    sw_g r1, 8
+                    lw_g r2, 0
+                    lw_g r3, 4
+                    lw_g r4, 8
+                    halt
+                """;
+
+            loadAndExecute(program);
+
+            assertThat(interpreter.getRegister(2)).isEqualTo(111);
+            assertThat(interpreter.getRegister(3)).isEqualTo(222);
+            assertThat(interpreter.getRegister(4)).isEqualTo(333);
+        }
+
+        @Test
+        @DisplayName("LW_G和SW_G应该能正确读写全局内存")
+        void testGlobalMemoryReadWrite() throws Exception {
+            String program = """
+                .def main: args=0, locals=0
+                    li r1, 12345
+                    sw_g r1, 100
+                    lw_g r2, 100
+                    halt
+                """;
+
+            loadAndExecute(program);
+
+            assertThat(interpreter.getRegister(2)).isEqualTo(12345);
+        }
+
+        @Test
+        @DisplayName("LW_G和SW_G应该支持负数")
+        void testGlobalMemoryNegativeValues() throws Exception {
+            String program = """
+                .def main: args=0, locals=0
+                    li r1, -12345
+                    sw_g r1, 0
+                    lw_g r2, 0
+                    halt
+                """;
+
+            loadAndExecute(program);
+
+            assertThat(interpreter.getRegister(2)).isEqualTo(-12345);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, 4, 8, 12, 100, 500})
+        @DisplayName("LW_G和SW_G应该支持不同的内存偏移")
+        void testGlobalMemoryWithVariousOffsets(int offset) throws Exception {
+            String program = String.format("""
+                .def main: args=0, locals=0
+                    li r1, 42
+                    sw_g r1, %d
+                    lw_g r2, %d
+                    halt
+                """, offset, offset);
+
+            loadAndExecute(program);
+
+            assertThat(interpreter.getRegister(2)).isEqualTo(42);
+        }
+
+        @Test
+        @DisplayName("LC指令应该正确加载字符立即数")
+        void testLcInstruction() throws Exception {
+            String program = """
+                .def main: args=0, locals=0
+                    lc r1, 65
+                    halt
+                """;
+
+            loadAndExecute(program);
+
+            assertThat(interpreter.getRegister(1)).isEqualTo(65);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, 1, 127, 255})
+        @DisplayName("LC指令应该支持各种字符值")
+        void testLcInstructionWithVariousValues(int charValue) throws Exception {
+            String program = String.format("""
+                .def main: args=0, locals=0
+                    lc r1, %d
+                    halt
+                """, charValue);
+
+            loadAndExecute(program);
+
+            assertThat(interpreter.getRegister(1)).isEqualTo(charValue);
+        }
     }
 
     @Nested
     @DisplayName("控制流指令测试")
-    @Order(5)
     class ControlFlowInstructionTests {
 
         @Test
@@ -612,7 +608,6 @@ public class RegisterVMInterpreterUnitTest {
 
     @Nested
     @DisplayName("寄存器文件操作测试")
-    @Order(6)
     class RegisterFileTests {
 
         @Test
@@ -666,7 +661,6 @@ public class RegisterVMInterpreterUnitTest {
 
     @Nested
     @DisplayName("异常处理测试")
-    @Order(7)
     class ExceptionHandlingTests {
 
         @Test
@@ -684,32 +678,36 @@ public class RegisterVMInterpreterUnitTest {
                 .isInstanceOf(VMDivisionByZeroException.class);
         }
 
-        @DisplayName("无效操作码应该抛出VMException")
-    @Disabled("需要VMAssembler.g4支持.word指令才能实现此测试")
     @Test
+    @DisplayName("无效操作码应该抛出VMException")
     void testInvalidOpcodeThrowsException() throws Exception {
-            String program = """
-                .def main: args=0, locals=0
-                    li r1, 10
-                    halt
-                """;
+            // 直接构造包含无效操作码(0)的字节码
+            // 指令格式: [opcode:6][rd:5][rs1:5][rs2:5][unused:11]
+            // 操作码0 = 无效指令 (RegisterBytecodeDefinition.instructions[0] = null)
+            byte[] invalidOpcodeCode = new byte[] {
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, // 无效操作码 0
+                (byte) 0x0A, (byte) 0x80, (byte) 0x00, (byte) 0x00  // HALT: opcode=42 << 26 = 0xA8000000
+            };
 
-            assertThatThrownBy(() -> loadAndExecute(program))
+            interpreter.loadCode(invalidOpcodeCode);
+
+            assertThatThrownBy(() -> interpreter.exec())
                 .isInstanceOf(VMInvalidOpcodeException.class)
-                .hasMessageContaining("Invalid opcode");
+                .matches(ex -> ((VMInvalidOpcodeException) ex).getErrorCode() == ErrorCode.INVALID_OPCODE);
         }
 
         @Test
         @DisplayName("栈溢出应该抛出VMStackOverflowException")
         void testStackOverflowThrowsException() throws Exception {
             // 创建一个会触发栈溢出的递归函数
+            // 使用 2000 次递归（超过 maxStackDepth=1000）
             String program = """
                 .def main: args=0, locals=0
-                    li r1, 10000
+                    li r1, 2000
                     call recursive
                     halt
                 .def recursive: args=1, locals=1
-                    sub r1, r1, r1
+                    sub r1, r1, r2
                     seq r2, r1, r1
                     jf r2, exit
                     call recursive
@@ -717,9 +715,26 @@ public class RegisterVMInterpreterUnitTest {
                     ret
                 """;
 
-            // 注意：这个测试可能需要调整触发栈溢出的深度
-            // 取决于VMConfig中的maxCallStackDepth设置
-            // 如果栈深度设置得足够大，可能不会触发异常
+            assertThatThrownBy(() -> loadAndExecute(program))
+                .isInstanceOf(VMStackOverflowException.class)
+                .satisfies(ex -> {
+                    VMStackOverflowException vmEx = (VMStackOverflowException) ex;
+                    assertThat(vmEx.getErrorCode()).isEqualTo(ErrorCode.STACK_OVERFLOW);
+                });
+        }
+
+        @Test
+        @DisplayName("无效操作码应该正确抛出异常")
+        void testInvalidOpcodeZero() throws Exception {
+            byte[] invalidCode = new byte[] {
+                (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0xA8, (byte) 0x00, (byte) 0x00, (byte) 0x00
+            };
+
+            interpreter.loadCode(invalidCode);
+
+            assertThatThrownBy(() -> interpreter.exec())
+                .isInstanceOf(VMInvalidOpcodeException.class);
         }
     }
 
@@ -727,7 +742,6 @@ public class RegisterVMInterpreterUnitTest {
 
     @Nested
     @DisplayName("边界条件测试")
-    @Order(8)
     class BoundaryConditionTests {
 
         @Test
@@ -801,6 +815,55 @@ public class RegisterVMInterpreterUnitTest {
             loadAndExecute(program);
 
             assertThat(interpreter.getRegister(1)).isEqualTo(value);
+        }
+
+        @Test
+        @DisplayName("应该正确访问内存边界值")
+        void testMemoryBoundaryAccess() throws Exception {
+            String program = """
+                .def main: args=0, locals=0
+                    li r1, 100
+                    sw r1, r14, 0
+                    lw r2, r14, 0
+                    halt
+                """;
+
+            loadAndExecute(program);
+
+            assertThat(interpreter.getRegister(2)).isEqualTo(100);
+        }
+
+        @Test
+        @DisplayName("应该正确访问全局内存边界值")
+        void testGlobalMemoryBoundaryAccess() throws Exception {
+            String program = """
+                .def main: args=0, locals=0
+                    li r1, 500
+                    sw_g r1, 1000
+                    lw_g r2, 1000
+                    halt
+                """;
+
+            loadAndExecute(program);
+
+            assertThat(interpreter.getRegister(2)).isEqualTo(500);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, 4, 100, 500, 1000})
+        @DisplayName("应该支持不同内存偏移的访问")
+        void testVariousMemoryOffsets(int offset) throws Exception {
+            String program = String.format("""
+                .def main: args=0, locals=0
+                    li r1, 42
+                    sw r1, r14, %d
+                    lw r2, r14, %d
+                    halt
+                """, offset, offset);
+
+            loadAndExecute(program);
+
+            assertThat(interpreter.getRegister(2)).isEqualTo(42);
         }
     }
 

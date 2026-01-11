@@ -7,14 +7,13 @@ import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * 简单验证测试 - 确保修复没有破坏基本功能
  */
 @DisplayName("简单验证测试")
-public class SimpleVerificationTest extends RegisterVMTestBase {
+class SimpleVerificationTest extends RegisterVMTestBase {
 
     @Test
     @DisplayName("应该能执行基本的算术运算")
@@ -56,8 +55,7 @@ public class SimpleVerificationTest extends RegisterVMTestBase {
         assertThat(hasErrors).isFalse();
 
         // 应该抛出无限循环检测异常
-        assertThrows(RuntimeException.class, () -> {
-            interpreter.exec();
-        });
+        assertThatThrownBy(() -> interpreter.exec())
+            .isInstanceOf(RuntimeException.class);
     }
 }

@@ -2,18 +2,14 @@ package org.teachfx.antlr4.ep18r.abi;
 
 import org.junit.jupiter.api.*;
 import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
-import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.*;
 
-/**
- * 简化版ABI测试
- */
 @DisplayName("简化版ABI测试")
-public class ABISimpleTest {
+class ABISimpleTest {
 
     private RegisterVMInterpreter interpreter;
 
@@ -35,24 +31,12 @@ public class ABISimpleTest {
 
         InputStream input = new ByteArrayInputStream(program.getBytes());
         boolean hasErrors = RegisterVMInterpreter.load(interpreter, input);
-        System.out.println("Has errors: " + hasErrors);
+        assertThat(hasErrors).as("Program should load without errors").isFalse();
 
-        if (hasErrors) {
-            System.out.println("汇编失败，跳过执行");
-            return;
-        }
-
-        try {
-            interpreter.exec();
-        } catch (RuntimeException e) {
-            if (!e.getMessage().equals("HALT instruction executed")) {
-                throw e;
-            }
-        }
-
-        System.out.println("r1 = " + interpreter.getRegister(1));
-        System.out.println("r2 = " + interpreter.getRegister(2));
-        System.out.println("r3 = " + interpreter.getRegister(3));
+        assertThatCode(() -> interpreter.exec()).doesNotThrowAnyException();
+        assertThat(interpreter.getRegister(1)).as("r1 should be 10").isEqualTo(10);
+        assertThat(interpreter.getRegister(2)).as("r2 should be 20").isEqualTo(20);
+        assertThat(interpreter.getRegister(3)).as("r3 should be 30").isEqualTo(30);
     }
 
     @Test
@@ -68,22 +52,10 @@ public class ABISimpleTest {
 
         InputStream input = new ByteArrayInputStream(program.getBytes());
         boolean hasErrors = RegisterVMInterpreter.load(interpreter, input);
-        System.out.println("Has errors: " + hasErrors);
+        assertThat(hasErrors).as("Program should load without errors").isFalse();
 
-        if (hasErrors) {
-            System.out.println("汇编失败，跳过执行");
-            return;
-        }
-
-        try {
-            interpreter.exec();
-        } catch (RuntimeException e) {
-            if (!e.getMessage().equals("HALT instruction executed")) {
-                throw e;
-            }
-        }
-
-        System.out.println("a0 = " + interpreter.getRegister(2));
-        System.out.println("a1 = " + interpreter.getRegister(3));
+        assertThatCode(() -> interpreter.exec()).doesNotThrowAnyException();
+        assertThat(interpreter.getRegister(2)).as("a0 should be 30").isEqualTo(30);
+        assertThat(interpreter.getRegister(3)).as("a1 should be 20").isEqualTo(20);
     }
 }

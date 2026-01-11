@@ -1,8 +1,10 @@
 package org.teachfx.antlr4.ep18r.stackvm.interpreter;
 
+import org.teachfx.antlr4.ep18r.stackvm.ErrorCode;
 import org.teachfx.antlr4.ep18r.stackvm.FunctionSymbol;
 import org.teachfx.antlr4.ep18r.stackvm.StackFrame;
 import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
+import org.teachfx.antlr4.ep18r.stackvm.exception.VMStackOverflowException;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
 
 /**
@@ -227,7 +229,7 @@ public class ExecutionContext {
      */
     public void checkStackOverflow() {
         if (getFramePointer() + 1 >= getConfig().getMaxCallStackDepth()) {
-            throw new StackOverflowError("Call stack overflow");
+            throw new VMStackOverflowException(ErrorCode.STACK_OVERFLOW, getProgramCounter(), null);
         }
     }
 

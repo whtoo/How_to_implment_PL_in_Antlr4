@@ -10,6 +10,7 @@ public abstract class VMException extends RuntimeException {
     protected final int pc;
     protected final String instruction;
     protected final String details;
+    protected final ErrorCode errorCode;
 
     public VMException(String message, int pc, String instruction) {
         this(message, pc, instruction, null);
@@ -20,18 +21,32 @@ public abstract class VMException extends RuntimeException {
         this.pc = pc;
         this.instruction = instruction;
         this.details = details;
+        // Legacy constructor without ErrorCode - use null for backwards compatibility
+        this.errorCode = null;
     }
 
     protected VMException(ErrorCode code, int pc, String instruction, String details) {
-        this(code.getDescription(), pc, instruction, details);
+        super(formatMessage(code.getDescription(), pc, instruction, details));
+        this.pc = pc;
+        this.instruction = instruction;
+        this.details = details;
+        this.errorCode = code;
     }
 
     protected VMException(ErrorCode code, int pc, String instruction) {
-        this(code.getDescription(), pc, instruction, null);
+        super(formatMessage(code.getDescription(), pc, instruction, null));
+        this.pc = pc;
+        this.instruction = instruction;
+        this.details = null;
+        this.errorCode = code;
     }
 
     protected VMException(ErrorCode code, int pc) {
-        this(code.getDescription(), pc, null, null);
+        super(formatMessage(code.getDescription(), pc, null, null));
+        this.pc = pc;
+        this.instruction = null;
+        this.details = null;
+        this.errorCode = code;
     }
 
     private static String formatMessage(String message, int pc, String instruction, String details) {
@@ -57,6 +72,10 @@ public abstract class VMException extends RuntimeException {
 
     public String getDetails() {
         return details;
+    }
+
+    public ErrorCode getErrorCode() {
+        return errorCode;
     }
 
     /**

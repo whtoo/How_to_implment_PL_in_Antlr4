@@ -248,7 +248,8 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
         if (executor != null) {
             executor.execute(operand, context);
         } else {
-            throw new UnsupportedOperationException("Unsupported opcode: " + opcode);
+            throw new org.teachfx.antlr4.ep18r.stackvm.exception.VMInvalidOpcodeException(
+                programCounter, "opcode=" + opcode);
         }
     }
 

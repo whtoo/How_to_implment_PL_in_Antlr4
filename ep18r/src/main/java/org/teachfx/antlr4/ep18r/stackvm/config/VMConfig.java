@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep18r.stackvm;
+package org.teachfx.antlr4.ep18r.stackvm.config;
 
 public class VMConfig implements IVMConfig {
     // 内存配置

@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep18r.stackvm;
+package org.teachfx.antlr4.ep18r.stackvm.instructions;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -8,7 +8,7 @@ import java.util.HashMap;
  * 将操作码映射到对应的指令执行器
  * 采用策略模式，消除代码重复
  */
-public class InstructionMapper {
+public class InstructionMapper implements IInstructionFactory {
     private final Map<Integer, InstructionExecutor> executors;
 
     public InstructionMapper() {

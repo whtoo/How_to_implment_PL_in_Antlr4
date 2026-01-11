@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep18r.stackvm;
+package org.teachfx.antlr4.ep18r.stackvm.callingconvention;
 
 /**
  * 栈帧管理器
@@ -151,5 +151,65 @@ public class StackFrameManager {
             int argValue = context.readMemory(srcBase + i);
             context.writeMemory(dstBase + i, argValue);
         }
+    }
+
+    /**
+     * 生成函数序言（Prologue）汇编代码
+     *
+     * @param numLocals 局部变量数量
+     * @param usedCalleeRegMask 使用的被调用者保存寄存器掩码
+     * @return 函数序言汇编代码
+     */
+    public static String generatePrologue(int numLocals, int usedCalleeRegMask) {
+        StringBuilder sb = new StringBuilder();
+
+        int numCalleeRegs = Integer.bitCount(usedCalleeRegMask & 0x1F00);
+        int frameSize = StackOffsets.calculateFrameSize(numCalleeRegs, numLocals, 0);
+        int spAdjustment = StackOffsets.calculateSpAdjustment(numCalleeRegs, numLocals);
+
+        sb.append(String.format("    addi sp, sp, %d      # 分配栈帧，大小=%d字节\n", spAdjustment, frameSize));
+        sb.append(String.format("    sw fp, %d(sp)        # 保存旧帧指针\n", StackOffsets.FP_SAVE_OFFSET));
+
+        int fpOffset = frameSize - 4;
+        sb.append(String.format("    addi fp, sp, %d      # 设置新帧指针\n", fpOffset));
+
+        for (int i = 8; i <= 12; i++) {
+            if ((usedCalleeRegMask & (1 << i)) != 0) {
+                int offset = StackOffsets.S0_SAVE_OFFSET + (i - 8) * 4;
+                String regName = StackOffsets.getAbiName(i);
+                sb.append(String.format("    sw %s, %d(fp)      # 保存%s\n", regName, offset, regName));
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * 生成函数尾声（Epilogue）汇编代码
+     *
+     * @param numLocals 局部变量数量
+     * @param usedCalleeRegMask 使用的被调用者保存寄存器掩码
+     * @return 函数尾声汇编代码
+     */
+    public static String generateEpilogue(int numLocals, int usedCalleeRegMask) {
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 12; i >= 8; i--) {
+            if ((usedCalleeRegMask & (1 << i)) != 0) {
+                int offset = StackOffsets.S0_SAVE_OFFSET + (i - 8) * 4;
+                String regName = StackOffsets.getAbiName(i);
+                sb.append(String.format("    lw %s, %d(fp)      # 恢复%s\n", regName, offset, regName));
+            }
+        }
+
+        sb.append(String.format("    lw fp, %d(sp)        # 恢复旧帧指针\n", StackOffsets.FP_SAVE_OFFSET));
+
+        int numCalleeRegs = Integer.bitCount(usedCalleeRegMask & 0x1F00);
+        int frameSize = StackOffsets.calculateFrameSize(numCalleeRegs, numLocals, 0);
+
+        sb.append(String.format("    addi sp, sp, %d      # 释放栈帧\n", frameSize));
+        sb.append("    # ret                     # 函数返回（由调用者添加）\n");
+
+        return sb.toString();
     }
 }

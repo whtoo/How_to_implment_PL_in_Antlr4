@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep18r.stackvm;
+package org.teachfx.antlr4.ep18r.stackvm.registers;
 
 /**
  * 寄存器文件 - 管理16个通用寄存器
@@ -9,7 +9,7 @@ package org.teachfx.antlr4.ep18r.stackvm;
  *   r14: 帧指针 (FP)
  *   r15: 链接寄存器 (LR)
  */
-public class RegisterFile {
+public class RegisterFile implements IRegisterFile {
     private final int[] registers;
     private final int numRegisters;
 

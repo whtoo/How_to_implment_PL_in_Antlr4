@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep18r.stackvm;
+package org.teachfx.antlr4.ep18r.stackvm.interpreter;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -9,7 +9,7 @@ import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser;
 
 import java.io.InputStream;
 
-public class RegisterVMInterpreter implements IVirtualMachine {
+public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
     // 虚拟机配置
     private final VMConfig config;
 
@@ -364,28 +364,28 @@ public class RegisterVMInterpreter implements IVirtualMachine {
     /**
      * 获取堆分配指针
      */
-    int getHeapAllocPointer() {
+    public int getHeapAllocPointer() {
         return heapAllocPointer;
     }
 
     /**
      * 设置堆分配指针
      */
-    void setHeapAllocPointer(int pointer) {
+    public void setHeapAllocPointer(int pointer) {
         this.heapAllocPointer = pointer;
     }
 
     /**
      * 获取调用栈
      */
-    StackFrame[] getCallStack() {
+    public StackFrame[] getCallStack() {
         return callStack;
     }
 
     /**
      * 获取帧指针
      */
-    int getFramePointer() {
+    public int getFramePointer() {
         return framePointer;
     }
 
@@ -402,14 +402,34 @@ public class RegisterVMInterpreter implements IVirtualMachine {
     /**
      * 设置帧指针
      */
-    void setFramePointer(int framePointer) {
+    public void setFramePointer(int framePointer) {
         this.framePointer = framePointer;
+    }
+
+    /**
+     * 读取全局变量
+     */
+    public Object readGlobal(int address) {
+        if (address < 0 || address >= globals.length) {
+            throw new IndexOutOfBoundsException("Global address out of bounds: " + address);
+        }
+        return globals[address];
+    }
+
+    /**
+     * 写入全局变量
+     */
+    public void writeGlobal(int address, Object value) {
+        if (address < 0 || address >= globals.length) {
+            throw new IndexOutOfBoundsException("Global address out of bounds: " + address);
+        }
+        globals[address] = value;
     }
 
     /**
      * 获取代码大小
      */
-    int getCodeSize() {
+    public int getCodeSize() {
         return codeSize;
     }
 
@@ -438,7 +458,7 @@ public class RegisterVMInterpreter implements IVirtualMachine {
     /**
      * 读取堆内存（内部使用）
      */
-    int readHeap(int address) {
+    public int readHeap(int address) {
         if (address < 0 || address >= heap.length) {
             throw new IndexOutOfBoundsException("Heap address out of bounds: " + address);
         }
@@ -448,7 +468,7 @@ public class RegisterVMInterpreter implements IVirtualMachine {
     /**
      * 写入堆内存（内部使用）
      */
-    void writeHeap(int address, int value) {
+    public void writeHeap(int address, int value) {
         if (address < 0 || address >= heap.length) {
             throw new IndexOutOfBoundsException("Heap address out of bounds: " + address);
         }
@@ -458,7 +478,7 @@ public class RegisterVMInterpreter implements IVirtualMachine {
     /**
      * 读取内存（内部使用）
      */
-    int readMemory(int address) {
+    public int readMemory(int address) {
         // 简化实现：使用堆作为内存
         return readHeap(address);
     }
@@ -466,7 +486,7 @@ public class RegisterVMInterpreter implements IVirtualMachine {
     /**
      * 写入内存（内部使用）
      */
-    void writeMemory(int address, int value) {
+    public void writeMemory(int address, int value) {
         // 简化实现：使用堆作为内存
         writeHeap(address, value);
     }

@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep18r.stackvm;
+package org.teachfx.antlr4.ep18r.stackvm.instructions;
 
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser;
 

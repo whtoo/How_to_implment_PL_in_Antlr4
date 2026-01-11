@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep18r.stackvm.instructions;
+package org.teachfx.antlr4.ep18r.stackvm.instructions.model;
 
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser;
 
@@ -152,9 +152,9 @@ public class RegisterBytecodeDefinition {
     // 指令信息类
     public static class Instruction {
         public String name;  // Public for external access
-        int[] type = new int[3];  // 操作数类型: REG, INT, POOL, FUNC
-        int n = 0;                // 操作数数量
-        int format = FORMAT_R;    // 指令格式
+        public int[] type = new int[3];  // 操作数类型: REG, INT, POOL, FUNC
+        public int n = 0;                // 操作数数量
+        public int format = FORMAT_R;    // 指令格式
 
         public Instruction(String name) {
             this(name, 0, 0, 0);

@@ -1,5 +1,8 @@
 package org.teachfx.antlr4.ep18r.stackvm.registers;
 
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+import org.teachfx.antlr4.ep18r.stackvm.memory.IRegisterFile;
+
 /**
  * 寄存器文件 - 管理16个通用寄存器
  * 寄存器分配：

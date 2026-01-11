@@ -1,5 +1,7 @@
 package org.teachfx.antlr4.ep18r.stackvm.registers;
 
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+
 /**
  * 寄存器操作数提取工具类
  * 统一处理32位指令格式中的各种字段提取操作

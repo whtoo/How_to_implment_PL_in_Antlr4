@@ -1,6 +1,6 @@
 package org.teachfx.antlr4.ep18r.pass.codegen;
 
-import org.teachfx.antlr4.ep18r.stackvm.RegisterBytecodeDefinition;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

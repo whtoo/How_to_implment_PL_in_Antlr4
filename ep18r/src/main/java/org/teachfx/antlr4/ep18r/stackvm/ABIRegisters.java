@@ -1,5 +1,7 @@
 package org.teachfx.antlr4.ep18r.stackvm;
 
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+
 /**
  * ABI寄存器映射枚举
  * 统一管理ABI相关的寄存器名称和编号映射

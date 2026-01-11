@@ -1,5 +1,7 @@
 package org.teachfx.antlr4.ep18r.stackvm.callingconvention;
 
+import org.teachfx.antlr4.ep18r.stackvm.StackFrame;
+
 public class CallingConventionUtils {
 
     private CallingConventionUtils() {}

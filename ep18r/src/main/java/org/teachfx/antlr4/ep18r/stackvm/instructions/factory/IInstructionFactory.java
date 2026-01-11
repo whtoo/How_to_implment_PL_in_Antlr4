@@ -1,4 +1,6 @@
-package org.teachfx.antlr4.ep18r.stackvm.instructions;
+package org.teachfx.antlr4.ep18r.stackvm.instructions.factory;
+
+import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionExecutor;
 
 /**
  * 指令工厂接口

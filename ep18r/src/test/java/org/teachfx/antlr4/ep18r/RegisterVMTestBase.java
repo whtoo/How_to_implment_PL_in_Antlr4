@@ -1,8 +1,10 @@
 package org.teachfx.antlr4.ep18r;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.teachfx.antlr4.ep18r.stackvm.RegisterVMInterpreter;
-import org.teachfx.antlr4.ep18r.stackvm.VMConfig;
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
+import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
+
+import static org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition.*;
 
 /**
  * RegisterVMTestBase - 寄存器虚拟机测试基类
@@ -105,7 +107,7 @@ public abstract class RegisterVMTestBase {
      */
     protected int encodeLI(int rd, int imm) {
         return encodeIType(
-            org.teachfx.antlr4.ep18r.stackvm.RegisterBytecodeDefinition.INSTR_LI,
+            org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition.INSTR_LI,
             rd, 0, imm
         );
     }
@@ -115,7 +117,7 @@ public abstract class RegisterVMTestBase {
      */
     protected int encodeADD(int rd, int rs1, int rs2) {
         return encodeRType(
-            org.teachfx.antlr4.ep18r.stackvm.RegisterBytecodeDefinition.INSTR_ADD,
+            org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition.INSTR_ADD,
             rd, rs1, rs2
         );
     }
@@ -126,7 +128,7 @@ public abstract class RegisterVMTestBase {
     protected int encodePRINT(int rs) {
         // PRINT是I类型：print rs, 无立即数
         return encodeIType(
-            org.teachfx.antlr4.ep18r.stackvm.RegisterBytecodeDefinition.INSTR_PRINT,
+            org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition.INSTR_PRINT,
             0, rs, 0
         );
     }
@@ -136,7 +138,7 @@ public abstract class RegisterVMTestBase {
      */
     protected int encodeHALT() {
         return encodeJType(
-            org.teachfx.antlr4.ep18r.stackvm.RegisterBytecodeDefinition.INSTR_HALT,
+            org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition.INSTR_HALT,
             0
         );
     }

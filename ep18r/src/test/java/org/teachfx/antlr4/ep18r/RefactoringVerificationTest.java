@@ -3,7 +3,8 @@ package org.teachfx.antlr4.ep18r;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.teachfx.antlr4.ep18r.stackvm.*;
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
+import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -496,8 +497,8 @@ public class RefactoringVerificationTest {
     @DisplayName("重构验证：配置对象测试")
     void testVMConfiguration() throws Exception {
         // 验证VMConfig类是否正确工作
-        org.teachfx.antlr4.ep18r.stackvm.VMConfig config =
-            new org.teachfx.antlr4.ep18r.stackvm.VMConfig.Builder()
+        org.teachfx.antlr4.ep18r.stackvm.config.VMConfig config =
+            new org.teachfx.antlr4.ep18r.stackvm.config.VMConfig.Builder()
                 .heapSize(2048 * 1024)
                 .maxExecutionSteps(2_000_000)
                 .build();
@@ -587,78 +588,4 @@ public class RefactoringVerificationTest {
     }
 }
 
-/**
- * 辅助类：VM配置（用于重构验证）
- */
-class VMConfig {
-    private final int heapSize;
-    private final int localsSize;
-    private final int maxCallStackDepth;
-    private final int maxExecutionSteps;
 
-    private VMConfig(Builder builder) {
-        this.heapSize = builder.heapSize;
-        this.localsSize = builder.localsSize;
-        this.maxCallStackDepth = builder.maxCallStackDepth;
-        this.maxExecutionSteps = builder.maxExecutionSteps;
-    }
-
-    public static class Builder {
-        private int heapSize = 1024 * 1024;
-        private int localsSize = 1024;
-        private int maxCallStackDepth = 1024;
-        private int maxExecutionSteps = 1_000_000;
-
-        public Builder heapSize(int size) {
-            this.heapSize = size;
-            return this;
-        }
-
-        public VMConfig build() {
-            return new VMConfig(this);
-        }
-
-        public int getHeapSize() { return heapSize; }
-        public int getLocalsSize() { return localsSize; }
-        public int getMaxCallStackDepth() { return maxCallStackDepth; }
-        public int getMaxExecutionSteps() { return maxExecutionSteps; }
-    }
-
-    public int getHeapSize() { return heapSize; }
-    public int getLocalsSize() { return localsSize; }
-    public int getMaxCallStackDepth() { return maxCallStackDepth; }
-    public int getMaxExecutionSteps() { return maxExecutionSteps; }
-}
-
-/**
- * 异常体系（用于重构验证）
- */
-class VMException extends RuntimeException {
-    protected final int pc;
-    protected final ErrorCode errorCode;
-
-    public VMException(String message, int pc, ErrorCode errorCode) {
-        super(message);
-        this.pc = pc;
-        this.errorCode = errorCode;
-    }
-
-    public int getPc() { return pc; }
-    public ErrorCode getErrorCode() { return errorCode; }
-}
-
-enum ErrorCode {
-    DIVISION_BY_ZERO("DIV_ZERO"),
-    INVALID_OPCODE("INV_OP"),
-    INVALID_REGISTER("INV_REG"),
-    INVALID_ADDRESS("INV_ADDR"),
-    INFINITE_LOOP("INF_LOOP");
-
-    private final String code;
-
-    ErrorCode(String code) {
-        this.code = code;
-    }
-
-    public String getCode() { return code; }
-}

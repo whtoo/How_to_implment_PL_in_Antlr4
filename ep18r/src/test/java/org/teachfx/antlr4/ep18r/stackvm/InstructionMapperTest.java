@@ -2,9 +2,13 @@ package org.teachfx.antlr4.ep18r.stackvm;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.teachfx.antlr4.ep18r.stackvm.*;
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.ExecutionContext;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionMapper;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionExecutor;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

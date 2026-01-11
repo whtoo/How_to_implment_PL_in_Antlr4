@@ -1,5 +1,12 @@
 package org.teachfx.antlr4.ep18r.stackvm.instructions;
 
+import org.teachfx.antlr4.ep18r.stackvm.instructions.executors.ArithmeticExecutors;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.executors.ComparisonExecutors;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.executors.ControlFlowExecutors;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.executors.MemoryExecutors;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.factory.IInstructionFactory;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+
 import java.util.Map;
 import java.util.HashMap;
 

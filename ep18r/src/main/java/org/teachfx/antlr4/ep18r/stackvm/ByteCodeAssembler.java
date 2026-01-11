@@ -9,6 +9,7 @@ import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser.GlobalVariableContext;
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser.InstrContext;
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser.LabelContext;
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser.TempContext;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.BytecodeDefinition;
 
 import java.util.ArrayList;
 import java.util.HashMap;

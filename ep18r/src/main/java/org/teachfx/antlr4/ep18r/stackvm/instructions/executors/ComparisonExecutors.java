@@ -1,4 +1,6 @@
-package org.teachfx.antlr4.ep18r.stackvm.instructions;
+package org.teachfx.antlr4.ep18r.stackvm.instructions.executors;
+
+import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionExecutor;
 
 /**
  * 比较指令执行器集合

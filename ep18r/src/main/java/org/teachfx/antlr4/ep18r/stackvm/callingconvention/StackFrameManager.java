@@ -1,5 +1,11 @@
 package org.teachfx.antlr4.ep18r.stackvm.callingconvention;
 
+import org.teachfx.antlr4.ep18r.stackvm.FunctionSymbol;
+import org.teachfx.antlr4.ep18r.stackvm.StackFrame;
+import org.teachfx.antlr4.ep18r.stackvm.StackOffsets;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.ExecutionContext;
+
 /**
  * 栈帧管理器
  * 统一管理CALL/RET指令的栈帧操作逻辑

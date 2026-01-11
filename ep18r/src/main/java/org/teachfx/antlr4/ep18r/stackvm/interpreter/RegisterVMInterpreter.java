@@ -6,6 +6,15 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerLexer;
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser;
+import org.teachfx.antlr4.ep18r.stackvm.FunctionSymbol;
+import org.teachfx.antlr4.ep18r.stackvm.RegisterByteCodeAssembler;
+import org.teachfx.antlr4.ep18r.stackvm.StackFrame;
+import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionExecutor;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionMapper;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+import org.teachfx.antlr4.ep18r.stackvm.memory.IMemoryManager;
+import org.teachfx.antlr4.ep18r.stackvm.registers.RegisterOperandExtractor;
 
 import java.io.InputStream;
 

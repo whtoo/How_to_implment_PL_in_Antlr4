@@ -1,13 +1,14 @@
 package org.teachfx.antlr4.ep18r.abi;
 
 import org.junit.jupiter.api.*;
-import org.teachfx.antlr4.ep18r.stackvm.*;
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
+import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.teachfx.antlr4.ep18r.stackvm.RegisterBytecodeDefinition.*;
+import static org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition.*;
 
 /**
  * ABI一致性测试套件

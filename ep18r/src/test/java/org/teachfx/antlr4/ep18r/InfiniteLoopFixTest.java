@@ -2,7 +2,7 @@ package org.teachfx.antlr4.ep18r;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.teachfx.antlr4.ep18r.stackvm.RegisterVMInterpreter;
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

@@ -1,5 +1,7 @@
 package org.teachfx.antlr4.ep18r.stackvm.instructions;
 
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.ExecutionContext;
+
 /**
  * 指令执行器接口
  * 每个指令类型对应一个实现类

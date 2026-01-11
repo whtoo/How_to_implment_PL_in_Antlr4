@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerLexer;
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser;
 import org.teachfx.antlr4.ep18r.stackvm.RegisterByteCodeAssembler;
-import org.teachfx.antlr4.ep18r.stackvm.RegisterBytecodeDefinition;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
 
 import java.io.File;
 import java.io.FileInputStream;

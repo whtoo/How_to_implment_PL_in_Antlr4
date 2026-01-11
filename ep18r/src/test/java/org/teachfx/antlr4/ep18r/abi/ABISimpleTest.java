@@ -1,7 +1,8 @@
 package org.teachfx.antlr4.ep18r.abi;
 
 import org.junit.jupiter.api.*;
-import org.teachfx.antlr4.ep18r.stackvm.*;
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
+import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

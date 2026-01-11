@@ -3,6 +3,8 @@ package org.teachfx.antlr4.ep18r.stackvm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+
 /**
  * 寄存器虚拟机反汇编器
  * 将寄存器字节码反汇编为可读的汇编代码

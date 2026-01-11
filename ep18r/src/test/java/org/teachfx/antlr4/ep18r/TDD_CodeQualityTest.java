@@ -1,7 +1,8 @@
 package org.teachfx.antlr4.ep18r;
 
 import org.junit.jupiter.api.*;
-import org.teachfx.antlr4.ep18r.stackvm.*;
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
+import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -90,8 +91,8 @@ public class TDD_CodeQualityTest {
         @DisplayName("指令执行方法应该可扩展")
         void testInstructionExecutionShouldBeExtensible() throws Exception {
             // 验证可以通过配置添加新指令（说明执行逻辑是策略化的）
-            org.teachfx.antlr4.ep18r.stackvm.VMConfig customConfig =
-                new org.teachfx.antlr4.ep18r.stackvm.VMConfig.Builder()
+            org.teachfx.antlr4.ep18r.stackvm.config.VMConfig customConfig =
+                new org.teachfx.antlr4.ep18r.stackvm.config.VMConfig.Builder()
                     .maxExecutionSteps(2_000_000)
                     .build();
 
@@ -209,7 +210,7 @@ public class TDD_CodeQualityTest {
 
             // 验证RegisterVMInterpreter可以正常加载
             Class<?> clazz = Class.forName(
-                "org.teachfx.antlr4.ep18r.stackvm.RegisterVMInterpreter");
+                "org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter");
             assertThat(clazz).isNotNull();
 
             // 验证它是public的
@@ -240,8 +241,8 @@ public class TDD_CodeQualityTest {
         void testCanCreateVMInstanceWithConfig() {
             // 验证抽象工厂模式或配置模式
 
-            org.teachfx.antlr4.ep18r.stackvm.VMConfig config =
-                new org.teachfx.antlr4.ep18r.stackvm.VMConfig.Builder()
+            org.teachfx.antlr4.ep18r.stackvm.config.VMConfig config =
+                new org.teachfx.antlr4.ep18r.stackvm.config.VMConfig.Builder()
                     .heapSize(2048 * 1024)
                     .maxExecutionSteps(2_000_000)
                     .build();
@@ -255,8 +256,8 @@ public class TDD_CodeQualityTest {
         void testVMConfigSupportsDefaultValues() {
             // 验证配置可以使用默认值
 
-            org.teachfx.antlr4.ep18r.stackvm.VMConfig defaultConfig =
-                new org.teachfx.antlr4.ep18r.stackvm.VMConfig.Builder().build();
+            org.teachfx.antlr4.ep18r.stackvm.config.VMConfig defaultConfig =
+                new org.teachfx.antlr4.ep18r.stackvm.config.VMConfig.Builder().build();
 
             assertThat(defaultConfig.getHeapSize()).isGreaterThan(0);
             assertThat(defaultConfig.getMaxExecutionSteps()).isGreaterThan(0);
@@ -267,8 +268,8 @@ public class TDD_CodeQualityTest {
         void testRegisterVMInterpreterUsesConfig() throws Exception {
             // 验证依赖注入或配置模式
 
-            org.teachfx.antlr4.ep18r.stackvm.VMConfig config =
-                new org.teachfx.antlr4.ep18r.stackvm.VMConfig.Builder()
+            org.teachfx.antlr4.ep18r.stackvm.config.VMConfig config =
+                new org.teachfx.antlr4.ep18r.stackvm.config.VMConfig.Builder()
                     .heapSize(1024 * 1024)
                     .localsSize(512)
                     .maxCallStackDepth(256)
@@ -466,8 +467,8 @@ public class TDD_CodeQualityTest {
     // ==================== 工具方法 ====================
 
     private RegisterVMInterpreter createVM() {
-        org.teachfx.antlr4.ep18r.stackvm.VMConfig config =
-            new org.teachfx.antlr4.ep18r.stackvm.VMConfig.Builder()
+        org.teachfx.antlr4.ep18r.stackvm.config.VMConfig config =
+            new org.teachfx.antlr4.ep18r.stackvm.config.VMConfig.Builder()
                 .heapSize(1024 * 1024)
                 .localsSize(1024)
                 .maxCallStackDepth(1024)

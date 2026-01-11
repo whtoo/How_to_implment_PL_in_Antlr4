@@ -1,6 +1,6 @@
 package org.teachfx.antlr4.ep18r.pass.codegen;
 
-import org.teachfx.antlr4.ep18r.stackvm.RegisterBytecodeDefinition;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -116,6 +116,11 @@ public class RegisterAssembler {
 
     /**
      * 生成加法指令: add rd, rs1, rs2
+     *
+     * @param rd  目标寄存器，存储加法结果
+     * @param rs1 源寄存器1，第一个操作数
+     * @param rs2 源寄存器2，第二个操作数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitAdd(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_ADD, rd, rs1, rs2);
@@ -123,6 +128,11 @@ public class RegisterAssembler {
 
     /**
      * 生成减法指令: sub rd, rs1, rs2
+     *
+     * @param rd  目标寄存器，存储减法结果
+     * @param rs1 源寄存器1，被减数
+     * @param rs2 源寄存器2，减数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitSub(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_SUB, rd, rs1, rs2);
@@ -130,6 +140,11 @@ public class RegisterAssembler {
 
     /**
      * 生成乘法指令: mul rd, rs1, rs2
+     *
+     * @param rd  目标寄存器，存储乘法结果
+     * @param rs1 源寄存器1，第一个乘数
+     * @param rs2 源寄存器2，第二个乘数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitMul(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_MUL, rd, rs1, rs2);
@@ -137,6 +152,12 @@ public class RegisterAssembler {
 
     /**
      * 生成除法指令: div rd, rs1, rs2
+     *
+     * @param rd  目标寄存器，存储除法结果（商）
+     * @param rs1 源寄存器1，被除数
+     * @param rs2 源寄存器2，除数
+     * @return 生成的指令在字节码中的位置索引
+     * @throws ArithmeticException 如果除数为0，在执行时抛出异常
      */
     public int emitDiv(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_DIV, rd, rs1, rs2);
@@ -144,6 +165,11 @@ public class RegisterAssembler {
 
     /**
      * 生成比较小于指令: slt rd, rs1, rs2 (set if less than)
+     *
+     * @param rd  目标寄存器，如果rs1 < rs2则置为1，否则置为0
+     * @param rs1 源寄存器1，第一个比较操作数
+     * @param rs2 源寄存器2，第二个比较操作数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitSlt(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_SLT, rd, rs1, rs2);
@@ -151,6 +177,11 @@ public class RegisterAssembler {
 
     /**
      * 生成比较小于等于指令: sle rd, rs1, rs2 (set if less or equal)
+     *
+     * @param rd  目标寄存器，如果rs1 ≤ rs2则置为1，否则置为0
+     * @param rs1 源寄存器1，第一个比较操作数
+     * @param rs2 源寄存器2，第二个比较操作数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitSle(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_SLE, rd, rs1, rs2);
@@ -158,6 +189,11 @@ public class RegisterAssembler {
 
     /**
      * 生成比较大于指令: sgt rd, rs1, rs2 (set if greater than)
+     *
+     * @param rd  目标寄存器，如果rs1 > rs2则置为1，否则置为0
+     * @param rs1 源寄存器1，第一个比较操作数
+     * @param rs2 源寄存器2，第二个比较操作数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitSgt(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_SGT, rd, rs1, rs2);
@@ -165,6 +201,11 @@ public class RegisterAssembler {
 
     /**
      * 生成比较大于等于指令: sge rd, rs1, rs2 (set if greater or equal)
+     *
+     * @param rd  目标寄存器，如果rs1 ≥ rs2则置为1，否则置为0
+     * @param rs1 源寄存器1，第一个比较操作数
+     * @param rs2 源寄存器2，第二个比较操作数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitSge(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_SGE, rd, rs1, rs2);
@@ -172,6 +213,11 @@ public class RegisterAssembler {
 
     /**
      * 生成比较相等指令: seq rd, rs1, rs2 (set if equal)
+     *
+     * @param rd  目标寄存器，如果rs1 = rs2则置为1，否则置为0
+     * @param rs1 源寄存器1，第一个比较操作数
+     * @param rs2 源寄存器2，第二个比较操作数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitSeq(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_SEQ, rd, rs1, rs2);
@@ -179,6 +225,11 @@ public class RegisterAssembler {
 
     /**
      * 生成比较不等指令: sne rd, rs1, rs2 (set if not equal)
+     *
+     * @param rd  目标寄存器，如果rs1 ≠ rs2则置为1，否则置为0
+     * @param rs1 源寄存器1，第一个比较操作数
+     * @param rs2 源寄存器2，第二个比较操作数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitSne(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_SNE, rd, rs1, rs2);
@@ -186,6 +237,11 @@ public class RegisterAssembler {
 
     /**
      * 生成逻辑与指令: and rd, rs1, rs2
+     *
+     * @param rd  目标寄存器，存储按位与结果
+     * @param rs1 源寄存器1，第一个操作数
+     * @param rs2 源寄存器2，第二个操作数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitAnd(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_AND, rd, rs1, rs2);
@@ -193,6 +249,11 @@ public class RegisterAssembler {
 
     /**
      * 生成逻辑或指令: or rd, rs1, rs2
+     *
+     * @param rd  目标寄存器，存储按位或结果
+     * @param rs1 源寄存器1，第一个操作数
+     * @param rs2 源寄存器2，第二个操作数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitOr(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_OR, rd, rs1, rs2);
@@ -200,6 +261,11 @@ public class RegisterAssembler {
 
     /**
      * 生成逻辑异或指令: xor rd, rs1, rs2
+     *
+     * @param rd  目标寄存器，存储按位异或结果
+     * @param rs1 源寄存器1，第一个操作数
+     * @param rs2 源寄存器2，第二个操作数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitXor(int rd, int rs1, int rs2) {
         return emitRType(RegisterBytecodeDefinition.INSTR_XOR, rd, rs1, rs2);
@@ -224,6 +290,10 @@ public class RegisterAssembler {
 
     /**
      * 生成加载立即数指令: li rd, imm
+     *
+     * @param rd  目标寄存器，存储立即数值
+     * @param imm 16位有符号立即数
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitLi(int rd, int imm) {
         return emitIType(RegisterBytecodeDefinition.INSTR_LI, rd, R0, imm);
@@ -231,6 +301,10 @@ public class RegisterAssembler {
 
     /**
      * 生成加载字符指令: lc rd, imm
+     *
+     * @param rd 目标寄存器，存储字符的ASCII值
+     * @param c  要加载的字符
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitLc(int rd, char c) {
         return emitIType(RegisterBytecodeDefinition.INSTR_LC, rd, R0, c);
@@ -238,6 +312,11 @@ public class RegisterAssembler {
 
     /**
      * 生成加载字指令: lw rd, base, offset
+     *
+     * @param rd     目标寄存器，存储从内存加载的值
+     * @param base   基址寄存器，内存地址的基础
+     * @param offset 16位有符号偏移量，相对于基址的偏移
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitLw(int rd, int base, int offset) {
         return emitIType(RegisterBytecodeDefinition.INSTR_LW, rd, base, offset);
@@ -246,6 +325,11 @@ public class RegisterAssembler {
     /**
      * 生成存储字指令: sw rs, base, offset
      * 注意：对于存储指令，rd字段实际存放的是源寄存器
+     *
+     * @param rs     源寄存器，要存储的值
+     * @param base   基址寄存器，内存地址的基础
+     * @param offset 16位有符号偏移量，相对于基址的偏移
+     * @return 生成的指令在字节码中的位置索引
      */
     public int emitSw(int rs, int base, int offset) {
         return emitIType(RegisterBytecodeDefinition.INSTR_SW, rs, base, offset);

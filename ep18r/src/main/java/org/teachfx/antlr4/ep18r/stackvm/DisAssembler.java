@@ -3,6 +3,8 @@ package org.teachfx.antlr4.ep18r.stackvm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.BytecodeDefinition;
+
 public class DisAssembler {
     protected Object[] constPool;
     byte[] code;

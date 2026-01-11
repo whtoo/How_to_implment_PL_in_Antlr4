@@ -1,5 +1,10 @@
 package org.teachfx.antlr4.ep18r.stackvm.interpreter;
 
+import org.teachfx.antlr4.ep18r.stackvm.FunctionSymbol;
+import org.teachfx.antlr4.ep18r.stackvm.StackFrame;
+import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
+import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+
 /**
  * 执行上下文
  * 封装寄存器、内存等执行环境

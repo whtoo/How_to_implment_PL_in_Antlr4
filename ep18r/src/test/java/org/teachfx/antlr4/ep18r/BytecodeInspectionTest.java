@@ -1,11 +1,10 @@
 package org.teachfx.antlr4.ep18r;
 
 import org.junit.jupiter.api.*;
-import org.teachfx.antlr4.ep18r.stackvm.*;
+import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.*;
 

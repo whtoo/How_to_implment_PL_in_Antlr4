@@ -143,6 +143,13 @@ EP18R与其他EP（特别是EP21）的协调计划，包含：
 - 删除不属于EP18R的文档（AGENTS.md、CLAUDE.md、EP21文档等）
 - 保留历史备份：`docs_backup_20260109/`
 
+**2026-01-11**: 测试错误修复
+- 修复 RefactoringVerificationTest.java 中重复定义的 VMConfig、VMException、ErrorCode 类
+- 修复 TDD_CodeQualityTest.java 中错误的 import 路径
+- 更新 import 路径：org.teachfx.antlr4.ep18r.stackvm.VMConfig → org.teachfx.antlr4.ep18r.stackvm.config.VMConfig
+- 更新 RegisterVMInterpreter 类路径：org.teachfx.antlr4.ep18r.stackvm.RegisterVMInterpreter → org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter
+- 所有 131 个测试通过
+
 ---
 
 ## 联系与反馈
@@ -154,5 +161,5 @@ EP18R与其他EP（特别是EP21）的协调计划，包含：
 
 ---
 
-**最后更新**: 2026-01-09
+**最后更新**: 2026-01-11
 **维护者**: EP18R开发团队

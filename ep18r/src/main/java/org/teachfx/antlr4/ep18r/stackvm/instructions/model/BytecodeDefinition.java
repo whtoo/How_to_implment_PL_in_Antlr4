@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep18r.stackvm.instructions;
+package org.teachfx.antlr4.ep18r.stackvm.instructions.model;
 
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser;
 
@@ -107,9 +107,9 @@ public class BytecodeDefinition {
     };
 
     public static class Instruction {
-        String name;
-        int[] type = new int[3];
-        int n = 0;
+        public String name;
+        public int[] type = new int[3];
+        public int n = 0;
 
         public Instruction(String name) {
             this(name, 0, 0, 0);

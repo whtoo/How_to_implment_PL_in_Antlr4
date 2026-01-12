@@ -79,13 +79,22 @@
                     <failsOnError>false</failsOnError>
                     <skip>true</skip>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- SpotBugs 静态分析插件 -->
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.7.3.6</version>
+                <version>4.9.8.2</version>
                 <configuration>
                     <effort>Max</effort>
                     <threshold>Low</threshold>
@@ -94,8 +103,8 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>check</id>
-                        <phase>verify</phase>
+                        <id>spotbugs-check</id>
+                        <phase>test</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>

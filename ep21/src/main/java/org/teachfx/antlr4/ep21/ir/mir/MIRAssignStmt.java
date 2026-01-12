@@ -17,7 +17,6 @@ public class MIRAssignStmt extends MIRStmt {
         if (source == null) {
             throw new NullPointerException("source expression cannot be null");
         }
-        System.out.println("DEBUG MIRAssignStmt: target='" + target + "', source=" + source);
         this.target = target;
         this.source = source;
     }

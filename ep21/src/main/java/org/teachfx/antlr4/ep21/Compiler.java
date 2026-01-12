@@ -16,7 +16,10 @@ import org.teachfx.antlr4.ep21.pass.cfg.ControlFlowAnalysis;
 import org.teachfx.antlr4.ep21.pass.cfg.LivenessAnalysis;
 import org.teachfx.antlr4.ep21.pass.cfg.TailRecursionOptimizer;
 import org.teachfx.antlr4.ep21.pass.codegen.CodeGenerationResult;
+import org.teachfx.antlr4.ep21.pass.codegen.GeneratorFactory;
+import org.teachfx.antlr4.ep21.pass.codegen.ICodeGenerator;
 import org.teachfx.antlr4.ep21.pass.codegen.StackVMGenerator;
+import org.teachfx.antlr4.ep21.pass.codegen.VMTargetType;
 import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep21.pass.symtab.LocalDefine;
 import org.teachfx.antlr4.ep21.utils.StreamUtils;
@@ -284,12 +287,12 @@ public class Compiler {
                                 })
                 )
                 .forEach(irNodeList -> {
-                    // 使用新的 ICodeGenerator 接口进行代码生成
-                    logger.info("开始为 EP18 栈式虚拟机生成字节码");
+                    VMTargetType targetType = VMTargetType.STACK_VM;
+                    logger.info("开始为 {} 生成字节码", targetType.getIdentifier());
                     logger.debug("IR节点数量: {}", irNodeList.size());
 
-                    // 创建代码生成器并生成字节码
-                    StackVMGenerator generator = new StackVMGenerator();
+                    GeneratorFactory factory = new GeneratorFactory();
+                    ICodeGenerator generator = factory.createGenerator(targetType);
                     CodeGenerationResult result = generator.generateFromInstructions(irNodeList);
 
                     if (result.isSuccess()) {

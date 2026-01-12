@@ -25,7 +25,6 @@ public class LIRAssign extends LIRNode {
         if (type == null) {
             throw new NullPointerException("register type cannot be null");
         }
-        System.out.println("DEBUG LIRAssign: target=" + target + ", source=" + source + ", type=" + type);
         this.target = target;
         this.source = source;
         this.registerType = type;

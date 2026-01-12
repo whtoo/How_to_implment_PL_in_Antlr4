@@ -20,7 +20,11 @@ import org.teachfx.antlr4.ep21.pass.codegen.GeneratorFactory;
 import org.teachfx.antlr4.ep21.pass.codegen.ICodeGenerator;
 import org.teachfx.antlr4.ep21.pass.codegen.StackVMGenerator;
 import org.teachfx.antlr4.ep21.pass.codegen.VMTargetType;
+import org.teachfx.antlr4.ep21.pass.codegen.RegisterVMGenerator;
+import org.teachfx.antlr4.ep21.pass.codegen.IRegisterAllocator;
+import org.teachfx.antlr4.ep21.pass.codegen.EP18RRegisterAllocatorAdapter;
 import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
+import org.teachfx.antlr4.ep18r.stackvm.codegen.LinearScanAllocator;
 import org.teachfx.antlr4.ep21.pass.symtab.LocalDefine;
 import org.teachfx.antlr4.ep21.utils.StreamUtils;
 import java.io.*;
@@ -286,13 +290,23 @@ public class Compiler {
                                     return a;
                                 })
                 )
-                .forEach(irNodeList -> {
+.forEach(irNodeList -> {
                     VMTargetType targetType = VMTargetType.STACK_VM;
                     logger.info("开始为 {} 生成字节码", targetType.getIdentifier());
                     logger.debug("IR节点数量: {}", irNodeList.size());
-
+ 
                     GeneratorFactory factory = new GeneratorFactory();
-                    ICodeGenerator generator = factory.createGenerator(targetType);
+                    ICodeGenerator generator;
+                    IRegisterAllocator registerAllocator = null;
+                    
+                    if (targetType == VMTargetType.REGISTER_VM) {
+                        logger.info("使用EP18R LinearScan寄存器分配器");
+                        registerAllocator = new EP18RRegisterAllocatorAdapter(new LinearScanAllocator());
+                    } else {
+                        logger.info("使用简单轮询寄存器分配器");
+                    }
+                    
+                    generator = factory.createGenerator(targetType, registerAllocator);
                     CodeGenerationResult result = generator.generateFromInstructions(irNodeList);
 
                     if (result.isSuccess()) {

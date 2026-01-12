@@ -38,7 +38,24 @@ public class GeneratorFactory {
 
         ICodeGenerator generator = switch (targetType) {
             case STACK_VM -> new StackVMGenerator(emitter);
-            case REGISTER_VM -> new RegisterVMGenerator();
+            case REGISTER_VM -> new RegisterVMGenerator(null);
+        };
+
+        if (generator != null && !config.isEmpty()) {
+            generator.configure(config);
+        }
+
+        return generator;
+    }
+
+    public ICodeGenerator createGenerator(VMTargetType targetType, IRegisterAllocator registerAllocator) {
+        if (targetType == null) {
+            throw new IllegalArgumentException("VM target type cannot be null");
+        }
+
+        ICodeGenerator generator = switch (targetType) {
+            case STACK_VM -> new StackVMGenerator();
+            case REGISTER_VM -> new RegisterVMGenerator(registerAllocator);
         };
 
         if (generator != null && !config.isEmpty()) {

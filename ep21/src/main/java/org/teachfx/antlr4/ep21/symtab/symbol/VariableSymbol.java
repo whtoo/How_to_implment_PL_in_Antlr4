@@ -16,4 +16,8 @@ public class VariableSymbol extends Symbol {
     public boolean equals(Object obj) {
         return super.equals(obj);
     }
+
+    public String getName() {
+        return name;
+    }
 }

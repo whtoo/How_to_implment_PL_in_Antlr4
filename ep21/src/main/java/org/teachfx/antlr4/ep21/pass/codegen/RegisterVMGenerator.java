@@ -14,6 +14,7 @@ import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType;
+import org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,33 +53,29 @@ public class RegisterVMGenerator implements ICodeGenerator {
 
     private final RegisterEmitter emitter;
     private final RegisterOperatorEmitter operatorEmitter;
+    private final IRegisterAllocator registerAllocator;
     private String lastAssemblyOutput = "";
 
     /**
-     * Creates a new RegisterVMGenerator with default emitters.
+     * Creates a new RegisterVMGenerator with default emitters and a simple round-robin allocator.
      */
     public RegisterVMGenerator() {
-        this(new RegisterEmitter(), new RegisterOperatorEmitter());
+        this(new RegisterEmitter(), new RegisterOperatorEmitter(), null);
     }
 
     /**
-     * Creates a new RegisterVMGenerator with a custom emitter.
+     * Creates a new RegisterVMGenerator with default emitters and custom register allocator.
      *
-     * @param emitter the custom instruction emitter
+     * @param registerAllocator custom register allocator (null for simple round-robin)
      */
-    public RegisterVMGenerator(RegisterEmitter emitter) {
-        this(emitter, new RegisterOperatorEmitter());
+    public RegisterVMGenerator(IRegisterAllocator registerAllocator) {
+        this(new RegisterEmitter(), new RegisterOperatorEmitter(), registerAllocator);
     }
 
-    /**
-     * Creates a new RegisterVMGenerator with custom emitters.
-     *
-     * @param emitter the custom instruction emitter
-     * @param operatorEmitter the custom operator emitter
-     */
-    public RegisterVMGenerator(RegisterEmitter emitter, RegisterOperatorEmitter operatorEmitter) {
+    private RegisterVMGenerator(RegisterEmitter emitter, RegisterOperatorEmitter operatorEmitter, IRegisterAllocator registerAllocator) {
         this.emitter = emitter;
         this.operatorEmitter = operatorEmitter;
+        this.registerAllocator = registerAllocator;
     }
 
     @Override
@@ -167,7 +164,7 @@ public class RegisterVMGenerator implements ICodeGenerator {
             }
 
             // Default code generation path for this function
-            RegisterGeneratorVisitor visitor = new RegisterGeneratorVisitor(emitter, operatorEmitter, errors);
+            RegisterGeneratorVisitor visitor = new RegisterGeneratorVisitor(emitter, operatorEmitter, registerAllocator, errors);
 
             for (IRNode node : functionInstructions) {
                 if (node instanceof Stmt stmt) {
@@ -245,6 +242,7 @@ public class RegisterVMGenerator implements ICodeGenerator {
     private class RegisterGeneratorVisitor implements IRVisitor<Void, Void> {
         private final RegisterEmitter emitter;
         private final RegisterOperatorEmitter operatorEmitter;
+        private final IRegisterAllocator registerAllocator;
         private final List<String> errors;
         private int instructionCount = 0;
         private int tempReg = 5;  // Start from t0 (r5)
@@ -252,9 +250,11 @@ public class RegisterVMGenerator implements ICodeGenerator {
         public RegisterGeneratorVisitor(
                 RegisterEmitter emitter,
                 RegisterOperatorEmitter operatorEmitter,
+                IRegisterAllocator registerAllocator,
                 List<String> errors) {
             this.emitter = emitter;
             this.operatorEmitter = operatorEmitter;
+            this.registerAllocator = registerAllocator;
             this.errors = errors;
         }
 
@@ -288,13 +288,31 @@ public class RegisterVMGenerator implements ICodeGenerator {
         }
 
         private int allocateTemp() {
-            int reg = tempReg;
-            tempReg = (tempReg + 1) % 10;  // Cycle through r5-r9
-            return reg;
+            if (registerAllocator != null) {
+                VariableSymbol tempVar = new VariableSymbol("temp" + instructionCount);
+                int reg = registerAllocator.allocateRegister(tempVar);
+                if (reg == -1) {
+                    throw new IllegalStateException("No registers available for temporary allocation");
+                }
+                return reg;
+            } else {
+                int reg = tempReg;
+                tempReg = (tempReg + 1) % 10;
+                return reg;
+            }
         }
 
         private void freeTemp(int reg) {
-            // In this simple allocator, we just cycle back
+            if (registerAllocator != null) {
+                if (registerAllocator instanceof EP18RRegisterAllocatorAdapter adapter) {
+                    for (VariableSymbol var : adapter.getManagedVariables()) {
+                        if (registerAllocator.getRegister(var) == reg) {
+                            registerAllocator.freeRegister(var);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         // ==================== Statement Visitors ====================
@@ -620,6 +638,8 @@ public class RegisterVMGenerator implements ICodeGenerator {
             count++;
             
             // n = n - 1
+            emitter.emit("    li r6, 1");
+            count++;
             emitter.emit("    sub r5, r5, r6"); // n = n - 1
             count++;
             
@@ -654,7 +674,7 @@ public class RegisterVMGenerator implements ICodeGenerator {
             // Function entry (assuming single parameter)
             emitter.emit(".def " + functionName + ": args=1, locals=1");
             count++;
-
+            
             // Load parameter n to r5
             emitter.emit("    lw r5, fp, 4");  // Load first parameter
             count++;
@@ -666,7 +686,7 @@ public class RegisterVMGenerator implements ICodeGenerator {
             count++;
             emitter.emit("    sle r7, r5, r6"); // r7 = (n <= 0)
             count++;
-            emitter.emit("    jnf r7, " + functionName + "_loop"); // Jump to loop if n > 0
+            emitter.emit("    jnf r7, " + functionName + "_loop"); // Continue loop if n > 0
             count++;
 
             // Base case return

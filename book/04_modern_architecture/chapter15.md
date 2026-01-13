@@ -1,47 +1,59 @@
-# 第15章：IR Generation - 中间表示生成
+# 第15章：本地优化与代码生成 (EP20)
 
 ## 本章概述
 
-本章聚焦于编译器前端的最终输出——中间表示（Intermediate Representation，IR）的生成。通过学习本章，你将掌握IR的设计原则、常用IR形式（如三地址码）以及如何将AST转换为IR。
+本章聚焦于编译器的最后两个关键阶段：**本地优化**和**代码生成**。你将学习如何在控制流图(CFG)上进行各种局部优化（如死代码消除、跳转优化），并最终将优化后的IR生成为EP18虚拟机字节码。
 
 【你现在站在哪】:
 ```
-... → [语法分析] → [AST构建] → [符号表] → [类型系统] → [语义分析] → ✅ IR生成 → [优化] → [代码生成] → ...
+... → [AST构建] → [符号表] → [类型检查] → [IR生成] → [CFG构建] → ✅ [本地优化] →  [代码生成] → ...
 ```
 
 ## 动机与真实场景
 
-真实场景：你的编译器已经能够检查程序的语义正确性，现在需要生成目标代码。用户希望编译器能够支持多种目标平台（x86、ARM、RISC-V），但你不想为每个平台都重新实现一遍语义分析。
+### 真实场景
 
-具体问题或挑战：
-- AST与目标机器紧密耦合，难以移植到不同平台
-- 语义分析与代码生成混在一起，难以维护和扩展
-- 没有统一的中间表示，难以进行跨平台的优化
-- 生成的代码难以理解和调试
+你的编译器现在已经可以生成IR和控制流图。但生成的代码中存在大量冗余：不必要的跳转、从未使用的计算、重复的指令等。用户抱怨编译出的程序运行效率不高，代码体积过大。
 
-如果缺少本章的能力，你将面临：
-- 难以支持多种目标平台
-- 无法进行平台无关的优化
-- 代码生成逻辑复杂且难以维护
-- 编译器架构不够清晰
+### 具体问题与挑战
 
-本章将教你如何：
-- 设计独立于源语言和目标语言的中间表示
-- 实现AST到IR的转换算法
-- 使用三地址码等常用IR形式
-- 为后续的优化和代码生成奠定基础
+- **冗余控制流**：生成的代码中有大量`goto L1; L1: goto L2`这样的冗余跳转
+- **死代码问题**：有些计算结果从未被使用，但仍在生成指令
+- **指令选择不佳**：没有针对目标平台选择最优指令序列
+- **寄存器分配前优化**：在寄存器分配前未能消除冗余计算
+
+### 缺失本章能力的影响
+
+如果缺少本地优化和代码生成能力，你将面临：
+- 生成的代码体积大、执行效率低
+- 无法消除明显的程序冗余
+- 编译器后端架构不清晰，难以扩展新目标平台
+- 无法实现生产级的代码生成
+
+### 本章学习目标
+
+- 理解控制流优化算法（跳转优化、基本块合并）
+- 掌握死代码消除技术
+- 学习指令选择的基本原则
+- 实现EP18虚拟机字节码生成器
+- 理解编译器后端的完整架构
 
 ## 人类工程师线：技术与实现
 
 ### 核心概念
 
-**中间表示（IR）**是编译器前端和后端之间的桥梁。它是一种抽象的、与源语言和目标机器都无关的程序表示，既能够表达源语言的语义，又便于进行各种分析和优化。
+**本地优化 (Local Optimization)** 是在单个基本块或相邻基本块范围内进行的优化。它不考虑跨越多个基本块的全局数据流信息，因此实现相对简单但效果显著。
 
-通俗解释：如果源语言是"中文"，目标机器代码是"法文"，那么IR就是"世界语"。世界语既能够表达中文的意思，又容易被翻译成法文。通过使用IR，我们不需要为每种源语言-目标语言的组合都写一个完整的编译器，只需要：
-1. 源语言 → IR（前端）
-2. IR → 目标语言（后端）
+通俗理解：本地优化就像编辑文章时，在段落内部进行的措辞优化。你会删除重复的词语、简化复杂的表达、删除无关的句子。这些优化不影响文章的整体结构，但能显著提升可读性。
 
-[图1：IR在编译器流水线中的位置]
+**控制流优化 (Control Flow Optimization)** 是本地优化的重要组成部分，主要包括：
+- **跳转优化**：消除跳转到跳转、跳转到下一指令等冗余
+- **基本块合并**：将只能顺序执行的两个小块合并
+- **空块消除**：删除不含任何指令的基本块
+
+**代码生成 (Code Generation)** 是将优化后的IR翻译成目标代码的过程。对于EP20，我们的目标是EP18虚拟机字节码（一种栈式虚拟机指令集）。
+
+[图1：编译器后端在流水线中的位置]
 ```
 源代码 (Cymbol)
    │
@@ -49,22 +61,558 @@
 前端
 ├─ 词法分析 → Token
 ├─ 语法分析 → AST
-├─ 语义分析 → 符号表 + 类型信息
-└─ IR生成 → 中间表示 (IR)
+├─ 语义分析 → 符号表 + 类型检查
+└─ IR生成 → 三地址码
+   │
+   ▼
+中端
+├─ CFG构建 → 控制流图
+└─ 本地优化 → 优化的IR
    │
    ▼
 后端
-├─ 优化 → 优化的IR
-└─ 代码生成 → 目标代码 (ASM/Bytecode)
+└─ 代码生成 → EP18 VM字节码
 ```
 
-类比理解：IR就像建筑的"建筑图"。建筑工人不需要知道设计师用什么语言交流（中文/英文），只需要看建筑图就能施工。建筑师（前端）把设计意图表达在建筑图（IR）上，施工队（后端）根据建筑图施工。如果要换施工队（目标平台），只需要给同样的建筑图就行。
+### 与仓库 EP 的对应关系
 
-**三地址码（Three-Address Code，TAC）**是最常用的IR形式之一。它的特点是每条指令最多包含三个地址（操作数），例如：`x = y + z`。三地址码接近汇编语言，但又是结构化的，便于分析和优化。
+对应 EP：EP20
 
-[图2：三地址码示例]
+目录结构：
 ```
-源代码：
+ep20/
+├── src/main/java/org/teachfx/antlr4/ep20/
+│   ├── ir/                             # IR节点定义
+│   │   ├── IRNode.java                 # IR节点基类
+│   │   ├── Prog.java                   # IR程序根节点
+│   │   └── ...
+│   ├── pass/
+│   │   ├── cfg/                        # 控制流分析与优化
+│   │   │   ├── BasicBlock.java         # 基本块定义 (130行)
+│   │   │   ├── CFG.java                # 控制流图 (158行)
+│   │   │   ├── CFGBuilder.java         # CFG构建器 (63行)
+│   │   │   ├── LinearIRBlock.java      # 线性IR块 (236行)
+│   │   │   ├── ControlFlowAnalysis.java # 控制流优化器 (69行)
+│   │   │   └── IFlowOptimizer.java     # 优化器接口 (7行)
+│   │   ├── codegen/                    # 代码生成器
+│   │   │   ├── CymbolAssembler.java    # EP18汇编器 (155行)
+│   │   │   ├── CymbolVMIOperatorEmitter.java # VM操作码发射器 (65行)
+│   │   │   └── IOperatorEmitter.java   # 操作码接口
+│   └── Compiler.java                   # 编译器入口 (完整流水线)
+```
+
+### 核心实现
+
+#### 1. 控制流优化 (ControlFlowAnalysis)
+
+**ControlFlowAnalysis.java** 是本地优化的核心实现，它实现了两种主要的优化：
+
+1. **冗余跳转消除**：如果基本块的最后一个指令是跳转到下一块，则删除该跳转
+2. **基本块合并**：如果基本块只有一个前驱，且前驱只有一个后继，则合并这两个块
+
+```java
+/**
+ * 控制流分析优化器
+ * 
+ * <p>在CFG上执行本地优化，包括：</p>
+ * <ul>
+ *   <li>删除冗余跳转指令（跳转到下一指令）</li>
+ *   <li>合并顺序执行的基本块</li>
+ *   <li>简化控制流图结构</li>
+ * </ul>
+ */
+public class ControlFlowAnalysis<I extends IRNode> implements IFlowOptimizer<I> {
+    private static final Logger logger = LogManager.getLogger(ControlFlowAnalysis.class);
+    
+    @Override
+    public void onHandle(CFG<I> cfg) {
+        List<Triple<Integer, Integer, Integer>> needRemovedLink = new ArrayList<>();
+        
+        // 1. 遍历所有控制流图的节点
+        // 2. 如果一个节点的出度为1，并且是JMP指令，同时满足JMP的next和此节点的后续相同
+        // 3. 如果一个节点的入度为1，则该节点的前一个节点可以合并到该节点上
+        // 根据上面三个条件，可以得到下面的代码
+
+        // 第一步：移除冗余跳转指令
+        for (var block : cfg.nodes) {
+            var key = block.getId();
+            var outDeg = cfg.getOutDegree(key);
+
+            // 检查块的最后一条指令是否是跳转
+            if (outDeg == 1 && block.getLastInstr() instanceof JMPInstr jmpInstr) {
+                var targetBlockId = jmpInstr.getTarget().getSeq();
+                AtomicBoolean needRemoveLastInstr = new AtomicBoolean(false);
+                
+                // 检查跳转目标是自然后继
+                cfg.getSucceed(key).stream()
+                   .filter(x -> x == targetBlockId)
+                   .findFirst()
+                   .ifPresent(next -> {
+                       needRemoveLastInstr.set(true);
+                   });
+
+                // 如果是跳转到自然后继，删除跳转指令和边
+                if (needRemoveLastInstr.get()) {
+                    block.removeLastInstr();  // 删除冗余跳转
+                    cfg.removeEdge(Triple.of(key, targetBlockId, 5));
+                    logger.debug("移除冗余跳转：块{}跳转到块{}是自然后继", key, targetBlockId);
+                }
+            }
+        }
+
+        // 第二步：合并顺序执行的基本块
+        var removeQueue = new LinkedList<BasicBlock<I>>();
+        
+        for (var block : cfg.nodes) {
+            var key = block.getId();
+            var inDeg = cfg.getInEdges(key).toList();
+            var isSrcSoloLink = (long) cfg.getFrontier(key).size() == 1;
+            var isDestSoloLink = isSrcSoloLink && cfg.getOutDegree(inDeg.get(0).getLeft()) == 1;
+            
+            // 如果入度为1，且前驱出度也为1，可以合并
+            if (inDeg.size() == 1 && isDestSoloLink) {
+                cfg.getFrontier(key).stream().findFirst().ifPresent(frontier -> {
+                    var prevBlock = cfg.getBlock(frontier);
+                    prevBlock.mergeNearBlock(block);  // 合并两个块
+                    cfg.removeEdge(inDeg.get(0));
+                    removeQueue.add(block);
+                    logger.debug("合并基本块：块{}合并到块{}", key, prevBlock.getId());
+                });
+            }
+        }
+
+        // 第三步：删除被合并的空块
+        for (var block : removeQueue) {
+            cfg.removeNode(block);
+        }
+        
+        if (DEBUG) {
+            logger.info("控制流优化完成，移除{}个块", removeQueue.size());
+        }
+    }
+}
+```
+
+**算法详解**：
+
+这个优化器实现了两个关键算法：
+
+**算法1：冗余跳转消除**
+```
+输入: CFG (控制流图)
+输出: 优化后的CFG
+
+对每个基本块 B:
+    如果 B 有且仅有一个出边 AND B 的最后一条指令是 JMP:
+        目标块 T = JMP 的目标
+        后继块集合 S = B 的自然后继
+        
+        如果 T ∈ S:  // 跳转到自然后继
+            从 B 中删除最后一条 JMP 指令
+            从CFG中删除 B→T 的边
+```
+
+**算法2：基本块合并**
+```
+输入: CFG (控制流图)
+输出: 优化后的CFG
+
+初始化空队列 Q (用于存储待删除的块)
+
+对每个基本块 B:
+    入边集合 E_in = B 的入边
+    
+    如果 |E_in| == 1:  // 只有一个前驱
+        前驱块 Pred = E_in[0].from
+        
+        如果 Pred 的出度 == 1:  // 前驱也只有这一个后继
+            将 B 的所有指令合并到 Pred
+            删除 B→? 的边
+            将 B 加入删除队列 Q
+
+对于每个在 Q 中的块 B:
+    从CFG中删除 B
+```
+
+#### 2. 代码生成 (CymbolAssembler)
+
+**CymbolAssembler.java** 负责将IR指令转换为EP18虚拟机字节码。它实现了IRVisitor接口，每种IR节点对应一个visit方法。
+
+```java
+/**
+ * EP18虚拟机汇编器
+ * 
+ * <p>将IR指令转换为EP18虚拟机字节码。</p>
+ * <p>访问者模式遍历IR节点，为每个IR节点生成对应的虚拟机指令。</p>
+ */
+public class CymbolAssembler implements IRVisitor<Void, Void> {
+    private LinkedList<String> assembleCmdBuffer = new LinkedList<>();
+    protected IOperatorEmitter operatorEmitter = new CymbolVMIOperatorEmitter();
+    
+    // 缩进计数（用于生成美观的汇编代码）
+    private int indents = 0;
+
+    /**
+     * 访问IR指令列表（主入口）
+     */
+    public Void visit(List<IRNode> linearInstrs) {
+        for (var instr : linearInstrs) {
+            if (instr instanceof Expr) {
+                ((Expr) instr).accept(this);
+            } else {
+                ((Stmt) instr).accept(this);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 生成EP18虚拟机加载指令
+     * 
+     * <p>FrameSlot表示栈帧中的变量槽位，对应EP18的load指令</p>
+     * 
+     * 例如：int x = 5;
+     *        x 存储在栈帧的 slot 0
+     *        读取 x 时：load 0
+     */
+    @Override
+    public Void visit(FrameSlot frameSlot) {
+        emit("load %d".formatted(frameSlot.getSlotIdx()));
+        return null;
+    }
+
+    /**
+     * 生成EP18虚拟机常数指令
+     * 
+     * <p>根据常数类型生成不同的iconst/sconst/bconst指令</p>
+     * 
+     * 例如：42       → iconst 42
+     *       "hello"  → sconst "hello"
+     *       true     → bconst 1
+     */
+    @Override
+    public <T> Void visit(ConstVal<T> tConstVal) {
+        var val = tConstVal.getVal();
+        if (val instanceof Integer integer) {
+            emit("iconst %d".formatted(integer));
+        } else if (val instanceof String str) {
+            emit("sconst \"%s\"".formatted(str));
+        } else if (val instanceof Boolean bool) {
+            emit("bconst %d".formatted(bool ? 1 : 0));
+        }
+        return null;
+    }
+
+    /**
+     * 生成二元运算指令
+     * 
+     * <p>先访问左右操作数，再生成运算指令</p>
+     * 
+     * 例如：a + b
+     *       load a    // 访问左操作数
+     *       load b    // 访问右操作数
+     *       iadd      // 生成加法指令
+     */
+    @Override
+    public Void visit(BinExpr node) {
+        node.getLhs().accept(this);  // 生成左操作数指令
+        node.getRhs().accept(this);  // 生成右操作数指令
+        
+        // 生成运算指令（通过操作码发射器）
+        emit(operatorEmitter.emitBinaryOp(node.getOpType()));
+        return null;
+    }
+
+    /**
+     * 生成一元运算指令
+     * 
+     * <p>先访问操作数，再生成运算指令</p>
+     */
+    @Override
+    public Void visit(UnaryExpr node) {
+        node.expr.accept(this);
+        emit(operatorEmitter.emitUnaryOp(node.op));
+        return null;
+    }
+
+    /**
+     * 生成函数调用指令
+     * 
+     * <p>内置函数直接调用（如print），用户函数使用call指令</p>
+     * 
+     * 例如：print(x)    → print
+     *       myFunc(a,b) → call myFunc()
+     */
+    @Override
+    public Void visit(CallFunc callFunc) {
+        if (!callFunc.getFuncType().isBuiltIn()) {
+            emit("call %s()".formatted(callFunc.getFuncName()));
+        } else {
+            emit("%s".formatted(callFunc.getFuncName()));
+        }
+        return null;
+    }
+
+    /**
+     * 生成标签指令
+     * 
+     * <p>函数入口标签或跳转目标标签</p>
+     * 
+     * 例如：factorial:
+     *       L1:
+     */
+    @Override
+    public Void visit(Label label) {
+        // 调整缩进（标签不缩进）
+        if (indents > 0) {
+            indents--;
+        }
+
+        if (label instanceof FuncEntryLabel) {
+            indents = 0;  // 函数入口重置缩进
+            emit("%s".formatted(label.toSource()));
+        } else {
+            emit("%s:".formatted(label.toSource()));  // 普通跳转标签
+        }
+        
+        indents++;  // 标签后内容缩进
+        return null;
+    }
+
+    /**
+     * 生成跳转指令
+     */
+    @Override
+    public Void visit(JMP jmp) {
+        emit("br %s".formatted(jmp.getNext().toString()));
+        indents--;  // 跳转后减少缩进
+        return null;
+    }
+
+    /**
+     * 生成条件跳转指令
+     * 
+     * <p>条件为假时跳转（EP18 VM的特性）</p>
+     */
+    @Override
+    public Void visit(CJMP cjmp) {
+        emit("brf %s".formatted(cjmp.getElseBlock().getLabel().toString()));
+        indents--;  // 条件跳转后减少缩进
+        return null;
+    }
+
+    /**
+     * 生成赋值指令
+     * 
+     * <p>将计算结果存储到栈帧变量</p>
+     * 
+     * 例如：x = 5 + 3
+     *       iconst 5
+     *       iconst 3
+     *       iadd
+     *       store 0    // x在槽位0
+     */
+    @Override
+    public Void visit(Assign assign) {
+        assign.getRhs().accept(this);  // 访问右值表达式
+
+        // 生成存储指令
+        if (assign.getLhs() instanceof FrameSlot frameSlot) {
+            emit("store %d".formatted(frameSlot.getSlotIdx()));
+        }
+
+        return null;
+    }
+
+    /**
+     * 生成返回指令
+     * 
+     * <p>main函数返回生成halt，其他函数生成ret</p>
+     */
+    @Override
+    public Void visit(ReturnVal returnVal) {
+        // 如果有返回值，先生成返回值
+        if (Objects.nonNull(returnVal.getRetVal())) {
+            returnVal.getRetVal().accept(this);
+        }
+
+        // 生成返回指令
+        if (returnVal.isMainEntry()) {
+            emit("halt");  // main函数结束时停机
+        } else {
+            emit("ret");   // 普通函数返回
+        }
+        indents--;  // 返回后减少缩进
+        return null;
+    }
+
+    /**
+     * 生成输出指令
+     * 
+     * <p>带缩进的发射方法，生成格式化的汇编代码</p>
+     */
+    protected void emit(String cmd) {
+        var indentCmdBuf = "    ".repeat(indents) + cmd;
+        assembleCmdBuffer.add(indentCmdBuf);
+    }
+}
+```
+
+**操作码发射器**
+
+**CymbolVMIOperatorEmitter.java** 负责将二元/一元运算符映射到EP18 VM指令。
+
+```java
+/**
+ * EP18虚拟机操作码发射器
+ * 
+ * <p>将运算符转换为EP18 VM指令字符串。</p>
+ */
+public class CymbolVMIOperatorEmitter implements IOperatorEmitter {
+    
+    /**
+     * 映射二元运算符到VM指令
+     */
+    @Override
+    public String emitBinaryOp(OperatorType.BinaryOpType binaryOpType) {
+        return switch (binaryOpType) {
+            case ADD -> "iadd";      // 整数加法
+            case SUB -> "isub";      // 整数减法
+            case MUL -> "imult";     // 整数乘法
+            case DIV -> "idiv";      // 整数除法
+            case MOD -> "imod";      // 整数取模
+            case LT -> "ilt";        // 小于
+            case LE -> "ile";        // 小于等于
+            case GT -> "igt";        // 大于
+            case GE -> "ige";        // 大于等于
+            case EQ -> "ieq";        // 等于
+            case NE -> "ine";        // 不等于
+            case AND -> "iand";      // 逻辑与
+            case OR -> "ior";        // 逻辑或
+        };
+    }
+
+    /**
+     * 映射一元运算符到VM指令
+     */
+    @Override
+    public String emitUnaryOp(OperatorType.UnaryOpType unaryOpType) {
+        return switch (unaryOpType) {
+            case NEG -> "ineg";      // 取负
+            case NOT -> "inot";      // 逻辑非
+        };
+    }
+}
+```
+
+#### 3. 编译器流水线集成
+
+编译器入口 **Compiler.java** 展示了完整的编译流程，从源码到字节码：
+
+```java
+public class Compiler {
+    private static final Logger logger = LogManager.getLogger(Compiler.class);
+
+    /**
+     * 完整的编译流程
+     */
+    public String compile(String sourceCode) {
+        // 阶段1：ANTLR4词法分析和语法分析
+        var charStream = CharStreams.fromString(sourceCode);
+        var lexer = new CymbolLexer(charStream);
+        var tokenStream = new CommonTokenStream(lexer);
+        var parser = new CymbolParser(tokenStream);
+        
+        ParseTree tree = parser.file();
+        if (parser.getNumberOfSyntaxErrors() > 0) {
+            throw new CompileException("语法错误");
+        }
+
+        // 阶段2：AST构建
+        var astBuilder = new CymbolASTBuilder();
+        var astRoot = astBuilder.visit(tree);
+        
+        // 阶段3：符号表构建
+        var symbolDefine = new LocalDefine();
+        astRoot.accept(symbolDefine);
+        var symbolTable = symbolDefine.getSymbolTable();
+
+        // 阶段4：类型检查
+        var typeChecker = new TypeChecker(symbolTable);
+        astRoot.accept(typeChecker);
+
+        // 阶段5：IR生成
+        var irBuilder = new CymbolIRBuilder(symbolTable);
+        var linearInstrs = astRoot.accept(irBuilder);
+
+        // 阶段6：CFG构建
+        var cfgBuilder = new CFGBuilder();
+        var cfg = cfgBuilder.buildCFG(linearInstrs);
+
+        // 阶段7：本地优化（控制流优化）
+        var optimizer = new ControlFlowAnalysis<IRNode>();
+        optimizer.onHandle(cfg);
+
+        // 阶段8：指令选择（线性化）
+        var linearIRBuilder = new LinearIRBlock(linearInstrs.size());
+        var linearIRInstrs = linearIRBuilder.toLinearInstrList(cfg);
+
+        // 阶段9：代码生成（EP18 VM）
+        var assembler = new CymbolAssembler();
+        assembler.visit(linearIRInstrs);
+        
+        return assembler.getAsmInfo();
+    }
+}
+```
+
+### 实战流程
+
+实战步骤：完整的编译、优化和代码生成
+
+**步骤1：编译项目并运行基本块优化测试**
+
+```bash
+# 进入EP20目录
+cd /Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4/ep20
+
+# 编译项目
+mvn clean compile -DskipTests
+
+# 运行基本块优化测试
+mvn test -Dtest=BasicBlockOptimizationTest
+
+# 预期输出：
+# [INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+# [INFO] BUILD SUCCESS
+```
+
+验证方法：
+- 检查点1：确认所有5个测试通过
+- 检查点2：查看`testMergeNearBlock()`验证基本块合并
+- 检查点3：查看`testRemoveLastInstr()`验证指令删除
+
+**步骤2：运行汇编器测试**
+
+```bash
+# 运行汇编器测试
+mvn test -Dtest=CymbolAssemblerTest
+
+# 预期输出：
+# [INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+# [INFO] BUILD SUCCESS
+```
+
+验证方法：
+- 检查点1：确认常量加载正确生成(`testEmitLoadConstantInstruction`)
+- 检查点2：验证二元运算指令生成
+- 检查点3：检查函数调用指令格式
+
+**步骤3：端到端编译测试**
+
+创建测试程序：
+```bash
+cat > /tmp/test_factorial.cymbol << 'EOF'
 int factorial(int n) {
     if (n <= 1) {
         return 1;
@@ -72,1078 +620,523 @@ int factorial(int n) {
     return n * factorial(n - 1);
 }
 
-三地址码：
-factorial:
-    t1 = n <= 1
-    if t1 goto L1
-    t2 = n - 1
-    t3 = factorial(t2)
-    t4 = n * t3
-    return t4
-L1:
-    return 1
-```
-
-相关概念：
-- **基本块（Basic Block）**：一段顺序执行的代码，没有分支进入或退出（除了入口和出口）
-- **控制流图（CFG）**：表示程序控制流的有向图，节点是基本块，边是跳转
-- **静态单赋值（SSA）**：每个变量只被赋值一次的IR形式，便于优化
-- **四元式（Quadruple）**：三地址码的一种实现形式：(op, arg1, arg2, result)
-
-### 与仓库 EP 的对应关系
-
-对应 EP：EP13-EP16
-
-目录结构：
-```
-common/
-├── src/main/java/org/teachfx/antlr4/common/
-│   └── ir/
-│       ├── IRNode.java              // IR节点基类
-│       ├── IRBuilder.java           // IR构建器
-│       ├── tac/                     // 三地址码相关
-│       │   ├── TACInstruction.java  // TAC指令
-│       │   ├── TACFunction.java     // TAC函数
-│       │   └── TACProgram.java      // TAC程序
-│       └── ssa/                     // SSA相关
-│           ├── SSABuilder.java      // SSA构建器
-│           └── SSANode.java         // SSA节点
-├── src/test/java/org/teachfx/antlr4/common/
-│   └── ir/
-│       ├── IRBuilderTest.java       // IR构建器测试
-│       └── TACBuilderTest.java      // TAC构建器测试
-└── docs/
-    └── ir_design.md                 // IR设计文档
-```
-
-关键类/方法说明：
-
-**IRNode** - IR节点基类
-```java
-/**
- * IR节点基类
- * 
- * <p>所有IR节点的父类，定义了IR节点的基本接口。</p>
- */
-public abstract class IRNode {
-    /** 源位置信息 */
-    protected final SourceLocation location;
-    
-    /** IR类型 */
-    protected final IRType type;
-    
-    /**
-     * 构造函数
-     * 
-     * @param location 源位置信息
-     * @param type IR类型
-     */
-    public IRNode(SourceLocation location, IRType type) {
-        this.location = location;
-        this.type = type;
-    }
-    
-    /**
-     * 获取源位置信息
-     * 
-     * @return 源位置信息
-     */
-    public SourceLocation getLocation() {
-        return location;
-    }
-    
-    /**
-     * 获取IR类型
-     * 
-     * @return IR类型
-     */
-    public IRType getType() {
-        return type;
-    }
-    
-    /**
-     * 获取结果变量（用于链式表达式）
-     * 
-     * @return 结果变量
-     */
-    public abstract IRVariable getResult();
-    
-    /**
-     * 接受IR Visitor
-     * 
-     * @param visitor IR Visitor
-     * @return Visitor的处理结果
-     */
-    public abstract <T> T accept(IRVisitor<T> visitor);
-    
-    @Override
-    public abstract String toString();
-}
-```
-
-**TACInstruction** - 三地址码指令
-```java
-/**
- * 三地址码指令
- * 
- * <p>表示一条三地址码指令，格式为：result = op arg1, arg2
- * 实际指令可能少于三个地址（如二元运算、一元运算、跳转）。</p>
- */
-public class TACInstruction {
-    /** 操作码 */
-    private final TACOpcode opcode;
-    
-    /** 结果变量（可能为null） */
-    private final IRVariable result;
-    
-    /** 操作数1（可能为null） */
-    private final IRVariable arg1;
-    
-    /** 操作数2（可能为null） */
-    private final IRVariable arg2;
-    
-    /** 源位置信息 */
-    private final SourceLocation location;
-    
-    /** 注释（用于调试） */
-    private String comment;
-    
-    /**
-     * 指令类型
-     */
-    public enum TACOpcode {
-        // 二元运算
-        ADD, SUB, MUL, DIV, MOD,      // 算术运算
-        AND, OR, XOR,                  // 位运算
-        SHL, SHR,                      // 移位
-        
-        // 一元运算
-        NEG, NOT, INC, DEC,           // 一元运算
-        LOAD, STORE,                  // 内存访问
-        LOAD_ADDR,                    // 取地址
-        
-        // 比较
-        CMP_EQ, CMP_NE, CMP_LT,       // 比较运算
-        CMP_LE, CMP_GT, CMP_GE,
-        
-        // 控制流
-        JUMP, JUMP_EQ, JUMP_NE,       // 条件跳转
-        JUMP_LT, JUMP_LE, JUMP_GT, JUMP_GE,
-        
-        // 函数调用
-        CALL, CALL_PARAM,             // 函数调用
-        RETURN,                       // 返回
-        
-        // 标签
-        LABEL,                        // 标签
-        
-        // 类型转换
-        CAST_INT_TO_FLOAT,
-        CAST_FLOAT_TO_INT,
-        CAST_INT_TO_BOOL,
-        CAST_BOOL_TO_INT,
-        
-        // 特殊
-        NOP, PHI,                     // NOP和Phi函数（SSA）
-        COPY                          // 复制
-    }
-    
-    /**
-     * 创建二元运算指令
-     */
-    public static TACInstruction createBinaryOp(
-            TACOpcode opcode, IRVariable result, 
-            IRVariable arg1, IRVariable arg2, SourceLocation location) {
-        return new TACInstruction(opcode, result, arg1, arg2, location);
-    }
-    
-    /**
-     * 创建一元运算指令
-     */
-    public static TACInstruction createUnaryOp(
-            TACOpcode opcode, IRVariable result, 
-            IRVariable arg, SourceLocation location) {
-        return new TACInstruction(opcode, result, arg, null, location);
-    }
-    
-    /**
-     * 创建跳转指令
-     */
-    public static TACInstruction createJump(
-            TACVariable target, SourceLocation location) {
-        return new TACInstruction(TACOpcode.JUMP, null, target, null, location);
-    }
-    
-    /**
-     * 创建条件跳转指令
-     */
-    public static TACInstruction createCondJump(
-            TACOpcode cmpOpcode, IRVariable condition,
-            IRVariable trueTarget, IRVariable falseTarget,
-            SourceLocation location) {
-        // 条件跳转 = 比较 + 条件跳转
-        TACInstruction cmp = new TACInstruction(
-            cmpOpcode, null, condition, null, location);
-        TACInstruction jump = new TACInstruction(
-            TACOpcode.JUMP_EQ, null, trueTarget, null, location);
-        // 这里返回的是比较指令，跳转指令需要额外创建
-        return cmp;
-    }
-    
-    /**
-     * 创建标签指令
-     */
-    public static TACInstruction createLabel(IRVariable label) {
-        return new TACInstruction(TACOpcode.LABEL, label, null, null, null);
-    }
-    
-    /**
-     * 创建返回指令
-     */
-    public static TACInstruction createReturn(IRVariable value, SourceLocation location) {
-        return new TACInstruction(TACOpcode.RETURN, null, value, null, location);
-    }
-    
-    /**
-     * 创建函数调用指令
-     */
-    public static TACInstruction createCall(String functionName, IRVariable result, SourceLocation location) {
-        IRVariable funcVar = new IRTemporary(functionName, IRType.INT);
-        return new TACInstruction(TACOpcode.CALL, result, funcVar, null, location);
-    }
-    
-    /**
-     * 创建加载指令
-     */
-    public static TACInstruction createLoad(
-            IRVariable result, IRVariable address, SourceLocation location) {
-        return new TACInstruction(TACOpcode.LOAD, result, address, null, location);
-    }
-    
-    /**
-     * 创建存储指令
-     */
-    public static TACInstruction createStore(
-            IRVariable value, IRVariable address, SourceLocation location) {
-        return new TACInstruction(TACOpcode.STORE, null, value, address, location);
-    }
-    
-    // 私有构造函数
-    private TACInstruction(TACOpcode opcode, IRVariable result, 
-                          IRVariable arg1, IRVariable arg2, 
-                          SourceLocation location) {
-        this.opcode = opcode;
-        this.result = result;
-        this.arg1 = arg1;
-        this.arg2 = arg2;
-        this.location = location;
-    }
-    
-    // Getters
-    public TACOpcode getOpcode() { return opcode; }
-    public IRVariable getResult() { return result; }
-    public IRVariable getArg1() { return arg1; }
-    public IRVariable getArg2() { return arg2; }
-    public SourceLocation getLocation() { return location; }
-    public String getComment() { return comment; }
-    public void setComment(String comment) { this.comment = comment; }
-    
-    /**
-     * 转换为字符串表示
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        
-        // 添加注释（如果有）
-        if (comment != null && !comment.isEmpty()) {
-            sb.append("    # ").append(comment).append("\n");
-        }
-        
-        sb.append("    ");
-        
-        switch (opcode) {
-            case LABEL:
-                sb.append(result).append(":");
-                break;
-                
-            case JUMP:
-                sb.append("goto ").append(arg1);
-                break;
-                
-            case RETURN:
-                if (arg1 != null) {
-                    sb.append("return ").append(arg1);
-                } else {
-                    sb.append("return");
-                }
-                break;
-                
-            case CALL:
-                if (result != null) {
-                    sb.append(result).append(" = ");
-                }
-                sb.append("call ").append(arg1);
-                break;
-                
-            case LOAD:
-                sb.append(result).append(" = *").append(arg1);
-                break;
-                
-            case STORE:
-                sb.append("*").append(arg2).append(" = ").append(arg1);
-                break;
-                
-            case NOP:
-                sb.append("nop");
-                break;
-                
-            default:
-                // 二元/一元运算
-                if (result != null) {
-                    sb.append(result).append(" = ");
-                }
-                
-                if (opcode == TACOpcode.NEG) {
-                    sb.append("-").append(arg1);
-                } else if (opcode == TACOpcode.NOT) {
-                    sb.append("!").append(arg1);
-                } else if (opcode == TACOpcode.CAST_INT_TO_FLOAT) {
-                    sb.append("(float)").append(arg1);
-                } else if (opcode == TACOpcode.CAST_FLOAT_TO_INT) {
-                    sb.append("(int)").append(arg1);
-                } else {
-                    // 二元运算
-                    if (arg1 != null) sb.append(arg1);
-                    sb.append(" ").append(opcode.toString().toLowerCase()).append(" ");
-                    if (arg2 != null) sb.append(arg2);
-                }
-                break;
-        }
-        
-        return sb.toString();
-    }
-}
-```
-
-**IRBuilder** - IR构建器
-```java
-/**
- * IR构建器
- * 
- * <p>将AST转换为中间表示（IR）。使用Visitor模式遍历AST，
- * 为每个AST节点生成对应的IR节点或指令序列。</p>
- */
-public class IRBuilder extends BaseASTVisitor<IRNode> {
-    /** 符号表 */
-    private final SymbolTable symbolTable;
-    
-    /** 类型系统 */
-    private final TypeSystem typeSystem;
-    
-    /** 当前构建的函数 */
-    private TACFunction currentFunction;
-    
-    /** 基本块栈（用于处理嵌套控制流） */
-    private final Deque<TACBasicBlock> blockStack;
-    
-    /** 临时变量计数器 */
-    private int tempCounter;
-    
-    /** 标签计数器 */
-    private int labelCounter;
-    
-    /** IR程序 */
-    private final TACProgram irProgram;
-    
-    /**
-     * 构造函数
-     * 
-     * @param symbolTable 符号表
-     * @param typeSystem 类型系统
-     */
-    public IRBuilder(SymbolTable symbolTable, TypeSystem typeSystem) {
-        this.symbolTable = symbolTable;
-        this.typeSystem = typeSystem;
-        this.blockStack = new ArrayDeque<>();
-        this.tempCounter = 0;
-        this.labelCounter = 0;
-        this.irProgram = new TACProgram();
-    }
-    
-    /**
-     * 获取构建的IR程序
-     * 
-     * @return IR程序
-     */
-    public TACProgram getIRProgram() {
-        return irProgram;
-    }
-    
-    /**
-     * 创建新的临时变量
-     * 
-     * @param type 变量类型
-     * @return 临时变量
-     */
-    public IRVariable createTemp(IRType type) {
-        return new IRTemporary("t" + tempCounter++, type);
-    }
-    
-    /**
-     * 创建新的标签
-     * 
-     * @return 标签变量
-     */
-    public IRVariable createLabel() {
-        return new IRTemporary("L" + labelCounter++, IRType.LABEL);
-    }
-    
-    @Override
-    public IRNode visitFile(ASTFile node) {
-        // 为每个函数创建TACFunction
-        for (var funcDecl : node.getFunctions()) {
-            TACFunction func = buildFunction(funcDecl);
-            irProgram.addFunction(func);
-        }
-        
-        return null;
-    }
-    
-    /**
-     * 构建函数
-     */
-    private TACFunction buildFunction(ASTFunctionDecl funcDecl) {
-        currentFunction = new TACFunction(funcDecl.getName());
-        
-        // 创建入口块
-        TACBasicBlock entryBlock = new TACBasicBlock(createLabel());
-        currentFunction.setEntryBlock(entryBlock);
-        
-        // 进入基本块
-        blockStack.push(entryBlock);
-        
-        // 为参数分配空间
-        int paramIndex = 0;
-        for (var param : funcDecl.getParameters()) {
-            Symbol symbol = symbolTable.resolve(param.getName());
-            IRVariable paramVar = createTemp(convertIRType(param.getType()));
-            if (symbol instanceof VariableSymbol) {
-                ((VariableSymbol) symbol).setIRVariable(paramVar);
-            }
-            paramIndex++;
-        }
-        
-        // 构建函数体
-        IRNode bodyResult = funcDecl.getBody().accept(this);
-        
-        // 添加返回指令（如果没有显式返回）
-        if (funcDecl.getReturnType() != BuiltInType.VOID) {
-            // 警告：非void函数缺少返回
-        }
-        
-        // 结束当前基本块
-        TACBasicBlock currentBlock = blockStack.pop();
-        currentFunction.addBlock(currentBlock);
-        
-        // 构建其他基本块
-        // ... (基本块分割逻辑)
-        
-        return currentFunction;
-    }
-    
-    @Override
-    public IRNode visitFunctionDecl(ASTFunctionDecl node) {
-        // 函数声明已在buildFunction中处理
-        return null;
-    }
-    
-    @Override
-    public IRNode visitReturnStmt(ASTReturnStmt node) {
-        IRNode value = null;
-        if (node.getValue() != null) {
-            value = node.getValue().accept(this);
-        }
-        
-        TACBasicBlock currentBlock = blockStack.peek();
-        
-        if (value != null) {
-            IRVariable resultVar = value.getResult();
-            TACInstruction retInstr = TACInstruction.createReturn(
-                resultVar, new SourceLocation(node.getLine()));
-            currentBlock.addInstruction(retInstr);
-        } else {
-            TACInstruction retInstr = TACInstruction.createReturn(
-                null, new SourceLocation(node.getLine()));
-            currentBlock.addInstruction(retInstr);
-        }
-        
-        return null;
-    }
-    
-    @Override
-    public IRNode visitBinaryExpr(ASTBinaryExpr node) {
-        // 递归构建左右操作数
-        IRNode left = node.getLeft().accept(this);
-        IRNode right = node.getRight().accept(this);
-        
-        IRVariable leftVar = left.getResult();
-        IRVariable rightVar = right.getResult();
-        
-        // 创建结果临时变量
-        IRVariable resultVar = createTemp(convertIRType(node.getType()));
-        
-        // 选择操作码
-        TACInstruction.TACOpcode opcode = convertOperator(node.getOperator());
-        
-        // 创建指令
-        TACInstruction instr = TACInstruction.createBinaryOp(
-            opcode, resultVar, leftVar, rightVar,
-            new SourceLocation(node.getLine())
-        );
-        
-        TACBasicBlock currentBlock = blockStack.peek();
-        currentBlock.addInstruction(instr);
-        
-        // 返回结果节点
-        return new IRExpression(resultVar, convertIRType(node.getType()));
-    }
-    
-    @Override
-    public IRNode visitVariableDecl(ASTVariableDecl node) {
-        String varName = node.getName();
-        Symbol symbol = symbolTable.resolve(varName);
-        
-        // 创建临时变量
-        IRVariable irVar = createTemp(convertIRType(node.getType()));
-        if (symbol instanceof VariableSymbol) {
-            ((VariableSymbol) symbol).setIRVariable(irVar);
-        }
-        
-        // 如果有初始化，生成赋值指令
-        if (node.getInitializer() != null) {
-            IRNode initValue = node.getInitializer().accept(this);
-            IRVariable initVar = initValue.getResult();
-            
-            TACInstruction assign = TACInstruction.createBinaryOp(
-                TACInstruction.TACOpcode.COPY, irVar, initVar, null,
-                new SourceLocation(node.getLine())
-            );
-            
-            TACBasicBlock currentBlock = blockStack.peek();
-            currentBlock.addInstruction(assign);
-        }
-        
-        return new IRExpression(irVar, convertIRType(node.getType()));
-    }
-    
-    @Override
-    public IRNode visitIdentifier(ASTIdentifier node) {
-        String name = node.getName();
-        Symbol symbol = symbolTable.resolve(name);
-        
-        IRVariable resultVar;
-        if (symbol instanceof VariableSymbol) {
-            resultVar = ((VariableSymbol) symbol).getIRVariable();
-        } else {
-            resultVar = createTemp(convertIRType(symbol.getType()));
-        }
-        
-        return new IRExpression(resultVar, convertIRType(symbol.getType()));
-    }
-    
-    @Override
-    public IRNode visitLiteral(ASTLiteral node) {
-        Object value = node.getValue();
-        IRType type;
-        
-        if (value instanceof Integer) {
-            type = IRType.INT32;
-        } else if (value instanceof Double) {
-            type = IRType.FLOAT64;
-        } else if (value instanceof Boolean) {
-            type = IRType.INT8;
-        } else {
-            type = IRType.INT32;
-        }
-        
-        // 创建常量临时变量
-        IRVariable constVar = new IRConstant(value.toString(), type);
-        return new IRExpression(constVar, type);
-    }
-    
-    /**
-     * 将语言类型转换为IR类型
-     */
-    private IRType convertIRType(Type type) {
-        if (type == BuiltInType.INT) {
-            return IRType.INT32;
-        } else if (type == BuiltInType.FLOAT) {
-            return IRType.FLOAT64;
-        } else if (type == BuiltInType.BOOL) {
-            return IRType.INT8;
-        } else {
-            return IRType.INT32;
-        }
-    }
-    
-    /**
-     * 将运算符转换为TAC操作码
-     */
-    private TACInstruction.TACOpcode convertOperator(String op) {
-        return switch (op) {
-            case "+" -> TACInstruction.TACOpcode.ADD;
-            case "-" -> TACInstruction.TACOpcode.SUB;
-            case "*" -> TACInstruction.TACOpcode.MUL;
-            case "/" -> TACInstruction.TACOpcode.DIV;
-            case "%" -> TACInstruction.TACOpcode.MOD;
-            case "==" -> TACInstruction.TACOpcode.CMP_EQ;
-            case "!=" -> TACInstruction.TACOpcode.CMP_NE;
-            case "<" -> TACInstruction.TACOpcode.CMP_LT;
-            case "<=" -> TACInstruction.TACOpcode.CMP_LE;
-            case ">" -> TACInstruction.TACOpcode.CMP_GT;
-            case ">=" -> TACInstruction.TACOpcode.CMP_GE;
-            case "&&" -> TACInstruction.TACOpcode.AND;
-            case "||" -> TACInstruction.TACOpcode.OR;
-            default -> throw new IllegalArgumentException("Unknown operator: " + op);
-        };
-    }
-}
-```
-
-**TACFunction** - TAC函数
-```java
-/**
- * TAC函数
- * 
- * <p>表示一个函数的TAC代码，包含基本块列表。</p>
- */
-public class TACFunction {
-    /** 函数名 */
-    private final String name;
-    
-    /** 基本块列表（按执行顺序） */
-    private final List<TACBasicBlock> blocks;
-    
-    /** 入口基本块 */
-    private TACBasicBlock entryBlock;
-    
-    /** 参数列表 */
-    private final List<IRVariable> parameters;
-    
-    /** 返回类型 */
-    private final IRType returnType;
-    
-    /**
-     * 构造函数
-     * 
-     * @param name 函数名
-     */
-    public TACFunction(String name) {
-        this.name = name;
-        this.blocks = new ArrayList<>();
-        this.parameters = new ArrayList<>();
-        this.returnType = IRType.VOID;
-    }
-    
-    /**
-     * 设置入口基本块
-     * 
-     * @param block 入口块
-     */
-    public void setEntryBlock(TACBasicBlock block) {
-        this.entryBlock = block;
-        if (!blocks.contains(block)) {
-            blocks.add(block);
-        }
-    }
-    
-    /**
-     * 添加基本块
-     * 
-     * @param block 基本块
-     */
-    public void addBlock(TACBasicBlock block) {
-        if (!blocks.contains(block)) {
-            blocks.add(block);
-        }
-    }
-    
-    /**
-     * 获取基本块列表
-     * 
-     * @return 基本块列表
-     */
-    public List<TACBasicBlock> getBlocks() {
-        return Collections.unmodifiableList(blocks);
-    }
-    
-    /**
-     * 生成函数的字符串表示
-     */
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append("# Function: ").append(name).append("\n");
-        sb.append("# Parameters: ").append(parameters.size()).append("\n");
-        sb.append("# Return type: ").append(returnType).append("\n");
-        sb.append("\n");
-        
-        sb.append(name).append(":\n");
-        
-        for (var block : blocks) {
-            sb.append(block.toString()).append("\n");
-        }
-        
-        return sb.toString();
-    }
-}
-```
-
-**TACProgram** - TAC程序
-```java
-/**
- * TAC程序
- * 
- * <p>表示完整的TAC程序，包含多个函数。</p>
- */
-public class TACProgram {
-    /** 函数列表 */
-    private final List<TACFunction> functions;
-    
-    /** 全局变量 */
-    private final List<IRVariable> globals;
-    
-    /**
-     * 构造函数
-     */
-    public TACProgram() {
-        this.functions = new ArrayList<>();
-        this.globals = new ArrayList<>();
-    }
-    
-    /**
-     * 添加函数
-     * 
-     * @param func 函数
-     */
-    public void addFunction(TACFunction func) {
-        functions.add(func);
-    }
-    
-    /**
-     * 获取函数列表
-     * 
-     * @return 函数列表
-     */
-    public List<TACFunction> getFunctions() {
-        return Collections.unmodifiableList(functions);
-    }
-    
-    /**
-     * 生成程序的字符串表示
-     */
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append("# TAC Program\n");
-        sb.append("# Functions: ").append(functions.size()).append("\n");
-        sb.append("# Globals: ").append(globals.size()).append("\n");
-        sb.append("\n");
-        
-        for (var func : functions) {
-            sb.append(func.toString()).append("\n");
-        }
-        
-        return sb.toString();
-    }
-}
-```
-
-### 实战流程
-
-实战步骤：构建和测试IR生成系统
-
-步骤1：编译项目并运行IR生成测试
-```bash
-# 进入项目根目录
-cd /Users/blitz/pl-dev/How_to_implment_PL_in_Antlr4
-
-# 编译项目
-mvn clean compile -DskipTests
-
-# 运行IR生成测试
-mvn test -Dtest=IRBuilderTest
-
-# 预期输出：
-# [INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0
-# [INFO] BUILD SUCCESS
-```
-
-验证方法：
-- 检查点1：确认测试通过
-
-步骤2：运行TAC构建器测试
-```bash
-# 运行TAC构建器测试
-mvn test -Dtest=TACBuilderTest
-
-# 预期输出：
-# [INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
-# [INFO] BUILD SUCCESS
-```
-
-步骤3：端到端IR生成测试
-```bash
-# 创建测试程序
-cat > /tmp/ir_test.cymbol << 'EOF'
-int add(int a, int b) {
-    return a + b;
-}
-
 void main() {
-    int x = 5;
-    int y = 10;
-    int z = add(x, y);
-    print(z);
+    int result = factorial(5);
+    print(result);
 }
 EOF
-
-# 运行编译器生成IR
-mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.common.Compiler" \
-    -Dexec.args="--ir /tmp/ir_test.cymbol"
-
-# 预期输出（TAC代码）：
-# # TAC Program
-# # Functions: 2
-# 
-# add:
-#     t0 = a
-#     t1 = b
-#     t2 = t0 + t1
-#     return t2
-# 
-# main:
-#     t3 = 5
-#     x = t3
-#     t4 = 10
-#     y = t4
-#     t5 = x
-#     t6 = y
-#     t7 = call add
-#     z = t7
-#     t8 = z
-#     print t8
-#     return
 ```
 
-故障排查：
+执行完整编译：
+```bash
+# 运行EP20编译器（生成EP18 VM字节码）
+mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.ep20.Compiler" \
+    -Dexec.args="/tmp/test_factorial.cymbol /tmp/output.vm"
 
-**问题1：IR生成不正确**
-- 原因：AST遍历顺序或IR指令生成有误
-- 解决方法：
-  1. 检查visit方法的递归顺序
-  2. 验证临时变量的创建和使用
-  3. 确认基本块管理正确
+# 查看生成的字节码
+cat /tmp/output.vm
+```
 
-**问题2：类型转换丢失**
-- 原因：语言类型到IR类型的转换不正确
-- 解决方法：
-  1. 检查convertIRType方法
-  2. 验证类型映射是否正确
-  3. 确认所有类型都有对应的IR类型
+预期输出（优化后的字节码）：
+```
+# function factorial
+factorial:
+    iconst 1
+    load 0           # 加载参数 n
+    ile
+    brf L0           # 如果 n > 1 跳转到 L0
+    iconst 1
+    ret              # return 1
+L0:
+    load 0           # n
+    load 0           # n
+    iconst 1
+    isub             # n - 1
+    call factorial() # 递归调用
+    imult            # n * result
+    ret
 
-**问题3：控制流结构不正确**
-- 原因：if/while等控制流的IR生成有误
-- 解决方法：
-  1. 检查基本块的创建和链接
-  2. 验证跳转指令的目标
-  3. 确认标签的生成和使用
+# function main
+main:
+    iconst 5
+    call factorial()
+    print
+    halt
+```
+
+注意：由于控制流优化，你可能看不到冗余的跳转指令。
+
+**故障排查指南**
+
+**问题1：优化后代码不正确**
+- **症状**：优化后的程序运行结果错误
+- **原因**：删除指令或合并块时破坏了控制流
+- **排查步骤**：
+  1. 禁用优化（注释掉`optimizer.onHandle(cfg)`），验证未优化代码正确
+  2. 单独测试每种优化（跳转消除、块合并）
+  3. 使用`ControlFlowAnalysis.DEBUG = true`查看详细日志
+  4. 检查目标块的标签是否正确更新
+- **修复方法**：
+  ```java
+  // 在合并块之前，确保正确转移后继关系
+  prevBlock.mergeNearBlock(block);
+  cfg.transferSuccessors(block, prevBlock);  // 手动添加：转移后继
+  ```
+
+**问题2：汇编器生成错误指令**
+- **症状**：VM报告未知指令或参数错误
+- **原因**：操作码映射错误或操作数类型不匹配
+- **排查步骤**：
+  1. 检查`CymbolVMIOperatorEmitter`的操作码映射
+  2. 验证IR节点的操作数类型是否正确
+  3. 对比`CymbolAssemblerTest`中的期望输出
+  4. 使用简单的测试用例（单个二元运算）
+- **常见错误**：
+  - 布尔值错误使用`iconst`而不是`bconst`
+  - 内存操作未正确处理FrameSlot
+  - 跳转标签格式错误（缺少`:`或`br`指令格式错误）
+
+**问题3：寄存器/栈布局错误**
+- **症状**：变量值在运行时错误（非预期值）
+- **原因**：生成的load/store指令的槽位索引错误
+- **排查步骤**：
+  1. 检查IR生成阶段的槽位分配（通过`FrameSlot.getSlotIdx()`）
+  2. 验证符号表的变量到槽位映射
+  3. 生成调试信息：`emit("// load var: " + frameSlot.getSymbol().getName())`
+  4. 对比简单的变量赋值和使用的完整指令序列
+- **修复方法**：
+  ```java
+  // 在IR生成时确保变量符号绑定到FrameSlot
+  FrameSlot slot = new FrameSlot(variableSymbol.getSlotIndex(), variableSymbol);
+  variableSymbol.setFrameSlot(slot);  // 建立符号→槽位的双向绑定
+  ```
+
+**问题4：递归函数代码生成错误**
+- **症状**：递归调用导致栈溢出或无限递归
+- **原因**：函数调用的参数传递或返回处理错误
+- **排查步骤**：
+  1. 检查`CallFunc`的IR节点是否正确生成所有参数
+  2. 验证参数计算顺序（从左到右）
+  3. 检查返回值是否正确放置在栈顶
+  4. 对比非递归函数的调用序列
+- **调试技巧**：
+  ```java
+  // 在汇编器中增加调用调试信息
+  @Override
+  public Void visit(CallFunc callFunc) {
+      logger.debug("生成函数调用: {} 参数个数: {}", 
+                   callFunc.getFuncName(), 
+                   callFunc.getArgCount());
+      // ... 现有代码 ...
+  }
+  ```
 
 ## AI 协作线：Context Engineering 视角
 
 ### 上下文设计
 
-为了让AI帮助完成IR生成相关的开发任务，我们需要精心设计上下文。
+为了让AI协助完成本地优化和代码生成的开发任务，需要精心设计上下文。
 
-上下文文件列表：
+**源码文件（按阅读顺序）：**
 
-**源码文件**（按阅读顺序）：
+1. `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/BasicBlock.java`
+   - 作用：基本块数据结构
+   - 关键方法：`mergeNearBlock()`, `removeLastInstr()`, `getLastInstr()`
 
-1. `common/src/main/java/org/teachfx/antlr4/common/ir/IRNode.java`
-   - 作用：IR节点基类
-   - 关键方法：`getResult()`, `accept()`
+2. `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/CFG.java`
+   - 作用：控制流图数据结构
+   - 关键方法：`getOutDegree()`, `getInEdges()`, `removeEdge()`, `removeNode()`
 
-2. `common/src/main/java/org/teachfx/antlr4/common/ir/tac/TACInstruction.java`
-   - 作用：三地址码指令
-   - 关键方法：`createBinaryOp()`, `createJump()`, `toString()`
+3. `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/ControlFlowAnalysis.java`
+   - 作用：控制流优化实现
+   - 关键方法：`onHandle()`, 优化算法
 
-3. `common/src/main/java/org/teachfx/antlr4/common/ir/IRBuilder.java`
-   - 作用：IR构建器
-   - 关键方法：`visitBinaryExpr()`, `visitFunctionDecl()`, `createTemp()`
+4. `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolAssembler.java`
+   - 作用：代码生成器
+   - 关键方法：所有`visit()`方法，`emit()`
 
-4. `common/src/main/java/org/teachfx/antlr4/common/ir/tac/TACFunction.java`
-   - 作用：TAC函数
-   - 关键方法：`addBlock()`, `toString()`
+5. `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolVMIOperatorEmitter.java`
+   - 作用：操作码映射
+   - 关键方法：`emitBinaryOp()`, `emitUnaryOp()`
 
-**文档文件**：
+6. `ep20/src/test/java/org/teachfx/antlr4/ep20/pass/cfg/BasicBlockOptimizationTest.java`
+   - 作用：优化测试用例
+   - 价值：展示优化算法的期望行为
 
-1. `AGENTS.md`
+7. `ep20/src/test/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolAssemblerTest.java`
+   - 作用：汇编器测试用例
+   - 价值：展示各种IR节点的代码生成结果
+
+**文档文件：**
+
+1. `ep20/README.md`
+   - 作用：EP20模块概述
+   - 相关部分：优化Pass、代码生成
+
+2. `AGENTS.md`
    - 作用：代码规范和最佳实践
-   - 相关部分：IR设计规范
+   - 相关部分：Pass设计模式、测试规范
 
-2. `common/docs/ir_design.md`
-   - 作用：IR设计文档
-   - 关键章节：三地址码格式、指令集
+### Prompt模板（给 AI 用）
 
-### Prompt 模板（给 AI 用）
-
-**类型 A：IR生成扩展 Prompt 模板**
+#### 类型 A：添加新优化Pass Prompt模板
 
 ```
-请为IR生成系统实现{新功能}。
+请为EP20编译器实现一个新的优化Pass：{优化名称}。
 
 任务目标：
-- 实现{功能描述}
-- 支持{使用场景}
-- 保持与现有IR API的一致性
+- 在CFG上实现{优化描述}
+- 优化范围：{局部/全局}
+- 预期效果：{具体优化效果}
 
 具体要求：
-1. 实现功能逻辑
-   - 在{相关类}中添加{方法/字段}
-   - 处理{边界情况}
-   - 正确生成IR指令
+1. 设计优化算法
+   - 输入：CFG（控制流图）
+   - 输出：优化后的CFG
+   - 算法步骤：{详细算法描述}
+   - 边界情况：{需要特殊处理的场景}
 
-2. 添加测试
-   - 测试{新功能}的各个方面
-   - 测试边界情况
-   - 测试与现有功能的兼容性
+2. 实现接口
+   - 创建类：{类全限定名}
+   - 实现接口：IFlowOptimizer<IRNode>
+   - 实现方法：onHandle(CFG<IRNode> cfg)
+
+3. 添加测试
+   - 测试文件：{测试类名}Test.java
+   - 测试场景：
+     * {场景1描述}
+     * {场景2描述}
+     * {场景3描述}
 
 参考上下文文件：
-- 源码：
-  - common/src/main/java/org/teachfx/antlr4/common/ir/IRBuilder.java
-  - common/src/main/java/org/teachfx/antlr4/common/ir/tac/TACInstruction.java
-- 测试：
-  - common/src/test/java/org/teachfx/antlr4/common/ir/IRBuilderTest.java
-- 代码规范：
-  - AGENTS.md
+- 优化Pass模板：ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/ControlFlowAnalysis.java
+- 基本块定义：ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/BasicBlock.java
+- CFG定义：ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/CFG.java
+- 现有优化测试：ep20/src/test/java/org/teachfx/antlr4/ep20/pass/cfg/BasicBlockOptimizationTest.java
 
 约束条件：
-- 不破坏现有的IR生成流程
-- 不修改核心IR数据结构
-- 所有新增代码必须通过mvn test
+- 不破坏现有优化Pass的行为
+- 保持代码风格一致（遵循AGENTS.md）
+- 所有测试必须通过：mvn test -Dtest={类名}Test
+- 算法时间复杂度控制在O(N)或O(N log N)
 
 期望输出：
-1. 新功能实现的完整代码
-2. 测试代码
-3. 使用示例和预期行为说明
+1. 优化Pass的完整实现代码
+2. 单元测试代码
+3. 优化前后对比示例（输入IR vs 输出IR）
+4. 性能分析（时间复杂度和实际运行时间）
+```
+
+#### 类型 B：扩展代码生成器 Prompt模板
+
+```
+请为CymbolAssembler添加新IR节点的支持：{IR节点类型}。
+
+任务目标：
+- 实现{节点类型}的代码生成
+- 生成正确的EP18 VM指令序列
+- 处理所有边界情况
+
+具体要求：
+1. 实现visit()方法
+   - 方法签名：public Void visit({NodeType} node)
+   - 返回值：Void（使用visitor模式）
+   - 逻辑步骤：
+     a. {步骤1：访问子节点}
+     b. {步骤2：生成指令}
+     c. {步骤3：处理特殊情况}
+
+2. 操作码映射
+   - 如果涉及新运算符：更新CymbolVMIOperatorEmitter
+   - 添加对应的{OperatorType}到EP18指令的映射
+
+3. 添加测试
+   - 测试文件：CymbolAssemblerTest.java
+   - 测试方法：test{NodeType}()
+   - 验证生成的指令序列正确
+
+参考上下文文件：
+- 代码生成器模板：ep20/src/main/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolAssembler.java
+- 操作码发射器：ep20/src/main/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolVMIOperatorEmitter.java
+- 现有测试：ep20/src/test/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolAssemblerTest.java
+- IR节点定义：ep20/src/main/java/org/teachfx/antlr4/ep20/ir/
+
+约束条件：
+- 遵循现有的缩进和格式化规则
+- 保持操作数访问顺序（左→右）
+- 正确处理临时变量的生成和清理
+- 所有现有测试必须继续通过
+- 新增测试必须通过
+
+期望输出：
+1. visit()方法的完整实现
+2. 操作码映射（如需要）
+3. 单元测试代码
+4. 使用示例和预期输出
+5. 可能遇到的陷阱和解决方案
 ```
 
 ### AI 应该做 / 不该做
 
-**✅ AI 允许的事情**：
+**✅ AI 允许做的事情：**
 
-1. **实现新的IR指令**
-   - ✅ 可以：添加新的TAC指令类型
-   - ✅ 可以：扩展指令创建方法
-   - ❌ 不能：改变核心指令格式
+1. **实现新的优化Pass**
+   - ✅ 可以：添加新的IFlowOptimizer实现
+   - ✅ 可以：扩展现有ControlFlowAnalysis
+   - ❌ 不能：删除现有的优化逻辑
 
-2. **增强IR构建器**
-   - ✅ 可以：添加新的AST节点处理
-   - ✅ 可以：优化临时变量管理
-   - ❌ 不能：改变Visitor模式结构
+2. **扩展代码生成器**
+   - ✅ 可以：为新的IR节点添加visit()方法
+   - ✅ 可以：增强操作码发射器
+   - ❌ 不能：改变IRVisitor接口
 
-3. **添加IR工具**
-   - ✅ 可以：实现IR打印工具
-   - ✅ 可以：实现IR验证工具
-   - ✅ 可以：生成IR可视化
+3. **添加调试和日志**
+   - ✅ 可以：添加logger.debug()语句
+   - ✅ 可以：实现toString()辅助方法
+   - ❌ 不能：在生产代码中使用System.out.println()
 
-**❌ AI 禁止做的事情**：
+4. **性能优化**
+   - ✅ 可以：优化算法时间复杂度
+   - ✅ 可以：添加缓存机制
+   - ❌ 不能：牺牲代码可读性换取微小性能提升
 
-1. **破坏IR核心结构**
-   - ❌ 不允许：改变IRNode基类的接口
-   - ❌ 不允许：修改TACInstruction的基本格式
-   - 原因：IR是前端后端的桥梁，必须保持稳定
+**❌ AI 禁止做的事情：**
 
-2. **删除IR功能**
-   - ❌ 不允许：移除现有的IR指令
-   - ❌ 不允许：禁用重要的IR生成逻辑
-   - 原因：IR生成是编译器核心功能
+1. **破坏编译器流水线**
+   - ❌ 不允许：改变优化Pass的执行顺序
+   - ❌ 不允许：修改IR到VM指令的映射关系
+   - 原因：pipeline的正确性依赖于执行顺序
+
+2. **引入平台相关代码**
+   - ❌ 不允许：硬编码平台特定的假设
+   - ❌ 不允许：假设特定的栈深度或寄存器数量
+   - 原因：EP20设计为可移植到不同目标平台
+
+3. **删除测试代码**
+   - ❌ 不允许：为了"简化"而删除测试
+   - ❌ 不允许：降低测试覆盖率
+   - 原因：测试是编译器正确性的保证
 
 ### 验证与回滚策略
 
-## 自动化验证
+#### 自动化验证
 
-**步骤1：运行IR生成相关测试**
+**步骤1：编译验证**
 ```bash
-# 运行所有IR生成测试
-cd common
-mvn test -Dtest=*IR*,*TAC*
+cd ep20
+mvn clean compile -DskipTests
 
-# 预期输出：
-# [INFO] Tests run: X, Failures: 0, Errors: 0, Skipped: 0
+# 预期结果：[INFO] BUILD SUCCESS
 ```
 
-## 手工检查点
-
-**检查1：IR生成正确性**
-- [ ] 所有AST节点都正确生成IR
-- [ ] 临时变量命名正确
-- [ ] 控制流结构正确
-
-**检查2：代码风格**
-- [ ] 遵循AGENTS.md规范
-- [ ] 有充分的注释
-- [ ] 命名清晰一致
-
-## 回滚方案
-
+**步骤2：优化Pass测试**
 ```bash
-# 恢复特定文件
-git checkout -- common/src/main/java/org/teachfx/antlr4/common/ir/
+# 运行优化测试
+mvn test -Dtest=BasicBlockOptimizationTest
+
+# 预期：所有测试通过
+```
+
+**步骤3：代码生成测试**
+```bash
+# 运行汇编器测试
+mvn test -Dtest=CymbolAssemblerTest
+
+# 预期：所有测试通过
+```
+
+**步骤4：集成测试**
+```bash
+# 创建测试程序
+cat > /tmp/opt_test.cymbol << 'EOF'
+int test() {
+    int a = 5;
+    int b = 3;
+    int c = a + b;  // 优化后可能直接计算为8
+    return c;
+}
+EOF
+
+# 完整编译流程测试
+mvn exec:java -Dexec.mainClass="org.teachfx.antlr4.ep20.Compiler" \
+    -Dexec.args="/tmp/opt_test.cymbol /tmp/opt_test.vm"
+
+# 验证输出文件存在且非空
+ls -lh /tmp/opt_test.vm
+```
+
+#### 手工检查点
+
+**检查点1：优化正确性**
+- [ ] 优化不改变程序语义
+- [ ] 所有测试用例通过
+- [ ] 手动验证简单用例（如factorial）
+
+**检查点2：代码生成正确性**
+- [ ] 每种IR节点都有对应的visit()方法
+- [ ] 操作码映射完整（覆盖所有OperatorType）
+- [ ] 生成的VM指令语法正确
+- [ ] EPS示例程序能正确执行
+
+**检查点3：代码质量**
+- [ ] 遵循AGENTS.md规范
+- [ ] 有充分的注释和文档
+- [ ] 日志输出合理使用(logger而非print)
+- [ ] 测试覆盖率>80%
+
+**检查点4：性能**
+- [ ] 优化算法时间复杂度O(N)或O(N log N)
+- [ ] 无明显的性能瓶颈
+- [ ] 大数据量测试（1000+行IR）在合理时间内完成
+
+#### 回滚策略
+
+**如果优化Pass导致错误：**
+```bash
+# 方法1：暂时禁用优化
+cd ep20
+# 在Compiler.java中注释掉：
+# optimizer.onHandle(cfg);
+mvn compile
+```
+
+**如果代码生成器导致错误：**
+```bash
+# 方法2：恢复代码生成器
+git checkout -- ep20/src/main/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolAssembler.java
+
+# 恢复测试
+git checkout -- ep20/src/test/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolAssemblerTest.java
+
+# 重新验证
+mvn test -Dtest=CymbolAssemblerTest
+```
+
+**如果新功能导致回归：**
+```bash
+# 方法3：使用git bisect定位问题提交
+git bisect start
+
+# 标记当前版本为坏版本
+git bisect bad
+
+# 标记已知的好版本（上一个发布版）
+git bisect good HEAD~10
+
+# Git会自动二分查找问题提交
+# 每个测试点运行：
+mvn test -Dtest=RegressionTest
+
+# 找到问题提交后，回滚或修复
+git revert <problem_commit>
+```
+
+**完全回滚到上一个稳定版本：**
+```bash
+# 找到上一个稳定版本的commit hash
+git log --oneline -20
+
+# 创建回滚分支（安全做法）
+git checkout -b rollback-optimization
+
+# 回滚到指定版本
+git reset --hard <stable_commit_hash>
+
+# 验证回归测试通过
+mvn test
+
+# 如果一切正常，强制推送到主分支（谨慎操作）
+git checkout main
+git reset --hard rollback-optimization
+git push --force-with-lease
 ```
 
 ## 练习题
 
-### 练习1：实现函数调用指令生成（手工实现版）
+### 练习1：实现常量折叠优化（手工实现版）
 
-难度：⭐⭐☆☆☆
-预计时间：30–45 分钟
+难度：⭐⭐⭐☆☆
+预计时间：45-60 分钟
 
 题目描述：
-完善IRBuilder中的函数调用指令生成，确保参数传递和返回值处理正确。
+在为LinearIRBlock实现常量折叠优化。遍历基本块中的指令序列，
+ewline如果检测到操作数都是常量的运算指令，直接计算结果并替换为ICONST指令。
+
+示例优化：
+```
+优化前：          优化后：
+iconst 5          iconst 8
+iconst 3          ...
+iadd
+```
 
 要求：
 - 完全手工实现，不依赖AI
-- 处理参数列表
-- 正确生成CALL指令
-- 编写测试验证功能
+- 在LinearIRBlock或ControlFlowAnalysis中添加
+- 处理二元运算（如ADD、SUB、MUL）
+- 编写至少3个测试用例
 
 验收标准：
-- [ ] 代码能编译通过
-- [ ] 正确生成函数调用IR
-- [ ] 代码风格符合规范
-- [ ] 通过所有测试
+- [ ] 能正确折叠整数常量运算
+- [ ] 代码编译通过，无lsp错误
+- [ ] 添加单元测试且全部通过
+- [ ] 集成到Compile流水线并成功运行
 
-### 练习2：实现控制流指令生成（AI协作版）
+### 练习2：为汇编器添加数组访问支持（AI协作版）
 
-难度：⭐⭐⭐☆☆
-预计时间：45–60 分钟
+难度：⭐⭐⭐⭐☆
+预计时间：60-90 分钟
 
 题目描述：
-完善IRBuilder中的if和while语句的IR生成，正确生成跳转指令和标签。
+当前CymbolAssembler不支持数组元素的访问（load_array、store_array）。
+需要实现ArrayAccess IR节点的代码生成。
+
+示例：
+a[5] = 42;  → 生成 load a, iconst 5, iadd, iconst 42, store_array
+int x = a[3]; → 生成 load a, iconst 3, iadd, load_array, store x
 
 AI协作要求：
-1. 设计上下文：列出需要提供给AI的文件和说明
-2. 设计Prompt：参考本章的Prompt模板
-3. 验证AI输出：使用本章的验证策略
-4. 理解AI代码：确保你能解释AI生成的每一部分
+1. 设计上下文：提供IR节点定义、测试用例和预期输出
+2. 设计Prompt：使用类型B模板，明确数组操作的语义
+3. 验证AI输出：检查生成的指令序列是否正确
+4. 理解AI代码：确保你能解释每条生成的指令
 
 验收标准：
-- [ ] AI生成的代码能编译通过
-- [ ] 正确生成if/while的IR
-- [ ] 跳转指令正确
-- [ ] 通过所有测试
+- [ ] AI生成的代码能正确编译
+- [ ] 生成正确的数组访问指令序列
+- [ ] 添加至少2个测试用例（赋值和读取）
+- [ ] 测试用例验证通过
+
+### 练习3：实现死代码消除（高级挑战）
+
+难度：⭐⭐⭐⭐⭐
+预计时间：90-120 分钟
+
+题目描述：
+实现一个死代码消除Pass，删除那些计算结果从未被使用的指令。
+
+示例：
+```
+优化前：          优化后：
+iconst 5     →    iconst 5
+iconst 3     →    # 删除：结果从未使用
+iadd         →    # 删除：结果从未使用
+dup          →    dup
+```
+
+要求：
+- 实现一个完整的IFlowOptimizer
+- 使用数据流分析（或简单的使用-定义链）
+- 处理赋值语句、运算表达式等
+- 编写全面的测试用例
+- 与AI协作设计算法（但手工编码实现）
+
+验收标准：
+- [ ] 能识别真正的死代码
+- [ ] 不删除有副作用的代码（如print）
+- [ ] 不删除影响控制流的代码
+- [ ] 代码通过所有测试用例
+- [ ] 添加性能测试（大函数优化速度）
 
 ## 本章小结与下一章预告
 
@@ -1151,43 +1144,63 @@ AI协作要求：
 
 通过本章的学习，你已经掌握了：
 
-1. **IR核心概念**
-   - 理解了IR在编译器中的位置和作用
-   - 掌握了三地址码的基本格式和指令集
-   - 学会了IR构建的Visitor模式
+1. **本地优化技术**
+   - 理解了控制流优化的核心算法
+   - 学会了冗余跳转消除和基本块合并
+   - 掌握了优化Pass的设计模式
 
-2. **IR实现技术**
-   - 学会了设计IR数据结构
-   - 掌握了AST到IR的转换算法
-   - 理解了临时变量和标签的管理
+2. **代码生成技术**
+   - 学习了指令选择的基本原则
+   - 掌握了将IR映射到VM指令的方法
+   - 理解了完整编译器后端架构
 
 3. **实战技能**
-   - 能够实现完整的IR生成器
-   - 学会了处理各种语句和表达式的IR生成
-   - 掌握了测试IR生成的方法
+   - 能够调试优化相关的问题
+   - 学会了验证优化正确性的方法
+   - 掌握了编译器集成和测试
+
+4. **AI协作**
+   - 学会了设计优化算法的Prompt
+   - 掌握了代码生成的Prompt技巧
+   - 理解了编译器任务的验证策略
 
 ### 【你现在站在】:
 ```
-... → [语义分析] → ✅ [IR生成] → [优化] → [代码生成] → ...
+... → [CFG构建] → ✅ [本地优化] → ✅ [代码生成]
 ```
 
 **当前在编译器流水线的位置**：
-- 本章完成了编译器前端的最终输出
-- IR是后端优化的基础
-- 下一阶段将进行IR优化
+- 你已经完成了编译器后端的核心功能
+- 生成的代码可以在EP18虚拟机上运行
+- 本地优化提升了代码质量和执行效率
 
 ### 下一章预告
 
-第16章将聚焦于**控制流分析与优化**，你将学习：
-- 如何构建程序的控制流图（CFG）
-- 如何进行基本块划分
-- 如何实现局部优化（如常量折叠、死代码消除）
-- 如何进行控制流优化
+第16章将聚焦于**端到端编译器流水线**，你将学习：
+- 如何将前端、中端、后端集成为一个完整的编译器
+- 错误处理和诊断系统
+- 编译器驱动和命令行接口
+- 多Pass协调和依赖管理
 
 **准备**：为了学习下一章，建议：
-- [ ] 复习本章的IR生成实现
-- [ ] 运行IR生成相关测试
-- [ ] 阅读AGENTS.md中的优化相关部分
-- [ ] 思考IR如何支持各种优化
+- [ ] 复习EP20的完整编译流程
+- [ ] 运行所有EP20测试：mvn test
+- [ ] 阅读Compiler.java的集成代码
+- [ ] 思考如何扩展支持新优化Pass
 
-继续加油！中间表示是编译器的"通用语言"，掌握了它，你的编译器就能支持多种源语言和目标平台！
+继续加油！你已经掌握了编译器后端的核心技术，完整编译器就在眼前！
+
+---
+
+**本章关联代码**：
+- 优化器：`ep20/src/main/java/org/teachfx/antlr4/ep20/pass/cfg/ControlFlowAnalysis.java`
+- 汇编器：`ep20/src/main/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolAssembler.java`
+- 操作码：`ep20/src/main/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolVMIOperatorEmitter.java`
+- 测试：`ep20/src/test/java/org/teachfx/antlr4/ep20/pass/cfg/BasicBlockOptimizationTest.java`
+- 测试：`ep20/src/test/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolAssemblerTest.java`
+
+**验证命令**：
+```bash
+cd ep20
+mvn test -Dtest=BasicBlockOptimizationTest,CymbolAssemblerTest
+```

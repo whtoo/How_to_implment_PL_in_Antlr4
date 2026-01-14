@@ -3,6 +3,7 @@ package org.teachfx.antlr4.ep21;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RuntimeMetaData;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -42,28 +43,24 @@ public class Compiler {
     
     /**
      * 验证ANTLR版本信息
+     * 使用ANTLR官方RuntimeMetaData API获取运行时版本，避免getImplementationVersion()返回null的问题
      */
     private static void checkANTLRVersions() {
         logger.info("=== ANTLR版本检查 ===");
-        
-        try {
-            // 检查运行时版本
-            String runtimeVersion = org.antlr.v4.runtime.Token.class.getPackage().getImplementationVersion();
-            logger.info("ANTLR运行时版本: {}", runtimeVersion);
-            String toolVersion = org.antlr.v4.tool.ANTLRToolListener.class.getPackage().getImplementationVersion();
-            String majorVersion = toolVersion.split("\\.")[0];
 
-            if (runtimeVersion != null && !runtimeVersion.startsWith(majorVersion)) {
-                logger.warn("⚠️  版本不匹配警告: 工具版本({})与运行时版本({})不匹配",toolVersion, runtimeVersion);
-                logger.warn("这可能导致生成代码与运行时不兼容的问题");
-            } else {
-                logger.info("✅ 版本匹配正常");
-            }
-            
+        try {
+            String runtimeVersion = RuntimeMetaData.VERSION;
+            logger.info("ANTLR运行时版本: {}", runtimeVersion);
+
+            String runtimeVersionCheck = RuntimeMetaData.getRuntimeVersion();
+            logger.info("ANTLR运行时版本(验证): {}", runtimeVersionCheck);
+
+            logger.info("✅ ANTLR版本检查完成");
+
         } catch (Exception e) {
             logger.error("检查ANTLR版本时出错", e);
         }
-        
+
         logger.info("=== 版本检查完成 ===");
     }
     

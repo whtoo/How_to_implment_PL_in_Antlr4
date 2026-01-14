@@ -64,6 +64,13 @@ mvn compile exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.integration.EP21
 mvn compile exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.benchmark.BenchmarkRunner" -Dexec.args="benchmarks/stanford/fib.cymbol"
 ```
 
+### 05_technical/ - 技术文档（新增）
+- **SSA-Construction.md**: SSA形式定义、支配边界算法、PHI节点插入策略、SSA优化机会和销毁流程
+- **Register-Allocation.md**: 寄存器分配理论、活跃变量分析、干扰图构建、线性扫描、图着色、寄存器合并和溢出策略
+- **Dataflow-Analysis.md**: 数据流分析理论基础、格理论、传递函数、Meet操作、Worklist算法、前向/后向分析和MLIR框架参考
+- **Loop-Optimizations.md**: 循环识别和分析、自然循环结构、循环不变代码外提、归纳变量分析、强度削减、循环展开、分块和融合
+- **EP21_TDD执行标准.md**: TDD流程定义、红-绿-重构循环、三层测试金字塔、测试覆盖率目标、重构安全网机制
+
 #### 基准测试
 ```bash
 # 查看基准测试集说明

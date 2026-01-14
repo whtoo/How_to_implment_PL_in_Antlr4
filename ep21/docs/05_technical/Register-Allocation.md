@@ -399,11 +399,203 @@ degree(x) + degree(y) < k
 ### LLVM 实现对比
 
 | 算法 | LLVM 类 | 复杂度 | 适用场景 |
-|--------|--------|--------|--------|----------|
+|--------|--------|--------|----------|
 | **Fast** | RegAllocFast | O(n) | 快速编译、调试 |
 | **Basic** | RegAllocBasic | O(n log n) | 通用编译 |
 | **Greedy** | RegAllocGreedy | O(n²) | 优化编译（O2, O3） |
 | **PBQP** | RegAllocPBQP | O(n³) | 最高质量、慢速 |
+
+---
+
+## 🔧 EP21 实现分析
+
+### 当前状态
+
+| 组件 | 状态 | 位置 | 说明 |
+|--------|--------|--------|------|
+| **线性扫描分配器** | ✅ 已实现 | `LinearScanAllocator.java` (EP18R) | 简单轮询分配，非严格线性扫描 |
+| **图着色分配器** | ✅ 已实现 | `GraphColoringAllocator.java` | 完整图着色算法，包括简化、着色、回填 |
+| **活跃区间表示** | ✅ 已实现 | `LiveInterval.java` | 活跃区间类，支持重叠判断 |
+| **活跃变量分析** | ✅ 已实现 | `LiveVariableAnalysis.java` | 后向数据流分析 |
+| **干扰图构建** | ✅ 已实现 | `GraphColoringAllocator.buildInterferenceGraph()` | 基于活跃区间的干扰图 |
+| **图着色算法** | ✅ 已实现 | `GraphColoringAllocator.colorGraph()` | Chaitin简化、着色、溢出处理 |
+| **寄存器合并** | ⏸ 未实现 | - 可作为未来扩展 |
+| **溢出管理** | ✅ 已实现 | `GraphColoringAllocator.allocateSpillSlot()` | 简单栈帧分配 |
+| **EP18R集成** | ✅ 已实现 | `EP18RRegisterAllocatorAdapter.java` | String到VariableSymbol的适配器 |
+
+### 实现特点
+
+**优势**：
+1. **完整性**：实现了完整的图着色算法流程
+   - 活跃区间表示和计算
+   - 干扰图自动构建
+   - 图简化（度数<k的节点）
+   - 着色顺序选择
+   - 回填颜色和溢出处理
+2. **可测试性**：独立于复杂的图数据结构
+3. **与EP18R兼容**：通过适配器模式无缝集成
+4. **符合规范**：栈偏移使用负数表示溢出（EP18R规范）
+
+**限制**：
+1. **简化启发式**：使用简单的度数<k启发式，未实现Briggs改进
+2. **无溢出优化**：缺少溢出变量选择策略
+3. **无寄存器合并**：不支持复制传播和变量合并
+
+---
+
+## 🎯 EP21 图着色分配器详细设计
+
+### 核心算法实现
+
+#### 1. 活跃区间表示
+
+```java
+public class LiveInterval {
+    private final String variable;
+    private final int start;
+    private final int end;
+
+    public LiveInterval(String variable, int start, int end) {
+        if (start > end) {
+            throw new IllegalArgumentException("Start must be less than or equal to end");
+        }
+        this.variable = variable;
+        this.start = start;
+        this.end = end;
+    }
+
+    public boolean overlaps(LiveInterval other) {
+        return !(this.end < other.start || this.start > other.end);
+    }
+
+    public boolean contains(int position) {
+        return position >= start && position < end;
+    }
+}
+```
+
+#### 2. 干扰图构建
+
+```java
+public void buildInterferenceGraph() {
+    interferenceGraph.clear();
+
+    for (VariableSymbol var1 : liveIntervals.keySet()) {
+        LiveInterval interval1 = liveIntervals.get(var1);
+        if (interval1 == null) continue;
+
+        Set<VariableSymbol> conflicts = new HashSet<>();
+
+        for (VariableSymbol var2 : liveIntervals.keySet()) {
+            if (var1.equals(var2)) continue;
+
+            LiveInterval interval2 = liveIntervals.get(var2);
+            if (interval2 != null && interval1.overlaps(interval2)) {
+                conflicts.add(var2);
+            }
+        }
+
+        if (!conflicts.isEmpty()) {
+            interferenceGraph.put(var1, conflicts);
+        }
+    }
+}
+```
+
+#### 3. 图着色算法
+
+```java
+public List<VariableSymbol> colorGraph(int k) {
+    Stack<VariableSymbol> coloringStack = new Stack<>();
+    Map<VariableSymbol, Integer> colors = new HashMap<>();
+    Map<VariableSymbol, Integer> spilled = new HashMap<>();
+
+    List<VariableSymbol> nodes = new ArrayList<>(liveIntervals.keySet());
+
+    // 步骤1：简化图
+    for (VariableSymbol node : nodes) {
+        Set<VariableSymbol> neighbors = interferenceGraph.getOrDefault(node, new HashSet<>());
+
+        if (neighbors.size() < k) {
+            coloringStack.push(node);
+        } else {
+            spilled.put(node, 1);
+        }
+    }
+
+    // 步骤2：着色
+    while (!coloringStack.isEmpty()) {
+        VariableSymbol node = coloringStack.pop();
+
+        Integer color = findAvailableColor(node, colors, k);
+        if (color != null) {
+            colors.put(node, color);
+            varToReg.put(node, color);
+            regToVar.put(color, node);
+        }
+    }
+
+    // 步骤3：处理溢出
+    for (VariableSymbol s : spilled.keySet()) {
+        int slot = allocateSpillSlot(s);
+    }
+
+    return new ArrayList<>(spilled.keySet());
+}
+
+private Integer findAvailableColor(VariableSymbol node,
+                                   Map<VariableSymbol, Integer> colors,
+                                   int k) {
+    Set<VariableSymbol> neighbors = interferenceGraph.getOrDefault(node, new HashSet<>());
+
+    for (int c = 1; c <= k; c++) {
+        boolean isAvailable = true;
+        for (VariableSymbol neighbor : neighbors) {
+            Integer neighborColor = colors.get(neighbor);
+            if (neighborColor != null && neighborColor == c) {
+                isAvailable = false;
+                break;
+            }
+        }
+        if (isAvailable) {
+            return c;
+        }
+    }
+    return null;
+}
+```
+
+#### 4. 栈偏移计算（EP18R规范）
+
+```java
+@Override
+public int getStackOffset(VariableSymbol variable) {
+    if (variable == null) {
+        throw new IllegalArgumentException("Variable cannot be null");
+    }
+
+    Integer spillSlot = spillSlots.get(variable);
+    if (spillSlot == null) {
+        return -1;  // 未溢出，返回-1
+    }
+
+    return -1 - spillSlot;  // 溢出，返回负数表示栈位置
+}
+
+@Override
+public int allocateRegister(VariableSymbol variable) {
+    // ... 分配逻辑 ...
+
+    if (reg == null) {
+        Integer spillSlot = spillSlots.get(variable);
+        if (spillSlot != null) {
+            return -1 - spillSlot;  // 负数表示溢出
+        }
+    }
+
+    return reg;
+}
+```
 
 ---
 

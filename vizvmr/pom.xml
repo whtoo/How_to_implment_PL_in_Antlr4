@@ -1,0 +1,88 @@
+<!-- vizvmr POM -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.teachfx</groupId>
+        <artifactId>antlr4-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>vizvmr</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <!-- 主类配置：可视化模块的入口点 -->
+        <run.main.entry>org.teachfx.antlr4.ep18r.vizvmr.VizVMRLauncher</run.main.entry>
+    </properties>
+
+    <!-- 构建配置 -->
+    <build>
+        <plugins>
+            <!-- Maven JAR 插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>${run.main.entry}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <!-- Maven 执行插件 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>${run.main.entry}</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+        <!-- 定义源码目录 -->
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <targetPath>${project.build.directory}/classes</targetPath>
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                    <include>**/*.vm</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+
+    <!-- 依赖配置 -->
+    <dependencies>
+        <!-- 依赖 EP18R 模块 -->
+        <dependency>
+            <groupId>org.teachfx</groupId>
+            <artifactId>ep18r</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <!-- JUnit 5 测试依赖（继承自父 POM） -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

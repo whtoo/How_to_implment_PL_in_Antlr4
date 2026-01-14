@@ -219,5 +219,6 @@
         <module>ep20</module>
         <!-- 添加其他子模块的名称 -->
         <module>ep21</module>
+        <module>vizvmr</module>
     </modules>
 </project>

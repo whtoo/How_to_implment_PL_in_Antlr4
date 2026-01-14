@@ -6,6 +6,7 @@ import org.teachfx.antlr4.ep21.analysis.dataflow.AbstractDataFlowAnalysis;
 import org.teachfx.antlr4.ep21.analysis.dataflow.LiveVariableAnalysis;
 import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
+import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
 import org.teachfx.antlr4.ep21.ir.stmt.Assign;
 
 import java.util.*;
@@ -177,21 +178,47 @@ public class DeadCodeEliminationOptimizer implements IFlowOptimizer<IRNode> {
 
     /**
      * 运行数据流分析
-     * 由于AbstractDataFlowAnalysis没有公共的run方法，这里简化处理
      */
     private void runDataFlowAnalysis(AbstractDataFlowAnalysis<?, ?> analysis) {
-        // 实际的数据流分析需要在框架中运行
-        // 这里只是占位符，实际的死存储消除需要完整的框架支持
+        analysis.analyze();
     }
 
-    /**
-     * 在单个基本块中消除死存储
-     * 返回true如果消除了任何指令
-     */
     private boolean eliminateDeadStoresInBlock(BasicBlock<IRNode> block,
                                                  LiveVariableAnalysis livenessAnalysis) {
-        // 由于当前框架限制，暂时只记录处理过的节点
-        processedNodes += block.getIRNodes().count();
+        boolean eliminated = false;
+        List<Loc<IRNode>> toRemove = new ArrayList<>();
+
+        for (Loc<IRNode> loc : block.codes) {
+            IRNode instr = loc.getInstruction();
+            processedNodes++;
+
+            if (instr instanceof Assign assign) {
+                VarSlot lhs = assign.getLhs();
+                Set<Operand> liveOut = livenessAnalysis.getOut(instr);
+
+                if (liveOut == null || !isOperandLive(lhs, liveOut)) {
+                    toRemove.add(loc);
+                    eliminated = true;
+                    eliminatedInstructions++;
+                    logger.debug("标记死存储: {} (LiveOut: {})", assign, liveOut);
+                }
+            }
+        }
+
+        for (Loc<IRNode> loc : toRemove) {
+            block.codes.remove(loc);
+            logger.debug("移除死存储: {}", loc.getInstruction());
+        }
+
+        return eliminated;
+    }
+
+    private boolean isOperandLive(Operand operand, Set<Operand> liveSet) {
+        for (Operand live : liveSet) {
+            if (live.toString().equals(operand.toString())) {
+                return true;
+            }
+        }
         return false;
     }
 

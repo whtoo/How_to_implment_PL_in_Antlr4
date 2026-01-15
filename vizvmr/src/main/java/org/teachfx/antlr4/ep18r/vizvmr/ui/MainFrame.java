@@ -5,6 +5,7 @@ import org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent;
 import org.teachfx.antlr4.ep18r.vizvmr.integration.VMRVisualBridge;
 import org.teachfx.antlr4.ep18r.vizvmr.ui.panel.CodePanel;
 import org.teachfx.antlr4.ep18r.vizvmr.ui.panel.ControlPanel;
+import org.teachfx.antlr4.ep18r.vizvmr.ui.panel.LogPanel;
 import org.teachfx.antlr4.ep18r.vizvmr.ui.panel.MemoryPanel;
 import org.teachfx.antlr4.ep18r.vizvmr.ui.panel.RegisterPanel;
 import org.teachfx.antlr4.ep18r.vizvmr.ui.panel.StackPanel;
@@ -27,6 +28,7 @@ public class MainFrame extends JFrame {
     private StackPanel stackPanel;
     private ControlPanel controlPanel;
     private StatusPanel statusPanel;
+    private LogPanel logPanel;
 
     // 菜单和工具栏
     private JMenuBar menuBar;
@@ -35,6 +37,10 @@ public class MainFrame extends JFrame {
     // 状态
     private static final String TITLE = "EP18R 寄存器虚拟机可视化";
     private static final Dimension DEFAULT_SIZE = new Dimension(1200, 800);
+    
+    private static final int MAX_RECENT_FILES = 5;
+    private final java.util.List<String> recentFiles = new java.util.ArrayList<>();
+    private JMenu recentFilesMenu;
 
     public MainFrame(VMRVisualBridge visualBridge) {
         super(TITLE);
@@ -58,6 +64,9 @@ public class MainFrame extends JFrame {
         stackPanel = new StackPanel(visualBridge);
         controlPanel = new ControlPanel(visualBridge);
         statusPanel = new StatusPanel(visualBridge);
+        logPanel = new LogPanel();
+
+        logPanel.redirectSystemStreams();
 
         // 初始化菜单栏
         initializeMenuBar();
@@ -82,6 +91,12 @@ public class MainFrame extends JFrame {
         reloadItem.setAccelerator(KeyStroke.getKeyStroke("control R"));
         reloadItem.addActionListener(e -> reloadFile());
         fileMenu.add(reloadItem);
+
+        fileMenu.addSeparator();
+
+        recentFilesMenu = new JMenu("最近打开");
+        updateRecentFilesMenu();
+        fileMenu.add(recentFilesMenu);
 
         fileMenu.addSeparator();
 
@@ -113,6 +128,11 @@ public class MainFrame extends JFrame {
         stackItem.setSelected(true);
         stackItem.addActionListener(e -> togglePanel(stackPanel));
         viewMenu.add(stackItem);
+
+        JMenuItem logItem = new JMenuItem("日志窗口", 'L');
+        logItem.setSelected(true);
+        logItem.addActionListener(e -> togglePanel(logPanel));
+        viewMenu.add(logItem);
 
         viewMenu.addSeparator();
 
@@ -240,7 +260,11 @@ public class MainFrame extends JFrame {
     }
 
     private void setupLayout() {
-        // 使用 JSplitPane 分割面板
+        JSplitPane bottomSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        bottomSplitPane.setTopComponent(statusPanel);
+        bottomSplitPane.setBottomComponent(logPanel);
+        bottomSplitPane.setDividerLocation(150);
+
         JSplitPane leftSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         leftSplitPane.setTopComponent(registerPanel);
         leftSplitPane.setBottomComponent(stackPanel);
@@ -256,11 +280,12 @@ public class MainFrame extends JFrame {
         mainSplitPane.setRightComponent(centerSplitPane);
         mainSplitPane.setDividerLocation(400);
 
-        // 添加主分割面板到中心
-        add(mainSplitPane, BorderLayout.CENTER);
+        JSplitPane finalSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        finalSplitPane.setTopComponent(mainSplitPane);
+        finalSplitPane.setBottomComponent(bottomSplitPane);
+        finalSplitPane.setDividerLocation(600);
 
-        // 添加状态面板到底部
-        add(statusPanel, BorderLayout.SOUTH);
+        add(finalSplitPane, BorderLayout.CENTER);
     }
 
     private void setupEventListeners() {
@@ -353,6 +378,7 @@ public class MainFrame extends JFrame {
                     refreshAllPanels();
                     codePanel.setInstructions(visualBridge.getDisAssembler());
                     statusPanel.updateStatus("已加载: " + file.getName());
+                    addToRecentFiles(file.getAbsolutePath());
                 } else {
                     JOptionPane.showMessageDialog(this, "代码加载错误", "错误", JOptionPane.ERROR_MESSAGE);
                 }
@@ -420,5 +446,112 @@ public class MainFrame extends JFrame {
 
     public StatusPanel getStatusPanel() {
         return statusPanel;
+    }
+
+    private void updateRecentFilesMenu() {
+        recentFilesMenu.removeAll();
+
+        if (recentFiles.isEmpty()) {
+            JMenuItem emptyItem = new JMenuItem("（无最近文件）");
+            emptyItem.setEnabled(false);
+            recentFilesMenu.add(emptyItem);
+            return;
+        }
+
+        for (int i = 0; i < recentFiles.size(); i++) {
+            String filePath = recentFiles.get(i);
+            String displayName = getDisplayName(filePath, i + 1);
+            
+            JMenuItem fileItem = new JMenuItem(displayName);
+            fileItem.addActionListener(e -> openRecentFile(filePath));
+            recentFilesMenu.add(fileItem);
+        }
+
+        recentFilesMenu.addSeparator();
+        JMenuItem clearItem = new JMenuItem("清除最近文件");
+        clearItem.addActionListener(e -> clearRecentFiles());
+        recentFilesMenu.add(clearItem);
+    }
+
+    private String getDisplayName(String filePath, int index) {
+        java.io.File file = new java.io.File(filePath);
+        String fileName = file.getName();
+        String parent = file.getParent();
+        
+        if (parent == null) {
+            return String.format("%d. %s", index, fileName);
+        }
+        
+        String parentName = new java.io.File(parent).getName();
+        return String.format("%d. %s (%s)", index, fileName, parentName);
+    }
+
+    private void addToRecentFiles(String filePath) {
+        recentFiles.remove(filePath);
+        
+        recentFiles.add(0, filePath);
+        
+        while (recentFiles.size() > MAX_RECENT_FILES) {
+            recentFiles.remove(recentFiles.size() - 1);
+        }
+        
+        updateRecentFilesMenu();
+        
+        if (logPanel != null) {
+            logPanel.info("添加到最近文件: " + filePath);
+        }
+    }
+
+    private void openRecentFile(String filePath) {
+        try {
+            java.io.File file = new java.io.File(filePath);
+            if (!file.exists()) {
+                JOptionPane.showMessageDialog(this, 
+                    "文件不存在: " + filePath, 
+                    "错误", 
+                    JOptionPane.ERROR_MESSAGE);
+                    
+                recentFiles.remove(filePath);
+                updateRecentFilesMenu();
+                return;
+            }
+
+            java.io.FileInputStream fis = new java.io.FileInputStream(file);
+            boolean hasErrors = visualBridge.loadCode(fis);
+            fis.close();
+
+            if (!hasErrors) {
+                refreshAllPanels();
+                codePanel.setInstructions(visualBridge.getDisAssembler());
+                statusPanel.updateStatus("已加载: " + file.getName());
+                
+                if (logPanel != null) {
+                    logPanel.info("打开最近文件: " + filePath);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, 
+                    "代码加载错误", 
+                    "错误", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, 
+                "加载失败: " + e.getMessage(), 
+                "错误", 
+                JOptionPane.ERROR_MESSAGE);
+                
+            if (logPanel != null) {
+                logPanel.error("打开最近文件失败", e);
+            }
+        }
+    }
+
+    private void clearRecentFiles() {
+        recentFiles.clear();
+        updateRecentFilesMenu();
+        
+        if (logPanel != null) {
+            logPanel.info("已清除最近文件列表");
+        }
     }
 }

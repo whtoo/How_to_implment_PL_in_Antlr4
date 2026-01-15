@@ -1,0 +1,7 @@
+.def main: args=0, locals=0
+    ; ABI: 使用a0(r2)作为返回值寄存器
+    li r2, 42        ; r2 = 42 (r2是a0，返回值寄存器)
+    mov r3, r2       ; r3 = r2 (测试mov指令)
+    print r2         ; 打印r2 (应该输出42)
+    print r3         ; 打印r3 (应该输出42)
+    halt

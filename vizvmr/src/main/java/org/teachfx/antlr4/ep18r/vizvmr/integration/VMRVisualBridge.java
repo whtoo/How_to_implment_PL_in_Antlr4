@@ -95,6 +95,7 @@ public class VMRVisualBridge implements VMRStateListener, VMRExecutionListener {
             } catch (Exception e) {
                 if (running.get()) {
                     System.err.println("Execution error: " + e.getMessage());
+                    e.printStackTrace();
                     if (executionCallback != null) {
                         executionCallback.onError(e);
                     }

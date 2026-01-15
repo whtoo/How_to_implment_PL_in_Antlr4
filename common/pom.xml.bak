@@ -1,0 +1,113 @@
+<!-- antlr4-common POM -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.teachfx</groupId>
+        <artifactId>antlr4-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>antlr4-common</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <!-- No special properties needed -->
+    </properties>
+
+    <!-- Build configuration -->
+    <build>
+        <plugins>
+            <!-- JaCoCo 测试覆盖率插件 -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.13</version>
+                <configuration>
+                    <!-- 排除Java内部类以避免Java 21上的Instrumentation错误 -->
+                    <excludes>
+                        <exclude>**/sun/**</exclude>
+                        <exclude>**/jdk/**</exclude>
+                        <exclude>**/java/lang/invoke/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- CheckStyle 代码风格检查插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.2.1</version>
+                <configuration>
+                    <configLocation>google_checks.xml</configLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>false</failsOnError>
+                    <skip>true</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- SpotBugs 静态分析插件 -->
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>4.9.8.2</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <threshold>Low</threshold>
+                    <failOnError>false</failOnError>
+                    <xmlOutput>true</xmlOutput>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotbugs-check</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <!-- 定义源码目录 -->
+        <sourceDirectory>visualization</sourceDirectory>
+        <!-- 资源目录 -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <targetPath>${project.build.directory}/classes</targetPath>
+            </resource>
+        </resources>
+    </build>
+
+    <!-- Dependencies -->
+    <dependencies>
+        <!-- Inherit dependencies from parent -->
+    </dependencies>
+</project>

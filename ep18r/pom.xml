@@ -15,8 +15,8 @@
     <version>1.0.0</version>
     <properties>
         <!-- 这里为包含g4文件的文件夹-->
-        <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep18r/stackvm/parser</parser.g4.dir>
-        <run.main.entry>org.teachfx.antlr4.ep18r.stackvm.RegisterVMInterpreter</run.main.entry>
+        <parser.g4.dir>src/main/antlr4</parser.g4.dir>
+        <run.main.entry>org.teachfx.antlr4.ep18r.VMRunner</run.main.entry>
     </properties>
     <!-- 添加ANTLR4插件 -->
     <build>
@@ -128,6 +128,20 @@
 
     <!-- 运行测试 -->
     <dependencies>
-
+        <!-- ANTLR4 Runtime - 用于解析 .vmr 文件 -->
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4-runtime</artifactId>
+            <version>${antlr4.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        
+        <!-- Common visualization library dependency -->
+        <dependency>
+            <groupId>org.teachfx</groupId>
+            <artifactId>antlr4-common</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>

@@ -35,6 +35,8 @@ package org.teachfx.antlr4.ep18r.stackvm;
  */
 public class StackOffsets {
 
+    private static final Logger logger = Logger.getLogger(StackOffsets.class);
+
     // 私有构造函数，防止实例化
     private StackOffsets() {}
 
@@ -255,20 +257,20 @@ public class StackOffsets {
      * @param numLocals 局部变量数量
      */
     public static void printLocalVarOffsets(String functionName, int numArgs, int numLocals) {
-        System.out.printf("[StackOffsets] 函数 %s: 参数数量=%d, 局部变量数量=%d%n", functionName, numArgs, numLocals);
+        logger.debug("函数 %s: 参数数量=%d, 局部变量数量=%d", functionName, numArgs, numLocals);
         // 参数偏移（栈传递的参数，索引>=6）
         for (int i = 6; i < numArgs; i++) {
             int offset = argOffset(i);
-            System.out.printf("  参数%d (栈传递): fp%+d%n", i, offset);
+            logger.debug("  参数%d (栈传递): fp%+d", i, offset);
         }
         // 局部变量偏移
         for (int i = 0; i < numLocals; i++) {
             int offset = localVarOffset(i);
-            System.out.printf("  局部变量%d: fp%+d%n", i, offset);
+            logger.debug("  局部变量%d: fp%+d", i, offset);
         }
         // 计算栈帧大小
         int numStackArgs = Math.max(0, numArgs - 6);
         int frameSize = calculateFrameSize(0, numLocals, numStackArgs); // 假设没有保存寄存器
-        System.out.printf("  栈帧大小: %d 字节 (对齐后)%n", frameSize);
+        logger.debug("  栈帧大小: %d 字节 (对齐后)", frameSize);
     }
 }

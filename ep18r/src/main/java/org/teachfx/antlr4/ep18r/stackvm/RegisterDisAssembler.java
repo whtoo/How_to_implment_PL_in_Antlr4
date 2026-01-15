@@ -163,6 +163,135 @@ public class RegisterDisAssembler {
     }
 
     /**
+     * 反汇编单条指令并返回字符串
+     * 
+     * @param ip 当前指令指针（字节偏移）
+     * @return 反汇编后的指令字符串
+     */
+    public String disassembleInstructionToString(int ip) {
+        // 保存原始ip用于格式输出
+        int startIp = ip;
+        
+        // 读取操作码（1字节）
+        int opcode = code[ip] & 0xFF;
+        ip++;
+        
+        // 读取操作数（4字节）
+        int operand = 0;
+        if (ip + 3 < codeSize) {
+            operand = ((code[ip] & 0xFF) << 24) |
+                      ((code[ip + 1] & 0xFF) << 16) |
+                      ((code[ip + 2] & 0xFF) << 8) |
+                      (code[ip + 3] & 0xFF);
+        }
+        ip += 4;
+        
+        // 获取指令信息
+        RegisterBytecodeDefinition.Instruction instr = null;
+        if (opcode >= 0 && opcode < instructions.length) {
+            instr = instructions[opcode];
+        }
+        
+        if (instr == null) {
+            return String.format("%04d: [INVALID opcode 0x%02x]", startIp, opcode);
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("%04d: %-8s", startIp, instr.name));
+        
+        // 根据指令格式反汇编操作数
+        if (instr.n == 0) {
+            // 无操作数指令
+            return sb.toString();
+        }
+        
+        // 提取操作数字段
+        int rd = 0, rs1 = 0, rs2 = 0, imm = 0;
+        switch (instr.getFormat()) {
+            case RegisterBytecodeDefinition.FORMAT_R:
+                // R类型: op rd, rs1, rs2
+                rd = (operand >> 21) & 0x1F;
+                rs1 = (operand >> 16) & 0x1F;
+                rs2 = (operand >> 11) & 0x1F;
+                break;
+            case RegisterBytecodeDefinition.FORMAT_I:
+                // I类型: op rd, rs1, imm 或 op rd, imm
+                rd = (operand >> 21) & 0x1F;
+                rs1 = (operand >> 16) & 0x1F;
+                imm = operand & 0xFFFF;
+                // 符号扩展
+                if ((imm & 0x8000) != 0) {
+                    imm |= 0xFFFF0000;
+                }
+                break;
+            case RegisterBytecodeDefinition.FORMAT_J:
+                // J类型: op imm
+                imm = operand & 0x3FFFFFF;
+                // 符号扩展
+                if ((imm & 0x2000000) != 0) {
+                    imm |= 0xFC000000;
+                }
+                break;
+        }
+        
+        // 根据操作数类型生成显示字符串
+        List<String> operands = new ArrayList<>();
+        for (int i = 0; i < instr.n; i++) {
+            int type = instr.getOperandType(i);
+            switch (type) {
+                case RegisterBytecodeDefinition.REG:
+                    if (i == 0) operands.add("r" + rd);
+                    else if (i == 1) operands.add("r" + rs1);
+                    else if (i == 2) operands.add("r" + rs2);
+                    break;
+                case RegisterBytecodeDefinition.INT:
+                    operands.add(String.valueOf(imm));
+                    break;
+                case RegisterBytecodeDefinition.POOL:
+                    // 常量池引用
+                    if (imm >= 0 && imm < constPool.length) {
+                        Object constant = constPool[imm];
+                        if (constant instanceof String) {
+                            operands.add("\"" + constant + "\"");
+                        } else if (constant instanceof Float) {
+                            operands.add(constant.toString() + "f");
+                        } else {
+                            operands.add("#" + imm + ":" + constant);
+                        }
+                    } else {
+                        operands.add("#" + imm + "[invalid]");
+                    }
+                    break;
+                case RegisterBytecodeDefinition.FUNC:
+                    // 函数引用
+                    if (imm >= 0 && imm < constPool.length) {
+                        Object constant = constPool[imm];
+                        if (constant instanceof FunctionSymbol) {
+                            FunctionSymbol fs = (FunctionSymbol) constant;
+                            operands.add(fs.name + "()@" + fs.address);
+                        } else {
+                            operands.add("#" + imm + ":" + constant);
+                        }
+                    } else {
+                        operands.add("func#" + imm);
+                    }
+                    break;
+                default:
+                    operands.add("?");
+                    break;
+            }
+        }
+        
+        // 添加操作数到字符串
+        for (int i = 0; i < operands.size(); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(operands.get(i));
+        }
+        
+        return sb.toString();
+    }
+
+    /**
      * 反汇编并返回字符串（用于测试）
      */
     public String disassembleToString() {

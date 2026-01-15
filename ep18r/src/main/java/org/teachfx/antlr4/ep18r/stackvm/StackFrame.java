@@ -5,6 +5,16 @@ package org.teachfx.antlr4.ep18r.stackvm;
  * 记录函数调用的状态信息，包括返回地址、保存的寄存器等
  */
 public class StackFrame {
+    private static boolean trace = false;
+    
+    public static void setTrace(boolean trace) {
+        StackFrame.trace = trace;
+    }
+    
+    public static boolean isTraceEnabled() {
+        return trace;
+    }
+    
     public FunctionSymbol symbol;
     public int returnAddress;
     public int frameBasePointer; // 栈帧基地址（在heap中的位置）
@@ -16,11 +26,13 @@ public class StackFrame {
         this.frameBasePointer = frameBasePointer;
         this.savedCallerRegisters = new int[7]; // 保存7个调用者保存寄存器（不包括a0/r2，因为它是返回值寄存器）
 
-        if (symbol != null) {
-            System.out.printf("[StackFrame] 创建栈帧: 函数=%s, 返回地址=%d, 帧基址=%d, 参数数量=%d, 局部变量数量=%d%n",
-                symbol.name, returnAddress, frameBasePointer, symbol.nargs, symbol.nlocals);
-        } else {
-            System.out.printf("[StackFrame] 创建匿名栈帧: 返回地址=%d, 帧基址=%d%n", returnAddress, frameBasePointer);
+        if (isTraceEnabled()) {
+            if (symbol != null) {
+                System.err.printf("[StackFrame] 创建栈帧: 函数=%s, 返回地址=%d, 帧基址=%d, 参数数量=%d, 局部变量数量=%d%n",
+                    symbol.name, returnAddress, frameBasePointer, symbol.nargs, symbol.nlocals);
+            } else {
+                System.err.printf("[StackFrame] 创建匿名栈帧: 返回地址=%d, 帧基址=%d%n", returnAddress, frameBasePointer);
+            }
         }
     }
 }

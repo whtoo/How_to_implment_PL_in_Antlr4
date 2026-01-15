@@ -15,8 +15,24 @@ import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionMapper;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
 import org.teachfx.antlr4.ep18r.stackvm.memory.IMemoryManager;
 import org.teachfx.antlr4.ep18r.stackvm.registers.RegisterOperandExtractor;
+import org.teachfx.antlr4.ep18r.stackvm.Logger;
+import org.teachfx.antlr4.ep18r.pass.codegen.ByteCodeEncoder;
 
 import java.io.InputStream;
+
+/**
+ * 可视化监听器接口
+ * 用于监听虚拟机执行过程中的事件
+ */
+interface VisualizationListener {
+    void beforeInstructionExecute(int pc, int opcode, String instruction);
+    void afterInstructionExecute(int pc, int opcode, String instruction, int[] registers);
+    void onPause(int pc);
+    void onResume(int pc);
+    void onBreakpointHit(int pc);
+    void onRegisterChange(int regNum, int oldValue, int newValue);
+    void onMemoryChange(int address, int oldValue, int newValue);
+}
 
 public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
     // 虚拟机配置
@@ -57,6 +73,16 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
     private static final int FP = RegisterBytecodeDefinition.R14; // 帧指针
     private static final int LR = RegisterBytecodeDefinition.R15; // 链接寄存器
 
+    // 可视化支持
+    private volatile boolean paused = false;
+    private volatile boolean stepMode = false;
+    private final java.util.Set<Integer> breakpoints = new java.util.HashSet<>();
+    private final java.util.List<VisualizationListener> visualizationListeners = new java.util.ArrayList<>();
+    private final ByteCodeEncoder byteCodeEncoder = new ByteCodeEncoder();
+    
+    // 日志记录器
+    private final Logger logger = Logger.getLogger(RegisterVMInterpreter.class);
+
     /**
      * 使用默认配置创建虚拟机实例
      * @deprecated 使用 RegisterVMInterpreter(VMConfig) 替代
@@ -83,6 +109,150 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
         this.running = false;
     }
 
+    // ==================== 可视化支持方法 ====================
+    
+    /**
+     * 添加可视化监听器
+     */
+    public synchronized void addVisualizationListener(VisualizationListener listener) {
+        if (listener != null && !visualizationListeners.contains(listener)) {
+            visualizationListeners.add(listener);
+        }
+    }
+    
+    /**
+     * 移除可视化监听器
+     */
+    public synchronized void removeVisualizationListener(VisualizationListener listener) {
+        if (listener != null) {
+            visualizationListeners.remove(listener);
+        }
+    }
+    
+    /**
+     * 设置暂停状态
+     */
+    public synchronized void setPaused(boolean paused) {
+        this.paused = paused;
+        if (paused) {
+            notifyPause(programCounter);
+        } else {
+            notifyResume(programCounter);
+        }
+    }
+    
+    /**
+     * 检查是否已暂停
+     */
+    public boolean isPaused() {
+        return paused;
+    }
+    
+    /**
+     * 设置步进模式
+     */
+    public synchronized void setStepMode(boolean stepMode) {
+        this.stepMode = stepMode;
+    }
+    
+    /**
+     * 检查是否为步进模式
+     */
+    public boolean isStepMode() {
+        return stepMode;
+    }
+    
+    /**
+     * 添加断点
+     */
+    public synchronized void addBreakpoint(int pc) {
+        breakpoints.add(pc);
+    }
+    
+    /**
+     * 移除断点
+     */
+    public synchronized void removeBreakpoint(int pc) {
+        breakpoints.remove(pc);
+    }
+    
+    /**
+     * 检查是否有断点
+     */
+    public synchronized boolean hasBreakpoint(int pc) {
+        return breakpoints.contains(pc);
+    }
+    
+    /**
+     * 获取所有断点
+     */
+    public synchronized java.util.Set<Integer> getBreakpoints() {
+        return new java.util.HashSet<>(breakpoints);
+    }
+    
+    /**
+     * 通知监听器：指令执行前
+     */
+    private void notifyBeforeInstructionExecute(int pc, int opcode, String instruction) {
+        for (VisualizationListener listener : visualizationListeners) {
+            listener.beforeInstructionExecute(pc, opcode, instruction);
+        }
+    }
+    
+    /**
+     * 通知监听器：指令执行后
+     */
+    private void notifyAfterInstructionExecute(int pc, int opcode, String instruction, int[] registers) {
+        for (VisualizationListener listener : visualizationListeners) {
+            listener.afterInstructionExecute(pc, opcode, instruction, registers);
+        }
+    }
+    
+    /**
+     * 通知监听器：暂停
+     */
+    private void notifyPause(int pc) {
+        for (VisualizationListener listener : visualizationListeners) {
+            listener.onPause(pc);
+        }
+    }
+    
+    /**
+     * 通知监听器：恢复
+     */
+    private void notifyResume(int pc) {
+        for (VisualizationListener listener : visualizationListeners) {
+            listener.onResume(pc);
+        }
+    }
+    
+    /**
+     * 通知监听器：断点命中
+     */
+    private void notifyBreakpointHit(int pc) {
+        for (VisualizationListener listener : visualizationListeners) {
+            listener.onBreakpointHit(pc);
+        }
+    }
+    
+    /**
+     * 通知监听器：寄存器变化
+     */
+    private void notifyRegisterChange(int regNum, int oldValue, int newValue) {
+        for (VisualizationListener listener : visualizationListeners) {
+            listener.onRegisterChange(regNum, oldValue, newValue);
+        }
+    }
+    
+    /**
+     * 通知监听器：内存变化
+     */
+    private void notifyMemoryChange(int address, int oldValue, int newValue) {
+        for (VisualizationListener listener : visualizationListeners) {
+            listener.onMemoryChange(address, oldValue, newValue);
+        }
+    }
+
     /**
      * 从输入流加载寄存器汇编代码
      */
@@ -102,6 +272,16 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
             interp.constPool = assembler.getConstantPool();
             interp.mainFunction = assembler.getMainFunction();
             interp.globals = new Object[assembler.getDataSize()];
+
+            // 诊断日志：输出加载的字节码信息（仅在trace模式下显示）
+            interp.logger.diagnostic("Loaded machine code size: %d bytes", interp.codeSize);
+            if (interp.codeSize > 0) {
+                StringBuilder hex = new StringBuilder();
+                for (int i = 0; i < Math.min(16, interp.codeSize); i++) {
+                    hex.append(String.format("%02X ", interp.code[i] & 0xFF));
+                }
+                interp.logger.diagnostic("First 16 bytes: %s", hex.toString().trim());
+            }
 
             hasErrors = parser.getNumberOfSyntaxErrors() > 0 || assembler.hasErrors();
         }
@@ -128,6 +308,10 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
         callStack[++framePointer] = frame;
         programCounter = mainFunction.address;
         running = true;
+        
+        // 重置可视化状态
+        paused = false;
+        stepMode = false;
 
         // 执行循环
         cpu();
@@ -135,6 +319,7 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
 
     /**
      * 主执行循环 - 解码并执行寄存器指令
+     * 集成可视化支持：暂停检查、断点、事件通知
      */
     private void cpu() throws Exception {
         executionSteps = 0; // 重置执行步数计数器
@@ -143,6 +328,26 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
             // 循环检测 - 防止无限循环
             if (executionSteps++ > maxExecutionSteps) {
                 throw new RuntimeException("Maximum execution steps exceeded. Possible infinite loop detected at PC=" + programCounter);
+            }
+
+            // ==================== 可视化支持：暂停处理 ====================
+            // 检查暂停状态，如果暂停则等待
+            synchronized (this) {
+                while (paused && running) {
+                    try {
+                        // 短暂等待，避免CPU占用过高
+                        wait(50);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        running = false;
+                        break;
+                    }
+                }
+            }
+            
+            // 如果虚拟机已停止，退出循环
+            if (!running) {
+                break;
             }
 
             // 提取32位固定长度指令
@@ -161,15 +366,36 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
             
             // 验证操作码范围
             if (opcode < 0 || opcode >= RegisterBytecodeDefinition.instructions.length) {
+                logger.error("Invalid opcode detected at PC=%d: opcode=%d (max=%d)", 
+                    programCounter, opcode, RegisterBytecodeDefinition.instructions.length);
                 throw new IllegalArgumentException("Invalid opcode: " + opcode + " at PC=" + programCounter);
             }
             
             // 整个指令字作为操作数传递给执行逻辑
             int operand = instructionWord;
 
-            // 添加PC追踪调试输出（RET之后的关键指令）
-            if (programCounter == 16 || programCounter == 20 || programCounter == 24) {
-                System.out.printf("[CPU TRACE] 执行指令: PC=%d, opcode=%d, didJump=%b, 寄存器: a0=%d, a1=%d, a2=%d, s0=%d, s1=%d, s2=%d%n",
+            // ==================== 可视化支持：断点检查 ====================
+            // 检查当前PC是否有断点
+            synchronized (this) {
+                if (breakpoints.contains(programCounter)) {
+                    // 命中断点，暂停执行并通知监听器
+                    paused = true;
+                    notifyBreakpointHit(programCounter);
+                    notifyPause(programCounter);
+                    // 继续等待暂停状态
+                    continue;
+                }
+            }
+
+            // ==================== 可视化支持：指令反汇编 ====================
+            String instructionText = byteCodeEncoder.toAssemblyString(instructionWord);
+
+            // ==================== 可视化支持：指令执行前事件 ====================
+            notifyBeforeInstructionExecute(programCounter, opcode, instructionText);
+
+            // 添加PC追踪调试输出（RET之后的关键指令） - 仅在trace模式下显示
+            if (isTraceEnabled() && (programCounter == 16 || programCounter == 20 || programCounter == 24)) {
+                logger.cpuTrace("执行指令: PC=%d, opcode=%d, didJump=%b, 寄存器: a0=%d, a1=%d, a2=%d, s0=%d, s1=%d, s2=%d",
                     programCounter, opcode, didJump,
                     registers[2], registers[3], registers[4], registers[8], registers[9], registers[10]);
             }
@@ -177,13 +403,28 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
             // 根据操作码执行指令
             executeInstruction(opcode, operand);
 
+            // ==================== 可视化支持：指令执行后事件 ====================
+            // 复制寄存器状态用于事件通知（避免引用被后续修改）
+            int[] registersCopy = new int[registers.length];
+            System.arraycopy(registers, 0, registersCopy, 0, registers.length);
+            notifyAfterInstructionExecute(programCounter, opcode, instructionText, registersCopy);
+
+            // ==================== 可视化支持：步进模式处理 ====================
+            if (stepMode) {
+                synchronized (this) {
+                    paused = true;
+                    stepMode = false;
+                    notifyPause(programCounter);
+                }
+            }
+
             // 更新程序计数器（每条指令4字节）
             // 注意：只有在没有跳转的情况下才自动增加PC
             // 跳转指令会在executeInstruction中直接设置PC
             if (!didJump) {
                 programCounter += 4;
-            } else if (programCounter == 16 || programCounter == 20 || programCounter == 24) {
-                System.out.printf("[CPU TRACE] 跳转后PC=%d, didJump重置前=%b%n", programCounter, didJump);
+            } else if (isTraceEnabled() && (programCounter == 16 || programCounter == 20 || programCounter == 24)) {
+                logger.cpuTrace("跳转后PC=%d, didJump重置前=%b", programCounter, didJump);
             }
             didJump = false; // 重置跳转标志
         }
@@ -248,6 +489,8 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
         if (executor != null) {
             executor.execute(operand, context);
         } else {
+            logger.error("No executor found for opcode=%d at PC=%d, registered opcodes=%d", 
+                opcode, programCounter, instructionMapper.getRegisteredOpcodeCount());
             throw new org.teachfx.antlr4.ep18r.stackvm.exception.VMInvalidOpcodeException(
                 programCounter, "opcode=" + opcode);
         }
@@ -328,7 +571,9 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
      */
     private void disassembleInstruction(int opcode, int operand) {
         // TODO: 实现反汇编
-        System.out.println("[" + opcode + "]");
+        if (isTraceEnabled()) {
+            logger.debug("[%d]", opcode);
+        }
     }
 
     /**
@@ -352,7 +597,9 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
             // r0是零寄存器，忽略写入
             return;
         }
+        int oldValue = registers[regNum];
         registers[regNum] = value;
+        notifyRegisterChange(regNum, oldValue, value);
     }
 
     /**
@@ -360,6 +607,14 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
      */
     public void setTrace(boolean trace) {
         this.trace = trace;
+        org.teachfx.antlr4.ep18r.stackvm.StackFrame.setTrace(trace);
+    }
+
+    /**
+     * 检查跟踪模式是否启用
+     */
+    public boolean isTraceEnabled() {
+        return trace;
     }
 
     /**
@@ -482,7 +737,9 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
         if (address < 0 || address >= heap.length) {
             throw new IndexOutOfBoundsException("Heap address out of bounds: " + address);
         }
+        int oldValue = heap[address];
         heap[address] = value;
+        notifyMemoryChange(address, oldValue, value);
     }
 
     /**

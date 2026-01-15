@@ -171,6 +171,13 @@ public class ExecutionContext {
     }
 
     /**
+     * 检查trace模式是否启用
+     */
+    public boolean isTraceEnabled() {
+        return vm.isTraceEnabled();
+    }
+
+    /**
      * 获取寄存器数组（内部使用）
      */
     public int[] getRegisters() {

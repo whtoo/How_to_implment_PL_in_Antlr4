@@ -2,12 +2,15 @@ package org.teachfx.antlr4.ep18r.stackvm.instructions.executors;
 
 import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionExecutor;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+import org.teachfx.antlr4.ep18r.stackvm.Logger;
 
 /**
  * 内存访问指令执行器集合
  * 处理所有内存加载、存储和常量访问指令
  */
 public class MemoryExecutors {
+
+    private static final Logger logger = Logger.getLogger(MemoryExecutors.class);
 
     // ==================== 常量加载指令 ====================
 
@@ -183,7 +186,9 @@ public class MemoryExecutors {
         // 计算字段地址（offset是字节偏移，堆是int数组，需要除以4）
         int fieldAddr = objPtr + offset / 4;
         int value = context.getRegister(rs);
-        System.out.printf("[SW_F] objPtr=%d, offset=%d, fieldAddr=%d, value=%d\n", objPtr, offset, fieldAddr, value);
+        if (context.isTraceEnabled()) {
+            logger.memoryTrace("[SW_F] objPtr=%d, offset=%d, fieldAddr=%d, value=%d", objPtr, offset, fieldAddr, value);
+        }
         context.writeMemory(fieldAddr, value);
     };
 
@@ -216,7 +221,9 @@ public class MemoryExecutors {
         context.setHeapAllocPointer(address + structSize);
 
         // 将结构体地址存储到寄存器
-        System.out.printf("[STRUCT] 分配结构体: numFields=%d, address=%d, heapAllocPointer=%d\n", numFields, address, address + structSize);
+        if (context.isTraceEnabled()) {
+            logger.memoryTrace("[STRUCT] 分配结构体: numFields=%d, address=%d, heapAllocPointer=%d", numFields, address, address + structSize);
+        }
         context.setRegister(rd, address);
     };
 
@@ -244,7 +251,7 @@ public class MemoryExecutors {
     public static final InstructionExecutor PRINT = (operand, context) -> {
         int rs = context.extractRd(operand);
         int value = context.getRegister(rs);
-        System.out.println(value);
+        Logger.programOutput(value);
     };
 
     /**

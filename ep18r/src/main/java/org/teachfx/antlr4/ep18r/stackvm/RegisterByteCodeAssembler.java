@@ -10,6 +10,7 @@ import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser.InstrContext;
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser.LabelContext;
 import org.teachfx.antlr4.ep18r.parser.VMAssemblerParser.TempContext;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+import org.teachfx.antlr4.ep18r.stackvm.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
+    private final Logger logger = Logger.getLogger(RegisterByteCodeAssembler.class);
+    
     public static final int INITIAL_CODE_SIZE = 2048;
     private static final int INT = VMAssemblerParser.INT;
     private static final int CHAR = VMAssemblerParser.CHAR;
@@ -97,8 +100,8 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
         currentInstruction = key;
         Integer opCodeI = instructionOpcodeMapping.get(key);
         if (opCodeI == null) {
-            System.err.println("line " + instrToken.getLine() + ": Unknown instruction: " + instructionName);
-            System.err.println("  Available instructions: " + instructionOpcodeMapping.keySet());
+            logger.error("line %d: Unknown instruction: %s", instrToken.getLine(), instructionName);
+            logger.error("  Available instructions: %s", instructionOpcodeMapping.keySet());
             hasErrors = true;
             currentInstruction = null;
             currentInstructionDef = null;
@@ -147,8 +150,8 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
         }
 
         if (currentOperandIndex >= currentInstructionDef.n) {
-            System.err.println("line " + operandToken.getLine() +
-                ": Too many operands for instruction " + currentInstruction);
+            logger.error("line %d: Too many operands for instruction %s", 
+                operandToken.getLine(), currentInstruction);
             hasErrors = true;
             return;
         }
@@ -431,7 +434,7 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
         for (String name : labels.keySet()) {
             LabelSymbol sym = labels.get(name);
             if (!sym.isDefined) {
-                System.err.println("unresolved reference: " + name);
+                logger.error("unresolved reference: %s", name);
             }
         }
     }
@@ -469,8 +472,8 @@ public class RegisterByteCodeAssembler extends VMAssemblerBaseListener {
                 sym.resolveForwardReferences(code);
             } else {
                 // redefinition of symbol
-                System.err.println("line " + idToken.getLine() +
-                        ": redefinition of symbol " + id);
+                logger.error("line %d: redefinition of symbol %s", 
+                        idToken.getLine(), id);
             }
         }
     }

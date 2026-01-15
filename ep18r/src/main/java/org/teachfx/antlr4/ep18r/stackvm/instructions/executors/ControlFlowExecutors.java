@@ -6,12 +6,15 @@ import org.teachfx.antlr4.ep18r.stackvm.StackOffsets;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.InstructionExecutor;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
 import org.teachfx.antlr4.ep18r.stackvm.interpreter.ExecutionContext;
+import org.teachfx.antlr4.ep18r.stackvm.Logger;
 
 /**
  * 控制流指令执行器集合
  * 处理所有跳转、调用和返回指令
  */
 public class ControlFlowExecutors {
+
+    private static final Logger logger = Logger.getLogger(ControlFlowExecutors.class);
 
     /**
      * 函数调用指令执行器 (CALL)
@@ -51,12 +54,14 @@ public class ControlFlowExecutors {
     public static final InstructionExecutor CALL = (operand, context) -> {
         int target = context.extractImm26(operand);
 
-        // 调试跟踪输出
-        System.out.printf("[CALL] PC=%d, target=%d (0x%x), returnAddr=%d, fp=%d, sp=%d%n",
-            context.getProgramCounter(), target, target,
-            context.getProgramCounter() + 4,
-            context.getRegister(RegisterBytecodeDefinition.R14),
-            context.getRegister(RegisterBytecodeDefinition.R13));
+        // 调试跟踪输出 - 仅在trace模式下显示
+        if (context.isTraceEnabled()) {
+            logger.callTrace("PC=%d, target=%d (0x%x), returnAddr=%d, fp=%d, sp=%d",
+                context.getProgramCounter(), target, target,
+                context.getProgramCounter() + 4,
+                context.getRegister(RegisterBytecodeDefinition.R14),
+                context.getRegister(RegisterBytecodeDefinition.R13));
+        }
 
         // 验证跳转目标（26位跳转需要4字节对齐）
         context.validateJumpTarget26(target);
@@ -143,30 +148,36 @@ public class ControlFlowExecutors {
             int srcBase = currentSP + StackOffsets.ARG_AREA_START_OFFSET / 4;
             // 目标地址：被调用者栈帧参数区域（fp + ARG_AREA_START_OFFSET/4）
             int dstBase = newFP + StackOffsets.ARG_AREA_START_OFFSET / 4;
-            System.out.printf("[CALL] 复制栈参数: 数量=%d, 从 src=%d字 到 dst=%d字%n", numStackArgs, srcBase, dstBase);
+            if (context.isTraceEnabled()) {
+                logger.callTrace("复制栈参数: 数量=%d, 从 src=%d字 到 dst=%d字", numStackArgs, srcBase, dstBase);
+            }
             for (int i = 0; i < numStackArgs; i++) {
                 int argValue = context.readMemory(srcBase + i);
                 context.writeMemory(dstBase + i, argValue);
-                System.out.printf("[CALL]   栈参数 %d: 值=%d (src=%d, dst=%d)%n", i, argValue, srcBase + i, dstBase + i);
+                if (context.isTraceEnabled()) {
+                    logger.callTrace("栈参数 %d: 值=%d (src=%d, dst=%d)", i, argValue, srcBase + i, dstBase + i);
+                }
             }
         }
 
-        // 调试跟踪输出
-        System.out.printf("[CALL] 栈帧布局: frameSize=%d字节(%d字), newSP=%d字, newFP=%d字, localsBase=%d字, heapPtr=%d字%n",
-            frameSize, frameSizeWords, newSP, newFP, localsBase, newSP + frameSizeWords);
-        System.out.printf("[CALL] 参数: nargs=%d (栈参数=%d), nlocals=%d%n", nargs, numStackArgs, nlocals);
-        System.out.printf("[CALL] 保存寄存器位置: s0@fp%d, s1@fp%d, s2@fp%d, s3@fp%d, s4@fp%d%n",
-            StackOffsets.S0_SAVE_OFFSET, StackOffsets.S1_SAVE_OFFSET,
-            StackOffsets.S2_SAVE_OFFSET, StackOffsets.S3_SAVE_OFFSET,
-            StackOffsets.S4_SAVE_OFFSET);
-        System.out.printf("[CALL] 局部变量区域: 起始@fp%d, 结束@fp%d%n",
-            StackOffsets.FIRST_LOCAL_OFFSET, StackOffsets.FIRST_LOCAL_OFFSET - 4 * (nlocals - 1));
-        System.out.printf("[CALL] 保存caller寄存器: [a1=%d,a2=%d,a3=%d,a4=%d,a5=%d,lr=%d,ra=%d]%n",
-            newFrame.savedCallerRegisters[0], newFrame.savedCallerRegisters[1],
-            newFrame.savedCallerRegisters[2], newFrame.savedCallerRegisters[3],
-            newFrame.savedCallerRegisters[4], newFrame.savedCallerRegisters[5],
-            newFrame.savedCallerRegisters[6]);
-        System.out.printf("[CALL EXIT] 从PC=%d跳转到PC=%d\n\n", context.getProgramCounter(), target);
+        // 调试跟踪输出 - 仅在trace模式下显示
+        if (context.isTraceEnabled()) {
+            logger.callTrace("栈帧布局: frameSize=%d字节(%d字), newSP=%d字, newFP=%d字, localsBase=%d字, heapPtr=%d字",
+                frameSize, frameSizeWords, newSP, newFP, localsBase, newSP + frameSizeWords);
+            logger.callTrace("参数: nargs=%d (栈参数=%d), nlocals=%d", nargs, numStackArgs, nlocals);
+            logger.callTrace("保存寄存器位置: s0@fp%d, s1@fp%d, s2@fp%d, s3@fp%d, s4@fp%d",
+                StackOffsets.S0_SAVE_OFFSET, StackOffsets.S1_SAVE_OFFSET,
+                StackOffsets.S2_SAVE_OFFSET, StackOffsets.S3_SAVE_OFFSET,
+                StackOffsets.S4_SAVE_OFFSET);
+            logger.callTrace("局部变量区域: 起始@fp%d, 结束@fp%d",
+                StackOffsets.FIRST_LOCAL_OFFSET, StackOffsets.FIRST_LOCAL_OFFSET - 4 * (nlocals - 1));
+            logger.callTrace("保存caller寄存器: [a1=%d,a2=%d,a3=%d,a4=%d,a5=%d,lr=%d,ra=%d]",
+                newFrame.savedCallerRegisters[0], newFrame.savedCallerRegisters[1],
+                newFrame.savedCallerRegisters[2], newFrame.savedCallerRegisters[3],
+                newFrame.savedCallerRegisters[4], newFrame.savedCallerRegisters[5],
+                newFrame.savedCallerRegisters[6]);
+            logger.callTrace("[CALL EXIT] 从PC=%d跳转到PC=%d", context.getProgramCounter(), target);
+        }
 
         // 跳转
         context.setJumpTarget(target);
@@ -187,38 +198,46 @@ public class ControlFlowExecutors {
         int returnAddr;
         int currentFramePointer = context.getFramePointer();
 
-        // 调试跟踪输出 - 进入RET
-        System.out.printf("\n[RET ENTRY] PC=%d, 当前framePointer=%d, 寄存器fp=%d, sp=%d%n",
-            context.getProgramCounter(), currentFramePointer,
-            context.getRegister(RegisterBytecodeDefinition.R14),
-            context.getRegister(RegisterBytecodeDefinition.R13));
-        System.out.printf("[RET ENTRY] 跳转前寄存器状态: a0=%d, a1=%d, a2=%d, s0=%d, s1=%d, s2=%d%n",
-            context.getRegister(2), context.getRegister(3), context.getRegister(4),
-            context.getRegister(8), context.getRegister(9), context.getRegister(10));
+        // 调试跟踪输出 - 进入RET（仅在trace模式下显示）
+        if (context.isTraceEnabled()) {
+            logger.retTrace("[RET ENTRY] PC=%d, 当前framePointer=%d, 寄存器fp=%d, sp=%d",
+                context.getProgramCounter(), currentFramePointer,
+                context.getRegister(RegisterBytecodeDefinition.R14),
+                context.getRegister(RegisterBytecodeDefinition.R13));
+            logger.retTrace("[RET ENTRY] 跳转前寄存器状态: a0=%d, a1=%d, a2=%d, s0=%d, s1=%d, s2=%d",
+                context.getRegister(2), context.getRegister(3), context.getRegister(4),
+                context.getRegister(8), context.getRegister(9), context.getRegister(10));
+        }
 
         if (currentFramePointer < 0) {
             // 没有调用栈帧，尝试使用 r15（兼容旧代码）
             returnAddr = context.getRegister(RegisterBytecodeDefinition.R15);
-            System.out.printf("[RET] 无栈帧，使用lr=%d作为返回地址%n", returnAddr);
+            if (context.isTraceEnabled()) {
+                logger.retTrace("无栈帧，使用lr=%d作为返回地址", returnAddr);
+            }
         } else {
             // 从调用栈弹出返回地址
             StackFrame frame = context.getCallStack()[currentFramePointer];
             returnAddr = frame.returnAddress;
 
-            System.out.printf("[RET] 从栈帧获取: returnAddr=%d, frameBase=%d, savedA1=%d%n",
-                returnAddr, frame.frameBasePointer, frame.savedCallerRegisters[0]);
+            if (context.isTraceEnabled()) {
+                logger.retTrace("从栈帧获取: returnAddr=%d, frameBase=%d, savedA1=%d",
+                    returnAddr, frame.frameBasePointer, frame.savedCallerRegisters[0]);
+            }
 
             // 恢复caller-saved寄存器（ABI第3.3节）
             // 数组索引映射：0:a1(r3), 1:a2(r4), 2:a3(r5), 3:a4(r6), 4:a5(r7), 5:lr(r15), 6:ra(r1)
             // 注意：不恢复a0(r2)，因为它是返回值寄存器
-            System.out.printf("[RET] 恢复寄存器: a1=%d->%d, a2=%d->%d, a3=%d->%d, a4=%d->%d, a5=%d->%d, lr=%d->%d, ra=%d->%d%n",
-                context.getRegister(3), frame.savedCallerRegisters[0],
+            if (context.isTraceEnabled()) {
+                logger.retTrace("恢复寄存器: a1=%d->%d, a2=%d->%d, a3=%d->%d, a4=%d->%d, a5=%d->%d, lr=%d->%d, ra=%d->%d",
+                    context.getRegister(3), frame.savedCallerRegisters[0],
                 context.getRegister(4), frame.savedCallerRegisters[1],
                 context.getRegister(5), frame.savedCallerRegisters[2],
                 context.getRegister(6), frame.savedCallerRegisters[3],
                 context.getRegister(7), frame.savedCallerRegisters[4],
                 context.getRegister(15), frame.savedCallerRegisters[5],
-                context.getRegister(1), frame.savedCallerRegisters[6]);
+                 context.getRegister(1), frame.savedCallerRegisters[6]);
+            }
 
             context.setRegister(3, frame.savedCallerRegisters[0]);  // a1
             context.setRegister(4, frame.savedCallerRegisters[1]);  // a2
@@ -253,10 +272,12 @@ public class ControlFlowExecutors {
             int newSP = currentFP + 1 - frameSizeWords;
             context.setRegister(RegisterBytecodeDefinition.R13, newSP);
 
-            System.out.printf("[RET] 恢复FP: 从fp+8字节(字地址%d)读取旧FP=%d字, 设置SP=%d字 (fp+1-frameSizeWords, frameSizeWords=%d)%n",
-                fpSaveAddress, prevFP, newSP, frameSizeWords);
-            System.out.printf("[RET] 设置framePointer: %d->%d%n",
-                currentFramePointer, currentFramePointer - 1);
+            if (context.isTraceEnabled()) {
+                logger.retTrace("恢复FP: 从fp+8字节(字地址%d)读取旧FP=%d字, 设置SP=%d字 (fp+1-frameSizeWords, frameSizeWords=%d)",
+                    fpSaveAddress, prevFP, newSP, frameSizeWords);
+                logger.retTrace("设置framePointer: %d->%d",
+                    currentFramePointer, currentFramePointer - 1);
+            }
 
             context.setFramePointer(currentFramePointer - 1);
         }
@@ -264,8 +285,10 @@ public class ControlFlowExecutors {
         // 验证返回地址（26位跳转需要4字节对齐）
         context.validateJumpTarget26(returnAddr);
 
-        // 调试跟踪输出
-        System.out.printf("[RET EXIT] 跳转: PC->%d (0x%x)\n\n", returnAddr, returnAddr);
+        // 调试跟踪输出 - 仅在trace模式下显示
+        if (context.isTraceEnabled()) {
+            logger.retTrace("[RET EXIT] 跳转: PC->%d (0x%x)", returnAddr, returnAddr);
+        }
 
         // 跳转
         context.setJumpTarget(returnAddr);

@@ -577,4 +577,124 @@ public class VMInterpreter {
         }
         System.out.println();
     }
+
+    /**
+     * 获取字节码数组
+     * @return 字节码数组
+     */
+    public byte[] getCode() {
+        return code;
+    }
+
+    /**
+     * 获取字节码大小
+     * @return 字节码大小
+     */
+    public int getCodeSize() {
+        return codeSize;
+    }
+
+    /**
+     * 获取程序计数器（指令指针）
+     * @return 当前指令指针位置
+     */
+    public int getProgramCounter() {
+        return ip;
+    }
+
+    /**
+     * 获取操作数栈快照
+     * @return 操作数栈的副本（从栈底到栈顶）
+     */
+    public Object[] getOperandStack() {
+        if (sp < 0) {
+            return new Object[0];
+        }
+        Object[] snapshot = new Object[sp + 1];
+        System.arraycopy(operands, 0, snapshot, 0, sp + 1);
+        return snapshot;
+    }
+
+    /**
+     * 获取栈指针
+     * @return 当前栈指针位置
+     */
+    public int getStackPointer() {
+        return sp;
+    }
+
+    /**
+     * 获取调用栈帧快照
+     * @return 活动调用栈帧的列表（从底部到顶部）
+     */
+    public StackFrame[] getCallStackFrames() {
+        if (fp < 0) {
+            return new StackFrame[0];
+        }
+        StackFrame[] snapshot = new StackFrame[fp + 1];
+        System.arraycopy(calls, 0, snapshot, 0, fp + 1);
+        return snapshot;
+    }
+
+    /**
+     * 获取帧指针
+     * @return 当前帧指针位置
+     */
+    public int getFramePointer() {
+        return fp;
+    }
+
+    /**
+     * 获取全局变量快照
+     * @return 全局变量数组的副本
+     */
+    public Object[] getGlobalVariables() {
+        if (globals == null) {
+            return new Object[0];
+        }
+        return globals.clone();
+    }
+
+    /**
+     * 获取常量池快照
+     * @return 常量池数组的副本
+     */
+    public Object[] getConstantPool() {
+        if (constPool == null) {
+            return new Object[0];
+        }
+        return constPool.clone();
+    }
+
+    /**
+     * 获取反汇编器实例
+     * @return 反汇编器实例
+     */
+    public DisAssembler getDisAssembler() {
+        return disasm;
+    }
+
+    /**
+     * 获取主函数符号
+     * @return 主函数符号
+     */
+    public FunctionSymbol getMainFunction() {
+        return mainFunction;
+    }
+
+    /**
+     * 检查是否正在跟踪执行
+     * @return 是否启用跟踪模式
+     */
+    public boolean isTraceEnabled() {
+        return trace;
+    }
+
+    /**
+     * 设置跟踪模式
+     * @param trace 是否启用跟踪模式
+     */
+    public void setTrace(boolean trace) {
+        this.trace = trace;
+    }
 }

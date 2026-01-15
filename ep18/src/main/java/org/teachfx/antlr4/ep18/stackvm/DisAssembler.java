@@ -62,6 +62,20 @@ public class DisAssembler {
     }
 
     /**
+     * 反汇编单条指令并返回字符串
+     * 
+     * @param ip 指令指针
+     * @return 反汇编后的指令字符串
+     */
+    public String disassembleInstructionToString(int ip) {
+        if (use32BitFormat) {
+            return disassembleInstruction32ToString(ip);
+        } else {
+            return disassembleInstructionLegacyToString(ip);
+        }
+    }
+
+    /**
      * 32位定长格式反汇编
      */
     private int disassembleInstruction32(int ip) {
@@ -93,6 +107,39 @@ public class DisAssembler {
         System.out.printf("  ; 0x%08X", instruction);
 
         return ip + 4;
+    }
+
+    /**
+     * 32位定长格式反汇编并返回字符串
+     */
+    private String disassembleInstruction32ToString(int ip) {
+        // 边界检查：确保有足够的字节读取完整指令
+        if (ip + 4 > codeSize) {
+            return String.format("%04d: <INCOMPLETE>", ip);
+        }
+        int instruction = readInt32(code, ip);
+        int opcode = InstructionEncoder.decodeOpcode(instruction);
+        String instrName = InstructionEncoder.getMnemonic(opcode);
+
+        // 检查是否为有效指令
+        if (instrName.equals("unknown")) {
+            return String.format("%04d:\t%-11s [UNKNOWN OPCODE 0x%02X]", ip, "?", opcode);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("%04d:\t%-11s", ip, instrName));
+
+        // 根据操作码判断指令类型并显示操作数
+        List<String> operands = getOperands32(opcode, instruction);
+        for (int i = 0; i < operands.size(); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(operands.get(i));
+        }
+
+        // 显示十六进制
+        sb.append(String.format("  ; 0x%08X", instruction));
+
+        return sb.toString();
     }
 
     /**
@@ -200,6 +247,44 @@ public class DisAssembler {
             System.out.print(s);
         }
         return ip;
+    }
+
+    /**
+     * 传统格式反汇编并返回字符串
+     */
+    private String disassembleInstructionLegacyToString(int ip) {
+        StringBuilder sb = new StringBuilder();
+        int opcode = code[ip];
+        BytecodeDefinition.Instruction I = BytecodeDefinition.instructions[opcode];
+        String instrName = I.name;
+        sb.append(String.format("%04d:\t%-11s", ip, instrName));
+        int currentIp = ip + 1; // 跳过操作码字节
+        if (I.n == 0) {
+            sb.append("  ");
+            return sb.toString();
+        }
+        List<String> operands = new ArrayList<String>();
+        for (int i = 0; i < I.n; i++) {
+            int opnd = ByteCodeAssembler.getInt(code, currentIp);
+            currentIp += 4;
+            switch (I.type[i]) {
+                case BytecodeDefinition.REG:
+                    operands.add("r" + opnd);
+                    break;
+                case BytecodeDefinition.FUNC:
+                case BytecodeDefinition.POOL:
+                    operands.add(showConstPoolOperand(opnd));
+                    break;
+                case BytecodeDefinition.INT:
+                    operands.add(String.valueOf(opnd));
+            }
+        }
+        for (int i = 0; i < operands.size(); i++) {
+            String s = operands.get(i);
+            if (i > 0) sb.append(", ");
+            sb.append(s);
+        }
+        return sb.toString();
     }
 
     /**

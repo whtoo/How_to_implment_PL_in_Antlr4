@@ -55,6 +55,13 @@
             <version>${jmh.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Common visualization library dependency -->
+        <dependency>
+            <groupId>org.teachfx</groupId>
+            <artifactId>antlr4-common</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <!-- TDD Refactoring - Build Configuration -->

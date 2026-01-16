@@ -1,5 +1,8 @@
 package org.teachfx.antlr4.ep18r.vizvmr.ui.javafx;
 
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -8,47 +11,43 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import org.teachfx.antlr4.ep18r.stackvm.RegisterDisAssembler;
-import org.teachfx.antlr4.ep18r.vizvmr.integration.VMRVisualBridge;
-import org.teachfx.antlr4.common.visualization.ui.javafx.JFXPanelBase;
+import org.teachfx.antlr4.ep18r.vizvmr.core.ReactiveVMRStateModel;
 
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Code/Disassembly panel - JavaFX version
- * Displays disassembled code with PC highlighting and breakpoint support
+ * 响应式代码视图
+ * 使用RxJava自动订阅PC变化和断点变化
  */
-public class CodeView extends JFXPanelBase {
+public class ReactiveCodeView extends BorderPane {
 
-    private final VMRVisualBridge visualBridge;
+    private final ReactiveVMRStateModel stateModel;
+    private final CompositeDisposable disposables = new CompositeDisposable();
+
     private ListView<String> instructionList;
     private ObservableList<String> instructionData;
-    private final Set<Integer> breakpoints;
-    private int currentPC = -1;
+    private final Set<Integer> breakpoints = new HashSet<>();
+    private volatile int currentPC = -1;
 
-    public CodeView(VMRVisualBridge visualBridge) {
-        super("CodeView");
-        this.visualBridge = visualBridge;
-        this.breakpoints = new HashSet<>();
-        buildUI();  // 在对象完全构造后初始化UI
+    public ReactiveCodeView(ReactiveVMRStateModel stateModel) {
+        this.stateModel = stateModel;
+        buildUI();
+        bindToState();
     }
 
-    @Override
-    protected void initializeComponents() {
-        setTitle("代码");
-        setMinSize(400, 400);
-
+    private void buildUI() {
         VBox mainLayout = new VBox(10);
         mainLayout.setPadding(new Insets(10));
 
-        // Create toolbar
+        // 工具栏
         HBox toolbar = createToolbar();
         mainLayout.getChildren().add(toolbar);
 
-        // Create instruction list
+        // 指令列表
         instructionData = FXCollections.observableArrayList();
         instructionList = new ListView<>(instructionData);
-        instructionList.setCellFactory(list -> new BreakpointListCell());
+        instructionList.setCellFactory(list -> new ReactiveListCell());
         instructionList.getStyleClass().add("code-list");
 
         VBox.setVgrow(instructionList, Priority.ALWAYS);
@@ -57,57 +56,81 @@ public class CodeView extends JFXPanelBase {
         setCenter(mainLayout);
     }
 
-    /**
-     * Create toolbar with controls
-     */
     private HBox createToolbar() {
         HBox toolbar = new HBox(10);
         toolbar.setAlignment(Pos.CENTER_LEFT);
 
         Button refreshButton = new Button("刷新");
-        refreshButton.setOnAction(e -> refresh());
+        refreshButton.setOnAction(e -> instructionList.refresh());
 
         Button toggleBreakpointButton = new Button("切换断点");
         toggleBreakpointButton.setOnAction(e -> toggleBreakpointAtSelection());
 
         Button clearBreakpointsButton = new Button("清除所有");
-        clearBreakpointsButton.setOnAction(e -> clearAllBreakpoints());
+        clearBreakpointsButton.setOnAction(e -> {
+            breakpoints.clear();
+            instructionList.refresh();
+        });
 
         toolbar.getChildren().addAll(refreshButton, toggleBreakpointButton, clearBreakpointsButton);
-
         return toolbar;
     }
 
-    /**
-     * Set instructions from disassembler
-     */
-    public void setInstructions(RegisterDisAssembler disAssembler) {
-        instructionData.clear();
-        if (disAssembler != null) {
-            String disassembly = disAssembler.disassembleToString();
-            String[] lines = disassembly.split("\n");
-            instructionData.addAll(lines);
-        }
+    private void bindToState() {
+        // 订阅PC变化 - 高亮当前指令
+        disposables.add(
+            stateModel.getPC()
+                .subscribeOn(Schedulers.computation())
+                .subscribe(pc -> Platform.runLater(() -> {
+                    currentPC = pc;
+                    highlightPC(pc);
+                }), Throwable::printStackTrace)
+        );
+
+        // 订阅执行状态变化 - 高亮当前行
+        disposables.add(
+            stateModel.getExecutionStatus()
+                .subscribeOn(Schedulers.computation())
+                .subscribe(status -> Platform.runLater(() -> {
+                    if (status == ReactiveVMRStateModel.ExecutionStatus.RUNNING ||
+                        status == ReactiveVMRStateModel.ExecutionStatus.PAUSED ||
+                        status == ReactiveVMRStateModel.ExecutionStatus.STEPPING) {
+                        instructionList.refresh();
+                    }
+                }), Throwable::printStackTrace)
+        );
     }
 
-    /**
-     * Highlight current PC position
-     */
-    public void highlightPC(int pc) {
-        currentPC = pc;
-        // Calculate line index (each instruction is 4 bytes)
+    public void setInstructions(RegisterDisAssembler disAssembler) {
+        Platform.runLater(() -> {
+            instructionData.clear();
+            if (disAssembler != null) {
+                String disassembly = disAssembler.disassembleToString();
+                String[] lines = disassembly.split("\n");
+                System.out.println("[ReactiveCodeView] Adding " + lines.length + " instruction lines");
+
+                for (int i = 0; i < lines.length; i++) {
+                    if (!lines[i].isEmpty()) {
+                        System.out.println("[ReactiveCodeView] Line " + i + ": " + lines[i]);
+                        instructionData.add(lines[i]);
+                    }
+                }
+            } else {
+                System.out.println("[ReactiveCodeView] DisAssembler is null");
+            }
+            System.out.println("[ReactiveCodeView] Total items in ListView: " + instructionData.size());
+        });
+    }
+
+    private void highlightPC(int pc) {
         int lineIndex = pc / 4;
         if (lineIndex >= 0 && lineIndex < instructionData.size()) {
             instructionList.getSelectionModel().select(lineIndex);
             instructionList.scrollTo(lineIndex);
         }
-        // Refresh to update cell rendering (highlights and cursor)
         instructionList.refresh();
     }
 
-    /**
-     * Toggle breakpoint at specific PC
-     */
     public void toggleBreakpoint(int pc) {
         if (breakpoints.contains(pc)) {
             breakpoints.remove(pc);
@@ -117,9 +140,6 @@ public class CodeView extends JFXPanelBase {
         instructionList.refresh();
     }
 
-    /**
-     * Toggle breakpoint at selected line
-     */
     public void toggleBreakpointAtSelection() {
         int selectedIndex = instructionList.getSelectionModel().getSelectedIndex();
         if (selectedIndex >= 0) {
@@ -128,46 +148,16 @@ public class CodeView extends JFXPanelBase {
         }
     }
 
-    /**
-     * Clear all breakpoints
-     */
     public void clearAllBreakpoints() {
         breakpoints.clear();
         instructionList.refresh();
     }
 
-    /**
-     * Check if breakpoint exists at PC
-     */
-    public boolean isBreakpointAt(int pc) {
-        return breakpoints.contains(pc);
+    public void dispose() {
+        disposables.clear();
     }
 
-    /**
-     * Get all breakpoints
-     */
-    public Set<Integer> getBreakpoints() {
-        return new HashSet<>(breakpoints);
-    }
-
-    /**
-     * Refresh display
-     */
-    public void refresh() {
-        instructionList.refresh();
-    }
-
-    /**
-     * Get instruction list for external access
-     */
-    public ListView<String> getInstructionList() {
-        return instructionList;
-    }
-
-    /**
-     * Custom list cell for displaying instructions with breakpoints and PC highlight
-     */
-    private class BreakpointListCell extends ListCell<String> {
+    private class ReactiveListCell extends ListCell<String> {
         @Override
         protected void updateItem(String item, boolean empty) {
             super.updateItem(item, empty);
@@ -180,19 +170,18 @@ public class CodeView extends JFXPanelBase {
                 int index = getIndex();
                 int pc = index * 4;
 
-                // Build prefix: breakpoint marker + cursor arrow (for alignment)
                 StringBuilder prefix = new StringBuilder();
 
-                // Check breakpoint
+                // 断点标记
                 if (breakpoints.contains(pc)) {
                     prefix.append("● ");
                 } else {
                     prefix.append("  ");
                 }
 
-                // Check if this is the current PC (cursor position)
+                // PC游标高亮
                 if (index * 4 == currentPC) {
-                    prefix.append("➜ ");  // Cursor arrow
+                    prefix.append("➜ ");
                     setBackground(new Background(new BackgroundFill(
                             Color.rgb(173, 216, 230, 150), CornerRadii.EMPTY, Insets.EMPTY)));
                     setTextFill(Color.BLUE);

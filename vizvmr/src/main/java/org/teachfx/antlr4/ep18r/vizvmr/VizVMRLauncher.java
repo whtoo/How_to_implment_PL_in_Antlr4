@@ -135,8 +135,90 @@ public class VizVMRLauncher extends Application {
         // 初始化日志重定向
         logView.redirectSystemStreams();
 
+        // 设置执行回调 - 关键：让UI响应VM执行事件
+        setupExecutionCallback();
+
         // 初始刷新所有视图
         refreshAll();
+    }
+
+    /**
+     * 设置执行回调 - 连接VM事件到UI更新
+     */
+    private void setupExecutionCallback() {
+        visualBridge.setExecutionCallback(new VMRVisualBridge.ExecutionCallback() {
+            @Override
+            public void onRegisterChanged(int regNum, int oldValue, int newValue) {
+                Platform.runLater(() -> registerView.refresh());
+            }
+
+            @Override
+            public void onMemoryChanged(org.teachfx.antlr4.ep18r.vizvmr.event.MemoryChangeEvent.MemoryType type, int address, int oldValue, int newValue) {
+                Platform.runLater(() -> memoryView.refresh());
+            }
+
+            @Override
+            public void onPCChanged(int oldPC, int newPC) {
+                Platform.runLater(() -> {
+                    // 高亮代码视图中的当前PC
+                    codeView.highlightPC(newPC);
+                    // 更新状态视图中的PC显示
+                    statusView.updatePC(newPC);
+                });
+            }
+
+            @Override
+            public void onStateChanged(org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent.State oldState, org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent.State newState) {
+                Platform.runLater(() -> {
+                    statusView.updateState(newState);
+                    if (newState == org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent.State.RUNNING) {
+                        statusView.startTimer();
+                    } else if (newState == org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent.State.HALTED) {
+                        statusView.stopTimer();
+                    }
+                });
+            }
+
+            @Override
+            public void onInstructionExecuted(int pc, int opcode, String mnemonic, String operands) {
+                Platform.runLater(() -> {
+                    statusView.updateInstruction(mnemonic, operands);
+                    // 更新执行步数
+                    statusView.refresh();
+                });
+            }
+
+            @Override
+            public void onExecutionStarted() {
+                Platform.runLater(() -> {
+                    logView.info("开始执行");
+                });
+            }
+
+            @Override
+            public void onExecutionFinished() {
+                Platform.runLater(() -> {
+                    statusView.stopTimer();
+                    statusView.updateState(org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent.State.HALTED);
+                    logView.info("执行完成");
+                });
+            }
+
+            @Override
+            public void onExecutionPaused() {
+                Platform.runLater(() -> {
+                    logView.info("执行已暂停");
+                });
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                Platform.runLater(() -> {
+                    logView.error("执行错误: " + error.getMessage());
+                    showError("执行错误: " + error.getMessage());
+                });
+            }
+        });
     }
 
     /**

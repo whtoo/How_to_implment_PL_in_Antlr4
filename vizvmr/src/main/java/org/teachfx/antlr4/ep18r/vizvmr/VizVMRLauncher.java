@@ -53,6 +53,16 @@ public class VizVMRLauncher {
         // 创建主窗口
         MainFrame mainFrame = new MainFrame(visualBridge);
 
+        // 添加窗口关闭监听器，防止 JVM 提前退出
+        mainFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                // 停止 VM
+                visualBridge.stop();
+                System.out.println("EP18R 寄存器虚拟机可视化工具已关闭");
+            }
+        });
+
         // 显示窗口
         mainFrame.setVisible(true);
 

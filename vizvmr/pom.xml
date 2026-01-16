@@ -15,11 +15,22 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
+    <properties>
+        <javafx.version>23.0.2</javafx.version>
+    </properties>
+
     <dependencies>
         <!-- 依赖 EP18R 模块 -->
         <dependency>
             <groupId>org.teachfx</groupId>
             <artifactId>ep18r</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
+        <!-- 依赖 Common 模块 (UI库) -->
+        <dependency>
+            <groupId>org.teachfx</groupId>
+            <artifactId>antlr4-common</artifactId>
             <version>1.0.0</version>
         </dependency>
 
@@ -56,19 +67,26 @@
             <scope>test</scope>
         </dependency>
         
-        <!-- AssertJ Swing for UI testing -->
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-swing</artifactId>
-            <version>1.2.0</version>
-            <scope>test</scope>
-        </dependency>
         
         <!-- AssertJ Core -->
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <version>3.23.1</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- TestFX for JavaFX UI testing -->
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-core</artifactId>
+            <version>4.0.18</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-junit5</artifactId>
+            <version>4.0.18</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -98,6 +116,11 @@
                 <version>3.1.0</version>
                 <configuration>
                     <mainClass>org.teachfx.antlr4.ep18r.vizvmr.VizVMRLauncher</mainClass>
+                    <arguments>
+                        <argument>--add-modules=javafx.controls,javafx.fxml</argument>
+                        <argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>
+                        <argument>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</argument>
+                    </arguments>
                 </configuration>
             </plugin>
         </plugins>

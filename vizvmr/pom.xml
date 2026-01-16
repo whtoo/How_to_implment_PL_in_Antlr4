@@ -20,14 +20,14 @@
     </properties>
 
     <dependencies>
-        <!-- 依赖 EP18R 模块 -->
+        <!-- EP18R 模块依赖 -->
         <dependency>
             <groupId>org.teachfx</groupId>
             <artifactId>ep18r</artifactId>
             <version>1.0.0</version>
         </dependency>
 
-        <!-- 依赖 Common 模块 (UI库) -->
+        <!-- Common 模块依赖 (UI库) -->
         <dependency>
             <groupId>org.teachfx</groupId>
             <artifactId>antlr4-common</artifactId>
@@ -109,13 +109,13 @@
                 </executions>
             </plugin>
             
-            <!-- Exec Maven Plugin: 运行 GUI 启动器 -->
+            <!-- Exec Maven Plugin: 运行响应式GUI启动器 -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>org.teachfx.antlr4.ep18r.vizvmr.VizVMRLauncher</mainClass>
+                    <mainClass>org.teachfx.antlr4.ep18r.vizvmr.ReactiveVizVMRLauncher</mainClass>
                     <arguments>
                         <argument>--add-modules=javafx.controls,javafx.fxml</argument>
                         <argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>

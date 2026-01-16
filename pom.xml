@@ -22,6 +22,7 @@
         <maven.compiler.release>21</maven.compiler.release>
         <JUnit.version>5.8.2</JUnit.version>
         <javafx.version>23.0.2</javafx.version>
+        <rxjava.version>3.1.8</rxjava.version>
     </properties>
 
     <!-- 添加依赖项 -->
@@ -81,6 +82,13 @@
             <artifactId>assertj-core</artifactId>
             <version>3.21.0</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- RxJava for Reactive State Management -->
+        <dependency>
+            <groupId>io.reactivex.rxjava3</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>${rxjava.version}</version>
         </dependency>
     </dependencies>
 

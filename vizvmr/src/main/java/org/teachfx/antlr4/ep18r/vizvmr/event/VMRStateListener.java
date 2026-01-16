@@ -24,6 +24,11 @@ public interface VMRStateListener extends EventListener {
     void pcChanged(PCChangeEvent event);
 
     /**
+     * 虚拟机状态变化时调用
+     */
+    void vmStateChanged(VMStateChangeEvent event);
+
+    /**
      * 批量寄存器更新（用于性能优化）
      */
     default void registersUpdated(RegisterChangeEvent[] events) {

@@ -1,7 +1,7 @@
 <!-- vizvmr POM -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -15,40 +15,93 @@
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <properties>
-        <!-- 主类配置：可视化模块的入口点 -->
-        <run.main.entry>org.teachfx.antlr4.ep18r.vizvmr.VizVMRLauncher</run.main.entry>
-    </properties>
+    <dependencies>
+        <!-- 依赖 EP18R 模块 -->
+        <dependency>
+            <groupId>org.teachfx</groupId>
+            <artifactId>ep18r</artifactId>
+            <version>1.0.0</version>
+        </dependency>
 
-    <!-- 构建配置 -->
+        <!-- JUnit 5 测试依赖 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${JUnit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${JUnit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>${JUnit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit Platform Engine for test discovery -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-engine</artifactId>
+            <version>1.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <version>1.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- AssertJ Swing for UI testing -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-swing</artifactId>
+            <version>1.2.0</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- AssertJ Core -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.23.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
     <build>
         <plugins>
-            <!-- Maven JAR 插件 -->
+            <!-- Maven Surefire 插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.3.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>${run.main.entry}</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
-
-            <!-- Maven 执行插件 -->
+            
+            <!-- Exec Maven Plugin: 运行 GUI 启动器 -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>${run.main.entry}</mainClass>
+                    <mainClass>org.teachfx.antlr4.ep18r.vizvmr.VizVMRLauncher</mainClass>
                 </configuration>
             </plugin>
         </plugins>
+
         <!-- 定义源码目录 -->
         <sourceDirectory>src/main/java</sourceDirectory>
         <resources>
@@ -59,30 +112,16 @@
                     <include>**/*.properties</include>
                     <include>**/*.xml</include>
                     <include>**/*.vm</include>
+                    <include>**/*.vmr</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/test/resources</directory>
+                <targetPath>${project.build.directory}/test-classes</targetPath>
+                <includes>
+                    <include>**/*.vmr</include>
                 </includes>
             </resource>
         </resources>
     </build>
-
-    <!-- 依赖配置 -->
-    <dependencies>
-        <!-- 依赖 EP18R 模块 -->
-        <dependency>
-            <groupId>org.teachfx</groupId>
-            <artifactId>ep18r</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-
-        <!-- JUnit 5 测试依赖（继承自父 POM） -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 </project>

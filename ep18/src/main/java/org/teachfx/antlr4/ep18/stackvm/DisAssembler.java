@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 32位定长指令反汇编器
+ * 字节码反汇编器
  * <p>
- * 支持解析统一指令格式: opcode(8) + rd(5) + rs1(5) + rs2(5) + imm(9)
+ * 支持两种指令格式：
+ * <ul>
+ * <li>可变长格式（EP18栈式VM）：opcode(1) + [operand(4)]</li>
+ * <li>32位定长格式（EP18R寄存器VM）：opcode(8) + rd(5) + rs1(5) + rs2(5) + imm(9)</li>
+ * </ul>
  * </p>
  */
 public class DisAssembler {
@@ -14,7 +18,7 @@ public class DisAssembler {
     byte[] code;
     int codeSize;
     BytecodeDefinition def;
-    private boolean use32BitFormat = true; // 默认使用32位格式
+    private boolean use32BitFormat = false;
 
     public DisAssembler(byte[] code, int codeSize, Object[] constPool) {
         this.code = code;
@@ -28,7 +32,8 @@ public class DisAssembler {
     }
 
     public void disassemble() {
-        System.out.println("Disassembly (32-bit format):");
+        String formatName = use32BitFormat ? "32-bit format" : "variable-length format";
+        System.out.println("Disassembly (" + formatName + "):");
         int i = 0;
         int instrCount = 0;
         while (i < codeSize) {

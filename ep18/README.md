@@ -395,32 +395,137 @@ mvn test -Dtest=PerformanceBenchmark
 
 ## 虚拟机指令参考
 
+### 指令格式说明
+
+**EP18栈式虚拟机使用可变长指令格式**（Variable-Length Format）：
+
+- **操作码**: 1字节（0-255）
+- **操作数**: 0或1个32位整数（0或4字节）
+- **字节序**: 大端序（Big-Endian）
+
+**指令格式**：
+```
+[opcode]          // 1字节操作码
+[operand1-4]     // 可选的4字节操作数（大端序）
+```
+
+**示例**：
+```
+iconst 10    →  [29][0x00 0x00 0x00 0x0A]
+              [opcode][4-byte immediate 10]
+
+halt          →  [42]
+              [opcode][no operands]
+```
+
 ### 完整指令集
 
-| 指令 | 描述 | 示例 |
+| 指令 | 操作码 | 操作数 | 描述 | 示例 | 字节码 |
+|------|--------|--------|------|------|--------|
+| **算术指令** | | | | | |
+| `iadd` | 1 | 0 | 整数加法：弹出2个值，相加后压栈 | `iadd` | `01` |
+| `isub` | 2 | 0 | 整数减法：弹出2个值，相减后压栈 | `isub` | `02` |
+| `imul` | 3 | 0 | 整数乘法：弹出2个值，相乘后压栈 | `imul` | `03` |
+| `idiv` | 4 | 0 | 整数除法：弹出2个值，相除后压栈 | `idiv` | `04` |
+| `ineg` | 11 | 0 | 整数取负 | `ineg` | `0B` |
+| **比较指令** | | | | | |
+| `ilt` | 5 | 0 | 整数小于比较 | `ilt` | `05` |
+| `ile` | 6 | 0 | 整数小于等于比较 | `ile` | `06` |
+| `igt` | 7 | 0 | 整数大于比较 | `igt` | `07` |
+| `ige` | 8 | 0 | 整数大于等于比较 | `ige` | `08` |
+| `ieq` | 9 | 0 | 整数等于比较 | `ieq` | `09` |
+| `ine` | 10 | 0 | 整数不等于比较 | `ine` | `0A` |
+| **逻辑指令** | | | | | |
+| `inot` | 12 | 0 | 布尔取反 | `inot` | `0C` |
+| `iand` | 13 | 0 | 位与 | `iand` | `0D` |
+| `ior` | 14 | 0 | 位或 | `ior` | `0E` |
+| `ixor` | 15 | 0 | 位异或 | `ixor` | `0F` |
+| **浮点指令** | | | | | |
+| `fadd` | 16 | 0 | 浮点加法 | `fadd` | `10` |
+| `fsub` | 17 | 0 | 浮点减法 | `fsub` | `11` |
+| `fmul` | 18 | 0 | 浮点乘法 | `fmul` | `12` |
+| `fdiv` | 19 | 0 | 浮点除法 | `fdiv` | `13` |
+| `flt` | 20 | 0 | 浮点小于比较 | `flt` | `14` |
+| `feq` | 21 | 0 | 浮点等于比较 | `feq` | `15` |
+| `itof` | 22 | 0 | 整数转浮点 | `itof` | `16` |
+| **控制流指令** | | | | | |
+| `br addr` | 25 | INT | 无条件跳转 | `br label` | `19 [addr]` |
+| `brt addr` | 26 | INT | 条件为真跳转 | `brt label` | `1A [addr]` |
+| `brf addr` | 27 | INT | 条件为假跳转 | `brf label` | `1B [addr]` |
+| `call func` | 23 | FUNC | 函数调用 | `call add` | `17 [idx]` |
+| `ret` | 24 | 0 | 函数返回 | `ret` | `18` |
+| **常量指令** | | | | | |
+| `cconst` | 28 | INT | 压入字符常量 | `cconst 'A'` | `1C [val]` |
+| `iconst n` | 29 | INT | 压入整数常量 | `iconst 10` | `1D [10]` |
+| `fconst n` | 30 | POOL | 压入浮点常量 | `fconst 3.14` | `1E [idx]` |
+| `sconst n` | 31 | POOL | 压入字符串常量 | `sconst "abc"` | `1F [idx]` |
+| **内存访问指令** | | | | | |
+| `load n` | 32 | INT | 加载局部变量 | `load 0` | `20 [idx]` |
+| `gload n` | 33 | INT | 加载全局变量 | `gload 0` | `21 [idx]` |
+| `fload n` | 34 | INT | 加载结构体字段 | `fload 0` | `22 [offset]` |
+| `store n` | 35 | INT | 存储局部变量 | `store 0` | `23 [idx]` |
+| `gstore n` | 36 | INT | 存储全局变量 | `gstore 0` | `24 [idx]` |
+| `fstore n` | 37 | INT | 存储结构体字段 | `fstore 0` | `25 [offset]` |
+| **结构体指令** | | | | | |
+| `struct n` | 39 | INT | 创建n字段的结构体 | `struct 2` | `27 [nfields]` |
+| **栈操作指令** | | | | | |
+| `null` | 40 | 0 | 压入null引用 | `null` | `28` |
+| `pop` | 41 | 0 | 弹出栈顶值 | `pop` | `29` |
+| **系统指令** | | | | | |
+| `print` | 38 | 0 | 打印栈顶值 | `print` | `26` |
+| `halt` | 42 | 0 | 停止虚拟机 | `halt` | `2A` |
+
+### 全局变量声明
+
+| 指令 | 格式 | 示例 |
 |------|------|------|
-| `iconst_n` | 压入整数常量 | `iconst_5` |
-| `fconst_n` | 压入浮点常量 | `fconst_1` |
-| `iload n` | 加载局部变量 | `iload 0` |
-| `istore n` | 存储局部变量 | `istore 1` |
-| `iadd` | 整数加法 | `iadd` |
-| `isub` | 整数减法 | `isub` |
-| `imul` | 整数乘法 | `imul` |
-| `idiv` | 整数除法 | `idiv` |
-| `ilt` | 整数小于比较 | `ilt` |
-| `igt` | 整数大于比较 | `igt` |
-| `ifeq label` | 等于跳转 | `ifeq loop` |
-| `goto label` | 无条件跳转 | `goto start` |
-| `call label` | 函数调用 | `call add` |
-| `ret` | 函数返回 | `ret` |
-| `.global` | 声明全局变量 | `.global counter` |
-| `gload name` | 加载全局变量 | `gload counter` |
-| `gstore name` | 存储全局变量 | `gstore counter` |
-| `newstruct` | 创建结构体 | `newstruct Point` |
-| `structget n` | 获取结构体字段 | `structget 0` |
-| `structset n` | 设置结构体字段 | `structset 1` |
-| `print` | 打印栈顶值 | `print` |
-| `halt` | 停止虚拟机 | `halt` |
+| `.global` | `.global type name` | `.global int counter` |
+
+全局变量声明指令不生成字节码，而是在汇编时分配数据内存空间。
+
+### 反汇编器使用
+
+**DisAssembler** 提供字节码反汇编功能，支持两种格式：
+
+```java
+// 创建反汇编器（EP18默认使用可变长格式）
+DisAssembler disasm = new DisAssembler(code, codeSize, constPool, false);
+
+// 反汇编所有指令
+disasm.disassemble();
+```
+
+**反汇编输出格式**：
+```
+Disassembly (variable-length format):
+0000:	iconst     10
+0005:	iconst     20
+0010:	iadd
+0011:	halt
+
+Total instructions: 4
+```
+
+**输出说明**：
+- 第一列：指令地址（字节偏移）
+- 第二列：指令名称
+- 第三列：操作数（如有）
+- 注释：32位十六进制表示（仅32位格式）
+
+**错误处理**：
+```
+line 2: Unknown instruction: invalid_instruction
+```
+此错误表示汇编时遇到未知指令。可能原因：
+1. 拼写错误
+2. 指令名称大小写不正确
+3. 指令不在EP18指令集中
+4. 操作数数量或类型错误
+
+**调试建议**：
+- 使用 `-dis` 参数查看反汇编代码验证指令编码
+- 使用 `-trace` 参数跟踪虚拟机执行
+- 检查 `BytecodeDefinition.java` 中定义的完整指令集
 
 ## 公共API参考 (Public API Reference)
 

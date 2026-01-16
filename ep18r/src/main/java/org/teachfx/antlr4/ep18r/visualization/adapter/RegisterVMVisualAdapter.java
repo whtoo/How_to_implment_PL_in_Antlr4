@@ -276,8 +276,9 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
                 throw new IllegalStateException("VM没有加载代码");
             }
             
-            // 设置步进模式
+            // 设置步进模式（同步到VM）
             stepMode.set(true);
+            vm.setStepMode(true);
             
             // 如果已暂停，恢复执行一条指令
             if (paused.get()) {
@@ -310,8 +311,11 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
     
     @Override
     public void pause() {
-        if (running.get() && !paused.get()) {
+        System.out.println("[DEBUG] RegisterVMVisualAdapter.pause() called, running=" + running.get() + ", paused=" + paused.get());
+        if (!paused.get()) {
             paused.set(true);
+            vm.setPaused(true); // 同步到VM
+            System.out.println("[DEBUG] VM paused, vm.isPaused()=" + vm.isPaused());
             vmState.setExecutionState(VMState.ExecutionState.PAUSED);
             
             // 发布暂停事件

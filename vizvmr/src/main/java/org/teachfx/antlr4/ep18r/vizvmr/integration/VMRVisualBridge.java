@@ -145,19 +145,9 @@ public class VMRVisualBridge implements VMRStateListener, VMRExecutionListener {
     private void initializeDisAssembler() {
         byte[] code = vm.getCode();
         int codeSize = vm.getCodeSize();
-        Object[] constPool = getConstantPool();
+        Object[] constPool = vm.getConstantPool();
         if (code != null && codeSize > 0) {
             disAssembler = new RegisterDisAssembler(code, codeSize, constPool);
-        }
-    }
-
-    private Object[] getConstantPool() {
-        try {
-            java.lang.reflect.Field constPoolField = vm.getClass().getDeclaredField("constPool");
-            constPoolField.setAccessible(true);
-            return (Object[]) constPoolField.get(vm);
-        } catch (Exception e) {
-            return new Object[0];
         }
     }
 

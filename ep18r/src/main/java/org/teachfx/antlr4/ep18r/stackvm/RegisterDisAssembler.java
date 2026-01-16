@@ -42,19 +42,18 @@ public class RegisterDisAssembler {
      * @return 下一条指令的指针
      */
     public int disassembleInstruction(int ip) {
-        // 读取操作码（1字节）
-        int opcode = code[ip] & 0xFF;
-        ip++;
-
-        // 读取操作数（4字节）
-        int operand = 0;
+        // 读取完整的32位指令字（大端序）
+        int instructionWord = 0;
         if (ip + 3 < codeSize) {
-            operand = ((code[ip] & 0xFF) << 24) |
-                      ((code[ip + 1] & 0xFF) << 16) |
-                      ((code[ip + 2] & 0xFF) << 8) |
-                      (code[ip + 3] & 0xFF);
+            instructionWord = ((code[ip] & 0xFF) << 24) |
+                            ((code[ip + 1] & 0xFF) << 16) |
+                            ((code[ip + 2] & 0xFF) << 8) |
+                            (code[ip + 3] & 0xFF);
         }
         ip += 4;
+
+        // 从指令字中提取操作码（bits 31-26）
+        int opcode = (instructionWord >> 26) & 0x3F;
 
         // 获取指令信息
         RegisterBytecodeDefinition.Instruction instr = null;
@@ -63,42 +62,34 @@ public class RegisterDisAssembler {
         }
 
         if (instr == null) {
-            System.out.printf("%04d: [INVALID opcode 0x%02x]", ip - 5, opcode);
+            System.out.printf("%04d: [INVALID opcode 0x%02x]", ip - 4, opcode);
             return ip;
         }
 
         // 打印指令地址和名称
-        System.out.printf("%04d: %-8s", ip - 5, instr.name);
+        System.out.printf("%04d: %-8s", ip - 4, instr.name);
 
-        // 根据指令格式反汇编操作数
         if (instr.n == 0) {
-            // 无操作数指令
             return ip;
         }
 
-        // 提取操作数字段
         int rd = 0, rs1 = 0, rs2 = 0, imm = 0;
         switch (instr.getFormat()) {
             case RegisterBytecodeDefinition.FORMAT_R:
-                // R类型: op rd, rs1, rs2
-                rd = (operand >> 21) & 0x1F;
-                rs1 = (operand >> 16) & 0x1F;
-                rs2 = (operand >> 11) & 0x1F;
+                rd = (instructionWord >> 21) & 0x1F;
+                rs1 = (instructionWord >> 16) & 0x1F;
+                rs2 = (instructionWord >> 11) & 0x1F;
                 break;
             case RegisterBytecodeDefinition.FORMAT_I:
-                // I类型: op rd, rs1, imm 或 op rd, imm
-                rd = (operand >> 21) & 0x1F;
-                rs1 = (operand >> 16) & 0x1F;
-                imm = operand & 0xFFFF;
-                // 符号扩展
+                rd = (instructionWord >> 21) & 0x1F;
+                rs1 = (instructionWord >> 16) & 0x1F;
+                imm = instructionWord & 0xFFFF;
                 if ((imm & 0x8000) != 0) {
                     imm |= 0xFFFF0000;
                 }
                 break;
             case RegisterBytecodeDefinition.FORMAT_J:
-                // J类型: op imm
-                imm = operand & 0x3FFFFFF;
-                // 符号扩展
+                imm = instructionWord & 0x3FFFFFF;
                 if ((imm & 0x2000000) != 0) {
                     imm |= 0xFC000000;
                 }
@@ -164,77 +155,63 @@ public class RegisterDisAssembler {
 
     /**
      * 反汇编单条指令并返回字符串
-     * 
+     *
      * @param ip 当前指令指针（字节偏移）
      * @return 反汇编后的指令字符串
      */
     public String disassembleInstructionToString(int ip) {
-        // 保存原始ip用于格式输出
         int startIp = ip;
-        
-        // 读取操作码（1字节）
-        int opcode = code[ip] & 0xFF;
-        ip++;
-        
-        // 读取操作数（4字节）
-        int operand = 0;
+
+        int instructionWord = 0;
         if (ip + 3 < codeSize) {
-            operand = ((code[ip] & 0xFF) << 24) |
-                      ((code[ip + 1] & 0xFF) << 16) |
-                      ((code[ip + 2] & 0xFF) << 8) |
-                      (code[ip + 3] & 0xFF);
+            instructionWord = ((code[ip] & 0xFF) << 24) |
+                            ((code[ip + 1] & 0xFF) << 16) |
+                            ((code[ip + 2] & 0xFF) << 8) |
+                            (code[ip + 3] & 0xFF);
         }
         ip += 4;
-        
-        // 获取指令信息
+
+        int opcode = (instructionWord >> 26) & 0x3F;
+
         RegisterBytecodeDefinition.Instruction instr = null;
         if (opcode >= 0 && opcode < instructions.length) {
             instr = instructions[opcode];
         }
-        
+
         if (instr == null) {
             return String.format("%04d: [INVALID opcode 0x%02x]", startIp, opcode);
         }
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("%04d: %-8s", startIp, instr.name));
-        
-        // 根据指令格式反汇编操作数
+
         if (instr.n == 0) {
-            // 无操作数指令
             return sb.toString();
         }
-        
-        // 提取操作数字段
+
         int rd = 0, rs1 = 0, rs2 = 0, imm = 0;
         switch (instr.getFormat()) {
             case RegisterBytecodeDefinition.FORMAT_R:
-                // R类型: op rd, rs1, rs2
-                rd = (operand >> 21) & 0x1F;
-                rs1 = (operand >> 16) & 0x1F;
-                rs2 = (operand >> 11) & 0x1F;
+                rd = (instructionWord >> 21) & 0x1F;
+                rs1 = (instructionWord >> 16) & 0x1F;
+                rs2 = (instructionWord >> 11) & 0x1F;
                 break;
             case RegisterBytecodeDefinition.FORMAT_I:
-                // I类型: op rd, rs1, imm 或 op rd, imm
-                rd = (operand >> 21) & 0x1F;
-                rs1 = (operand >> 16) & 0x1F;
-                imm = operand & 0xFFFF;
-                // 符号扩展
+                rd = (instructionWord >> 21) & 0x1F;
+                rs1 = (instructionWord >> 16) & 0x1F;
+                imm = instructionWord & 0xFFFF;
                 if ((imm & 0x8000) != 0) {
                     imm |= 0xFFFF0000;
                 }
                 break;
             case RegisterBytecodeDefinition.FORMAT_J:
-                // J类型: op imm
-                imm = operand & 0x3FFFFFF;
-                // 符号扩展
+                imm = instructionWord & 0x3FFFFFF;
                 if ((imm & 0x2000000) != 0) {
                     imm |= 0xFC000000;
                 }
                 break;
         }
-        
-        // 根据操作数类型生成显示字符串
+
         List<String> operands = new ArrayList<>();
         for (int i = 0; i < instr.n; i++) {
             int type = instr.getOperandType(i);
@@ -248,7 +225,6 @@ public class RegisterDisAssembler {
                     operands.add(String.valueOf(imm));
                     break;
                 case RegisterBytecodeDefinition.POOL:
-                    // 常量池引用
                     if (imm >= 0 && imm < constPool.length) {
                         Object constant = constPool[imm];
                         if (constant instanceof String) {
@@ -263,7 +239,6 @@ public class RegisterDisAssembler {
                     }
                     break;
                 case RegisterBytecodeDefinition.FUNC:
-                    // 函数引用
                     if (imm >= 0 && imm < constPool.length) {
                         Object constant = constPool[imm];
                         if (constant instanceof FunctionSymbol) {
@@ -281,13 +256,12 @@ public class RegisterDisAssembler {
                     break;
             }
         }
-        
-        // 添加操作数到字符串
+
         for (int i = 0; i < operands.size(); i++) {
             if (i > 0) sb.append(", ");
             sb.append(operands.get(i));
         }
-        
+
         return sb.toString();
     }
 
@@ -301,24 +275,19 @@ public class RegisterDisAssembler {
 
         int ip = 0;
         while (ip < codeSize) {
-            // 保存当前ip用于计算下一条指令
+            int instructionWord = 0;
             int startIp = ip;
 
-            // 读取操作码
-            int opcode = code[ip] & 0xFF;
-            ip++;
-
-            // 读取操作数
-            int operand = 0;
             if (ip + 3 < codeSize) {
-                operand = ((code[ip] & 0xFF) << 24) |
-                          ((code[ip + 1] & 0xFF) << 16) |
-                          ((code[ip + 2] & 0xFF) << 8) |
-                          (code[ip + 3] & 0xFF);
+                instructionWord = ((code[ip] & 0xFF) << 24) |
+                                ((code[ip + 1] & 0xFF) << 16) |
+                                ((code[ip + 2] & 0xFF) << 8) |
+                                (code[ip + 3] & 0xFF);
             }
             ip += 4;
 
-            // 获取指令信息
+            int opcode = (instructionWord >> 26) & 0x3F;
+
             RegisterBytecodeDefinition.Instruction instr = null;
             if (opcode >= 0 && opcode < instructions.length) {
                 instr = instructions[opcode];
@@ -332,8 +301,43 @@ public class RegisterDisAssembler {
             sb.append(String.format("%04d: %-8s", startIp, instr.name));
 
             if (instr.n > 0) {
-                // 简化：只显示操作数值（实际实现应解码）
-                sb.append(String.format("0x%08x", operand));
+                int rd = 0, rs1 = 0, rs2 = 0, imm = 0;
+                switch (instr.getFormat()) {
+                    case RegisterBytecodeDefinition.FORMAT_R:
+                        rd = (instructionWord >> 21) & 0x1F;
+                        rs1 = (instructionWord >> 16) & 0x1F;
+                        rs2 = (instructionWord >> 11) & 0x1F;
+                        sb.append(String.format("r%d, r%d, r%d", rd, rs1, rs2));
+                        break;
+                    case RegisterBytecodeDefinition.FORMAT_I:
+                        rd = (instructionWord >> 21) & 0x1F;
+                        rs1 = (instructionWord >> 16) & 0x1F;
+                        imm = instructionWord & 0xFFFF;
+                        if ((imm & 0x8000) != 0) {
+                            imm |= 0xFFFF0000;
+                        }
+                        if (instr.n == 2) {
+                            int type1 = instr.getOperandType(0);
+                            int type2 = instr.getOperandType(1);
+                            if (type1 == RegisterBytecodeDefinition.REG && type2 == RegisterBytecodeDefinition.REG) {
+                                sb.append(String.format("r%d, r%d", rd, rs1));
+                            } else {
+                                sb.append(String.format("r%d, %d", rd, imm));
+                            }
+                        } else if (instr.n == 3) {
+                            sb.append(String.format("r%d, r%d, %d", rd, rs1, imm));
+                        } else {
+                            sb.append(String.format("0x%04x", imm & 0xFFFF));
+                        }
+                        break;
+                    case RegisterBytecodeDefinition.FORMAT_J:
+                        imm = instructionWord & 0x3FFFFFF;
+                        if ((imm & 0x2000000) != 0) {
+                            imm |= 0xFC000000;
+                        }
+                        sb.append(String.format("%d", imm));
+                        break;
+                }
             }
 
             sb.append("\n");

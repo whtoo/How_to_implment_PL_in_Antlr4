@@ -1,0 +1,52 @@
+.def main: args=0, locals=1
+    ; 测试 fib(10) = 55
+    ; ABI: 参数通过a0(r2)传递
+    li r2, 10        ; r2 = 10 (参数 n)
+    call fib         ; 调用 fib(10)
+    ; fib(10) 返回后，结果在 r2 中 (ABI: a0)
+    print r2         ; 打印结果 (应该输出 55)
+    halt
+
+; fib(n): 计算第n个fibonacci数
+; ABI: 输入参数 r2 = n, 输出 r2 = fib(n)
+.def fib: args=1, locals=2
+    ; 保存参数 n 到栈帧
+    sw r2, fp, -16     ; 保存 n 到 fp-16 (局部变量0)
+
+    ; 检查 n < 2
+    li r3, 2         ; r3 = 2
+    sge r4, r2, r3   ; r4 = (n >= 2)
+    jf r4, base_case ; 如果 n < 2，跳转到 base_case
+
+    ; 递归调用 fib(n-1)
+    ; 从栈帧加载 n
+    lw r2, fp, -16     ; r2 = n
+    li r5, 1         ; r5 = 1
+    sub r2, r2, r5   ; r2 = n - 1
+    call fib         ; 调用 fib(n-1)
+
+    ; 此时 r2 = fib(n-1)
+    ; 保存结果到栈帧
+    sw r2, fp, -20     ; 保存 fib(n-1) 到 fp-20 (局部变量1)
+
+    ; 递归调用 fib(n-2)
+    ; 从栈帧加载 n
+    lw r2, fp, -16     ; r2 = n
+    li r5, 2         ; r5 = 2
+    sub r2, r2, r5   ; r2 = n - 2
+    call fib         ; 调用 fib(n-2)
+
+    ; 此时 r2 = fib(n-2)
+    ; 从栈帧加载 fib(n-1)
+    lw r3, fp, -20     ; r3 = fib(n-1)
+
+    ; 计算 fib(n-1) + fib(n-2)
+    add r2, r3, r2   ; r2 = fib(n-1) + fib(n-2) (ABI: 结果在r2)
+    ret
+
+base_case:
+    ; n < 2 时返回 n
+    ; ABI: 返回值在r2中
+    ; 从栈帧加载 n
+    lw r2, fp, -16     ; r2 = n
+    ret

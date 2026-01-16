@@ -1,0 +1,6 @@
+.def main: args=0, locals=0
+    ; ABI: 使用a0(r2)作为返回值寄存器
+    li r2, 10        ; r2 = 10
+    neg r3, r2       ; r3 = -r2
+    print r3         ; 打印r3 (应该输出-10)
+    halt

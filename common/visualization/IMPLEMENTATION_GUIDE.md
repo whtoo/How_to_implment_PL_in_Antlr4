@@ -348,6 +348,647 @@ dataBinding.bindEvent("stepComplete", event -> {
 3. 配置事件发布
 4. 测试集成功能
 
+
+## 🎨 JavaFX 迁移支持
+
+### 1. 框架兼容性设计
+
+为了支持从Swing到JavaFX的平滑迁移，common模块提供了双框架兼容性设计。
+
+### 1.1 设计原则
+
+1. **抽象隔离**: UI框架细节被抽象到基类中
+2. **事件统一**: 事件系统与UI框架解耦
+3. **适配器模式**: 使用适配器处理框架差异
+4. **渐进式迁移**: 支持两种框架并行运行
+
+### 1.2 架构变更
+
+```
+原有架构:
+┌─────────────────────────────────────────────┐
+│         Swing UI层 (VisualPanelBase)        │
+├─────────────────────────────────────────────┤
+│         事件系统层 (EventBus)               │
+├─────────────────────────────────────────────┤
+│         虚拟机层 (IVirtualMachine)          │
+└─────────────────────────────────────────────┘
+
+目标架构:
+┌─────────────────────────────────────────────┐
+│         UI层 (抽象)                         │
+│  ┌──────────────┐  ┌──────────────┐       │
+│  │ Swing实现    │  │ JavaFX实现   │       │
+│  │VisualPanelBase│ │ JFXPanelBase │       │
+│  └──────────────┘  └──────────────┘       │
+├─────────────────────────────────────────────┤
+│         事件系统层 (EventBus)               │
+├─────────────────────────────────────────────┤
+│         虚拟机层 (IVirtualMachine)          │
+└─────────────────────────────────────────────┘
+```
+
+### 2. JavaFX基类实现
+
+### 2.1 JFXPanelBase
+
+```java
+package org.teachfx.antlr4.common.visualization.ui.javafx;
+
+import javafx.application.Platform;
+import javafx.scene.layout.Region;
+
+/**
+ * JavaFX面板基类
+ * 对应Swing版本的VisualPanelBase
+ */
+public abstract class JFXPanelBase extends Region {
+    protected final String panelId;
+    protected volatile boolean initialized;
+    protected volatile boolean updating;
+    
+    protected JFXPanelBase(String panelId) {
+        this.panelId = panelId != null ? panelId : this.getClass().getSimpleName();
+        this.initialized = false;
+        this.updating = false;
+        initializePanel();
+    }
+    
+    /**
+     * 初始化面板
+     */
+    private void initializePanel() {
+        setId(panelId);
+        setPrefSize(getPreferredWidth(), getPreferredHeight());
+        setupStylesheets();
+        initializeComponents();
+        initialized = true;
+    }
+    
+    /**
+     * 设置样式表
+     */
+    private void setupStylesheets() {
+        String css = getClass().getResource("/css/" + panelId.toLowerCase() + ".css").toExternalForm();
+        if (css != null) {
+            getStylesheets().add(css);
+        }
+    }
+    
+    /**
+     * 获取首选宽度
+     */
+    protected double getPreferredWidth() {
+        return 400;
+    }
+    
+    /**
+     * 获取首选高度
+     */
+    protected double getPreferredHeight() {
+        return 300;
+    }
+    
+    /**
+     * 安全更新UI (线程安全)
+     */
+    protected final void safeUpdateUI(Runnable updateAction) {
+        if (Platform.isFxApplicationThread()) {
+            updateAction.run();
+        } else {
+            Platform.runLater(updateAction);
+        }
+    }
+    
+    /**
+     * 批量更新UI
+     */
+    protected final void batchUpdate(Runnable... updates) {
+        if (updating) {
+            return;
+        }
+        
+        updating = true;
+        try {
+            safeUpdateUI(() -> {
+                for (Runnable update : updates) {
+                    update.run();
+                }
+            });
+        } finally {
+            updating = false;
+        }
+    }
+    
+    /**
+     * 初始化组件 (抽象方法)
+     */
+    protected abstract void initializeComponents();
+    
+    /**
+     * 刷新面板
+     */
+    public void refresh() {
+        safeUpdateUI(this::requestLayout);
+    }
+    
+    /**
+     * 重置面板状态
+     */
+    public void reset() {
+        safeUpdateUI(() -> {
+            getChildren().clear();
+            initializeComponents();
+            requestLayout();
+        });
+    }
+    
+    /**
+     * 清理资源
+     */
+    public void cleanup() {
+        // JavaFX自动管理大多数资源
+    }
+    
+    public String getPanelId() {
+        return panelId;
+    }
+    
+    public boolean isInitialized() {
+        return initialized;
+    }
+}
+```
+
+### 2.2 线程模型对比
+
+| 方面 | Swing | JavaFX |
+|------|-------|--------|
+| UI线程 | EDT (Event Dispatch Thread) | JavaFX Application Thread |
+| 线程检查 | SwingUtilities.isEventDispatchThread() | Platform.isFxApplicationThread() |
+| 异步更新 | SwingUtilities.invokeLater() | Platform.runLater() |
+| 批量更新 | RepaintManager | requestLayout() |
+
+### 3. 事件适配器
+
+### 3.1 JFXEventAdapter
+
+```java
+package org.teachfx.antlr4.common.visualization.event.javafx;
+
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import org.teachfx.antlr4.common.visualization.event.VMEvent;
+
+/**
+ * JavaFX事件适配器
+ * 将Swing事件模型转换为JavaFX事件模型
+ */
+public class JFXEventAdapter {
+    
+    /**
+     * 将VMEvent转换为JavaFX Event
+     */
+    public static Event toJFXEvent(VMEvent vmEvent) {
+        if (vmEvent == null) {
+            return null;
+        }
+        
+        return new Event(vmEvent.getClass().getSimpleName());
+    }
+    
+    /**
+     * 创建JavaFX事件处理器
+     */
+    public static <T extends VMEvent> EventHandler<Event> createHandler(
+            java.util.function.Consumer<T> handler) {
+        return event -> {
+            // 从event中提取原始VMEvent
+            if (event.getSource() instanceof VMEvent) {
+                @SuppressWarnings("unchecked")
+                T vmEvent = (T) event.getSource();
+                handler.accept(vmEvent);
+            }
+        };
+    }
+    
+    /**
+     * 将JavaFX事件转换回VMEvent
+     */
+    public static VMEvent fromJFXEvent(Event event) {
+        if (event == null) {
+            return null;
+        }
+        
+        Object source = event.getSource();
+        if (source instanceof VMEvent) {
+            return (VMEvent) source;
+        }
+        
+        return null;
+    }
+}
+```
+
+### 4. 数据绑定兼容性
+
+### 4.1 双框架绑定支持
+
+```java
+/**
+ * 数据绑定系统
+ * 支持Swing和JavaFX两种框架
+ */
+public class DataBinding {
+    private final Object target;
+    private final UIFramework framework;
+    
+    public enum UIFramework {
+        SWING,
+        JAVAFX
+    }
+    
+    public DataBinding(Object target, UIFramework framework) {
+        this.target = target;
+        this.framework = framework;
+    }
+    
+    /**
+     * 绑定属性 - Swing版本
+     */
+    public void bindSwingProperty(String propertyName, 
+                                   java.util.function.Supplier<Object> getter,
+                                   java.util.function.Consumer<Object> setter) {
+        // Swing属性绑定实现
+    }
+    
+    /**
+     * 绑定属性 - JavaFX版本
+     */
+    public void bindJFXProperty(String propertyName,
+                                 javafx.beans.property.Property<?> javafxProperty) {
+        // JavaFX属性绑定实现
+    }
+    
+    /**
+     * 创建JavaFX Observable属性
+     */
+    public static javafx.beans.property.Property<?> createObservable(
+            java.util.function.Supplier<Object> getter,
+            java.util.function.Consumer<Object> setter) {
+        
+        return new javafx.beans.property.ObjectPropertyBase<Object>() {
+            @Override
+            public Object getValue() {
+                return getter.get();
+            }
+            
+            @Override
+            public void setValue(Object v) {
+                setter.accept(v);
+            }
+        };
+    }
+}
+```
+
+### 5. 主题系统扩展
+
+### 5.1 JavaFX CSS主题
+
+```css
+/* themes/light.css */
+.root {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #000000;
+    -fx-font-family: "Segoe UI", Arial;
+}
+
+.panel {
+    -fx-background-color: #F5F5F5;
+    -fx-border-color: #DDDDDD;
+    -fx-padding: 10px;
+}
+
+.register-cell {
+    -fx-background-color: #DCDCDC;
+    -fx-border-color: #A9A9A9;
+    -fx-padding: 5px;
+}
+
+.register-modified {
+    -fx-background-color: #FFB6C1;
+}
+
+.register-special {
+    -fx-background-color: #ADD8E6;
+}
+
+/* themes/dark.css */
+.root {
+    -fx-background-color: #2D2D2D;
+    -fx-text-fill: #FFFFFF;
+    -fx-font-family: "Segoe UI", Arial;
+}
+
+.panel {
+    -fx-background-color: #3C3C3C;
+    -fx-border-color: #555555;
+    -fx-padding: 10px;
+}
+```
+
+### 5.2 主题加载
+
+```java
+/**
+ * 主题管理器 - JavaFX版本
+ */
+public class JFXThemeManager {
+    private static final String THEME_PATH = "/css/themes/";
+    
+    public enum Theme {
+        LIGHT("light.css"),
+        DARK("dark.css"),
+        EDUCATIONAL("educational.css"),
+        HIGH_CONTRAST("high-contrast.css");
+        
+        private final String fileName;
+        
+        Theme(String fileName) {
+            this.fileName = fileName;
+        }
+        
+        public String getFileName() {
+            return fileName;
+        }
+    }
+    
+    /**
+     * 加载主题到场景
+     */
+    public static void loadTheme(javafx.scene.Scene scene, Theme theme) {
+        String css = JFXThemeManager.class.getResource(
+            THEME_PATH + theme.getFileName()
+        ).toExternalForm();
+        
+        scene.getStylesheets().clear();
+        scene.getStylesheets().add(css);
+    }
+    
+    /**
+     * 动态切换主题
+     */
+    public static void switchTheme(javafx.scene.Scene scene, Theme newTheme) {
+        loadTheme(scene, newTheme);
+    }
+}
+```
+
+### 6. 教育功能支持
+
+### 6.1 高亮动画
+
+```java
+/**
+ * 教育高亮效果 - JavaFX版本
+ */
+public class EducationalHighlightFX {
+    
+    /**
+     * 高亮组件
+     */
+    public static void highlight(javafx.scene.Node node, 
+                                  javafx.scene.paint.Color highlightColor,
+                                  int durationMs) {
+        // 保存原始样式
+        String originalStyle = node.getStyle();
+        
+        // 应用高亮样式
+        node.setStyle(String.format(
+            "-fx-background-color: %s; -fx-border-color: %s;",
+            toHexString(highlightColor),
+            toHexString(highlightColor)
+        ));
+        
+        // 设置定时器移除高亮
+        javafx.animation.Timeline timeline = new javafx.animation.Timeline(
+            new javafx.animation.KeyFrame(
+                javafx.duration.Duration.millis(durationMs),
+                e -> node.setStyle(originalStyle)
+            )
+        );
+        timeline.play();
+    }
+    
+    /**
+     * 脉冲动画效果
+     */
+    public static void pulse(javafx.scene.Node node) {
+        javafx.animation.ScaleTransition transition = 
+            new javafx.animation.ScaleTransition(
+                javafx.duration.Duration.millis(300), node
+            );
+        transition.setToX(1.1);
+        transition.setToY(1.1);
+        transition.setAutoReverse(true);
+        transition.setCycleCount(2);
+        transition.play();
+    }
+    
+    private static String toHexString(javafx.scene.paint.Color color) {
+        return String.format("#%02X%02X%02X",
+            (int) (color.getRed() * 255),
+            (int) (color.getGreen() * 255),
+            (int) (color.getBlue() * 255)
+        );
+    }
+}
+```
+
+### 7. 迁移检查清单
+
+### 7.1 组件迁移检查
+
+对于每个需要迁移的Swing面板，检查以下项目：
+
+- [ ] **继承关系**: 改为继承JFXPanelBase
+- [ ] **布局管理**: 使用JavaFX布局容器替代Swing布局
+- [ ] **组件替换**: 使用JavaFX等价组件
+- [ ] **事件处理**: 转换为JavaFX事件处理器
+- [ ] **线程安全**: 确保在JavaFX Application Thread更新UI
+- [ ] **样式迁移**: 将LookAndFeel转换为CSS样式
+- [ ] **数据绑定**: 使用JavaFX Observable属性
+- [ ] **测试覆盖**: 添加TestFX测试用例
+
+### 7.2 常见问题解决
+
+1. **布局不一致**
+   - 问题: JavaFX和Swing布局行为不同
+   - 解决: 使用FXML可视化布局，细粒度调整
+
+2. **字体渲染差异**
+   - 问题: 字体大小和渲染略有不同
+   - 解决: 使用相对单位(percentage)而非绝对像素
+
+3. **事件顺序差异**
+   - 问题: JavaFX事件顺序可能不同
+   - 解决: 使用Platform.runLater确保顺序一致
+
+4. **性能差异**
+   - 问题: JavaFX首次渲染较慢
+   - 解决: 使用预热渲染和缓存
+
+### 8. 性能优化
+
+### 8.1 渲染优化
+
+```java
+/**
+ * 性能优化工具类
+ */
+public class JFXPerformanceOptimizer {
+    
+    /**
+     * 启用硬件加速
+     */
+    public static void enableHardwareAcceleration(javafx.stage.Stage stage) {
+        // JavaFX默认使用硬件加速
+        // 确认GPU渲染可用
+        System.setProperty("prism.order", "sw,es2");
+    }
+    
+    /**
+     * 批量更新优化
+     */
+    public static void batchUpdates(Runnable updates) {
+        // 在单个Platform.runLater中执行多个更新
+        Platform.runLater(() -> {
+            long start = System.nanoTime();
+            updates.run();
+            long duration = System.nanoTime() - start;
+            
+            if (duration > 16_000_000) { // 超过16ms（60fps）
+                System.out.println("Warning: UI update took " + 
+                    (duration / 1_000_000) + "ms");
+            }
+        });
+    }
+    
+    /**
+     * 虚拟化列表优化
+     */
+    public static <T> javafx.scene.control.ListView<T> createVirtualList(
+            java.util.List<T> items) {
+        
+        javafx.scene.control.ListView<T> listView = 
+            new javafx.scene.control.ListView<>();
+        listView.setItems(javafx.collections.FXCollections.observableList(items));
+        listView.setCellFactory(lv -> new javafx.scene.control.ListCell<T>() {
+            @Override
+            protected void updateItem(T item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.toString());
+                }
+            }
+        });
+        
+        return listView;
+    }
+}
+```
+
+### 9. 测试策略
+
+### 9.1 TestFX测试示例
+
+```java
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import org.junit.jupiter.api.Test;
+import org.testfx.api.FxRobot;
+import org.testfx.framework.junit5.ApplicationTest;
+
+import static org.testfx.api.FxAssert.verifyThat;
+import static org.testfx.matcher.control.LabeledMatchers.hasText;
+
+public class RegisterViewTest extends ApplicationTest {
+    
+    private RegisterViewController controller;
+    
+    @Override
+    public void start(Stage stage) throws Exception {
+        VMRVisualBridge visualBridge = createMockBridge();
+        controller = new RegisterViewController(visualBridge);
+        
+        FXMLLoader loader = new FXMLLoader(
+            getClass().getResource("RegisterView.fxml")
+        );
+        loader.setController(controller);
+        
+        Parent root = loader.load();
+        Scene scene = new Scene(root);
+        
+        stage.setScene(scene);
+        stage.show();
+    }
+    
+    @Test
+    public void testRegisterInitialization() {
+        // 验证寄存器网格初始化
+        verifyThat(".register-cell", org.testfx.matcher.base.NodeMatchers.isVisible());
+    }
+    
+    @Test
+    public void testRegisterUpdate() {
+        // 模拟寄存器更新
+        controller.updateRegister(0, 100);
+        
+        // 验证UI更新
+        verifyThat("#register-0", hasText("0x00000064 (100)"));
+    }
+    
+    @Test
+    public void testColorCoding() {
+        // 验证颜色编码
+        controller.updateRegister(0, 0);
+        
+        // 零寄存器应该显示绿色
+        verifyThat("#register-0", hasStyle("-fx-background-color: #90EE90"));
+    }
+}
+```
+
+### 10. 资源文件
+
+### 10.1 目录结构
+
+```
+common/src/main/resources/
+├── css/
+│   ├── themes/
+│   │   ├── light.css
+│   │   ├── dark.css
+│   │   ├── educational.css
+│   │   └── high-contrast.css
+│   ├── registerview.css
+│   ├── controlview.css
+│   └── memoryview.css
+└── fxml/
+    ├── RegisterView.fxml
+    ├── ControlView.fxml
+    ├── MemoryView.fxml
+    ├── CodeView.fxml
+    ├── StackView.fxml
+    ├── StatusView.fxml
+    └── LogView.fxml
+```
+
 ---
 
 这个设计框架为虚拟机可视化工具提供了坚实的基础，支持未来扩展和功能增强。通过遵循这个指南，可以构建出高性能、教育友好、可维护的可视化系统。

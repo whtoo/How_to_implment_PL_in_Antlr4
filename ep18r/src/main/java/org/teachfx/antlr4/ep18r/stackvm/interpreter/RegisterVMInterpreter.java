@@ -21,18 +21,8 @@ import org.teachfx.antlr4.ep18r.pass.codegen.ByteCodeEncoder;
 import java.io.InputStream;
 
 /**
- * 可视化监听器接口
- * 用于监听虚拟机执行过程中的事件
+ * 可视化监听器接口 - 已移动到单独文件 VisualizationListener.java
  */
-interface VisualizationListener {
-    void beforeInstructionExecute(int pc, int opcode, String instruction);
-    void afterInstructionExecute(int pc, int opcode, String instruction, int[] registers);
-    void onPause(int pc);
-    void onResume(int pc);
-    void onBreakpointHit(int pc);
-    void onRegisterChange(int regNum, int oldValue, int newValue);
-    void onMemoryChange(int address, int oldValue, int newValue);
-}
 
 public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
     // 虚拟机配置
@@ -76,6 +66,8 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
     // 可视化支持
     private volatile boolean paused = false;
     private volatile boolean stepMode = false;
+    private volatile boolean autoStepMode = false;
+    private volatile int autoStepDelay = 200;
     private final java.util.Set<Integer> breakpoints = new java.util.HashSet<>();
     private final java.util.List<VisualizationListener> visualizationListeners = new java.util.ArrayList<>();
     private final ByteCodeEncoder byteCodeEncoder = new ByteCodeEncoder();
@@ -154,14 +146,42 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
     public synchronized void setStepMode(boolean stepMode) {
         this.stepMode = stepMode;
     }
-    
+
     /**
      * 检查是否为步进模式
      */
     public boolean isStepMode() {
         return stepMode;
     }
-    
+
+    /**
+     * 设置自动步进模式
+     */
+    public synchronized void setAutoStepMode(boolean autoStepMode) {
+        this.autoStepMode = autoStepMode;
+    }
+
+    /**
+     * 检查是否为自动步进模式
+     */
+    public boolean isAutoStepMode() {
+        return autoStepMode;
+    }
+
+    /**
+     * 设置自动步进延迟（毫秒）
+     */
+    public synchronized void setAutoStepDelay(int delayMs) {
+        this.autoStepDelay = delayMs;
+    }
+
+    /**
+     * 获取自动步进延迟（毫秒）
+     */
+    public int getAutoStepDelay() {
+        return autoStepDelay;
+    }
+
     /**
      * 添加断点
      */
@@ -408,6 +428,17 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
             int[] registersCopy = new int[registers.length];
             System.arraycopy(registers, 0, registersCopy, 0, registers.length);
             notifyAfterInstructionExecute(programCounter, opcode, instructionText, registersCopy);
+
+            // ==================== 可视化支持：自动步进延迟 ====================
+            if (autoStepMode && !paused) {
+                try {
+                    Thread.sleep(autoStepDelay);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    running = false;
+                    break;
+                }
+            }
 
             // ==================== 可视化支持：步进模式处理 ====================
             if (stepMode) {

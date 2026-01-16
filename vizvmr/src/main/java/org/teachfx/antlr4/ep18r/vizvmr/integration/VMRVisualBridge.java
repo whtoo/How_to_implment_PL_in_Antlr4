@@ -60,12 +60,10 @@ public class VMRVisualBridge implements VMRStateListener, VMRExecutionListener {
         return new ExecutionListener() {
             @Override
             public void afterInstructionExecute(int pc, String instruction, Object result) {
-                // 同步PC到状态模型
                 stateModel.setProgramCounter(pc);
-                
-                // 使用VM公共API同步所有寄存器到状态模型
                 syncRegistersToStateModel();
-                
+                stateModel.notifyInstructionExecuted(pc, 0, instruction, "");
+
                 if (executionCallback != null) {
                     executionCallback.onPCChanged(-1, pc);
                 }
@@ -268,6 +266,22 @@ public class VMRVisualBridge implements VMRStateListener, VMRExecutionListener {
             return disAssembler.disassembleToString();
         }
         return "";
+    }
+
+    public void setAutoStepMode(boolean autoStepMode) {
+        vmAdapter.setAutoStepMode(autoStepMode);
+    }
+
+    public void setAutoStepDelay(int delayMs) {
+        vmAdapter.setAutoStepDelay(delayMs);
+    }
+
+    public boolean isAutoStepMode() {
+        return vmAdapter.isAutoStepMode();
+    }
+
+    public int getAutoStepDelay() {
+        return vmAdapter.getAutoStepDelay();
     }
 
     @Override

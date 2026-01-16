@@ -270,8 +270,6 @@ public class RegisterDisAssembler {
      */
     public String disassembleToString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Register VM Disassembly:\n");
-        sb.append("========================\n");
 
         int ip = 0;
         while (ip < codeSize) {
@@ -294,7 +292,8 @@ public class RegisterDisAssembler {
             }
 
             if (instr == null) {
-                sb.append(String.format("%04d: [INVALID opcode 0x%02x]\n", startIp, opcode));
+                sb.append(String.format("%04d: [INVALID opcode 0x%02x]", startIp, opcode));
+                sb.append('\n');
                 continue;
             }
 
@@ -340,7 +339,7 @@ public class RegisterDisAssembler {
                 }
             }
 
-            sb.append("\n");
+            sb.append('\n');
         }
 
         return sb.toString();

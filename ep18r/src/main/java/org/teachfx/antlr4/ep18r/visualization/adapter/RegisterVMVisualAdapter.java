@@ -304,7 +304,7 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
             vm.setPaused(true); // 同步到VM
             System.out.println("[DEBUG] VM paused, vm.isPaused()=" + vm.isPaused());
             vmState.setExecutionState(VMState.ExecutionState.PAUSED);
-            
+
             // 发布暂停事件
             this.publish(new ExecutionStateChangedEvent(
                 this,
@@ -313,14 +313,42 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
                 VMState.ExecutionState.PAUSED,
                 "用户请求暂停"
             ));
-            
+
             // 通知监听器
             for (ExecutionListener listener : executionListeners) {
                 listener.executionPaused();
             }
         }
     }
-    
+
+    /**
+     * 设置自动步进模式
+     */
+    public void setAutoStepMode(boolean autoStepMode) {
+        vm.setAutoStepMode(autoStepMode);
+    }
+
+    /**
+     * 设置自动步进延迟（毫秒）
+     */
+    public void setAutoStepDelay(int delayMs) {
+        vm.setAutoStepDelay(delayMs);
+    }
+
+    /**
+     * 检查是否为自动步进模式
+     */
+    public boolean isAutoStepMode() {
+        return vm.isAutoStepMode();
+    }
+
+    /**
+     * 获取自动步进延迟（毫秒）
+     */
+    public int getAutoStepDelay() {
+        return vm.getAutoStepDelay();
+    }
+
     @Override
     public void stop() {
         boolean wasRunning = running.getAndSet(false);

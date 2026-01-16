@@ -68,17 +68,45 @@ public interface IVirtualMachineVisualization {
     
     /**
      * 暂停执行
-     * 
+     *
      * @throws IllegalStateException 如果虚拟机未在运行
      */
     void pause() throws IllegalStateException;
-    
+
     /**
      * 停止执行并重置状态
-     * 
+     *
      * @throws IllegalStateException 如果虚拟机已经停止
      */
     void stop() throws IllegalStateException;
+
+    /**
+     * 设置自动步进模式
+     *
+     * @param autoStepMode true为启用自动步进，false为禁用
+     */
+    void setAutoStepMode(boolean autoStepMode);
+
+    /**
+     * 设置自动步进延迟
+     *
+     * @param delayMs 每条指令执行后的延迟时间（毫秒）
+     */
+    void setAutoStepDelay(int delayMs);
+
+    /**
+     * 检查是否为自动步进模式
+     *
+     * @return true表示已启用自动步进，false表示未启用
+     */
+    boolean isAutoStepMode();
+
+    /**
+     * 获取自动步进延迟
+     *
+     * @return 每条指令执行后的延迟时间（毫秒）
+     */
+    int getAutoStepDelay();
     
     /**
      * 检查虚拟机是否正在运行

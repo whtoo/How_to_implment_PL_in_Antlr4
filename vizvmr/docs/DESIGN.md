@@ -43,43 +43,44 @@
 ### 包结构
 ```
 org.teachfx.antlr4.ep18r.vizvmr/
-├── core/                    # 核心模型
-│   ├── VMRStateModel.java       # 状态数据模型
-│   └── VMRConfig.java           # 可视化配置
+├── VizVMRLauncher.java            # 独立启动器
 │
-├── event/                   # 事件系统
-│   ├── VMRStateListener.java    # 状态监听器接口
-│   ├── VMRExecutionListener.java # 执行监听器接口
-│   ├── VMRStateEvent.java       # 状态事件基类
-│   ├── RegisterChangeEvent.java # 寄存器变化事件
-│   ├── MemoryChangeEvent.java   # 内存变化事件
-│   ├── PCChangeEvent.java       # 程序计数器变化事件
+├── core/                          # 核心模型
+│   ├── VMRStateModel.java         # 状态数据模型
+│   └── VMRExecutionHistory.java   # 执行历史记录
+│
+├── event/                         # 事件系统
+│   ├── VMRStateListener.java      # 状态监听器接口 (含vmStateChanged)
+│   ├── VMRExecutionListener.java  # 执行监听器接口
+│   ├── VMRStateEvent.java         # 状态事件基类
+│   ├── RegisterChangeEvent.java   # 寄存器变化事件
+│   ├── MemoryChangeEvent.java     # 内存变化事件
+│   ├── PCChangeEvent.java         # 程序计数器变化事件
 │   ├── InstructionExecutionEvent.java # 指令执行事件
-│   └── VMStateChangeEvent.java  # 虚拟机状态变化事件
+│   └── VMStateChangeEvent.java    # 虚拟机状态变化事件
 │
-├── integration/             # 集成层
-│   ├── VMRInstrumentation.java  # 虚拟机插桩适配器
-│   └── VMRVisualBridge.java     # 可视化桥接器
+├── integration/                   # 集成层
+│   ├── VMRInstrumentation.java    # 虚拟机插桩适配器
+│   └── VMRVisualBridge.java       # 可视化桥接器
 │
-├── ui/                     # 用户界面
-│   ├── MainFrame.java          # 主窗口框架
-│   ├── component/              # UI组件
-│   │   ├── RegisterPanel.java  # 寄存器显示面板
-│   │   ├── MemoryPanel.java    # 内存显示面板
-│   │   ├── CodePanel.java      # 代码显示面板
-│   │   ├── StackPanel.java     # 调用栈面板
-│   │   ├── ControlPanel.java   # 控制面板
-│   │   └── StatusPanel.java    # 状态面板
-│   ├── control/               # 控制组件
-│   │   └── VMRStepController.java # 单步执行控制器
-│   └── dialog/               # 对话框
-│       ├── BreakpointDialog.java # 断点设置对话框
-│       └── LoadDialog.java    # 代码加载对话框
+├── controller/                    # 控制器
+│   ├── VMRStepController.java     # 单步执行控制器
+│   └── VMRBreakpointManager.java  # 断点管理器
 │
-└── util/                    # 工具类
-    ├── VMRFormatter.java       # 数据格式化工具
-    ├── VMRColorScheme.java     # 颜色主题管理
-    └── VMRResourceLoader.java  # 资源加载器
+├── ui/                            # 用户界面
+│   ├── MainFrame.java             # 主窗口框架
+│   ├── panel/                     # UI组件
+│   │   ├── RegisterPanel.java     # 寄存器显示面板
+│   │   ├── MemoryPanel.java       # 内存显示面板
+│   │   ├── CodePanel.java         # 代码显示面板
+│   │   ├── StackPanel.java        # 调用栈面板
+│   │   ├── ControlPanel.java      # 控制面板
+│   │   ├── StatusPanel.java       # 状态面板
+│   │   └── LogPanel.java          # 日志面板 (新增)
+│   └── dialog/                    # 对话框 (预留)
+│
+└── util/                          # 工具类
+    └── ConfigPersistence.java     # 配置持久化 (新增)
 ```
 
 ## 🔧 核心组件设计
@@ -92,6 +93,7 @@ public interface VMRStateListener extends EventListener {
     void registerChanged(RegisterChangeEvent event);
     void memoryChanged(MemoryChangeEvent event);
     void pcChanged(PCChangeEvent event);
+    void vmStateChanged(VMStateChangeEvent event);  // 添加：虚拟机状态变化监听
     default void registersUpdated(RegisterChangeEvent[] events);
     default void memoryUpdated(MemoryChangeEvent[] events);
 }
@@ -125,25 +127,27 @@ public interface VMRExecutionListener extends EventListener {
 public class VMRStateModel {
     // 状态存储
     private final int[] registers;                 // 16个寄存器值
-    private final int[] heap;                      // 堆内存
-    private final int[] globals;                   // 全局变量
+    private int[] heap;                            // 堆内存 (非final，支持restoreSnapshot)
+    private int[] globals;                         // 全局变量 (非final，支持restoreSnapshot)
     private final StackFrame[] callStack;          // 调用栈
     private int framePointer;                      // 当前帧指针
     private int programCounter;                    // 程序计数器
-    
+    private int heapAllocPointer;                  // 堆分配指针
+
     // 修改追踪
     private final boolean[] registerModified;      // 寄存器修改标记
     private final Set<Integer> modifiedMemoryAddresses; // 内存修改地址
     private final Set<Integer> modifiedHeapAddresses;   // 堆修改地址
-    
+
     // 监听器管理
     private final List<VMRStateListener> stateListeners;
     private final List<VMRExecutionListener> executionListeners;
-    
+
     // 执行状态
     private volatile VMStateChangeEvent.State vmState;
     private long executionSteps;
     private long startTime;
+    private int eventStepNumber;                   // 事件步数计数器
 }
 ```
 
@@ -604,7 +608,14 @@ public class VMRConfig {
 
 ---
 
-**文档版本**: 1.0  
-**创建日期**: 2026-01-14  
-**最后更新**: 2026-01-14  
+**文档版本**: 1.1
+**创建日期**: 2026-01-14
+**最后更新**: 2026-01-16
 **维护者**: EP18R开发团队
+
+### 更新记录
+
+| 版本 | 日期 | 更新内容 |
+|------|------|----------|
+| 1.1 | 2026-01-16 | 添加 `vmStateChanged()` 到 VMRStateListener；更新 VMRStateModel 的 heap/globals 为非 final；更新包结构以匹配实际实现 |
+| 1.0 | 2026-01-14 | 初始版本 |

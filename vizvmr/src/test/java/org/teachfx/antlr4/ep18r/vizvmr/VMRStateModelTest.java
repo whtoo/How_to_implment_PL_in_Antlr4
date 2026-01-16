@@ -35,7 +35,8 @@ public class VMRStateModelTest {
 
     @Test
     void testRegisterZeroIsConstant() {
-        stateModel.setRegister(0, 999);
+        // r0 is the zero register and cannot be modified
+        assertThrows(IllegalArgumentException.class, () -> stateModel.setRegister(0, 999));
         assertEquals(0, stateModel.getRegister(0)); // r0 should remain 0
     }
 

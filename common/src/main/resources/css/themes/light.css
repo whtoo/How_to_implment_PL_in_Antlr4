@@ -1,0 +1,235 @@
+/* Light Theme - 默认浅色主题 */
+.root {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #000000;
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-font-size: 14px;
+}
+
+/* 面板样式 */
+.jfx-panel {
+    -fx-background-color: #F5F5F5;
+    -fx-border-color: #DDDDDD;
+    -fx-border-width: 1px;
+    -fx-padding: 10px;
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+}
+
+/* 标题面板 */
+.jfx-panel .title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333333;
+}
+
+/* 寄存器面板样式 */
+.register-cell {
+    -fx-background-color: #DCDCDC;
+    -fx-border-color: #A9A9A9;
+    -fx-border-width: 1px;
+    -fx-padding: 5px;
+    -fx-background-radius: 3px;
+    -fx-border-radius: 3px;
+}
+
+.register-zero {
+    -fx-background-color: #90EE90;
+}
+
+.register-modified {
+    -fx-background-color: #FFB6C1;
+}
+
+.register-special {
+    -fx-background-color: #ADD8E6;
+}
+
+.register-label {
+    -fx-font-family: "Monospaced", "Consolas", monospace;
+    -fx-font-size: 12px;
+}
+
+/* 按钮样式 */
+.button {
+    -fx-background-color: #3498DB;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 8px 16px;
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #2980B9;
+}
+
+.button:pressed {
+    -fx-background-color: #1F6391;
+}
+
+.button:disabled {
+    -fx-background-color: #BDC3C7;
+    -fx-text-fill: #7F8C8D;
+}
+
+/* 工具栏按钮 */
+.toolbar-button {
+    -fx-background-color: transparent;
+    -fx-padding: 5px;
+    -fx-cursor: hand;
+}
+
+.toolbar-button:hover {
+    -fx-background-color: #E0E0E0;
+    -fx-background-radius: 3px;
+}
+
+/* 状态标签 */
+.status-label {
+    -fx-padding: 5px 10px;
+    -fx-background-radius: 3px;
+    -fx-font-size: 12px;
+}
+
+.status-label.ready {
+    -fx-background-color: #27AE60;
+    -fx-text-fill: white;
+}
+
+.status-label.running {
+    -fx-background-color: #3498DB;
+    -fx-text-fill: white;
+}
+
+.status-label.paused {
+    -fx-background-color: #F39C12;
+    -fx-text-fill: white;
+}
+
+.status-label.halted {
+    -fx-background-color: #95A5A6;
+    -fx-text-fill: white;
+}
+
+.status-label.error {
+    -fx-background-color: #E74C3C;
+    -fx-text-fill: white;
+}
+
+/* 分隔线 */
+.theme-separator {
+    -fx-background-color: #DDDDDD;
+    -fx-padding: 0 5px;
+}
+
+/* 菜单样式 */
+.menu-bar {
+    -fx-background-color: #ECF0F1;
+    -fx-border-color: #BDC3C7;
+    -fx-border-width: 0 0 1px 0;
+}
+
+.menu {
+    -fx-padding: 5px 10px;
+}
+
+.menu:hover {
+    -fx-background-color: #D5DBDB;
+}
+
+.menu-item {
+    -fx-padding: 5px 15px;
+}
+
+.menu-item:hover {
+    -fx-background-color: #3498DB;
+    -fx-text-fill: white;
+}
+
+/* 工具栏样式 */
+.tool-bar {
+    -fx-background-color: #ECF0F1;
+    -fx-border-color: #BDC3C7;
+    -fx-border-width: 0 0 1px 0;
+    -fx-padding: 5px;
+    -fx-spacing: 5px;
+}
+
+/* 滚动面板样式 */
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: #FFFFFF;
+}
+
+/* 表格样式 */
+.table-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #DDDDDD;
+}
+
+.table-view .column-header {
+    -fx-background-color: #ECF0F1;
+    -fx-font-weight: bold;
+    -fx-border-color: #DDDDDD;
+}
+
+.table-view .table-cell {
+    -fx-padding: 5px;
+    -fx-border-color: #EEEEEE;
+}
+
+.table-view .table-row:hover {
+    -fx-background-color: #F5F5F5;
+}
+
+/* 标签页样式 */
+.tab-pane {
+    -fx-background-color: #FFFFFF;
+}
+
+.tab {
+    -fx-padding: 8px 15px;
+    -fx-background-color: #ECF0F1;
+    -fx-border-color: #BDC3C7;
+    -fx-border-width: 0 0 2px 0;
+}
+
+.tab:selected {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #3498DB;
+    -fx-border-width: 0 0 2px 0;
+}
+
+/* 对话框样式 */
+.dialog-pane {
+    -fx-background-color: #FFFFFF;
+}
+
+.dialog-pane .button {
+    -fx-min-width: 80px;
+}
+
+/* 提示框样式 */
+.tooltip {
+    -fx-background-color: #333333;
+    -fx-text-fill: white;
+    -fx-padding: 5px 10px;
+    -fx-background-radius: 3px;
+}
+
+/* 高亮动画效果 */
+.highlight-pulse {
+    -fx-effect: dropshadow(three-pass-box, #3498DB, 10, 0.5, 0, 0);
+}
+
+/* 教育模式高亮 */
+.educational-highlight {
+    -fx-effect: dropshadow(three-pass-box, #F39C12, 15, 0.7, 0, 0);
+    -fx-border-color: #F39C12;
+    -fx-border-width: 2px;
+}

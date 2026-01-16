@@ -16,7 +16,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <!-- No special properties needed -->
+        <javafx.version>23.0.2</javafx.version>
     </properties>
 
     <!-- Build configuration -->
@@ -28,7 +28,6 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.13</version>
                 <configuration>
-                    <!-- 排除Java内部类以避免Java 21上的Instrumentation错误 -->
                     <excludes>
                         <exclude>**/sun/**</exclude>
                         <exclude>**/jdk/**</exclude>
@@ -95,12 +94,42 @@
                 </executions>
             </plugin>
         </plugins>
-        <!-- 定义源码目录 -->
-        <!-- 资源目录 -->
     </build>
 
     <!-- Dependencies -->
     <dependencies>
-        <!-- Inherit dependencies from parent -->
+        <!-- JavaFX Base (required for properties) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+
+        <!-- JavaFX Dependencies (explicit versions) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
     </dependencies>
 </project>

@@ -655,6 +655,13 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
     }
 
     /**
+     * 获取程序计数器
+     */
+    public int getProgramCounter() {
+        return programCounter;
+    }
+
+    /**
      * 获取当前栈帧
      */
     StackFrame getCurrentFrame() {
@@ -802,9 +809,10 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
     }
 
     /**
-     * 获取常量池（用于查找函数符号）
+     * 获取常量池
+     * @return 常量池数组
      */
-    Object[] getConstantPool() {
+    public Object[] getConstantPool() {
         return constPool;
     }
 

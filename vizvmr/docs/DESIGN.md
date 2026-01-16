@@ -580,6 +580,346 @@ public class VMRConfig {
 - **反编译器**: 高级反汇编和代码分析
 
 ### 2. 技术升级
+
+## 🚀 JavaFX 迁移计划
+
+### 1. 迁移背景
+
+#### 1.1 迁移原因
+
+**技术层面**:
+- **Swing已弃用**: Oracle已宣布Swing进入维护模式，不再添加新功能
+- **性能差异**: JavaFX使用硬件加速，在现代硬件上性能更优（基准测试显示12-37%提升）
+- **CSS支持**: JavaFX原生支持CSS样式，动画效果更流畅
+- **Web集成**: JavaFX内置WebView，支持未来Web可视化扩展
+
+**社区层面**:
+- **活跃度**: JavaFX社区更活跃，第三方库更丰富
+- **文档**: 官方文档更完善，迁移指南详尽
+- **工具**: Scene Builder等专业工具支持
+
+#### 1.2 兼容性确认
+
+**Java版本**: Java 21
+**JavaFX版本**: JavaFX 21.0.9 LTS (推荐) 或 JavaFX 23+ (最新)
+**依赖配置**:
+
+```xml
+<properties>
+    <javafx.version>21.0.9</javafx.version>
+</properties>
+
+<dependencies>
+    <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-controls</artifactId>
+        <version>${javafx.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-fxml</artifactId>
+        <version>${javafx.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-graphics</artifactId>
+        <version>${javafx.version}</version>
+    </dependency>
+</dependencies>
+```
+
+### 2. 迁移策略
+
+#### 2.1 渐进式迁移
+
+采用增量迁移策略，保持Swing版本作为后备：
+
+1. **第一阶段**: 创建JavaFX基础设施（基类、事件适配器）
+2. **第二阶段**: 迁移主窗口框架
+3. **第三阶段**: 迁移面板组件
+4. **第四阶段**: 测试和优化
+
+#### 2.2 组件映射
+
+| Swing组件 | JavaFX对应 | 迁移复杂度 |
+|-----------|------------|------------|
+| JFrame | Stage | 中 |
+| JPanel | Pane/Region | 中 |
+| JButton | Button | 低 |
+| JLabel | Label | 低 |
+| JTable | TableView | 中 |
+| JMenuBar | MenuBar | 低 |
+| JToolBar | ToolBar | 低 |
+| JSplitPane | SplitPane | 低 |
+| JOptionPane | Alert/Dialog | 中 |
+| JFileChooser | FileChooser | 中 |
+
+### 3. 架构变更
+
+#### 3.1 当前架构 (Swing)
+
+```
+┌─────────────────────────────────────────────────┐
+│ MainFrame (JFrame)                              │
+├─────────────────────────────────────────────────┤
+│ ┌──────────┐  ┌──────────────────────────────┐ │
+│ │ MenuBar  │  │   JSplitPane Hierarchy       │ │
+│ └──────────┘  │  ┌─────────┐  ┌──────────┐  │ │
+│               │  │ Register│  │  Code    │  │ │
+│ ┌──────────┐  │  │  Panel  │  │  Panel   │  │ │
+│ │ ToolBar  │  │  └─────────┘  └──────────┘  │ │
+│ └──────────┘  └──────────────────────────────┘ │
+└─────────────────────────────────────────────────┘
+```
+
+#### 3.2 目标架构 (JavaFX)
+
+```
+┌─────────────────────────────────────────────────┐
+│ PrimaryStage (Stage)                            │
+├─────────────────────────────────────────────────┤
+│ ┌──────────┐  ┌──────────────────────────────┐ │
+│ │ MenuBar  │  │   BorderPane Layout          │ │
+│ └──────────┘  │  ┌─────────┐  ┌──────────┐  │ │
+│               │  │ Register│  │  Code    │  │ │
+│ ┌──────────┐  │  │  View   │  │  View    │  │ │
+│ │ ToolBar  │  │  └─────────┘  └──────────┘  │ │
+│ └──────────┘  └──────────────────────────────┘ │
+└─────────────────────────────────────────────────┘
+```
+
+#### 3.3 文件结构
+
+```
+vizvmr/src/main/java/org/teachfx/antlr4/ep18r/vizvmr/
+├── VizVMRLauncher.java           # 修改: 支持双框架
+├── ui/
+│   ├── MainFrame.java            # 保留: Swing版本(后备)
+│   ├── javafx/
+│   │   ├── MainStage.fxml        # 新增: FXML布局
+│   │   ├── MainStageController.java # 新增: FXML控制器
+│   │   ├── RegisterView.java     # 新增: JavaFX版寄存器
+│   │   ├── RegisterView.fxml     # 新增: FXML布局
+│   │   ├── ControlView.java      # 新增: JavaFX版控制
+│   │   ├── ControlView.fxml      # 新增: FXML布局
+│   │   ├── MemoryView.java       # 新增: JavaFX版内存
+│   │   ├── MemoryView.fxml       # 新增: FXML布局
+│   │   ├── CodeView.java         # 新增: JavaFX版代码
+│   │   ├── CodeView.fxml         # 新增: FXML布局
+│   │   ├── StackView.java        # 新增: JavaFX版调用栈
+│   │   ├── StackView.fxml        # 新增: FXML布局
+│   │   ├── StatusView.java       # 新增: JavaFX版状态
+│   │   ├── StatusView.fxml       # 新增: FXML布局
+│   │   └── LogView.java          # 新增: JavaFX版日志
+│   │   └── LogView.fxml          # 新增: FXML布局
+│   └── panel/                    # 保留: Swing版本
+└── integration/
+    └── VMRVisualBridge.java      # 修改: 支持双UI框架
+```
+
+### 4. 关键技术点
+
+#### 4.1 线程模型调整
+
+**Swing模式**:
+```java
+SwingUtilities.invokeLater(() -> {
+    // UI更新代码
+});
+```
+
+**JavaFX模式**:
+```java
+Platform.runLater(() -> {
+    // UI更新代码
+});
+```
+
+#### 4.2 事件处理转换
+
+**Swing模式**:
+```java
+button.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        // 处理事件
+    }
+});
+```
+
+**JavaFX模式**:
+```java
+button.setOnAction(event -> {
+    // 处理事件
+});
+```
+
+#### 4.3 CSS样式支持
+
+```css
+/* styles.css */
+.register-cell {
+    -fx-background-color: #DCDCDC;
+    -fx-padding: 5px;
+    -fx-border-color: #A9A9A9;
+}
+
+.register-modified {
+    -fx-background-color: #FFB6C1;
+}
+
+.register-special {
+    -fx-background-color: #ADD8E6;
+}
+```
+
+```java
+// 在Java代码中加载CSS
+scene.getStylesheets().add(
+    getClass().getResource("/css/vizvmr.css").toExternalForm()
+);
+```
+
+#### 4.4 FXML布局示例
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<GridPane xmlns="http://javafx.com/javafx/21.0.3"
+          xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="org.teachfx.antlr4.ep18r.vizvmr.ui.javafx.RegisterViewController"
+          fx:id="rootPane"
+          hgap="5" vgap="5">
+    
+    <columnConstraints>
+        <ColumnConstraints percentWidth="25"/>
+        <ColumnConstraints percentWidth="25"/>
+        <ColumnConstraints percentWidth="25"/>
+        <ColumnConstraints percentWidth="25"/>
+    </columnConstraints>
+    
+    <rowConstraints>
+        <RowConstraints percentHeight="25"/>
+        <RowConstraints percentHeight="25"/>
+        <RowConstraints percentHeight="25"/>
+        <RowConstraints percentHeight="25"/>
+    </rowConstraints>
+    
+</GridPane>
+```
+
+### 5. 迁移时间表
+
+#### 阶段一：基础设施 (第1周)
+- [ ] 添加JavaFX依赖到POM
+- [ ] 创建JavaFX基类JFXPanelBase
+- [ ] 创建事件适配器JFXEventAdapter
+- [ ] 配置模块路径
+
+#### 阶段二：核心框架 (第2-3周)
+- [ ] 迁移MainFrame → MainStage
+- [ ] 迁移菜单系统
+- [ ] 迁移工具栏
+- [ ] 迁移布局管理器
+
+#### 阶段三：面板组件 (第4-6周)
+- [ ] 迁移RegisterPanel (高优先级)
+- [ ] 迁移ControlPanel (高优先级)
+- [ ] 迁移StatusPanel (高优先级)
+- [ ] 迁移CodePanel (中优先级)
+- [ ] 迁移MemoryPanel (中优先级)
+- [ ] 迁移StackPanel (中优先级)
+- [ ] 迁移LogPanel (低优先级)
+
+#### 阶段四：测试优化 (第7-8周)
+- [ ] 创建TestFX测试用例
+- [ ] 性能基准测试
+- [ ] 内存使用优化
+- [ ] 端到端集成测试
+
+### 6. 已知问题和解决方案
+
+#### 6.1 macOS 14 Sonoma窗口激活
+**问题**: 应用窗口无法正确激活
+**解决方案**: 使用JavaFX 21.0.2或更新版本
+
+#### 6.2 Linux GTK 3依赖
+**问题**: JavaFX 21需要GTK 3
+**解决方案**: 确保Linux系统安装GTK 3.8+
+```bash
+sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev
+```
+
+#### 6.3 性能回归
+**问题**: CSS渲染性能问题
+**解决方案**: 更新到JavaFX 21.0.9（包含性能修复）
+
+### 7. 测试策略
+
+#### 7.1 单元测试
+保持现有JUnit测试覆盖业务逻辑。
+
+#### 7.2 UI测试
+使用TestFX替代AssertJ-Swing：
+
+```java
+@Test
+public void testRegisterUpdate() {
+    RegisterViewController controller = new RegisterViewController(visualBridge);
+    
+    controller.updateRegister(0, 100);
+    
+    // 验证UI更新
+    verify(registerLabel).setText("0x00000064 (100)");
+}
+```
+
+#### 7.3 性能测试
+使用JMH进行基准测试：
+
+```java
+@Benchmark
+@BenchmarkMode(Mode.AverageTime)
+public void registerUpdateBenchmark() {
+    controller.updateRegister(0, randomValue());
+}
+```
+
+### 8. 回滚计划
+
+#### 8.1 快速回滚机制
+- 保留Swing版本作为后备
+- 使用特性开关切换UI框架
+- 配置文件控制默认框架
+
+#### 8.2 回滚触发条件
+- 关键功能测试失败
+- 性能下降超过10%
+- 内存使用增加超过20%
+
+### 9. 验收标准
+
+#### 功能验收
+- [ ] 所有现有功能正常工作
+- [ ] 事件系统兼容性完整
+- [ ] 断点和单步执行功能正常
+- [ ] 文件加载和保存功能正常
+
+#### 性能验收
+- [ ] UI响应时间 < 100ms
+- [ ] 内存使用稳定
+- [ ] 事件处理延迟 < 10ms
+
+#### 兼容性验收
+- [ ] 在Windows/Linux/macOS上正常运行
+- [ ] 键盘快捷键正常工作
+- [ ] 主题切换功能正常
+
 - **JavaFX迁移**: 从 Swing 迁移到 JavaFX
 - **Web版本**: 基于 Web 的可视化界面
 - **插件系统**: 支持第三方插件扩展

@@ -141,12 +141,47 @@ cd vizvmr
 mvn compile exec:java
 ```
 
+
+## 🚀 JavaFX 迁移计划
+
+> ⚠️ **注意**: vizvmr模块正在从Java Swing迁移到JavaFX。当前版本使用Swing，新版本将提供JavaFX实现。
+
+### 迁移状态
+
+| 组件 | 状态 | 计划版本 |
+|------|------|----------|
+| 基础设施 | 🔄 进行中 | v2.0 |
+| 主窗口框架 | 📋 待开始 | v2.0 |
+| 面板组件 | 📋 待开始 | v2.1 |
+| 测试覆盖 | 📋 待开始 | v2.1 |
+
+### 迁移时间表
+
+- **v1.5** (当前): 纯Swing实现，稳定版本
+- **v2.0**: Swing + JavaFX双框架支持
+- **v2.1**: 完整JavaFX实现，迁移完成
+
+### 快速开始 (JavaFX)
+
+迁移完成后，启动命令将更改为：
+
+```bash
+cd vizvmr
+mvn compile exec:java -Dui.framework=javafx
+```
+
+### 文档链接
+
+- [迁移计划文档](./docs/migration/JAVAFX_MIGRATION_PLAN.md)
+- [设计文档](./docs/DESIGN.md#-javaFX-迁移计划)
+- [API文档](./docs/API.md)
+
 ## 技术规范
 
 | 项目 | 规范 |
 |------|------|
 | Java 版本 | 21+ |
-| GUI 框架 | Java Swing |
+| GUI 框架 | Java Swing (当前) 
 | 构建工具 | Maven 3.8+ |
 | 测试框架 | JUnit 5 |
 | 包名 | `org.teachfx.antlr4.ep18r.vizvmr` |

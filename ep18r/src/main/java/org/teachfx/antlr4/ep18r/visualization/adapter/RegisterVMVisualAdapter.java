@@ -151,7 +151,7 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
         try {
             byte[] code = vm.getCode();
             int codeSize = vm.getCodeSize();
-            Object[] constPool = getConstantPool(vm);
+            Object[] constPool = vm.getConstantPool();
             if (code != null && codeSize > 0) {
                 return new RegisterDisAssembler(code, codeSize, constPool);
             }
@@ -159,19 +159,6 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
             // 如果无法创建反汇编器，返回null（某些方法将回退到基本反汇编）
         }
         return null;
-    }
-    
-    /**
-     * 获取常量池（通过反射）
-     */
-    private Object[] getConstantPool(RegisterVMInterpreter vm) {
-        try {
-            java.lang.reflect.Field constPoolField = RegisterVMInterpreter.class.getDeclaredField("constPool");
-            constPoolField.setAccessible(true);
-            return (Object[]) constPoolField.get(vm);
-        } catch (Exception e) {
-            return new Object[0];
-        }
     }
     
     /**
@@ -471,56 +458,37 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
      * 获取程序计数器
      */
     private int getProgramCounter() {
-        // 需要VM提供访问方法，当前通过反射获取
-        try {
-            java.lang.reflect.Field pcField = RegisterVMInterpreter.class.getDeclaredField("programCounter");
-            pcField.setAccessible(true);
-            return (int) pcField.get(vm);
-        } catch (Exception e) {
-            return 0;
-        }
+        return vm.getProgramCounter();
     }
-    
+
     /**
      * 获取寄存器值
      */
     private int[] getRegisters() {
-        // 需要VM提供访问方法，当前通过反射获取
-        try {
-            java.lang.reflect.Field regField = RegisterVMInterpreter.class.getDeclaredField("registers");
-            regField.setAccessible(true);
-            return (int[]) regField.get(vm);
-        } catch (Exception e) {
-            return new int[0];
+        int[] regs = new int[16];
+        for (int i = 0; i < 16; i++) {
+            regs[i] = vm.getRegister(i);
         }
+        return regs;
     }
-    
+
     /**
      * 获取内存快照
      */
     private int[] getMemorySnapshot() {
-        // 需要VM提供访问方法，当前通过反射获取
-        try {
-            java.lang.reflect.Field heapField = RegisterVMInterpreter.class.getDeclaredField("heap");
-            heapField.setAccessible(true);
-            return (int[]) heapField.get(vm);
-        } catch (Exception e) {
-            return new int[0];
+        int heapSize = vm.getHeapSize();
+        int[] memory = new int[heapSize];
+        for (int i = 0; i < heapSize; i++) {
+            memory[i] = vm.readHeap(i);
         }
+        return memory;
     }
-    
+
     /**
      * 获取调用栈深度
      */
     private int getCallStackDepth() {
-        // 需要VM提供访问方法，当前通过反射获取
-        try {
-            java.lang.reflect.Field fpField = RegisterVMInterpreter.class.getDeclaredField("framePointer");
-            fpField.setAccessible(true);
-            return (int) fpField.get(vm);
-        } catch (Exception e) {
-            return 0;
-        }
+        return vm.getFramePointer();
     }
     
     /**

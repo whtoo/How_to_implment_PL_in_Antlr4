@@ -82,7 +82,7 @@ public class VMCommandController {
 
         if (!command.canExecute(currentState)) {
             String errorMsg = String.format("命令'%s'在状态'%s'下不可执行",
-                command.getName(), currentState);
+                    command.getName(), currentState);
             System.err.println("[ERROR] " + errorMsg);
             return VMCommandResult.failure(errorMsg, new IllegalStateException(errorMsg));
         }
@@ -91,11 +91,18 @@ public class VMCommandController {
 
         VMCommandResult result = command.execute();
 
-        System.out.println("[COMMAND] 命令执行结果: success=" + result.isSuccess() +
-            ", message=" + result.getMessage());
+        System.out.println("[COMMAND] 命令执行结果:");
+        System.out.println("  成功: " + result.isSuccess());
+        System.out.println("  消息: " + result.getMessage());
+        System.out.println("  当前状态: " + stateManager.getCurrentState());
 
         if (result.isSuccess()) {
+            if (expectedState == VMState.RUNNING) {
+                System.out.println("[STATE] 检测到Start/Step/Pause命令，触发自动转换到RUNNING");
+            }
+
             boolean transitionSuccess = stateManager.transitionTo(expectedState);
+
             if (!transitionSuccess) {
                 System.err.println("[ERROR] 状态转换失败: " + expectedState);
                 return VMCommandResult.failure("状态转换失败", null);

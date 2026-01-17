@@ -56,6 +56,11 @@ public enum VMState {
         return this == READY || this == LOADED || this == PAUSED || this == STOPPED;
     }
 
+    public boolean autoTransitionToReady() {
+        System.out.println("[STATE] 自动转换触发: LOADED -> READY");
+        return this == LOADED;
+    }
+
     public static VMState fromLegacyState(VMStateChangeEvent.State legacyState) {
         for (VMState state : values()) {
             if (state.legacyState == legacyState && state != READY) {

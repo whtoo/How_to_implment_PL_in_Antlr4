@@ -808,24 +808,76 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
     }
     
     // ==================== EventPublisher 实现 ====================
-    
+
     @Override
     public <T extends VMEvent> void publish(T event) {
         eventBus.publish(event);
     }
-    
+
     @Override
     public String getPublisherId() {
         return "StackVMVisualAdapter";
     }
-    
+
     @Override
     public EventBus getEventBus() {
         return eventBus;
     }
-    
+
     @Override
     public void setEventBus(EventBus eventBus) {
         this.eventBus = eventBus;
+    }
+
+    // ==================== RxJava事件流实现 ====================
+
+    @Override
+    public Observable<VMEvent> getEventStream() {
+        return eventBus.getRawEventStream();
+    }
+
+    @Override
+    public Observable<InstructionExecutedEvent> getInstructionExecutedStream() {
+        return eventBus.getEventStream(InstructionExecutedEvent.class);
+    }
+
+    @Override
+    public Observable<RegisterChangedEvent> getRegisterChangedStream() {
+        return eventBus.getEventStream(RegisterChangedEvent.class);
+    }
+
+    @Override
+    public Observable<MemoryChangedEvent> getMemoryChangedStream() {
+        return eventBus.getEventStream(MemoryChangedEvent.class);
+    }
+
+    @Override
+    public Observable<ProgramCounterChangedEvent> getProgramCounterChangedStream() {
+        return eventBus.getEventStream(ProgramCounterChangedEvent.class);
+    }
+
+    @Override
+    public Observable<ExecutionStateChangedEvent> getExecutionStateChangedStream() {
+        return eventBus.getEventStream(ExecutionStateChangedEvent.class);
+    }
+
+    @Override
+    public Observable<ExecutionStartedEvent> getExecutionStartedStream() {
+        return eventBus.getEventStream(ExecutionStartedEvent.class);
+    }
+
+    @Override
+    public Observable<ExecutionFinishedEvent> getExecutionFinishedStream() {
+        return eventBus.getEventStream(ExecutionFinishedEvent.class);
+    }
+
+    @Override
+    public Observable<BreakpointHitEvent> getBreakpointHitStream() {
+        return eventBus.getEventStream(BreakpointHitEvent.class);
+    }
+
+    @Override
+    public Observable<EducationalHintEvent> getEducationalHintStream() {
+        return eventBus.getEventStream(EducationalHintEvent.class);
     }
 }

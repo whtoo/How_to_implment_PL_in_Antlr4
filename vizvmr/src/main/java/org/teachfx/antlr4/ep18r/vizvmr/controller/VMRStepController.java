@@ -3,6 +3,8 @@ package org.teachfx.antlr4.ep18r.vizvmr.controller;
 import org.teachfx.antlr4.ep18r.vizvmr.core.VMRStateModel;
 import org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent;
 import org.teachfx.antlr4.ep18r.vizvmr.integration.VMRVisualBridge;
+import org.teachfx.antlr4.ep18r.vizvmr.controller.VMCommandController;
+import org.teachfx.antlr4.ep18r.vizvmr.controller.VMCommandResult;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -18,6 +20,7 @@ public class VMRStepController {
     }
 
     private final VMRVisualBridge visualBridge;
+    private final VMCommandController commandController;
     private final VMRStateModel stateModel;
     private final VMRBreakpointManager breakpointManager;
     private final AtomicBoolean stepping;
@@ -26,6 +29,7 @@ public class VMRStepController {
     public VMRStepController(VMRVisualBridge visualBridge) {
         this.visualBridge = visualBridge;
         this.stateModel = visualBridge.getStateModel();
+        this.commandController = new VMCommandController(visualBridge.getVM());
         this.breakpointManager = new VMRBreakpointManager();
         this.stepping = new AtomicBoolean(false);
         this.currentMode = StepMode.CONTINUE;
@@ -72,7 +76,10 @@ public class VMRStepController {
         currentMode = StepMode.RUN_TO_LINE;
         stepping.set(true);
 
-        visualBridge.start();
+        VMCommandResult result = commandController.start();
+        if (!result.isSuccess()) {
+            System.err.println("[ERROR] 运行到PC失败: " + result.getMessage());
+        }
     }
 
     public void continueExecution() {
@@ -81,7 +88,10 @@ public class VMRStepController {
         }
 
         currentMode = StepMode.CONTINUE;
-        visualBridge.resume();
+        VMCommandResult result = commandController.start();
+        if (!result.isSuccess()) {
+            System.err.println("[ERROR] 继续执行失败: " + result.getMessage());
+        }
     }
 
     public void setBreakpoint(int pc) {

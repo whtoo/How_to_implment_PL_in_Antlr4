@@ -14,6 +14,8 @@ import org.teachfx.antlr4.ep18r.vizvmr.event.StackFrameEvent;
 import org.teachfx.antlr4.ep18r.vizvmr.event.InstructionExecutionEvent;
 import org.teachfx.antlr4.ep18r.vizvmr.event.RegisterChangeEvent;
 import org.teachfx.antlr4.ep18r.vizvmr.event.MemoryChangeEvent;
+import org.teachfx.antlr4.ep18r.vizvmr.controller.VMCommandController;
+import org.teachfx.antlr4.ep18r.vizvmr.controller.VMCommandResult;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import java.util.Arrays;
@@ -33,6 +35,7 @@ public class ReactiveVMRStateModel {
     // ==================== 可视化桥接 ====================
     private final org.teachfx.antlr4.ep18r.vizvmr.core.VMRStateModel delegateStateModel;
     private final org.teachfx.antlr4.ep18r.vizvmr.integration.VMRVisualBridge visualBridge;
+    private final VMCommandController commandController;
 
     // ==================== 状态Subjects ====================
     private final BehaviorSubject<int[]> registersSubject;
@@ -63,6 +66,7 @@ public class ReactiveVMRStateModel {
         this.delegateStateModel = new org.teachfx.antlr4.ep18r.vizvmr.core.VMRStateModel(
             heapSize, 256, maxCallStackDepth);
         this.visualBridge = new org.teachfx.antlr4.ep18r.vizvmr.integration.VMRVisualBridge(vm, delegateStateModel);
+        this.commandController = new VMCommandController(vm);
         visualBridge.setAutoStepMode(true);
         visualBridge.setAutoStepDelay(autoStepDelay);
         logger.debug("设置自动步进模式: true，延迟: {}ms", autoStepDelay);
@@ -126,22 +130,36 @@ public class ReactiveVMRStateModel {
 
     public void start() {
         logger.info("开始VM执行");
-        visualBridge.start();
+        VMCommandResult result = commandController.start();
+        if (!result.isSuccess()) {
+            logger.error("启动失败: {}", result.getMessage());
+        } else {
+            logger.info("启动成功: {}", result.getMessage());
+        }
     }
 
     public void pause() {
         logger.info("暂停VM执行");
-        visualBridge.pause();
+        VMCommandResult result = commandController.pause();
+        if (!result.isSuccess()) {
+            logger.error("暂停失败: {}", result.getMessage());
+        }
     }
 
     public void stop() {
         logger.info("停止VM执行");
-        visualBridge.stop();
+        VMCommandResult result = commandController.stop();
+        if (!result.isSuccess()) {
+            logger.error("停止失败: {}", result.getMessage());
+        }
     }
 
     public void step() {
         logger.info("单步执行VM指令");
-        visualBridge.step();
+        VMCommandResult result = commandController.step();
+        if (!result.isSuccess()) {
+            logger.error("单步执行失败: {}", result.getMessage());
+        }
     }
 
     public void syncFromVM() {

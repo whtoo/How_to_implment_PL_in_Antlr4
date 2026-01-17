@@ -2,6 +2,7 @@ package org.teachfx.antlr4.ep18r.visualization.adapter;
 
 import org.teachfx.antlr4.common.visualization.*;
 import org.teachfx.antlr4.common.visualization.event.*;
+import org.teachfx.antlr4.common.visualization.event.RxEventBus;
 import org.teachfx.antlr4.common.visualization.event.events.*;
 import org.teachfx.antlr4.ep18r.stackvm.interpreter.RegisterVMInterpreter;
 import org.teachfx.antlr4.ep18r.stackvm.RegisterDisAssembler;
@@ -9,6 +10,8 @@ import org.teachfx.antlr4.ep18r.stackvm.config.VMConfig;
 
 import org.teachfx.antlr4.ep18r.stackvm.FunctionSymbol;
 import org.teachfx.antlr4.ep18r.stackvm.instructions.model.RegisterBytecodeDefinition;
+
+import io.reactivex.rxjava3.core.Observable;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -42,6 +45,10 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
      */
     private EventBus eventBus;
     
+    /**
+     * RxJava响应式事件总线
+     */
+    private RxEventBus rxEventBus;
 
     
     /**
@@ -118,6 +125,7 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
         
         this.vm = vm;
         this.eventBus = new EventBus();
+        this.rxEventBus = new RxEventBus(eventBus);
 
         this.disAssembler = createDisAssembler(vm);
         
@@ -310,8 +318,7 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
                 this,
                 stepCounter.get(),
                 VMState.ExecutionState.RUNNING,
-                VMState.ExecutionState.PAUSED,
-                "用户请求暂停"
+                VMState.ExecutionState.PAUSED
             ));
 
             // 通知监听器
@@ -363,8 +370,7 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
                 this,
                 stepCounter.get(),
                 VMState.ExecutionState.RUNNING,
-                VMState.ExecutionState.STOPPED,
-                "用户请求停止"
+                VMState.ExecutionState.STOPPED
             ));
             
             // 通知监听器
@@ -454,6 +460,58 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
         }
     }
     
+    // ==================== RxJava事件流 ====================
+    
+    @Override
+    public Observable<VMEvent> getEventStream() {
+        return rxEventBus != null ? rxEventBus.getRawEventStream() : Observable.empty();
+    }
+    
+    @Override
+    public Observable<InstructionExecutedEvent> getInstructionExecutedStream() {
+        return rxEventBus != null ? rxEventBus.getEventStream(InstructionExecutedEvent.class) : Observable.empty();
+    }
+    
+    @Override
+    public Observable<RegisterChangedEvent> getRegisterChangedStream() {
+        return rxEventBus != null ? rxEventBus.getEventStream(RegisterChangedEvent.class) : Observable.empty();
+    }
+    
+    @Override
+    public Observable<MemoryChangedEvent> getMemoryChangedStream() {
+        return rxEventBus != null ? rxEventBus.getEventStream(MemoryChangedEvent.class) : Observable.empty();
+    }
+    
+    @Override
+    public Observable<ProgramCounterChangedEvent> getProgramCounterChangedStream() {
+        return rxEventBus != null ? rxEventBus.getEventStream(ProgramCounterChangedEvent.class) : Observable.empty();
+    }
+    
+    @Override
+    public Observable<ExecutionStateChangedEvent> getExecutionStateChangedStream() {
+        return rxEventBus != null ? rxEventBus.getEventStream(ExecutionStateChangedEvent.class) : Observable.empty();
+    }
+    
+    @Override
+    public Observable<ExecutionStartedEvent> getExecutionStartedStream() {
+        return rxEventBus != null ? rxEventBus.getEventStream(ExecutionStartedEvent.class) : Observable.empty();
+    }
+    
+    @Override
+    public Observable<ExecutionFinishedEvent> getExecutionFinishedStream() {
+        return rxEventBus != null ? rxEventBus.getEventStream(ExecutionFinishedEvent.class) : Observable.empty();
+    }
+    
+    @Override
+    public Observable<BreakpointHitEvent> getBreakpointHitStream() {
+        return rxEventBus != null ? rxEventBus.getEventStream(BreakpointHitEvent.class) : Observable.empty();
+    }
+    
+    @Override
+    public Observable<EducationalHintEvent> getEducationalHintStream() {
+        return rxEventBus != null ? rxEventBus.getEventStream(EducationalHintEvent.class) : Observable.empty();
+    }
+
     // ==================== 内部方法 ====================
     
     /**
@@ -663,60 +721,14 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
     
     // ==================== 事件类（简化，实际应使用common包中的事件） ====================
     
-    /**
-     * 执行状态变化事件
-     */
-    private static class ExecutionStateChangedEvent extends VMEvent {
-        private final VMState.ExecutionState oldState;
-        private final VMState.ExecutionState newState;
-        private final String reason;
-        
-        public ExecutionStateChangedEvent(Object source, int stepNumber,
-                                         VMState.ExecutionState oldState,
-                                         VMState.ExecutionState newState,
-                                         String reason) {
-            super(source, EventType.EXECUTION_STATE_CHANGED, stepNumber);
-            this.oldState = oldState;
-            this.newState = newState;
-            this.reason = reason;
-        }
-        
-        @Override
-        public String getDescription() {
-            return String.format("执行状态变化: %s -> %s (%s)", oldState, newState, reason);
-        }
-    }
+
     
     /**
      * 执行开始事件
      */
-    private static class ExecutionStartedEvent extends VMEvent {
-        public ExecutionStartedEvent(Object source, int stepNumber) {
-            super(source, EventType.EXECUTION_STARTED, stepNumber);
-        }
-        
-        @Override
-        public String getDescription() {
-            return "执行开始";
-        }
-    }
+
     
-    /**
-     * 执行完成事件
-     */
-    private static class ExecutionFinishedEvent extends VMEvent {
-        private final String reason;
-        
-        public ExecutionFinishedEvent(Object source, int stepNumber, String reason) {
-            super(source, EventType.EXECUTION_FINISHED, stepNumber);
-            this.reason = reason;
-        }
-        
-        @Override
-        public String getDescription() {
-            return String.format("执行完成: %s", reason);
-        }
-    }
+
     
     /**
      * 执行错误事件
@@ -819,7 +831,13 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
     
     @Override
     public <T extends VMEvent> void publish(T event) {
-        eventBus.publish(event);
+        // 优先发布到RxEventBus，它会自动桥接到传统EventBus
+        if (rxEventBus != null) {
+            rxEventBus.publish(event);
+        } else {
+            // 回退到传统EventBus
+            eventBus.publish(event);
+        }
     }
     
     @Override

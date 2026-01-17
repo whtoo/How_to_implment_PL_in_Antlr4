@@ -20,6 +20,22 @@ public class StackFrame {
     public int frameBasePointer; // 栈帧基地址（在heap中的位置）
     public int[] savedCallerRegisters; // 保存caller-saved寄存器 a1(r3), a2(r4), a3(r5), a4(r6), a5(r7), lr(r15), ra(r1) 共7个
 
+    public FunctionSymbol getFunctionSymbol() {
+        return symbol;
+    }
+
+    public int getReturnAddress() {
+        return returnAddress;
+    }
+
+    public int getFrameBasePointer() {
+        return frameBasePointer;
+    }
+
+    public int[] getSavedCallerRegisters() {
+        return savedCallerRegisters;
+    }
+
     public StackFrame(FunctionSymbol symbol, int returnAddress, int frameBasePointer) {
         this.symbol = symbol;
         this.returnAddress = returnAddress;

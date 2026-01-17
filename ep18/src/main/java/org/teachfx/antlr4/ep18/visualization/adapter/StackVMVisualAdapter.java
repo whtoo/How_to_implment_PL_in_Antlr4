@@ -75,6 +75,16 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
     private final AtomicBoolean stepMode;
     
     /**
+     * 自动步进模式标志
+     */
+    private boolean autoStepMode;
+    
+    /**
+     * 自动步进延迟（毫秒）
+     */
+    private int autoStepDelay;
+    
+    /**
      * 断点集合
      */
     private final Set<Integer> breakpoints;
@@ -130,6 +140,8 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
         this.running = new AtomicBoolean(false);
         this.paused = new AtomicBoolean(false);
         this.stepMode = new AtomicBoolean(false);
+        this.autoStepMode = false;
+        this.autoStepDelay = 200;
         this.breakpoints = Collections.synchronizedSet(new HashSet<>());
         this.stepCounter = new AtomicInteger(0);
         
@@ -356,6 +368,26 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
     @Override
     public boolean isPaused() {
         return paused.get();
+    }
+    
+    @Override
+    public void setAutoStepMode(boolean autoStepMode) {
+        this.autoStepMode = autoStepMode;
+    }
+    
+    @Override
+    public void setAutoStepDelay(int delayMs) {
+        this.autoStepDelay = delayMs;
+    }
+    
+    @Override
+    public boolean isAutoStepMode() {
+        return autoStepMode;
+    }
+    
+    @Override
+    public int getAutoStepDelay() {
+        return autoStepDelay;
     }
     
     @Override

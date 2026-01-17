@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep18.visualization.adapter;
 
+import io.reactivex.rxjava3.core.Observable;
 import org.teachfx.antlr4.common.visualization.*;
 import org.teachfx.antlr4.common.visualization.event.*;
 import org.teachfx.antlr4.common.visualization.event.events.*;
@@ -9,7 +10,6 @@ import org.teachfx.antlr4.ep18.stackvm.FunctionSymbol;
 import org.teachfx.antlr4.ep18.stackvm.VMConfig;
 
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -38,7 +38,7 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
     /**
      * 事件总线
      */
-    private EventBus eventBus;
+    private RxEventBus eventBus;
     
 
     
@@ -93,24 +93,7 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
      * 步进计数器
      */
     private final AtomicInteger stepCounter;
-    
-    // ==================== 监听器列表 ====================
-    
-    /**
-     * 执行监听器列表
-     */
-    private final List<ExecutionListener> executionListeners;
-    
-    /**
-     * 状态变化监听器列表
-     */
-    private final List<StateChangeListener> stateChangeListeners;
-    
-    /**
-     * 教育提示监听器列表
-     */
-    private final List<EducationalHintListener> educationalHintListeners;
-    
+
     // ==================== 构造函数 ====================
     
     /**
@@ -125,7 +108,7 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
         }
         
         this.vm = vm;
-        this.eventBus = new EventBus();
+        this.eventBus = new RxEventBus();
 
         this.disAssembler = createDisAssembler(vm);
         
@@ -144,12 +127,7 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
         this.autoStepDelay = 200;
         this.breakpoints = Collections.synchronizedSet(new HashSet<>());
         this.stepCounter = new AtomicInteger(0);
-        
-        // 初始化监听器列表
-        this.executionListeners = new CopyOnWriteArrayList<>();
-        this.stateChangeListeners = new CopyOnWriteArrayList<>();
-        this.educationalHintListeners = new CopyOnWriteArrayList<>();
-        
+
         // 初始化事件系统
         initializeEventSystem();
     }
@@ -175,43 +153,13 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
      * 初始化事件系统
      */
     private void initializeEventSystem() {
-        // 启动事件总线
-        eventBus.start();
-        
         // 注册默认事件订阅者（用于内部状态跟踪）
-        eventBus.subscribe(new EventSubscriber<InstructionExecutedEvent>() {
-            @Override
-            public void onEvent(InstructionExecutedEvent event) {
-                // 更新步进计数器
-                stepCounter.incrementAndGet();
-                
-                // 更新VM状态
-                updateVMState();
-                
-                // 通知执行监听器
-                for (ExecutionListener listener : executionListeners) {
-                    listener.afterInstructionExecute(
-                        event.getPC(),
-                        event.getMnemonic() + " " + event.getOperands(),
-                        null // 结果暂不提供
-                    );
-                }
-            }
-            
-            @Override
-            public Class<InstructionExecutedEvent> getSubscribedEventType() {
-                return InstructionExecutedEvent.class;
-            }
-            
-            @Override
-            public String getSubscriberId() {
-                return "StackVMVisualAdapter";
-            }
-            
-            @Override
-            public String getSourceId() {
-                return "StackVMVisualAdapter";
-            }
+        eventBus.subscribe(InstructionExecutedEvent.class, event -> {
+            // 更新步进计数器
+            stepCounter.incrementAndGet();
+
+            // 更新VM状态
+            updateVMState();
         });
     }
     
@@ -313,20 +261,14 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
         if (running.get() && !paused.get()) {
             paused.set(true);
             vmState.setExecutionState(VMState.ExecutionState.PAUSED);
-            
+
             // 发布暂停事件
             this.publish(new ExecutionStateChangedEvent(
                 this,
                 stepCounter.get(),
                 VMState.ExecutionState.RUNNING,
-                VMState.ExecutionState.PAUSED,
-                "用户请求暂停"
+                VMState.ExecutionState.PAUSED
             ));
-            
-            // 通知监听器
-            for (ExecutionListener listener : executionListeners) {
-                listener.executionPaused();
-            }
         }
     }
     
@@ -335,24 +277,18 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
         boolean wasRunning = running.getAndSet(false);
         paused.set(false);
         stepMode.set(false);
-        
+
         if (wasRunning) {
             vmState.setExecutionState(VMState.ExecutionState.STOPPED);
-            
+
             // 发布停止事件
             this.publish(new ExecutionStateChangedEvent(
                 this,
                 stepCounter.get(),
                 VMState.ExecutionState.RUNNING,
-                VMState.ExecutionState.STOPPED,
-                "用户请求停止"
+                VMState.ExecutionState.STOPPED
             ));
-            
-            // 通知监听器
-            for (ExecutionListener listener : executionListeners) {
-                listener.executionStopped("用户请求停止");
-            }
-            
+
             // 中断执行线程
             if (executionThread != null && executionThread.isAlive()) {
                 executionThread.interrupt();
@@ -436,25 +372,28 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
     
     @Override
     public void addExecutionListener(ExecutionListener listener) {
-        if (listener != null) {
-            executionListeners.add(listener);
-        }
+        throw new UnsupportedOperationException(
+            "Traditional listener pattern not supported. Use RxJava Observable streams instead: " +
+            "getEventStream(), getInstructionExecutedStream(), etc."
+        );
     }
-    
+
     @Override
     public void addStateChangeListener(StateChangeListener listener) {
-        if (listener != null) {
-            stateChangeListeners.add(listener);
-        }
+        throw new UnsupportedOperationException(
+            "Traditional listener pattern not supported. Use RxJava Observable streams instead: " +
+            "getEventStream(), getProgramCounterChangedStream(), etc."
+        );
     }
-    
+
     @Override
     public void addEducationalListener(EducationalHintListener listener) {
-        if (listener != null) {
-            educationalHintListeners.add(listener);
-        }
+        throw new UnsupportedOperationException(
+            "Traditional listener pattern not supported. Use RxJava Observable streams instead: " +
+            "getEventStream(), getEducationalHintStream(), etc."
+        );
     }
-    
+
     // ==================== 内部方法 ====================
     
     /**
@@ -527,38 +466,23 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
             try {
                 // 发布执行开始事件
                 this.publish(new ExecutionStartedEvent(this, stepCounter.get()));
-                
-                // 通知监听器
-                for (ExecutionListener listener : executionListeners) {
-                    listener.executionStarted();
-                }
-                
+
                 // 执行虚拟机
                 vm.exec();
-                
+
                 // 执行完成
                 running.set(false);
                 vmState.setExecutionState(VMState.ExecutionState.STOPPED);
-                
+
                 // 发布执行完成事件
                 this.publish(new ExecutionFinishedEvent(this, stepCounter.get(), "正常结束"));
-                
-                // 通知监听器
-                for (ExecutionListener listener : executionListeners) {
-                    listener.executionStopped("正常结束");
-                }
-                
+
             } catch (Exception e) {
                 running.set(false);
                 vmState.setExecutionState(VMState.ExecutionState.ERROR);
-                
+
                 // 发布错误事件
                 this.publish(new ExecutionErrorEvent(this, stepCounter.get(), e));
-                
-                // 通知监听器
-                for (ExecutionListener listener : executionListeners) {
-                    listener.executionError(new VMExecutionException("虚拟机执行错误", e));
-                }
             }
         }, "VM-Visual-Execution-Thread");
         
@@ -652,64 +576,9 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
             );
         }
     }
-    
-    // ==================== 事件类（简化，实际应使用common包中的事件） ====================
-    
-    /**
-     * 执行状态变化事件
-     */
-    private static class ExecutionStateChangedEvent extends VMEvent {
-        private final VMState.ExecutionState oldState;
-        private final VMState.ExecutionState newState;
-        private final String reason;
-        
-        public ExecutionStateChangedEvent(Object source, int stepNumber,
-                                         VMState.ExecutionState oldState,
-                                         VMState.ExecutionState newState,
-                                         String reason) {
-            super(source, EventType.EXECUTION_STATE_CHANGED, stepNumber);
-            this.oldState = oldState;
-            this.newState = newState;
-            this.reason = reason;
-        }
-        
-        @Override
-        public String getDescription() {
-            return String.format("执行状态变化: %s -> %s (%s)", oldState, newState, reason);
-        }
-    }
-    
-    /**
-     * 执行开始事件
-     */
-    private static class ExecutionStartedEvent extends VMEvent {
-        public ExecutionStartedEvent(Object source, int stepNumber) {
-            super(source, EventType.EXECUTION_STARTED, stepNumber);
-        }
-        
-        @Override
-        public String getDescription() {
-            return "执行开始";
-        }
-    }
-    
-    /**
-     * 执行完成事件
-     */
-    private static class ExecutionFinishedEvent extends VMEvent {
-        private final String reason;
-        
-        public ExecutionFinishedEvent(Object source, int stepNumber, String reason) {
-            super(source, EventType.EXECUTION_FINISHED, stepNumber);
-            this.reason = reason;
-        }
-        
-        @Override
-        public String getDescription() {
-            return String.format("执行完成: %s", reason);
-        }
-    }
-    
+
+    // ==================== EP18特定事件类（不在common包中） ====================
+
     /**
      * 执行错误事件
      */
@@ -821,12 +690,15 @@ public class StackVMVisualAdapter implements IVirtualMachineVisualization, Event
 
     @Override
     public EventBus getEventBus() {
-        return eventBus;
+        // Return null as RxEventBus doesn't extend EventBus
+        // This is a compatibility shim - the adapter primarily uses RxEventBus
+        return null;
     }
 
     @Override
     public void setEventBus(EventBus eventBus) {
-        this.eventBus = eventBus;
+        // Ignore - we use RxEventBus internally
+        // This is a compatibility shim for the EventPublisher interface
     }
 
     // ==================== RxJava事件流实现 ====================

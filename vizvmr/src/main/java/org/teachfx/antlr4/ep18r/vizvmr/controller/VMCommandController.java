@@ -46,7 +46,14 @@ public class VMCommandController {
             return VMCommandResult.success("跳过代码加载", stateManager.getCurrentState());
         }
         VMCommand command = new LoadCodeCommand(vm, codeStream);
-        return executeCommand(command, VMState.LOADED);
+        VMCommandResult result = executeCommand(command, VMState.LOADED);
+
+        if (result.isSuccess()) {
+            System.out.println("[STATE] LoadCode成功，触发自动状态转换LOADED->READY");
+            stateManager.autoTransitionToReady();
+        }
+
+        return result;
     }
 
     public VMCommandResult start() {

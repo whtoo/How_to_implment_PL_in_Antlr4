@@ -59,6 +59,16 @@ public class VMStateManager {
         return true;
     }
 
+    public void autoTransitionToReady() {
+        System.out.println("[STATE] 自动转换触发: LOADED -> READY");
+        if (this.currentState != VMState.LOADED) {
+            System.err.println("[WARN] autoTransitionToReady只能在LOADED状态下调用");
+            return;
+        }
+        currentState = VMState.READY;
+        notifyStateChanged(VMState.LOADED, VMState.READY);
+    }
+
     public void addStateChangeListener(StateChangeListener listener) {
         listeners.add(listener);
     }

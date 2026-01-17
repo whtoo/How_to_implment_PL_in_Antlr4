@@ -209,6 +209,10 @@ public class RegisterVMInterpreter implements IVirtualMachine, IMemoryManager {
     public synchronized java.util.Set<Integer> getBreakpoints() {
         return new java.util.HashSet<>(breakpoints);
     }
+
+    public boolean hasBreakpoints() {
+        return !breakpoints.isEmpty();
+    }
     
     /**
      * 通知监听器：指令执行前

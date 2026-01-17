@@ -331,14 +331,32 @@ public class ReactiveVizVMRLauncher extends Application {
      */
     private void startExecution() {
         logger.info("开始执行 (慢速播放模式)");
+
         if (vm == null) {
             logView.warn("请先加载代码文件");
             logger.warn("VM未初始化，无法开始执行");
             return;
         }
+
+        // 检查代码是否已加载
+        if (vm.getCode() == null || vm.getCodeSize() == 0) {
+            logView.warn("请先加载代码文件（代码为空）");
+            logger.warn("VM代码未加载，代码大小: {}, 代码引用: {}", vm.getCodeSize(), vm.getCode());
+            showError("请先加载代码文件");
+            return;
+        }
+
         logView.info("开始执行 (慢速播放模式)");
-        logger.debug("调用stateModel.start()");
-        stateModel.start(); // 自动设置200ms延迟
+        logger.debug("调用stateModel.start()，代码大小: {} bytes", vm.getCodeSize());
+
+        try {
+            stateModel.start(); // 自动设置200ms延迟
+            logger.info("VM执行已启动");
+        } catch (Exception e) {
+            logger.error("启动VM执行失败", e);
+            logView.error("启动失败: " + e.getMessage());
+            showError("启动失败: " + e.getMessage());
+        }
     }
 
     /**

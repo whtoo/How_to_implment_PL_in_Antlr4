@@ -300,7 +300,7 @@ public class VizVMRLauncher extends Application {
         // 运行菜单
         Menu runMenu = new Menu("运行");
         MenuItem startItem = new MenuItem("开始执行");
-        startItem.setOnAction(e -> visualBridge.start());
+        startItem.setOnAction(e -> startExecution());
         MenuItem pauseItem = new MenuItem("暂停");
         pauseItem.setOnAction(e -> visualBridge.pause());
         MenuItem stopItem = new MenuItem("停止");
@@ -331,7 +331,7 @@ public class VizVMRLauncher extends Application {
         
         Button startBtn = new Button("▶");
         startBtn.setTooltip(new javafx.scene.control.Tooltip("开始执行 (F5)"));
-        startBtn.setOnAction(e -> visualBridge.start());
+        startBtn.setOnAction(e -> startExecution());
         
         Button pauseBtn = new Button("⏸");
         pauseBtn.setTooltip(new javafx.scene.control.Tooltip("暂停 (F6)"));
@@ -379,6 +379,32 @@ public class VizVMRLauncher extends Application {
             } catch (Exception e) {
                 showError("加载失败: " + e.getMessage());
             }
+        }
+    }
+
+    /**
+     * 开始执行
+     */
+    private void startExecution() {
+        System.out.println("开始执行");
+        if (visualBridge.getVM() == null) {
+            System.out.println("VM未初始化");
+            showError("VM未初始化");
+            return;
+        }
+
+        if (visualBridge.getVM().getCode() == null || visualBridge.getVM().getCodeSize() == 0) {
+            System.out.println("VM代码未加载");
+            showError("请先加载代码文件");
+            return;
+        }
+
+        try {
+            visualBridge.start();
+        } catch (Exception e) {
+            System.err.println("启动失败: " + e.getMessage());
+            e.printStackTrace();
+            showError("启动失败: " + e.getMessage());
         }
     }
 

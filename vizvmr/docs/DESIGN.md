@@ -222,29 +222,86 @@ public class VMRInstrumentation {
 
 ### 5. GUI界面设计
 
-#### 主窗口布局 (MainFrame)
+#### 主窗口布局 (VizVMRLauncher - JavaFX)
+
+**实际布局结构**:
 ```
-+-------------------------------------------------+
-| [菜单栏] File View Run Debug Help               |
-+-------------------------------------------------+
-| [工具栏] ▶ ⏸ ⏹ ⏭  🔍 💾 📊                    |
-+-------------------------------------------------+
-| [代码面板]        | [寄存器面板]                |
-| PC: 0x004 li r1, 100| r0: 0x00000000 (0)       |
-| PC: 0x008 add r2, r1, r1 | r1: 0x00000064 (100)|
-| PC: 0x00C add r3, r2, r1 | r2: 0x000000c8 (200)|
-| ...               | ...                         |
-|                   | r15: 0x00000000 (0)        |
-+-------------------+-----------------------------+
-| [内存面板]        | [调用栈面板]                |
-| 0x0000: 0x12345678| Frame 0: main (PC=0x004)   |
-| 0x0004: 0x9abcdef0| Frame 1: func1 (PC=0x024)  |
-| 0x0008: 0xdeadbeef| Frame 2: func2 (PC=0x044)  |
-| ...               | ...                         |
-+-------------------+-----------------------------+
-| [状态栏] 已执行: 153 指令 | 耗时: 0.45s | ✅运行中|
-+-------------------------------------------------+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ ┌───────────────────────────────────────────────────────────────────┐ │
+│ │ [菜单栏] 文件 视图 运行 帮助                        │ │
+│ ├───────────────────────────────────────────────────────────────────┤ │
+│ │ [工具栏] ▶ ⏸ ⏹ ⏭                                   │ │
+│ └───────────────────────────────────────────────────────────────────┘ │
+│ ┌───────────────────────────────────────────────────────────────────┐ │
+│ │ ┌───────────────┬───────────────┐                     │ │
+│ │ │   寄存器      │    代码       │                     │ │
+│ │ │   RegisterView  │   CodeView    │                     │ │
+│ │ │               │               │                     │ │
+│ │ │  r0: 0x00    │ 0x004: li r1,100                    │ │
+│ │ │  r1: 0x64    │ 0x008: add r2,r1,r1               │ │
+│ │ │  r2: 0xC8    │ 0x00C: add r3,r2,r1               │ │
+│ │ │  ...          │ ...                                  │ │
+│ │ │  r15: 0x00    │                                      │ │
+│ │ ├───────────────┴───────────────┤                     │ │
+│ │ │    栈         │    内存        │                     │ │
+│ │ │  StackView    │ MemoryView    │                     │ │
+│ │ │               │               │                     │ │
+│ │ │ Frame 0:     │ 0x0000: 0x12345678                 │ │
+│ │ │   main(PC=4) │ 0x0004: 0x9abcdef0                  │ │
+│ │ │ Frame 1:     │ 0x0008: 0xdeadbeef                  │ │
+│ │ │  func1(PC=24)│ ...                                  │ │
+│ │ │ ...          │                                      │ │
+│ │ └───────────────────────────────┘                     │ │
+│ └───────────────────────────────────────────────────────────────────┘ │
+│ ┌───────────────────────────────────────────────────────────────────┐ │
+│ │ [状态栏] 状态: 运行中 | PC: 0x0010 | 指令: 153      │ │
+│ ├───────────────────────────────────────────────────────────────────┤ │
+│ │ [日志] [INFO] 开始执行                                    │ │
+│ └───────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
+
+**布局层次结构**:
+```mermaid
+graph TB
+    Root[BorderPane - 根面板]
+    
+    Root --> Top[VBox - 顶部容器]
+    Top --> MenuBar[MenuBar - 菜单栏]
+    Top --> ToolBar[ToolBar - 工具栏]
+    
+    Root --> Center[SplitPane - 中央水平分割 40% | 60%]
+    
+    Center --> Left[SplitPane - 左侧垂直分割 50% | 50%]
+    Left --> RegisterView[RegisterView - 寄存器视图]
+    Left --> StackView[StackView - 调用栈视图]
+    
+    Center --> Right[SplitPane - 右侧垂直分割 50% | 50%]
+    Right --> CodeView[CodeView - 代码视图]
+    Right --> MemoryView[MemoryView - 内存视图]
+    
+    Root --> Bottom[VBox - 底部容器]
+    Bottom --> StatusView[StatusView - 状态视图]
+    Bottom --> LogView[LogView - 日志视图]
+    
+    style Root fill:#e1f5ff
+    style Center fill:#fff3e0
+    style Left fill:#fce4ec
+    style Right fill:#e8f5e9
+```
+
+**组件说明**:
+
+| 区域 | 组件 | 说明 |
+|------|------|------|
+| 菜单栏 | MenuBar | 文件(打开、重新加载、退出)、视图(寄存器、内存、刷新)、运行(开始、暂停、停止、单步)、帮助 |
+| 工具栏 | ToolBar | ▶开始、⏸暂停、⏹停止、⏭单步执行 |
+| 左上 | RegisterView | 4×4网格显示16个寄存器，支持颜色编码 |
+| 左下 | StackView | 垂直列表显示调用栈帧信息 |
+| 右上 | CodeView | 显示反汇编指令，支持PC高亮和断点 |
+| 右下 | MemoryView | 可滚动表格显示堆内存和全局变量 |
+| 底部状态栏 | StatusView | 显示VM状态、PC、指令数、执行时间、当前指令 |
+| 底部日志栏 | LogView | 显示系统日志和执行信息 |
 
 #### 组件详细设计
 
@@ -948,14 +1005,973 @@ public void registerUpdateBenchmark() {
 
 ---
 
-**文档版本**: 1.1
+## 🔄 事件执行流程分析
+
+### 概述
+
+vizvmr 采用事件驱动架构，通过观察者模式实现虚拟机状态变化到 UI 组件的实时更新。事件流从虚拟机执行开始，经过桥接器、状态模型，最终传播到各个 UI 组件。
+
+### 核心事件类型
+
+| 事件类型 | 接口 | 触发时机 | 监听器 |
+|---------|------|---------|---------|
+| **寄存器变化** | `RegisterChangeEvent` | 寄存器值被修改 | `VMRStateListener` |
+| **内存变化** | `MemoryChangeEvent` | 堆/全局变量被修改 | `VMRStateListener` |
+| **PC变化** | `PCChangeEvent` | 程序计数器更新 | `VMRStateListener` |
+| **VM状态变化** | `VMStateChangeEvent` | VM执行状态改变 | `VMRStateListener`, `VMRExecutionListener` |
+| **指令执行** | `InstructionExecutionEvent` | 指令执行完成 | `VMRExecutionListener` |
+| **执行错误** | `Throwable` + PC | 执行异常发生 | `VMRExecutionListener` |
+
+---
+
+## 🤖 关键 UI 组件状态机
+
+### 1. VMRVisualBridge 状态机
+
+**职责**: 作为中央执行协调器，连接虚拟机和可视化界面
+
+```mermaid
+stateDiagram-v2
+    [*] --> CREATED: 初始化
+    CREATED --> LOADED: loadCode()
+    LOADED --> RUNNING: start()
+    RUNNING --> PAUSED: pause()
+    PAUSED --> RUNNING: resume()
+    RUNNING --> STEPPING: step()
+    STEPPING --> RUNNING: 指令完成
+    RUNNING --> HALTED: stop()
+    PAUSED --> HALTED: stop()
+    HALTED --> LOADED: 重新加载代码
+
+    note right of CREATED
+        VM初始化完成
+    end note
+
+    note right of RUNNING
+        VM执行指令中
+    end note
+
+    note right of PAUSED
+        VM暂停等待用户操作
+    end note
+
+    note right of HALTED
+        VM停止执行
+    end note
+
+    note right of STEPPING
+        单步执行模式
+    end note
+```
+
+**状态转换表**:
+
+| 当前状态 | 触发事件 | 目标状态 | 条件 |
+|---------|---------|---------|------|
+| CREATED | loadCode() | LOADED | 代码加载成功 |
+| LOADED | start() | RUNNING | VM启动 |
+| RUNNING | pause() | PAUSED | 用户请求暂停 |
+| PAUSED | resume() | RUNNING | 用户请求继续 |
+| RUNNING | step() | STEPPING | 单步执行模式 |
+| STEPPING | (指令完成) | RUNNING | 返回连续执行 |
+| RUNNING | stop() | HALTED | 停止执行 |
+| PAUSED | stop() | HALTED | 停止执行 |
+| HALTED | loadCode() | LOADED | 重新加载代码 |
+
+**状态属性**:
+- `running`: AtomicBoolean - VM是否运行中
+- `paused`: AtomicBoolean - VM是否暂停
+- `executionThread`: Thread - VM执行线程
+
+---
+
+### 2. VMRStateModel 状态机
+
+**职责**: 管理虚拟机所有状态，提供状态变更通知
+
+```mermaid
+stateDiagram-v2
+    [*] --> CREATED: 初始化完成
+    CREATED --> LOADED: 代码加载
+    LOADED --> RUNNING: 开始执行
+    RUNNING --> PAUSED: 暂停请求
+    PAUSED --> RUNNING: 恢复执行
+    RUNNING --> STEPPING: 单步执行
+    STEPPING --> RUNNING: 完成单步
+    RUNNING --> HALTED: 停止执行
+
+    CREATED --> ERROR: 执行异常
+    LOADED --> ERROR: 执行异常
+    RUNNING --> ERROR: 执行异常
+    PAUSED --> ERROR: 执行异常
+    STEPPING --> ERROR: 执行异常
+    HALTED --> ERROR: 执行异常
+
+    note right of CREATED
+        VM状态模型已创建
+    end note
+
+    note right of RUNNING
+        VM正在执行指令
+        触发: vmStateChanged(LOADED, RUNNING)
+    end note
+
+    note right of ERROR
+        执行过程中发生异常
+        触发: vmStateChanged(old, ERROR)
+    end note
+```
+
+**状态事件触发**:
+
+| 状态转换 | 触发事件 | 监听器通知 |
+|---------|---------|-----------|
+| CREATED → LOADED | loadCode()完成 | vmStateChanged(CREATED, LOADED) |
+| LOADED → RUNNING | 开始执行 | vmStateChanged(LOADED, RUNNING) |
+| RUNNING → PAUSED | 暂停请求 | vmStateChanged(RUNNING, PAUSED) |
+| PAUSED → RUNNING | 恢复执行 | vmStateChanged(PAUSED, RUNNING) |
+| RUNNING → HALTED | 停止执行 | vmStateChanged(RUNNING, HALTED) |
+| 任意 → ERROR | 执行异常 | vmStateChanged(old, ERROR) |
+
+**数据变化事件**:
+
+| 操作 | 触发事件 | 事件参数 |
+|------|---------|---------|
+| setRegister() | registerChanged() | RegisterChangeEvent(寄存器索引, 旧值, 新值) |
+| writeHeap() | memoryChanged() | MemoryChangeEvent(HEAP, 地址, 旧值, 新值) |
+| writeGlobal() | memoryChanged() | MemoryChangeEvent(GLOBAL, 地址, 旧值, 新值) |
+| setProgramCounter() | pcChanged() | PCChangeEvent(旧PC, 新PC) |
+| 指令执行完成 | afterInstructionExecute() | InstructionExecutionEvent(PC, 操作码, 助记符, 操作数) |
+
+**监听器管理**:
+- `addStateListener()`: 注册状态监听器 - CopyOnWriteArrayList (线程安全)
+- `addExecutionListener()`: 注册执行监听器 - CopyOnWriteArrayList (线程安全)
+- `removeStateListener()`: 移除状态监听器
+- `removeExecutionListener()`: 移除执行监听器
+
+**状态快照**:
+- `createSnapshot()`: 创建当前状态快照 - VMRStateSnapshot
+- `restoreSnapshot()`: 从快照恢复状态 - 恢复寄存器、内存、栈、PC等
+
+---
+
+### 3. RegisterView 状态机
+
+**职责**: 显示16个寄存器值，支持颜色编码和高亮
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE: 初始化UI
+    IDLE --> ACTIVE: UI就绪
+    ACTIVE --> REFRESHING: refresh()
+    REFRESHING --> ACTIVE: 刷新完成
+    ACTIVE --> HIGHLIGHTED: highlightRegister()
+    HIGHLIGHTED --> ACTIVE: 清除高亮
+
+    note right of ACTIVE
+        寄存器显示正常
+    end note
+
+    note right of REFRESHING
+        正在更新寄存器值
+    end note
+
+    note right of HIGHLIGHTED
+        寄存器高亮显示
+    end note
+```
+
+**每个寄存器单元格状态**:
+
+```mermaid
+stateDiagram-v2
+    [*] --> NORMAL: 初始化
+    NORMAL --> MODIFIED: setRegister()值改变
+    MODIFIED --> NORMAL: 刷新后重置
+    NORMAL --> ZERO: r0 (零寄存器)
+    ZERO --> NORMAL: 非r0
+    NORMAL --> SPECIAL: SP/FP/LR
+    SPECIAL --> NORMAL: 非特殊寄存器
+
+    note right of NORMAL
+        未修改的普通寄存器
+        颜色: #DCDCDC (浅灰)
+    end note
+
+    note right of MODIFIED
+        最近修改的寄存器
+        颜色: #FFB6C1 (浅红)
+    end note
+
+    note right of ZERO
+        零寄存器 (仅r0)
+        颜色: #90EE90 (浅绿)
+        恒为0
+    end note
+
+    note right of SPECIAL
+        特殊寄存器
+        颜色: #ADD8E6 (浅蓝)
+        SP(r13), FP(r14), LR(r15)
+    end note
+```
+
+**颜色编码**:
+
+| 颜色 | 十六进制值 | 应用条件 | 寄存器 |
+|------|-----------|---------|--------|
+| 浅绿色 | #90EE90 | r0 (零寄存器) | r0 |
+| 浅红色 | #FFB6C1 | 最近修改的寄存器 | r1-r15 |
+| 浅蓝色 | #ADD8E6 | 特殊寄存器 (SP, FP, LR) | r13-r15 |
+| 浅灰色 | #DCDCDC | 未修改的普通寄存器 | r1-r12 |
+| 黄色 | #FFFF00 | 用户高亮 | 任意 |
+
+**事件处理流程**:
+1. VM执行指令 → 寄存器值改变
+2. VMRVisualBridge 接收到 RegisterChangeEvent
+3. 通过 ExecutionCallback 传递到 UI 线程
+4. Platform.runLater() 调度到 JavaFX 应用线程
+5. RegisterView.updateRegister() 更新显示
+6. applyColorCoding() 应用颜色编码
+7. UI 重新渲染
+
+---
+
+### 4. CodeView 状态机
+
+**职责**: 显示反汇编指令，高亮当前PC位置，支持断点
+
+```mermaid
+stateDiagram-v2
+    [*] --> EMPTY: 初始化
+    EMPTY --> LOADED: setInstructions()
+    LOADED --> ACTIVE: PC变化
+    ACTIVE --> HIGHLIGHTING: highlightPC()
+    HIGHLIGHTING --> ACTIVE: 完成高亮
+    ACTIVE --> BREAKPOINT_SET: toggleBreakpoint()
+    BREAKPOINT_SET --> ACTIVE: 断点标记显示
+
+    note right of EMPTY
+        代码面板为空
+    end note
+
+    note right of LOADED
+        代码已加载显示
+    end note
+
+    note right of ACTIVE
+        代码面板活跃
+    end note
+
+    note right of HIGHLIGHTING
+        高亮当前PC位置
+        黄色背景
+    end note
+
+    note right of BREAKPOINT_SET
+        断点已设置
+        红色圆点标记
+    end note
+```
+
+**代码行状态**:
+
+| 状态 | 描述 | 显示样式 |
+|------|------|---------|
+| NORMAL | 普通指令行 | 默认样式 |
+| CURRENT_PC | 当前执行位置 | 黄色背景 |
+| BREAKPOINT | 断点位置 | 红色圆点 |
+| EXECUTED | 已执行过的指令 | 浅绿背景 |
+
+**事件处理**:
+
+| 事件 | 触发条件 | UI更新 |
+|------|---------|--------|
+| setInstructions() | 代码加载成功 | 显示所有指令 |
+| highlightPC() | PC变化 | 高亮当前行，更新状态栏 |
+| toggleBreakpoint() | 用户点击代码行 | 添加/删除断点标记 |
+| refresh() | 执行回调 | 刷新所有显示 |
+
+**指令显示格式**:
+- 格式: `"0x{PC:04X}  {助记符}  {操作数}"`
+- 示例: `"0x0010  li      r1, 100"`
+
+**交互操作**:
+- 单击: 设置/清除断点
+- 右键: 上下文菜单 (跳转、查看详情)
+- 双击: 跳转到PC
+
+---
+
+### 5. StatusView 状态机
+
+**职责**: 显示执行统计、VM状态、PC、指令信息
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE: 初始化
+    IDLE --> READY: UI就绪
+    READY --> TIMING: 执行开始
+    TIMING --> STOPPED: 执行暂停/停止
+    STOPPED --> TIMING: 重新开始
+
+    note right of IDLE
+        状态面板初始化
+    end note
+
+    note right of READY
+        准备执行
+        stateLabel: "状态: 就绪"
+    end note
+
+    note right of TIMING
+        正在计时
+        AnimationTimer运行中
+        更新: 时间显示
+    end note
+
+    note right of STOPPED
+        执行已停止
+        AnimationTimer已停止
+    end note
+```
+
+**状态属性**:
+
+| 属性 | 显示格式 | 更新时机 |
+|------|---------|--------|
+| 状态 | "状态: {中文名称}" | vmStateChanged() |
+| PC | "PC: 0x{PC:04X}" | pcChanged() |
+| 指令数 | "指令: {步数}" | incrementExecutionSteps() |
+| 时间 | "时间: {秒数}.3fs" | AnimationTimer (每帧) |
+| 当前指令 | "当前: {助记符} {操作数}" | afterInstructionExecute() |
+
+**计时器状态**:
+
+```mermaid
+stateDiagram-v2
+    [*] --> NOT_STARTED: 初始化
+    NOT_STARTED --> RUNNING: startTimer()
+    RUNNING --> STOPPED: stopTimer()
+    STOPPED --> RUNNING: 重新启动
+
+    note right of NOT_STARTED
+        计时器未启动
+        startTime = 0
+    end note
+
+    note right of RUNNING
+        计时器运行中
+        触发频率: ~60 FPS (每16ms)
+        更新内容: 经过时间
+    end note
+
+    note right of STOPPED
+        计时器已停止
+        停止显示时间更新
+    end note
+```
+
+**UI布局**:
+
+```
+[状态: 运行中]  [PC: 0x0010]  [指令: 153]  [时间: 2.456s]  [当前: add r2, r1, r0]
+    ↑               ↑              ↑              ↑                ↑
+stateLabel      pcLabel       stepsLabel     timeLabel      instructionLabel
+```
+
+---
+
+### 6. VMRStepController 状态机
+
+**职责**: 管理单步执行模式和断点控制
+
+```mermaid
+stateDiagram-v2
+    [*] --> CONTINUE: 初始化
+    CONTINUE --> STEP_INTO: stepInto()
+    STEP_INTO --> STEP_OVER: stepOver()
+    STEP_OVER --> STEP_OUT: stepOut()
+    STEP_OUT --> CONTINUE: continueExecution()
+
+    CONTINUE --> RUN_TO_LINE: runToPC(pc)
+    RUN_TO_LINE --> PAUSED: 到达目标PC
+
+    note right of CONTINUE
+        连续执行模式
+    end note
+
+    note right of STEP_INTO
+        单步入
+        执行下一条指令
+        停止条件: 每条指令后
+    end note
+
+    note right of STEP_OVER
+        单步步过
+        执行函数但不进入
+        停止条件: 当前栈深度不变
+    end note
+
+    note right of STEP_OUT
+        单步步出
+        执行到函数返回
+        停止条件: 栈深度减少
+    end note
+
+    note right of RUN_TO_LINE
+        运行到指定PC
+        停止条件: 到达目标PC
+    end note
+```
+
+**步执行模式对比**:
+
+| 模式 | 行为 | 停止条件 |
+|------|------|---------|
+| STEP_INTO | 执行下一条指令 | 每条指令后停止 |
+| STEP_OVER | 执行函数但不进入 | 当前栈深度不变时停止 |
+| STEP_OUT | 执行到函数返回 | 栈深度减少时停止 |
+| RUN_TO_LINE | 执行到指定PC | 到达目标PC时停止 |
+| CONTINUE | 连续执行 | 遇到断点或程序结束 |
+
+**断点交互**:
+
+| 操作 | 动作 | VM接口 |
+|------|------|--------|
+| setBreakpoint() | 添加断点到管理器 | vm.addBreakpoint() |
+| clearBreakpoint() | 从管理器删除断点 | vm.removeBreakpoint() |
+| toggleBreakpoint() | 切换断点状态 | vm.hasBreakpoint() + add/remove |
+| clearAllBreaks() | 清除所有断点 | 遍历删除 |
+
+**条件断点检查流程**:
+
+```mermaid
+stateDiagram-v2
+    [*] --> CheckPC: 指令执行
+    CheckPC --> NoBreak: PC不在断点集合
+    CheckPC --> CheckDisabled: PC在断点集合
+    CheckDisabled --> NoBreak: 断点已禁用
+    CheckDisabled --> CheckCondition: 断点已启用
+    CheckCondition --> NoBreak: 条件评估为false
+    CheckCondition --> ShouldPause: 条件评估为true
+    CheckCondition --> ShouldPause: 无条件断点
+    ShouldPause --> [*]: 返回 true (暂停)
+    NoBreak --> [*]: 返回 false (继续)
+
+    note right of ShouldPause
+        触发暂停执行
+        更新UI显示断点位置
+    end note
+
+    note right of NoBreak
+        继续执行下一条指令
+    end note
+```
+
+**条件断点检查 (`shouldPause(pc)`)**:
+1. 检查PC是否在断点集合中
+2. 检查断点是否被禁用
+3. 如果是条件断点，评估条件表达式
+4. 返回是否应该暂停
+
+---
+
+## 🏊 UI 事件流泳道图
+
+### 整体事件流交互
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant 用户操作
+    participant VizVMRLauncher
+    participant VMRVisualBridge
+    participant VMRStateModel
+    participant RegisterVMInterpreter as VM
+    participant UI组件
+
+    用户操作->>VizVMRLauncher: 点击"开始"按钮
+    VizVMRLauncher->>VMRVisualBridge: start()
+    VMRVisualBridge->>VM: vmAdapter.run()
+    VM->>VM: 开始执行指令
+    VM-->>VM: 指令执行完成
+    VM->>VMRStateModel: afterInstructionExecute()
+    VMRStateModel->>VMRStateModel: syncRegisters()
+    VMRStateModel->>VM: getRegister()
+    VM-->>VMRStateModel: 返回寄存器值
+    VMRStateModel->>VMRStateModel: registerChanged()
+    VMRStateModel->>VMRVisualBridge: onRegisterChanged()
+    VMRVisualBridge->>UI组件: Platform.runLater()
+    UI组件->>UI组件: RegisterView.refresh()
+    UI组件->>UI组件: 更新显示
+    UI组件-->>用户操作: UI显示更新完成
+```
+
+### 单步执行流程
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant 用户
+    participant VMRStepController
+    participant VMRVisualBridge
+    participant VM
+    participant VMRStateModel
+    participant UI组件
+
+    用户->>VMRStepController: 点击"单步"
+    VMRStepController->>VMRVisualBridge: stepInto()
+    VMRVisualBridge->>VMRStateModel: setVMState(STEPPING)
+    VMRVisualBridge->>VM: step()
+    VM->>VM: 执行单条指令
+    VM-->>VMRVisualBridge: afterInstructionExecute()
+    VMRVisualBridge->>VMRStateModel: syncRegisters()
+    VMRStateModel->>VM: getRegister()
+    VM-->>VMRStateModel: 返回寄存器值
+    VMRStateModel->>VMRVisualBridge: registerChanged()
+    VMRVisualBridge->>UI组件: onRegisterChanged()
+    UI组件->>UI组件: Platform.runLater()
+    UI组件->>UI组件: RegisterView.refresh()
+    UI组件->>UI组件: UI更新
+    UI组件-->>用户: 单步完成
+```
+
+### 暂停/恢复流程
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant 用户
+    participant VMRVisualBridge
+    participant VM
+    participant VMRStateModel
+    participant UI组件
+
+    用户->>VMRVisualBridge: 点击"暂停"
+    VMRVisualBridge->>VM: pause()
+    VM->>VM: vmAdapter.pause()
+    VM-->>VMRVisualBridge: 暂停完成
+    VMRVisualBridge->>VMRStateModel: setVMState(PAUSED)
+    VMRStateModel->>VMRVisualBridge: vmStateChanged()
+    VMRVisualBridge->>UI组件: onStateChanged()
+    UI组件->>UI组件: Platform.runLater()
+    UI组件->>UI组件: StatusView.updateState()
+    UI组件->>UI组件: UI更新
+    UI组件-->>用户: UI显示"已暂停"
+
+    rect rgb(200, 220, 200)
+    Note over 用户,UI组件: 用户请求恢复执行
+    end
+
+    用户->>VMRVisualBridge: 点击"继续"
+    VMRVisualBridge->>VMRVisualBridge: paused.set(false)
+    VMRVisualBridge->>VM: vm.setPaused(false)
+    VMRVisualBridge->>VMRStateModel: setVMState(RUNNING)
+    VMRStateModel->>VMRVisualBridge: vmStateChanged()
+    VMRVisualBridge->>UI组件: onStateChanged()
+    UI组件->>UI组件: Platform.runLater()
+    UI组件->>UI组件: StatusView.updateState()
+    UI组件->>UI组件: UI更新
+    UI组件-->>用户: UI显示"运行中"
+```
+
+### 断点触发流程
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant 用户
+    participant VMRStepController
+    participant VMRBreakpointManager
+    participant VM
+    participant VMRStateModel
+    participant UI组件
+
+    用户->>VMRStepController: 点击代码行
+    VMRStepController->>VMRBreakpointManager: toggleBreakpoint(pc)
+    VMRBreakpointManager->>VMRBreakpointManager: setBreakpoint(pc)
+    VMRBreakpointManager->>VM: vm.addBreakpoint()
+    VMRBreakpointManager-->>UI组件: 断点已设置
+    UI组件->>UI组件: Platform.runLater()
+    UI组件->>UI组件: CodeView.toggleBreakpoint()
+    UI组件->>UI组件: 显示断点标记
+    UI组件-->>用户: UI显示断点
+
+    rect rgb(255, 230, 200)
+    Note over 用户,UI组件: 用户执行程序到断点
+    end
+
+    用户->>VMRStepController: 点击"继续"
+    VMRStepController->>VMRVisualBridge: continueExecution()
+    VMRVisualBridge->>VM: start()
+    VM->>VM: 执行指令...
+    VM->>VM: 到达断点PC
+    VM->>VMRBreakpointManager: shouldPause(pc)
+    VMRBreakpointManager-->>VM: 返回 true (暂停)
+    VM->>VM: 执行暂停
+    VM->>VMRStateModel: setVMState(PAUSED)
+    VMRStateModel->>VMRVisualBridge: vmStateChanged()
+    VMRVisualBridge->>UI组件: onStateChanged()
+    UI组件->>UI组件: Platform.runLater()
+    UI组件->>UI组件: CodeView.highlightPC()
+    UI组件->>UI组件: StatusView.updateState()
+    UI组件->>UI组件: LogView.info("在断点暂停")
+    UI组件-->>用户: UI在断点处暂停
+```
+泳道: 用户操作 | VizVMRLauncher (UI框架) | VMRVisualBridge (桥接器) | VMRStateModel (状态模型) | RegisterVMInterpreter (VM) | UI组件 (RegisterView等)
+
+时间流:
+
+用户操作           VizVMRLauncher          VMRVisualBridge           VMRStateModel              VM               UI组件
+   │                     │                        │                          │                    │                  │
+   │ 点击"开始"按钮       │                        │                          │                    │                  │
+   ├───────────────────>│                        │                          │                    │                  │
+   │                     │ start()                  │                          │                    │                  │
+   │                     ├─────────────────────────>│                          │                    │                  │
+   │                     │                        │ vmAdapter.run()            │                    │                  │
+   │                     │                        ├─────────────────────────>│                  │                  │
+   │                     │                        │                          │ 开始执行指令        │                  │
+   │                     │                        │                          ├──────────────────>│                  │
+   │                     │                        │                          │ 指令执行完成        │                  │
+   │                     │                        │                          │<──────────────────┤                  │
+   │                     │                        │                          │                    │                  │
+   │                     │                        │ afterInstructionExecute()    │                    │                  │
+   │                     │                        │<─────────────────────────┤                    │                  │
+   │                     │                        │                          │                    │                  │
+   │                     │                        │ syncRegisters()            │                    │                  │
+   │                     │                        │                          │ getRegister()       │                  │
+   │                     │                        │                          ├──────────────────>│                  │
+   │                     │                        │                          │<──────────────────┤                  │
+   │                     │                        │                          │                    │                  │
+   │                     │                        │ registerChanged()          │                    │                  │
+   │                     │                        │                          │                    │                  │
+   │                     │ onRegisterChanged()      │                          │                    │                  │
+   │                     │<───────────────────────┤                          │                    │                  │
+   │                     │                        │                          │                    │                  │
+   │                     │ Platform.runLater()     │                          │                    │                  │
+   │                     │                        │                          │                    │                  │
+   │                     │                        │                          │                    │                  │
+   │                     │                        │                          │                    │                  │
+   │                     │                        │                          │                    │ RegisterView      │
+   │                     │                        │                          │                    │ refresh()         │
+   │                     │                        │                          │                    ├─────────────────>│
+   │                     │                        │                          │                    │                  │
+   │                     │                        │                          │                    │ 更新显示         │
+   │                     │                        │                          │                    │                  │
+   │                     │                        │                          │                    │<─────────────────┤
+   │                     │                        │                          │                    │                  │
+   │ UI显示更新完成       │                        │                          │                    │                  │
+   │<────────────────────│                        │                          │                    │                  │
+   │                     │                        │                          │                    │                  │
+
+═══════════════════════════════════════════════════════════════════════════════════════════════
+```
+
+### 单步执行流程
+
+```
+泳道: 用户 | VMRStepController | VMRVisualBridge | VM | VMRStateModel | UI组件
+
+时间流:
+
+用户         VMRStepController    VMRVisualBridge      VM          VMRStateModel      UI组件
+ │                 │                    │                │                │              │
+ │ 点击"单步"       │                    │                │                │              │
+ ├─────────────────>│                    │                │                │              │
+ │                 │ stepInto()          │                │                │              │
+ │                 ├───────────────────>│                │                │              │
+ │                 │                    │ setVMState(STEPPING)│              │              │
+ │                 │                    ├───────────────>│                │              │
+ │                 │                    │                │                │              │
+ │                 │                    │ step()          │                │              │
+ │                 │                    ├───────────────>│                │              │
+ │                 │                    │                │ 执行单条指令     │              │
+ │                 │                    │                ├───────────────>│              │
+ │                 │                    │                │                │              │
+ │                 │                    │                │<───────────────┤              │
+ │                 │                    │                │                │              │
+ │                 │                    │ afterInstructionExecute()│              │              │
+ │                 │                    │<───────────────┤                │              │
+ │                 │                    │                │                │              │
+ │                 │                    │ syncRegisters() │                │              │
+ │                 │                    ├───────────────>│                │              │
+ │                 │                    │                │ getRegister()   │              │
+ │                 │                    │                ├───────────────>│              │
+ │                 │                    │                │<───────────────┤              │
+ │                 │                    │                │                │              │
+ │                 │                    │ registerChanged()                │              │
+ │                 │                    │<───────────────┤                │              │
+ │                 │                    │                │                │              │
+ │                 │ onRegisterChanged() │                │              │              │
+ │                 │<───────────────────┤                │                │              │
+ │                 │                    │                │                │              │
+ │                 │                    │                │                │ Platform.runLater()
+ │                 │                    │                │                │              │
+ │                 │                    │                │                │              │ RegisterView.refresh()
+ │                 │                    │                │                ├─────────────>│
+ │                 │                    │                │                │              │
+ │                 │                    │                │                │              │ UI更新
+ │                 │                    │                │                │<─────────────┤
+ │                 │                    │                │                │              │
+ │ 单步完成         │                    │                │                │              │
+ │<─────────────────│                    │                │                │              │
+
+```
+
+### 暂停/恢复流程
+
+```
+泳道: 用户 | VMRVisualBridge | VM | VMRStateModel | UI组件
+
+时间流:
+
+用户         VMRVisualBridge       VM              VMRStateModel      UI组件
+ │                 │                  │                  │              │
+ │ 点击"暂停"       │                  │                  │              │
+ ├─────────────────>│                  │                  │              │
+ │                 │ pause()           │                  │              │
+ │                 ├─────────────────>│                  │              │
+ │                 │                  │ vmAdapter.pause()   │              │
+ │                 │                  ├─────────────────>│              │
+ │                 │                  │                  │              │
+ │                 │                  │<─────────────────┤              │
+ │                 │ setVMState(PAUSED)│                  │              │
+ │                 ├─────────────────>│                  │              │
+ │                 │                  │ vmStateChanged()   │              │
+ │                 │                  │<─────────────────┤              │
+ │                 │ onStateChanged()  │                  │              │
+ │                 │<─────────────────┤                  │              │
+ │                 │ Platform.runLater()│                  │              │
+ │                 │                  │                  │              │ StatusView.updateState()
+ │                 │                  │                  ├────────────>│
+ │                 │                  │                  │              │ UI更新
+ │                 │                  │                  │<────────────┤
+ │                 │                  │                  │              │
+ │ UI显示"已暂停"   │                  │                  │              │
+ │<─────────────────│                  │                  │              │
+ │                 │                  │                  │              │
+ ───────────────────────────────────────────────────────────────────────────
+ │                 │                  │                  │              │
+ │ 点击"继续"       │                  │                  │              │
+ ├─────────────────>│                  │                  │              │
+ │                 │ resume()          │                  │              │
+ │                 │ paused.set(false) │                  │              │
+ │                 │ vm.setPaused(false)                  │              │
+ │                 ├─────────────────>│                  │              │
+ │                 │                  │                  │              │
+ │                 │ setVMState(RUNNING)│                  │              │
+ │                 ├─────────────────>│                  │              │
+ │                 │                  │ vmStateChanged()   │              │
+ │                 │                  │<─────────────────┤              │
+ │                 │ onStateChanged()  │                  │              │
+ │                 │<─────────────────┤                  │              │
+ │                 │ Platform.runLater()│                  │              │
+ │                 │                  │                  │              │ StatusView.updateState()
+ │                 │                  │                  ├────────────>│
+ │                 │                  │                  │              │ UI更新
+ │                 │                  │                  │<────────────┤
+ │                 │                  │                  │              │
+ │ UI显示"运行中"   │                  │                  │              │
+ │<─────────────────│                  │                  │              │
+
+```
+
+### 断点触发流程
+
+```
+泳道: 用户 | VMRStepController | VMRBreakpointManager | VM | VMRStateModel | UI组件
+
+时间流:
+
+用户         VMRStepController  VMRBreakpointManager   VM           VMRStateModel      UI组件
+ │                 │                    │                 │                  │              │
+ │ 点击代码行       │                    │                 │                  │              │
+ ├─────────────────>│                    │                 │                  │              │
+ │                 │ toggleBreakpoint(pc) │                 │                  │              │
+ │                 ├───────────────────>│                 │                  │              │
+ │                 │                    │ setBreakpoint(pc)│                  │              │
+ │                 │                    ├────────────────>│                  │              │
+ │                 │                    │<────────────────┤                  │              │
+ │                 │                    │                 │                  │              │
+ │                 │                    │                 │                  │ Platform.runLater()
+ │                 │                    │                 │                  │              │ CodeView.toggleBreakpoint()
+ │                 │                    │                 │                  ├──────────>│
+ │                 │                    │                 │                  │              │ 显示断点标记
+ │                 │                    │                 │                  │<──────────┤
+ │                 │                    │                 │                  │              │
+ │ UI显示断点       │                    │                 │                  │              │
+ │<─────────────────│                    │                 │                  │              │
+ │                 │                    │                 │                  │              │
+ ───────────────────────────────────────────────────────────────────────────────────────
+ │                 │                    │                 │                  │              │
+ │ 点击"继续"       │                    │                 │                  │              │
+ ├─────────────────>│                    │                 │                  │              │
+ │                 │ continueExecution()  │                 │                  │              │
+ │                 ├───────────────────>│                 │                  │              │
+ │                 │                    │                 │ start()           │              │
+ │                 │                    │                 ├────────────────>│              │
+ │                 │                    │                 │                  │              │
+ │                 │                    │                 │ 执行指令...      │              │
+ │                 │                    │                 ├────────────────>│              │
+ │                 │                    │                 │                  │              │
+ │                 │                    │                 │ 到达断点PC       │              │
+ │                 │                    │                 ├────────────────>│              │
+ │                 │                    │                 │                  │ shouldPause(pc)
+ │                 │                    │                 │                  ├─────────>│
+ │                 │                    │                 │<─────────────────┤              │
+ │                 │                    │                 │ 返回 true (暂停)    │              │
+ │                 │                    │                 │<─────────────────┤              │
+ │                 │                    │                 │ 执行暂停           │              │
+ │                 │                    │                 │                  │              │
+ │                 │                    │                 │                  │ setVMState(PAUSED)
+ │                 │                    │                 │                  ├─────────>│
+ │                 │                    │                 │                  │              │ vmStateChanged()
+ │                 │                    │                 │                  │<─────────┤
+ │                 │                    │                 │                  │              │
+ │                 │                    │                 │                  │              │ Platform.runLater()
+ │                 │                    │                 │                  │              │ CodeView.highlightPC()
+ │                 │                    │                 │                  │              │ StatusView.updateState()
+ │                 │                    │                 │                  │              │ LogView.info("在断点暂停")
+ │                 │                    │                 │                  │              │
+ │                 │                    │                 │                  │<─────────┤
+ │                 │                    │                 │                  │              │
+ │ UI在断点处暂停   │                    │                 │                  │              │
+ │<─────────────────│                    │                 │                  │              │
+
+```
+
+---
+
+## 📊 事件执行流程总结
+
+### 事件传播路径
+
+```
+[RegisterVMInterpreter]
+        │
+        │ 指令执行
+        │ 寄存器变化
+        │ 内存变化
+        ▼
+[VMRInstrumentation / RegisterVMVisualAdapter]
+        │
+        │ 反射读取VM状态
+        │ 同步到VMRStateModel
+        ▼
+[VMRStateModel]
+        │
+        │ 触发状态事件
+        │ (registerChanged, memoryChanged, pcChanged)
+        ▼
+[VMRVisualBridge]
+        │
+        │ 实现VMRStateListener接口
+        │ 接收状态事件
+        ▼
+[ExecutionCallback]
+        │
+        │ Platform.runLater()调度
+        │ (确保在JavaFX应用线程执行)
+        ▼
+[UI Components]
+        │
+        │ RegisterView.refresh()
+        │ MemoryView.refresh()
+        │ CodeView.highlightPC()
+        │ StatusView.updateState()
+        ▼
+[UI更新和渲染]
+```
+
+### 线程模型
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ VM执行线程                                                 │
+│ ┌───────────────────────────────────────────────────────────┐  │
+│ │ RegisterVMInterpreter.execute()                         │  │
+│ │ - 执行指令                                            │  │
+│ │ - 修改寄存器                                          │  │
+│ │ - 访问内存                                            │  │
+│ │ - 更新PC                                              │  │
+│ └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                            │
+                            │ 状态变化
+                            │ 触发事件
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ VMRStateModel (任何线程可调用)                              │
+│ ┌───────────────────────────────────────────────────────────┐  │
+│ │ CopyOnWriteArrayList<VMRStateListener>                   │  │
+│ │ 线程安全的监听器遍历                                   │  │
+│ └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                            │
+                            │ 回调通知
+                            │ (可能在VM线程)
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ ExecutionCallback (回调层)                                   │
+│ ┌───────────────────────────────────────────────────────────┐  │
+│ │ Platform.runLater(Runnable)                             │  │
+│ │ 调度到JavaFX应用线程                                  │  │
+│ └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                            │
+                            │ UI更新请求
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ JavaFX应用线程 (EDT)                                       │
+│ ┌───────────────────────────────────────────────────────────┐  │
+│ │ RegisterView.refresh()                                  │  │
+│ │ MemoryView.refresh()                                    │  │
+│ │ CodeView.highlightPC()                                  │  │
+│ │ StatusView.updateState()                                │  │
+│ │ - 更新UI组件属性                                       │  │
+│ │ - 触发重新渲染                                         │  │
+│ └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 性能优化策略
+
+1. **批处理更新**: VMRStateModel 提供批量更新接口 (`registersUpdated`, `memoryUpdated`)
+2. **线程安全监听器**: 使用 `CopyOnWriteArrayList` 避免并发修改异常
+3. **UI线程调度**: `Platform.runLater()` 将所有UI更新调度到JavaFX应用线程
+4. **增量更新**: UI组件只在值变化时更新对应的单元格
+5. **颜色缓存**: RegisterView 记录 `previousValues[]`，只在值改变时触发重新着色
+
+---
+
+## 🔌 扩展指南
+
+### 添加新UI组件
+
+1. 继承 `JFXPanelBase` 基类
+2. 实现 `refresh()` 方法更新显示
+3. 在 `VizVMRLauncher.setupExecutionCallback()` 中添加事件处理
+4. 在 `createScene()` 中添加到UI布局
+
+### 添加新事件类型
+
+1. 在 `VMRStateListener` 或 `VMRExecutionListener` 添加接口方法
+2. 创建对应的事件类 (继承 `VMRStateEvent`)
+3. 在 `VMRStateModel` 中触发事件
+4. 在 `VMRVisualBridge` 中接收并转发到 `ExecutionCallback`
+
+---
+
+**文档版本**: 1.2
 **创建日期**: 2026-01-14
-**最后更新**: 2026-01-16
+**最后更新**: 2026-01-17
 **维护者**: EP18R开发团队
 
 ### 更新记录
 
 | 版本 | 日期 | 更新内容 |
 |------|------|----------|
+| 1.2 | 2026-01-17 | 添加事件执行流程分析章节；包含状态机图、泳道图、事件传播路径 |
 | 1.1 | 2026-01-16 | 添加 `vmStateChanged()` 到 VMRStateListener；更新 VMRStateModel 的 heap/globals 为非 final；更新包结构以匹配实际实现 |
 | 1.0 | 2026-01-14 | 初始版本 |

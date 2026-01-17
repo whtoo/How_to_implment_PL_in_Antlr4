@@ -178,13 +178,13 @@ public class VMRVisualBridge implements VMRStateListener, VMRExecutionListener {
             return;
         }
 
-        logger.info("启动VM执行");
+        logger.info("启动VM执行，running={}, paused={}", running.get(), paused.get());
         try {
             vmAdapter.run();
             running.set(true);
             paused.set(false);
             stateModel.setVMState(VMStateChangeEvent.State.RUNNING);
-            logger.info("VM执行已启动，状态: RUNNING");
+            logger.info("VM执行已启动，状态: RUNNING，vmAdapter运行状态: {}", vmAdapter.isRunning());
         } catch (Exception e) {
             logger.error("启动VM执行失败", e);
             if (executionCallback != null) {

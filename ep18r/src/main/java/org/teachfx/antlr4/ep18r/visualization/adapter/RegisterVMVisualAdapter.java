@@ -287,19 +287,25 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
     
     @Override
     public void run() {
+        System.out.println("[DEBUG] RegisterVMVisualAdapter.run() called, running=" + running.get() + ", paused=" + paused.get());
+
         if (running.get() && !paused.get()) {
             // 已经在运行中
+            System.out.println("[DEBUG] Already running, returning");
             return;
         }
-        
+
         // 确保虚拟机已加载代码
         if (vm.getCode() == null || vm.getCodeSize() == 0) {
+            System.err.println("[ERROR] VM没有加载代码");
             throw new IllegalStateException("VM没有加载代码");
         }
-        
+
+        System.out.println("[DEBUG] Code loaded successfully, size=" + vm.getCodeSize() + " bytes");
+
         // 重置步进模式
         stepMode.set(false);
-        
+
         // 启动执行线程
         startExecutionThread();
     }
@@ -581,54 +587,68 @@ public class RegisterVMVisualAdapter implements IVirtualMachineVisualization, Ev
      * 启动执行线程
      */
     private void startExecutionThread() {
+        System.out.println("[DEBUG] 启动VM执行线程，当前状态: running=" + running.get() + ", paused=" + paused.get());
+
         if (executionThread != null && executionThread.isAlive()) {
+            System.out.println("[DEBUG] 中断已存在的执行线程");
             executionThread.interrupt();
         }
-        
-        running.set(true);
+
         paused.set(false);
         vmState.setExecutionState(VMState.ExecutionState.RUNNING);
-        
+
         executionThread = new Thread(() -> {
+            System.out.println("[DEBUG] VM执行线程已启动，线程名: " + Thread.currentThread().getName());
             try {
                 // 发布执行开始事件
                 this.publish(new ExecutionStartedEvent(this, stepCounter.get()));
-                
+                System.out.println("[DEBUG] 已发布执行开始事件");
+
                 // 通知监听器
                 for (ExecutionListener listener : executionListeners) {
                     listener.executionStarted();
                 }
-                
+                System.out.println("[DEBUG] 已通知所有执行监听器");
+
+                // 设置running标志
+                running.set(true);
+                System.out.println("[DEBUG] running标志已设置为true");
+
                 // 执行虚拟机
+                System.out.println("[DEBUG] 开始执行vm.exec()，代码大小: " + vm.getCodeSize());
                 vm.exec();
-                
+                System.out.println("[DEBUG] vm.exec()已返回");
+
                 // 执行完成
                 running.set(false);
                 vmState.setExecutionState(VMState.ExecutionState.STOPPED);
-                
+
                 // 发布执行完成事件
                 this.publish(new ExecutionFinishedEvent(this, stepCounter.get(), "正常结束"));
-                
+
                 // 通知监听器
                 for (ExecutionListener listener : executionListeners) {
                     listener.executionStopped("正常结束");
                 }
-                
+
             } catch (Exception e) {
+                System.err.println("[ERROR] VM执行线程中发生异常: " + e.getMessage());
+                e.printStackTrace();
                 running.set(false);
                 vmState.setExecutionState(VMState.ExecutionState.ERROR);
-                
+
                 // 发布错误事件
                 this.publish(new ExecutionErrorEvent(this, stepCounter.get(), e));
-                
+
                 // 通知监听器
                 for (ExecutionListener listener : executionListeners) {
                     listener.executionError(new VMExecutionException("虚拟机执行错误", e));
                 }
             }
         }, "VM-Visual-Execution-Thread");
-        
+
         executionThread.start();
+        System.out.println("[DEBUG] VM执行线程已调用start()");
     }
     
     /**

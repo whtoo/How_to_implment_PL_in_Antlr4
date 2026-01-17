@@ -1,5 +1,17 @@
 package org.teachfx.antlr4.common.visualization;
 
+import io.reactivex.rxjava3.core.Observable;
+import org.teachfx.antlr4.common.visualization.event.VMEvent;
+import org.teachfx.antlr4.common.visualization.event.events.InstructionExecutedEvent;
+import org.teachfx.antlr4.common.visualization.event.events.RegisterChangedEvent;
+import org.teachfx.antlr4.common.visualization.event.events.MemoryChangedEvent;
+import org.teachfx.antlr4.common.visualization.event.events.ProgramCounterChangedEvent;
+import org.teachfx.antlr4.common.visualization.event.events.ExecutionStateChangedEvent;
+import org.teachfx.antlr4.common.visualization.event.events.ExecutionStartedEvent;
+import org.teachfx.antlr4.common.visualization.event.events.ExecutionFinishedEvent;
+import org.teachfx.antlr4.common.visualization.event.events.BreakpointHitEvent;
+import org.teachfx.antlr4.common.visualization.event.events.EducationalHintEvent;
+
 /**
  * 统一的虚拟机可视化接口
  * 
@@ -185,4 +197,76 @@ public interface IVirtualMachineVisualization {
      * @throws IllegalArgumentException 如果监听器为null
      */
     void addEducationalListener(EducationalHintListener listener) throws IllegalArgumentException;
+    
+    // ==================== RxJava事件流 ====================
+    
+    /**
+     * 获取所有事件的通用流
+     * 
+     * @return 所有VMEvent事件的Observable流
+     */
+    Observable<VMEvent> getEventStream();
+    
+    /**
+     * 获取指令执行事件流
+     * 
+     * @return InstructionExecutedEvent事件的Observable流
+     */
+    Observable<InstructionExecutedEvent> getInstructionExecutedStream();
+    
+    /**
+     * 获取寄存器变化事件流
+     * 
+     * @return RegisterChangedEvent事件的Observable流
+     */
+    Observable<RegisterChangedEvent> getRegisterChangedStream();
+    
+    /**
+     * 获取内存变化事件流
+     * 
+     * @return MemoryChangedEvent事件的Observable流
+     */
+    Observable<MemoryChangedEvent> getMemoryChangedStream();
+    
+    /**
+     * 获取程序计数器变化事件流
+     * 
+     * @return ProgramCounterChangedEvent事件的Observable流
+     */
+    Observable<ProgramCounterChangedEvent> getProgramCounterChangedStream();
+    
+    /**
+     * 获取执行状态变化事件流
+     * 
+     * @return ExecutionStateChangedEvent事件的Observable流
+     */
+    Observable<ExecutionStateChangedEvent> getExecutionStateChangedStream();
+    
+    /**
+     * 获取执行开始事件流
+     * 
+     * @return ExecutionStartedEvent事件的Observable流
+     */
+    Observable<ExecutionStartedEvent> getExecutionStartedStream();
+    
+    /**
+     * 获取执行完成事件流
+     * 
+     * @return ExecutionFinishedEvent事件的Observable流
+     */
+    Observable<ExecutionFinishedEvent> getExecutionFinishedStream();
+    
+    /**
+     * 获取断点命中事件流
+     * 
+     * @return BreakpointHitEvent事件的Observable流
+     */
+    Observable<BreakpointHitEvent> getBreakpointHitStream();
+    
+    /**
+     * 获取教育提示事件流
+     * 
+     * @return EducationalHintEvent事件的Observable流
+     */
+    Observable<EducationalHintEvent> getEducationalHintStream();
 }

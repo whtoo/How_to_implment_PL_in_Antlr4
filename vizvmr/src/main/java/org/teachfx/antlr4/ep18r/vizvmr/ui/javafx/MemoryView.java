@@ -1,275 +1,191 @@
 package org.teachfx.antlr4.ep18r.vizvmr.ui.javafx;
 
-import javafx.application.Platform;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import org.teachfx.antlr4.ep18r.vizvmr.integration.VMRVisualBridge;
-import org.teachfx.antlr4.common.visualization.ui.javafx.JFXPanelBase;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.Pane;
 
 /**
- * Memory display panel - JavaFX version
- * Scrollable table displaying memory content (heap, global variables, local variables)
+ * 内存视图组件
+ *
+ * <p>显示堆内存和全局变量</p>
  */
-public class MemoryView extends JFXPanelBase {
+public class MemoryView extends TabPane {
 
-    private final VMRVisualBridge visualBridge;
-    private TableView<MemoryRow> memoryTable;
-    private TextField addressField;
-    private Label pageLabel;
-    private static final int PAGE_SIZE = 16;
-    private int currentPage = 0;
-    private int totalPages = 0;
+    private final TableView<MemoryRow> heapTable;
+    private final TableView<MemoryRow> globalsTable;
 
-    public MemoryView(VMRVisualBridge visualBridge) {
-        super("MemoryView");
-        this.visualBridge = visualBridge;
-        buildUI();  // 在对象完全构造后初始化UI
+    public MemoryView() {
+        this.heapTable = createHeapTable();
+        this.globalsTable = createGlobalsTable();
+
+        Tab heapTab = new Tab("堆内存", createHeapScrollPane());
+        heapTab.setClosable(false);
+
+        Tab globalsTab = new Tab("全局变量", createGlobalsScrollPane());
+        globalsTab.setClosable(false);
+
+        getTabs().addAll(heapTab, globalsTab);
     }
 
-    @Override
-    protected void initializeComponents() {
-        setTitle("内存");
-        setMinSize(400, 300);
-
-        // Main layout
-        VBox mainLayout = new VBox(10);
-        mainLayout.setPadding(new Insets(10));
-
-        // Create toolbar
-        HBox toolbar = createToolbar();
-        mainLayout.getChildren().add(toolbar);
-
-        // Create table
-        memoryTable = createMemoryTable();
-        ScrollPane scrollPane = new ScrollPane(memoryTable);
+    private ScrollPane createHeapScrollPane() {
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(heapTable);
         scrollPane.setFitToWidth(true);
-        VBox.setVgrow(scrollPane, Priority.ALWAYS);
-        mainLayout.getChildren().add(scrollPane);
-
-        // Add layout to center of BorderPane
-        setCenter(mainLayout);
-        
-        // Load initial data after table is created
-        refreshData();
+        scrollPane.setStyle("-fx-background-color: #F5F5F5;");
+        return scrollPane;
     }
 
-    /**
-     * Create toolbar with controls
-     */
-    private HBox createToolbar() {
-        HBox toolbar = new HBox(10);
-        toolbar.setAlignment(Pos.CENTER_LEFT);
-
-        Button refreshButton = new Button("刷新");
-        refreshButton.setOnAction(e -> refresh());
-
-        Label addressLabel = new Label("地址:");
-        addressField = new TextField();
-        addressField.setPrefColumnCount(10);
-
-        Button gotoButton = new Button("跳转");
-        gotoButton.setOnAction(e -> {
-            try {
-                int address = Integer.parseInt(addressField.getText(), 16);
-                jumpToAddress(address);
-            } catch (NumberFormatException ex) {
-                showError("无效地址", "请输入有效的十六进制地址");
-            }
-        });
-
-        pageLabel = new Label("页: 0/0");
-
-        toolbar.getChildren().addAll(refreshButton, addressLabel, addressField, gotoButton, new Separator(), pageLabel);
-
-        return toolbar;
+    private ScrollPane createGlobalsScrollPane() {
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(globalsTable);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: #E8F5E9;");
+        return scrollPane;
     }
 
-    /**
-     * Create memory table
-     */
-    private TableView<MemoryRow> createMemoryTable() {
+    private TableView<MemoryRow> createHeapTable() {
         TableView<MemoryRow> table = new TableView<>();
 
-        // Configure table
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        // Address column
         TableColumn<MemoryRow, String> addressCol = new TableColumn<>("地址");
-        addressCol.setCellValueFactory(data -> data.getValue().addressProperty());
-        addressCol.setPrefWidth(80);
-        addressCol.setMinWidth(60);
+        addressCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("address"));
+        addressCol.setPrefWidth(120);
 
-        // Hex value column
         TableColumn<MemoryRow, String> hexCol = new TableColumn<>("十六进制");
-        hexCol.setCellValueFactory(data -> data.getValue().hexProperty());
-        hexCol.setPrefWidth(120);
-        hexCol.setMinWidth(100);
+        hexCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("hexValue"));
+        hexCol.setPrefWidth(150);
 
-        // Decimal value column
-        TableColumn<MemoryRow, String> decimalCol = new TableColumn<>("十进制");
-        decimalCol.setCellValueFactory(data -> data.getValue().decimalProperty());
-        decimalCol.setPrefWidth(100);
-        decimalCol.setMinWidth(80);
+        TableColumn<MemoryRow, String> decCol = new TableColumn<>("十进制");
+        decCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("decValue"));
+        decCol.setPrefWidth(100);
 
-        table.getColumns().addAll(addressCol, hexCol, decimalCol);
+        TableColumn<MemoryRow, String> asciiCol = new TableColumn<>("ASCII");
+        asciiCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("asciiValue"));
+        asciiCol.setPrefWidth(50);
+
+        table.getColumns().addAll(addressCol, hexCol, decCol, asciiCol);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 
         return table;
     }
 
-    /**
-     * Update memory at specific address
-     */
-    public void updateMemory(int address, int value) {
-        safeUpdateUI(() -> {
-            refreshData();
-        });
+    private TableView<MemoryRow> createGlobalsTable() {
+        TableView<MemoryRow> table = new TableView<>();
+
+        TableColumn<MemoryRow, String> nameCol = new TableColumn<>("名称");
+        nameCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("name"));
+        nameCol.setPrefWidth(150);
+
+        TableColumn<MemoryRow, String> addressCol = new TableColumn<>("地址");
+        addressCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("address"));
+        addressCol.setPrefWidth(120);
+
+        TableColumn<MemoryRow, String> valueCol = new TableColumn<>("值");
+        valueCol.setCellValueFactory(new javafx.scene.control.cell.PropertyValueFactory<>("value"));
+        valueCol.setPrefWidth(200);
+
+        table.getColumns().addAll(nameCol, addressCol, valueCol);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+
+        return table;
     }
 
-    /**
-     * Refresh memory display
-     */
-    public void refresh() {
-        refreshData();
+    public void updateHeap(int[] heap) {
+        heapTable.getItems().clear();
+
+        if (heap == null) {
+            return;
+        }
+
+        for (int i = 0; i < heap.length; i += 4) {
+            String address = String.format("0x%08X", i);
+            String hex = formatHexRow(heap, i);
+            String dec = formatDecRow(heap, i);
+            String ascii = formatAsciiRow(heap, i);
+
+            MemoryRow row = new MemoryRow(address, hex, dec, ascii);
+            heapTable.getItems().add(row);
+        }
     }
 
-    /**
-     * Refresh table data
-     */
-    private void refreshData() {
-        calculateTotalPages();
+    public void updateGlobals(int[] globals) {
+        globalsTable.getItems().clear();
 
-        ObservableList<MemoryRow> data = FXCollections.observableArrayList();
+        if (globals == null) {
+            return;
+        }
 
-        if (visualBridge.getStateModel() != null) {
-            int heapSize = visualBridge.getStateModel().getHeap().length;
-            int startAddress = currentPage * PAGE_SIZE;
-            int endAddress = Math.min(startAddress + PAGE_SIZE, heapSize);
+        for (int i = 0; i < globals.length; i++) {
+            String name = String.format("g%d", i);
+            String address = String.format("0x%08X", i);
+            String value = String.valueOf(globals[i]);
 
-            for (int address = startAddress; address < endAddress; address++) {
-                int value = visualBridge.getStateModel().readHeap(address);
-                String addressStr = String.format("0x%04X", address);
-                String hexStr = String.format("0x%08X", value);
-                String decimalStr = String.valueOf(value);
-                data.add(new MemoryRow(addressStr, hexStr, decimalStr));
+            MemoryRow row = new MemoryRow(name, address, value, "");
+            globalsTable.getItems().add(row);
+        }
+    }
+
+    private String formatHexRow(int[] heap, int startAddr) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 4 && startAddr + i < heap.length; i++) {
+            sb.append(String.format("%02X ", heap[startAddr + i] & 0xFF));
+        }
+        return sb.toString();
+    }
+
+    private String formatDecRow(int[] heap, int startAddr) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 4 && startAddr + i < heap.length; i++) {
+            sb.append(String.format("%12d ", heap[startAddr + i]));
+        }
+        return sb.toString();
+    }
+
+    private String formatAsciiRow(int[] heap, int startAddr) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 4 && startAddr + i < heap.length; i++) {
+            int val = heap[startAddr + i] & 0xFF;
+            if (val >= 32 && val <= 126) {
+                sb.append((char) val);
+            } else {
+                sb.append('.');
             }
         }
-
-        memoryTable.setItems(data);
-        pageLabel.setText(String.format("页: %d/%d", currentPage + 1, Math.max(1, totalPages)));
+        return sb.toString();
     }
 
-    /**
-     * Calculate total pages
-     */
-    private void calculateTotalPages() {
-        if (visualBridge.getStateModel() != null) {
-            int heapSize = visualBridge.getStateModel().getHeap().length;
-            totalPages = (heapSize + PAGE_SIZE - 1) / PAGE_SIZE;
-        } else {
-            totalPages = 0;
-        }
-    }
-
-    /**
-     * Jump to specific address
-     */
-    public void jumpToAddress(int address) {
-        if (visualBridge.getStateModel() == null) {
-            return;
-        }
-
-        int heapSize = visualBridge.getStateModel().getHeap().length;
-        if (address < 0 || address >= heapSize) {
-            showError("地址越界", "地址必须在有效范围内");
-            return;
-        }
-
-        currentPage = address / PAGE_SIZE;
-        refreshData();
-
-        // Select the row
-        int rowInPage = address % PAGE_SIZE;
-        if (rowInPage >= 0 && rowInPage < memoryTable.getItems().size()) {
-            memoryTable.getSelectionModel().select(rowInPage);
-            memoryTable.scrollTo(rowInPage);
-        }
-    }
-
-    /**
-     * Go to previous page
-     */
-    public void previousPage() {
-        if (currentPage > 0) {
-            currentPage--;
-            refreshData();
-        }
-    }
-
-    /**
-     * Go to next page
-     */
-    public void nextPage() {
-        if (currentPage < totalPages - 1) {
-            currentPage++;
-            refreshData();
-        }
-    }
-
-    /**
-     * Show error dialog
-     */
-    private void showError(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    /**
-     * Inner class for memory row data
-     */
     public static class MemoryRow {
-        private final SimpleStringProperty address;
-        private final SimpleStringProperty hex;
-        private final SimpleStringProperty decimal;
+        private final String address;
+        private final String hexValue;
+        private final String decValue;
+        private final String asciiValue;
 
-        public MemoryRow(String address, String hex, String decimal) {
-            this.address = new SimpleStringProperty(address);
-            this.hex = new SimpleStringProperty(hex);
-            this.decimal = new SimpleStringProperty(decimal);
+        public MemoryRow(String address, String hexValue, String decValue, String asciiValue) {
+            this.address = address;
+            this.hexValue = hexValue;
+            this.decValue = decValue;
+            this.asciiValue = asciiValue;
         }
 
-        public StringProperty addressProperty() {
-            return address;
+        public MemoryRow(String name, String address, String value, Object dummy) {
+            this.address = address;
+            this.hexValue = null;
+            this.decValue = null;
+            this.asciiValue = null;
+            this.name = name;
+            this.value = value;
         }
 
-        public StringProperty hexProperty() {
-            return hex;
-        }
+        private String name;
+        private String value;
 
-        public StringProperty decimalProperty() {
-            return decimal;
-        }
-
-        public String getAddress() {
-            return address.get();
-        }
-
-        public String getHex() {
-            return hex.get();
-        }
-
-        public String getDecimal() {
-            return decimal.get();
-        }
+        public String getAddress() { return address; }
+        public String getHexValue() { return hexValue; }
+        public String getDecValue() { return decValue; }
+        public String getAsciiValue() { return asciiValue; }
+        public String getName() { return name; }
+        public String getValue() { return value; }
     }
 }

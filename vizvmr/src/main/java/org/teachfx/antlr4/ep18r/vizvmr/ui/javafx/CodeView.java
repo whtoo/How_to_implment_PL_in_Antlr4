@@ -1,210 +1,93 @@
 package org.teachfx.antlr4.ep18r.vizvmr.ui.javafx;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.application.Platform;
+import javafx.scene.control.Label;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import org.teachfx.antlr4.ep18r.stackvm.RegisterDisAssembler;
-import org.teachfx.antlr4.ep18r.vizvmr.integration.VMRVisualBridge;
-import org.teachfx.antlr4.common.visualization.ui.javafx.JFXPanelBase;
-
-import java.util.HashSet;
-import java.util.Set;
+import javafx.scene.shape.Rectangle;
 
 /**
- * Code/Disassembly panel - JavaFX version
- * Displays disassembled code with PC highlighting and breakpoint support
+ * 代码视图组件
+ *
+ * <p>显示反汇编指令，高亮当前PC位置</p>
  */
-public class CodeView extends JFXPanelBase {
+public class CodeView extends VBox {
 
-    private final VMRVisualBridge visualBridge;
-    private ListView<String> instructionList;
-    private ObservableList<String> instructionData;
-    private final Set<Integer> breakpoints;
+    private final VBox instructionsContainer;
     private int currentPC = -1;
 
-    public CodeView(VMRVisualBridge visualBridge) {
-        super("CodeView");
-        this.visualBridge = visualBridge;
-        this.breakpoints = new HashSet<>();
-        buildUI();  // 在对象完全构造后初始化UI
+    public CodeView() {
+        this.instructionsContainer = new VBox(5);
+        instructionsContainer.setStyle("-fx-background-color: #F5F5F5; -fx-padding: 10;");
+
+        Label header = new Label("代码视图");
+        header.setStyle("-fx-font-weight: bold; -fx-text-fill: #666666;");
+
+        getChildren().addAll(header, instructionsContainer);
     }
 
-    @Override
-    protected void initializeComponents() {
-        setTitle("代码");
-        setMinSize(400, 400);
+    public void setInstructions(String[] disassembly) {
+        instructionsContainer.getChildren().clear();
 
-        VBox mainLayout = new VBox(10);
-        mainLayout.setPadding(new Insets(10));
-
-        // Create toolbar
-        HBox toolbar = createToolbar();
-        mainLayout.getChildren().add(toolbar);
-
-        // Create instruction list
-        instructionData = FXCollections.observableArrayList();
-        instructionList = new ListView<>(instructionData);
-        instructionList.setCellFactory(list -> new BreakpointListCell());
-        instructionList.getStyleClass().add("code-list");
-
-        VBox.setVgrow(instructionList, Priority.ALWAYS);
-        mainLayout.getChildren().add(instructionList);
-
-        setCenter(mainLayout);
-    }
-
-    /**
-     * Create toolbar with controls
-     */
-    private HBox createToolbar() {
-        HBox toolbar = new HBox(10);
-        toolbar.setAlignment(Pos.CENTER_LEFT);
-
-        Button refreshButton = new Button("刷新");
-        refreshButton.setOnAction(e -> refresh());
-
-        Button toggleBreakpointButton = new Button("切换断点");
-        toggleBreakpointButton.setOnAction(e -> toggleBreakpointAtSelection());
-
-        Button clearBreakpointsButton = new Button("清除所有");
-        clearBreakpointsButton.setOnAction(e -> clearAllBreakpoints());
-
-        toolbar.getChildren().addAll(refreshButton, toggleBreakpointButton, clearBreakpointsButton);
-
-        return toolbar;
-    }
-
-    /**
-     * Set instructions from disassembler
-     */
-    public void setInstructions(RegisterDisAssembler disAssembler) {
-        instructionData.clear();
-        if (disAssembler != null) {
-            String disassembly = disAssembler.disassembleToString();
-            String[] lines = disassembly.split("\n");
-            instructionData.addAll(lines);
+        if (disassembly == null) {
+            return;
         }
+
+        for (int i = 0; i < disassembly.length; i++) {
+            InstructionLine line = new InstructionLine(i, disassembly[i]);
+            instructionsContainer.getChildren().add(line);
+        }
+
+        updateHighlighting();
     }
 
-    /**
-     * Highlight current PC position
-     */
     public void highlightPC(int pc) {
-        currentPC = pc;
-        // Calculate line index (each instruction is 4 bytes)
-        int lineIndex = pc / 4;
-        if (lineIndex >= 0 && lineIndex < instructionData.size()) {
-            instructionList.getSelectionModel().select(lineIndex);
-            instructionList.scrollTo(lineIndex);
-        }
-        // Refresh to update cell rendering (highlights and cursor)
-        instructionList.refresh();
+        this.currentPC = pc;
+        updateHighlighting();
     }
 
-    /**
-     * Toggle breakpoint at specific PC
-     */
-    public void toggleBreakpoint(int pc) {
-        if (breakpoints.contains(pc)) {
-            breakpoints.remove(pc);
-        } else {
-            breakpoints.add(pc);
-        }
-        instructionList.refresh();
-    }
-
-    /**
-     * Toggle breakpoint at selected line
-     */
-    public void toggleBreakpointAtSelection() {
-        int selectedIndex = instructionList.getSelectionModel().getSelectedIndex();
-        if (selectedIndex >= 0) {
-            int pc = selectedIndex * 4;
-            toggleBreakpoint(pc);
-        }
-    }
-
-    /**
-     * Clear all breakpoints
-     */
-    public void clearAllBreakpoints() {
-        breakpoints.clear();
-        instructionList.refresh();
-    }
-
-    /**
-     * Check if breakpoint exists at PC
-     */
-    public boolean isBreakpointAt(int pc) {
-        return breakpoints.contains(pc);
-    }
-
-    /**
-     * Get all breakpoints
-     */
-    public Set<Integer> getBreakpoints() {
-        return new HashSet<>(breakpoints);
-    }
-
-    /**
-     * Refresh display
-     */
-    public void refresh() {
-        instructionList.refresh();
-    }
-
-    /**
-     * Get instruction list for external access
-     */
-    public ListView<String> getInstructionList() {
-        return instructionList;
-    }
-
-    /**
-     * Custom list cell for displaying instructions with breakpoints and PC highlight
-     */
-    private class BreakpointListCell extends ListCell<String> {
-        @Override
-        protected void updateItem(String item, boolean empty) {
-            super.updateItem(item, empty);
-
-            if (empty || item == null) {
-                setText(null);
-                setGraphic(null);
-                setStyle(null);
-            } else {
-                int index = getIndex();
-                int pc = index * 4;
-
-                // Build prefix: breakpoint marker + cursor arrow (for alignment)
-                StringBuilder prefix = new StringBuilder();
-
-                // Check breakpoint
-                if (breakpoints.contains(pc)) {
-                    prefix.append("● ");
-                } else {
-                    prefix.append("  ");
-                }
-
-                // Check if this is the current PC (cursor position)
-                if (index * 4 == currentPC) {
-                    prefix.append("➜ ");  // Cursor arrow
-                    setBackground(new Background(new BackgroundFill(
-                            Color.rgb(173, 216, 230, 150), CornerRadii.EMPTY, Insets.EMPTY)));
-                    setTextFill(Color.BLUE);
-                } else if (breakpoints.contains(pc)) {
-                    setTextFill(Color.RED);
-                } else {
-                    setTextFill(Color.BLACK);
-                    prefix.append("  ");
-                }
-
-                setText(prefix.toString() + item);
+    private void updateHighlighting() {
+        for (int i = 0; i < instructionsContainer.getChildren().size(); i++) {
+            if (instructionsContainer.getChildren().get(i) instanceof InstructionLine) {
+                InstructionLine line = (InstructionLine) instructionsContainer.getChildren().get(i);
+                line.setHighlighted(line.getInstructionAddress() == currentPC);
             }
+        }
+    }
+
+    private static class InstructionLine extends VBox {
+        private final int instructionAddress;
+        private final Rectangle background;
+        private final Label instructionLabel;
+        private boolean highlighted;
+
+        public InstructionLine(int address, String instruction) {
+            this.instructionAddress = address;
+            this.highlighted = false;
+
+            this.background = new Rectangle(800, 25);
+            background.setFill(Color.web("#F5F5F5"));
+            background.setStroke(Color.TRANSPARENT);
+            background.setStrokeWidth(0);
+
+            this.instructionLabel = new Label(String.format("0x%04X  %s", address, instruction));
+            instructionLabel.setStyle("-fx-font-family: 'Courier New', monospace; -fx-font-size: 14px;");
+
+            setStyle("-fx-padding: 2;");
+            getChildren().addAll(background, instructionLabel);
+        }
+
+        public void setHighlighted(boolean highlighted) {
+            this.highlighted = highlighted;
+            if (highlighted) {
+                background.setFill(Color.web("#FFF9C4"));
+            } else {
+                background.setFill(Color.web("#F5F5F5"));
+            }
+        }
+
+        public int getInstructionAddress() {
+            return instructionAddress;
         }
     }
 }

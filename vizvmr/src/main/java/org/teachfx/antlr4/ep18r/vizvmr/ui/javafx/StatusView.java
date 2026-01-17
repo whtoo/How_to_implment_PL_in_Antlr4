@@ -1,163 +1,104 @@
 package org.teachfx.antlr4.ep18r.vizvmr.ui.javafx;
 
-import javafx.animation.AnimationTimer;
-import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.layout.*;
-import org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent;
-import org.teachfx.antlr4.ep18r.vizvmr.integration.VMRVisualBridge;
-import org.teachfx.antlr4.common.visualization.ui.javafx.JFXPanelBase;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+
+import org.teachfx.antlr4.ep18r.vizvmr.unified.core.VMTypes;
 
 /**
- * Status bar panel - JavaFX version
- * Displays execution statistics: instruction count, runtime, VM state
+ * 状态视图组件
+ *
+ * <p>显示执行统计、VM状态、PC、指令信息</p>
  */
-public class StatusView extends JFXPanelBase {
+public class StatusView extends HBox {
 
-    private final VMRVisualBridge visualBridge;
-    private Label stateLabel = new Label("状态: 空闲");
-    private Label pcLabel = new Label("PC: 0x0000");
-    private Label stepsLabel = new Label("指令: 0");
-    private Label timeLabel = new Label("时间: 0.000s");
-    private Label instructionLabel = new Label("当前指令: -");
-    private final AnimationTimer timer;
-    private long startTime;
+    private final Label stateLabel;
+    private final Label pcLabel;
+    private final Label stepsLabel;
+    private final Label instructionLabel;
+    private final Label timeLabel;
 
-    public StatusView(VMRVisualBridge visualBridge) {
-        super("StatusView");
-        this.visualBridge = visualBridge;
-        this.startTime = 0;
+    public StatusView() {
+        setSpacing(15);
+        setStyle("-fx-padding: 10; -fx-background-color: #2C3E50; -fx-border-color: #1F2937; -fx-border-width: 1;");
 
-        // Create animation timer for elapsed time
-        timer = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                if (startTime > 0) {
-                    double elapsed = (System.currentTimeMillis() - startTime) / 1000.0;
-                    Platform.runLater(() -> {
-                        timeLabel.setText(String.format("时间: %.3fs", elapsed));
-                    });
-                }
-            }
-        };
-        buildUI();  // 在对象完全构造后初始化UI
+        stateLabel = createStatusLabel("状态:", Color.web("#666666"));
+        pcLabel = createStatusLabel("PC:", Color.web("#666666"));
+        stepsLabel = createStatusLabel("指令:", Color.web("#666666"));
+
+        timeLabel = new Label("时间: 0.0s");
+        timeLabel.setTextFill(Color.web("#999999"));
+        timeLabel.setStyle("-fx-font-size: 14px;");
+
+        instructionLabel = new Label("当前: -");
+        instructionLabel.setTextFill(Color.web("#999999"));
+        instructionLabel.setStyle("-fx-font-size: 14px;");
+
+        getChildren().addAll(stateLabel, pcLabel, stepsLabel, timeLabel, instructionLabel);
     }
 
-    @Override
-    protected void initializeComponents() {
-        setTitle("状态");
-        setMinSize(300, 60);
-
-        HBox statusBar = new HBox(20);
-        statusBar.setPadding(new Insets(5, 10, 5, 10));
-        statusBar.setAlignment(Pos.CENTER_LEFT);
-        statusBar.setStyle("-fx-background-color: #F0F0F0; -fx-border-color: #CCCCCC; -fx-border-width: 1 0 0 0;");
-
-        // Initialize labels
-        stateLabel = new Label("状态: 空闲");
-        pcLabel = new Label("PC: 0x0000");
-        stepsLabel = new Label("指令: 0");
-        timeLabel = new Label("时间: 0.000s");
-        instructionLabel = new Label("当前指令: -");
-
-        // Set monospaced font for all labels
-        String fontStyle = "-fx-font-family: 'Monospaced'; -fx-font-size: 12px;";
-        stateLabel.setStyle(fontStyle);
-        pcLabel.setStyle(fontStyle);
-        stepsLabel.setStyle(fontStyle);
-        timeLabel.setStyle(fontStyle);
-        instructionLabel.setStyle(fontStyle);
-
-        // Set fixed width for instruction label
-        instructionLabel.setMinWidth(200);
-        instructionLabel.setMaxWidth(200);
-
-        statusBar.getChildren().addAll(stateLabel, pcLabel, stepsLabel, timeLabel, instructionLabel);
-
-        setCenter(statusBar);
+    private Label createStatusLabel(String text, Color textColor) {
+        Label label = new Label(text);
+        label.setTextFill(textColor);
+        label.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        return label;
     }
 
-    /**
-     * Update VM state display
-     */
-    public void updateState(VMStateChangeEvent.State state) {
-        String stateText;
-        switch (state) {
-            case CREATED:
-                stateText = "已创建";
-                break;
-            case LOADED:
-                stateText = "已加载";
-                break;
-            case RUNNING:
-                stateText = "运行中";
-                break;
-            case PAUSED:
-                stateText = "已暂停";
-                break;
-            case STEPPING:
-                stateText = "单步";
-                break;
-            case HALTED:
-                stateText = "已停止";
-                break;
-            case ERROR:
-                stateText = "错误";
-                break;
-            default:
-                stateText = "未知";
-        }
-        stateLabel.setText("状态: " + stateText);
+    public void updateState(VMTypes.VMState state) {
+        stateLabel.setText(String.format("状态: %s", getStateText(state)));
+        updateStateColor(state);
     }
 
-    /**
-     * Update PC display
-     */
     public void updatePC(int pc) {
         pcLabel.setText(String.format("PC: 0x%04X", pc));
     }
 
-    /**
-     * Update current instruction display
-     */
-    public void updateInstruction(String mnemonic, String operands) {
-        if (operands != null && !operands.isEmpty()) {
-            instructionLabel.setText("当前: " + mnemonic + " " + operands);
-        } else {
-            instructionLabel.setText("当前: " + mnemonic);
+    public void updateSteps(long steps) {
+        stepsLabel.setText(String.format("指令: %d", steps));
+    }
+
+    public void updateTime(double time) {
+        timeLabel.setText(String.format("时间: %.3fs", time));
+    }
+
+    public void updateInstruction(String instruction) {
+        instructionLabel.setText(String.format("当前: %s", instruction));
+    }
+
+    private String getStateText(VMTypes.VMState state) {
+        switch (state) {
+            case CREATED: return "已创建";
+            case LOADED: return "已加载";
+            case RUNNING: return "运行中";
+            case PAUSED: return "已暂停";
+            case STEPPING: return "单步执行";
+            case HALTED: return "已停止";
+            case ERROR: return "错误";
+            default: return state.toString();
         }
     }
 
-    /**
-     * Start execution timer
-     */
-    public void startTimer() {
-        startTime = System.currentTimeMillis();
-        timer.start();
-    }
-
-    /**
-     * Stop execution timer
-     */
-    public void stopTimer() {
-        timer.stop();
-    }
-
-    /**
-     * Refresh all status displays
-     */
-    public void refresh() {
-        updateState(visualBridge.getStateModel().getVMState());
-        updatePC(visualBridge.getCurrentPC());
-        stepsLabel.setText("指令: " + visualBridge.getStateModel().getExecutionSteps());
-    }
-
-    /**
-     * Update status message
-     */
-    public void updateStatus(String message) {
-        stateLabel.setText(message);
+    private void updateStateColor(VMTypes.VMState state) {
+        Color color = Color.web("#666666");
+        switch (state) {
+            case CREATED:
+            case LOADED:
+                color = Color.web("#999999");
+                break;
+            case RUNNING:
+                color = Color.web("#90EE90");
+                break;
+            case PAUSED:
+                color = Color.web("#FFB6C1");
+                break;
+            case HALTED:
+                color = Color.web("#DCDCDC");
+                break;
+            case ERROR:
+                color = Color.web("#FF0000");
+                break;
+        }
+        stateLabel.setTextFill(color);
     }
 }

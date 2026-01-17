@@ -109,13 +109,13 @@
                 </executions>
             </plugin>
             
-            <!-- Exec Maven Plugin: 运行响应式GUI启动器 -->
+            <!-- Exec Maven Plugin: 运行统一响应式GUI启动器 -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>org.teachfx.antlr4.ep18r.vizvmr.ReactiveVizVMRLauncher</mainClass>
+                    <mainClass>org.teachfx.antlr4.ep18r.vizvmr.UnifiedVizVMRLauncher</mainClass>
                     <arguments>
                         <argument>--add-modules=javafx.controls,javafx.fxml</argument>
                         <argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>

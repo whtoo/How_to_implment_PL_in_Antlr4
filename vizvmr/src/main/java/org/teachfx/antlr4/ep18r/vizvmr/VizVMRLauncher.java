@@ -25,6 +25,9 @@ import org.teachfx.antlr4.ep18r.vizvmr.ui.javafx.CodeView;
 import org.teachfx.antlr4.ep18r.vizvmr.ui.javafx.MemoryView;
 import org.teachfx.antlr4.ep18r.vizvmr.ui.javafx.LogView;
 import org.teachfx.antlr4.ep18r.vizvmr.ui.javafx.StatusView;
+import org.teachfx.antlr4.ep18r.vizvmr.controller.VMCommandController;
+import org.teachfx.antlr4.ep18r.vizvmr.controller.VMCommandResult;
+import org.teachfx.antlr4.ep18r.vizvmr.controller.VMViewStateAdapter;
 import org.teachfx.antlr4.common.visualization.ui.javafx.JFXThemeManager;
 
 /**
@@ -38,6 +41,8 @@ public class VizVMRLauncher extends Application {
     private static final int HEIGHT = 800;
 
     private VMRVisualBridge visualBridge;
+    private VMCommandController commandController;
+    private VMViewStateAdapter viewStateAdapter;
     private Stage primaryStage;
 
     // JavaFX 视图组件
@@ -87,7 +92,14 @@ public class VizVMRLauncher extends Application {
             // 4. 创建可视化桥接器
             visualBridge = new VMRVisualBridge(vm, stateModel);
 
-            // 5. 创建 UI
+            // 5. 创建命令控制器
+            commandController = new VMCommandController(vm);
+
+            // 6. 创建视图状态适配器
+            viewStateAdapter = new VMViewStateAdapter(commandController);
+            setupViewStateListener();
+
+            // 7. 创建 UI
             createUI();
 
             // 6. 配置并显示窗口
@@ -138,8 +150,27 @@ public class VizVMRLauncher extends Application {
         // 设置执行回调 - 关键：让UI响应VM执行事件
         setupExecutionCallback();
 
+        // 设置视图状态监听器
+        setupViewStateListener();
+
         // 初始刷新所有视图
         refreshAll();
+    }
+
+    /**
+     * 设置视图状态监听器 - 连接命令控制器状态到UI更新
+     */
+    private void setupViewStateListener() {
+        viewStateAdapter.setViewStateListener((oldState, newState) -> {
+            Platform.runLater(() -> {
+                statusView.updateState(newState);
+                if (newState == org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent.State.RUNNING) {
+                    statusView.startTimer();
+                } else if (newState == org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent.State.HALTED) {
+                    statusView.stopTimer();
+                }
+            });
+        });
     }
 
     /**
@@ -302,11 +333,38 @@ public class VizVMRLauncher extends Application {
         MenuItem startItem = new MenuItem("开始执行");
         startItem.setOnAction(e -> startExecution());
         MenuItem pauseItem = new MenuItem("暂停");
-        pauseItem.setOnAction(e -> visualBridge.pause());
+        pauseItem.setOnAction(e -> {
+            commandController.asyncPause()
+                .thenAcceptAsync(result -> {
+                    Platform.runLater(() -> {
+                        if (!result.isSuccess()) {
+                            System.err.println("暂停失败: " + result.getMessage());
+                        }
+                    });
+                }, Platform::runLater);
+        });
         MenuItem stopItem = new MenuItem("停止");
-        stopItem.setOnAction(e -> visualBridge.stop());
+        stopItem.setOnAction(e -> {
+            commandController.asyncStop()
+                .thenAcceptAsync(result -> {
+                    Platform.runLater(() -> {
+                        if (!result.isSuccess()) {
+                            System.err.println("停止失败: " + result.getMessage());
+                        }
+                    });
+                }, Platform::runLater);
+        });
         MenuItem stepItem = new MenuItem("单步执行");
-        stepItem.setOnAction(e -> visualBridge.step());
+        stepItem.setOnAction(e -> {
+            commandController.asyncStep()
+                .thenAcceptAsync(result -> {
+                    Platform.runLater(() -> {
+                        if (!result.isSuccess()) {
+                            System.err.println("单步执行失败: " + result.getMessage());
+                        }
+                    });
+                }, Platform::runLater);
+        });
         
         runMenu.getItems().addAll(startItem, pauseItem, stopItem);
         runMenu.getItems().add(new SeparatorMenuItem());
@@ -335,17 +393,44 @@ public class VizVMRLauncher extends Application {
         
         Button pauseBtn = new Button("⏸");
         pauseBtn.setTooltip(new javafx.scene.control.Tooltip("暂停 (F6)"));
-        pauseBtn.setOnAction(e -> visualBridge.pause());
+        pauseBtn.setOnAction(e -> {
+            commandController.asyncPause()
+                .thenAcceptAsync(result -> {
+                    Platform.runLater(() -> {
+                        if (!result.isSuccess()) {
+                            System.err.println("暂停失败: " + result.getMessage());
+                        }
+                    });
+                }, Platform::runLater);
+        });
         
         Button stopBtn = new Button("⏹");
         stopBtn.setTooltip(new javafx.scene.control.Tooltip("停止 (F8)"));
-        stopBtn.setOnAction(e -> visualBridge.stop());
+        stopBtn.setOnAction(e -> {
+            commandController.asyncStop()
+                .thenAcceptAsync(result -> {
+                    Platform.runLater(() -> {
+                        if (!result.isSuccess()) {
+                            System.err.println("停止失败: " + result.getMessage());
+                        }
+                    });
+                }, Platform::runLater);
+        });
         
         toolBar.getItems().addAll(startBtn, pauseBtn, stopBtn, new Separator());
         
         Button stepBtn = new Button("⏭");
         stepBtn.setTooltip(new javafx.scene.control.Tooltip("单步执行 (F11)"));
-        stepBtn.setOnAction(e -> visualBridge.step());
+        stepBtn.setOnAction(e -> {
+            commandController.asyncStep()
+                .thenAcceptAsync(result -> {
+                    Platform.runLater(() -> {
+                        if (!result.isSuccess()) {
+                            System.err.println("单步执行失败: " + result.getMessage());
+                        }
+                    });
+                }, Platform::runLater);
+        });
         
         toolBar.getItems().add(stepBtn);
         
@@ -383,7 +468,7 @@ public class VizVMRLauncher extends Application {
     }
 
     /**
-     * 开始执行
+     * 开始执行 - 使用异步API
      */
     private void startExecution() {
         System.out.println("开始执行");
@@ -399,13 +484,25 @@ public class VizVMRLauncher extends Application {
             return;
         }
 
-        try {
-            visualBridge.start();
-        } catch (Exception e) {
-            System.err.println("启动失败: " + e.getMessage());
-            e.printStackTrace();
-            showError("启动失败: " + e.getMessage());
-        }
+        // 使用异步API，避免阻塞UI线程
+        commandController.asyncStart()
+            .thenAcceptAsync(result -> {
+                Platform.runLater(() -> {
+                    if (result.isSuccess()) {
+                        System.out.println("启动成功: " + result.getMessage());
+                    } else {
+                        System.err.println("启动失败: " + result.getMessage());
+                        showError("启动失败: " + result.getMessage());
+                    }
+                });
+            }, Platform::runLater)
+            .exceptionally(throwable -> {
+                Platform.runLater(() -> {
+                    System.err.println("启动失败: " + throwable.getMessage());
+                    showError("启动失败: " + throwable.getMessage());
+                });
+                return null;
+            });
     }
 
     /**
@@ -478,6 +575,10 @@ public class VizVMRLauncher extends Application {
         // 清理资源
         if (visualBridge != null) {
             visualBridge.stop();
+        }
+        // 关闭命令控制器
+        if (commandController != null) {
+            commandController.shutdown();
         }
         System.out.println("EP18R 寄存器虚拟机可视化工具已关闭");
     }

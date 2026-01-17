@@ -13,6 +13,7 @@ import javafx.scene.paint.Color;
 import org.teachfx.antlr4.ep18r.stackvm.StackFrame;
 import org.teachfx.antlr4.ep18r.vizvmr.core.ReactiveVMRStateModel;
 import org.teachfx.antlr4.ep18r.vizvmr.integration.VMRVisualBridge;
+import org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent;
 
 /**
  * 响应式调用栈视图
@@ -71,9 +72,9 @@ public class ReactiveStackView extends BorderPane {
             stateModel.getExecutionStatus()
                 .subscribeOn(Schedulers.computation())
                 .subscribe(status -> Platform.runLater(() -> {
-                    if (status == ReactiveVMRStateModel.ExecutionStatus.RUNNING ||
-                        status == ReactiveVMRStateModel.ExecutionStatus.PAUSED ||
-                        status == ReactiveVMRStateModel.ExecutionStatus.STEPPING) {
+                    if (status == VMStateChangeEvent.State.RUNNING ||
+                        status == VMStateChangeEvent.State.PAUSED ||
+                        status == VMStateChangeEvent.State.STEPPING) {
                         refresh();
                     }
                 }), Throwable::printStackTrace)
@@ -111,6 +112,10 @@ public class ReactiveStackView extends BorderPane {
 
     public void dispose() {
         disposables.clear();
+    }
+    
+    public ListView<StackFrame> getStackList() {
+        return stackList;
     }
 
     private static class StackFrameCell extends ListCell<StackFrame> {

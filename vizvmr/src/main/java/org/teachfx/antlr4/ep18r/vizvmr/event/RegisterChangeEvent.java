@@ -31,6 +31,10 @@ public class RegisterChangeEvent extends VMRStateEvent {
         return newValue;
     }
 
+    public int regNum() {
+        return registerNumber;
+    }
+
     @Override
     public String getDescription() {
         return String.format("r%d: 0x%08X → 0x%08X", registerNumber, oldValue, newValue);

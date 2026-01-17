@@ -9,12 +9,18 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import org.teachfx.antlr4.ep18r.vizvmr.core.ReactiveVMRStateModel;
+import org.teachfx.antlr4.ep18r.vizvmr.event.VMStateChangeEvent;
+import org.teachfx.antlr4.ep18r.vizvmr.event.InstructionExecutionEvent;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * 响应式状态视图
  * 使用RxJava自动订阅状态变化，无需手动刷新
  */
 public class ReactiveStatusView extends Region {
+    
+    private static final Logger logger = LogManager.getLogger(ReactiveStatusView.class);
 
     private final ReactiveVMRStateModel stateModel;
     private final CompositeDisposable disposables = new CompositeDisposable();
@@ -27,6 +33,7 @@ public class ReactiveStatusView extends Region {
     private final Label instructionLabel = new Label("当前指令: -");
 
     public ReactiveStatusView(ReactiveVMRStateModel stateModel) {
+        logger.info("创建ReactiveStatusView");
         this.stateModel = stateModel;
         buildUI();
         bindToState();
@@ -55,55 +62,83 @@ public class ReactiveStatusView extends Region {
     }
 
     private void bindToState() {
+        logger.debug("绑定状态订阅");
+        
         // 订阅执行状态变化
         disposables.add(
-            stateModel.getExecutionStatus()
+            stateModel.getVMStateObs()
                 .subscribeOn(Schedulers.computation())
-                .subscribe(status -> Platform.runLater(() -> updateState(status)), Throwable::printStackTrace)
+                .subscribe(status -> {
+                    logger.debug("VM状态变化: {}", status);
+                    Platform.runLater(() -> updateState(status));
+                }, error -> {
+                    logger.error("VM状态订阅错误", error);
+                    error.printStackTrace();
+                })
         );
 
         // 订阅PC变化
         disposables.add(
             stateModel.getPC()
                 .subscribeOn(Schedulers.computation())
-                .subscribe(pc -> Platform.runLater(() -> {
-                    pcLabel.setText(String.format("PC: 0x%04X", pc));
-                }), Throwable::printStackTrace)
+                .subscribe(pc -> {
+                    logger.trace("PC变化: {}", pc);
+                    Platform.runLater(() -> {
+                        pcLabel.setText(String.format("PC: 0x%04X", pc));
+                    });
+                }, error -> {
+                    logger.error("PC订阅错误", error);
+                    error.printStackTrace();
+                })
         );
 
         // 订阅执行步数
         disposables.add(
             stateModel.getStepsObs()
                 .subscribeOn(Schedulers.computation())
-                .subscribe(steps -> Platform.runLater(() -> {
-                    stepsLabel.setText(String.format("指令: %d", steps));
-                    timeLabel.setText(String.format("时间: %.3fs", steps * 0.2));
-                }), Throwable::printStackTrace)
+                .subscribe(steps -> {
+                    logger.trace("执行步数: {}", steps);
+                    Platform.runLater(() -> {
+                        stepsLabel.setText(String.format("指令: %d", steps));
+                        timeLabel.setText(String.format("时间: %.3fs", steps * 0.2));
+                    });
+                }, error -> {
+                    logger.error("执行步数订阅错误", error);
+                    error.printStackTrace();
+                })
         );
 
         // 订阅当前指令
         disposables.add(
             stateModel.getInstruction()
                 .subscribeOn(Schedulers.computation())
-                .subscribe(info -> Platform.runLater(() -> {
-                    if (info.operands() != null && !info.operands().isEmpty()) {
-                        instructionLabel.setText("当前: " + info.mnemonic() + " " + info.operands());
-                    } else {
-                        instructionLabel.setText("当前: " + info.mnemonic());
-                    }
-                }), Throwable::printStackTrace)
+                .subscribe(info -> {
+                    logger.debug("指令执行: PC={}, 操作码={}, 助记符={}, 操作数={}",
+                        info.getPC(), info.getOpcode(), info.getMnemonic(), info.getOperands());
+                    Platform.runLater(() -> {
+                        if (info.getOperands() != null && !info.getOperands().isEmpty()) {
+                            instructionLabel.setText("当前: " + info.getMnemonic() + " " + info.getOperands());
+                        } else {
+                            instructionLabel.setText("当前: " + info.getMnemonic());
+                        }
+                    });
+                }, error -> {
+                    logger.error("指令订阅错误", error);
+                    error.printStackTrace();
+                })
         );
+        
+        logger.info("状态绑定完成");
     }
 
-    private void updateState(ReactiveVMRStateModel.ExecutionStatus status) {
+    private void updateState(VMStateChangeEvent.State status) {
         String stateText;
         switch (status) {
-            case IDLE -> stateText = "空闲";
+            case CREATED -> stateText = "已创建";
             case RUNNING -> stateText = "运行中";
             case PAUSED -> stateText = "已暂停";
             case STEPPING -> stateText = "单步";
             case HALTED -> stateText = "已停止";
-            case ERROR -> stateText = "错误";
             default -> stateText = "未知";
         }
         stateLabel.setText("状态: " + stateText);

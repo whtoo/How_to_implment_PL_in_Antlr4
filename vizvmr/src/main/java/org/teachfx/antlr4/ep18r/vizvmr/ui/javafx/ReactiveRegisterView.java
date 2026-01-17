@@ -141,7 +141,7 @@ public class ReactiveRegisterView extends BorderPane {
                 .subscribeOn(Schedulers.computation())
                 .subscribe(change -> Platform.runLater(() -> {
                     if (change.regNum() >= 0 && change.regNum() < 16) {
-                        updateRegister(change.regNum(), change.newValue());
+                        updateRegister(change.regNum(), change.getNewValue());
                     }
                 }), Throwable::printStackTrace)
         );

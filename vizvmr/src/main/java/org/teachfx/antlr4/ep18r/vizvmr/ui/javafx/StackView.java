@@ -1,6 +1,7 @@
 package org.teachfx.antlr4.ep18r.vizvmr.ui.javafx;
 
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.VBox;
@@ -13,15 +14,38 @@ import javafx.scene.layout.VBox;
 public class StackView extends VBox {
 
     private final TreeView<String> treeView;
+    private final ScrollPane scrollPane;
 
     public StackView() {
         this.treeView = new TreeView<>();
+        this.treeView.setShowRoot(false);
+        this.treeView.setCellFactory(tv -> new javafx.scene.control.TreeCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (item != null && !empty) {
+                    setText(item);
+                    setStyle("-fx-font-family: 'Courier New', monospace; -fx-font-size: 12px;");
+                } else {
+                    setText(null);
+                    setGraphic(null);
+                }
+            }
+        });
+
+        this.scrollPane = new ScrollPane(treeView);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 
         Label header = new Label("调用栈");
         header.setStyle("-fx-font-weight: bold; -fx-text-fill: #666666;");
 
-        getChildren().addAll(header, treeView);
+        getChildren().addAll(header, scrollPane);
         setStyle("-fx-spacing: 5; -fx-padding: 10;");
+        setMaxHeight(Double.MAX_VALUE);
+        setMaxWidth(Double.MAX_VALUE);
     }
 
     public void updateStack(int[] callStack) {

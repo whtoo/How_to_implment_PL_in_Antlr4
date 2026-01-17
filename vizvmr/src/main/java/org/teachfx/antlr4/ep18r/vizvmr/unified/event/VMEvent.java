@@ -189,6 +189,33 @@ public abstract class VMEvent {
     }
 
     /**
+     * 指令获取事件（执行前）
+     */
+    public static class InstructionFetchedEvent extends VMEvent {
+        private final int pc;
+        private final int opcode;
+        private final String mnemonic;
+        private final String operands;
+
+        public InstructionFetchedEvent(int pc, int opcode, String mnemonic, String operands) {
+            super(VMEventType.INSTRUCTION_FETCHED);
+            this.pc = pc;
+            this.opcode = opcode;
+            this.mnemonic = mnemonic;
+            this.operands = operands;
+            addMetadata("pc", pc);
+            addMetadata("opcode", opcode);
+            addMetadata("mnemonic", mnemonic);
+            addMetadata("operands", operands);
+        }
+
+        public int getPC() { return pc; }
+        public int getOpcode() { return opcode; }
+        public String getMnemonic() { return mnemonic; }
+        public String getOperands() { return operands; }
+    }
+
+    /**
      * 指令执行事件
      */
     public static class InstructionExecutedEvent extends VMEvent {

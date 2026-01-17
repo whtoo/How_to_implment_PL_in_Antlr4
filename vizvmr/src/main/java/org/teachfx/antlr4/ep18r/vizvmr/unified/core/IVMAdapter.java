@@ -110,6 +110,41 @@ public class IVMAdapter implements IVM {
     }
 
     @Override
+    public String[] getDisassembly() {
+        byte[] code = interpreter.getCode();
+        if (code == null || code.length == 0) {
+            return new String[0];
+        }
+
+        org.teachfx.antlr4.ep18r.stackvm.RegisterDisAssembler disassembler =
+            new org.teachfx.antlr4.ep18r.stackvm.RegisterDisAssembler(
+                code,
+                code.length,
+                interpreter.getConstantPool()
+            );
+
+        return disassembler.disassembleToString().split("\n");
+    }
+
+    @Override
+    public int[] getCallStack() {
+        org.teachfx.antlr4.ep18r.stackvm.StackFrame[] stack = interpreter.getCallStack();
+        if (stack == null || stack.length == 0) {
+            return new int[0];
+        }
+
+        int[] callStackPCs = new int[stack.length];
+        for (int i = 0; i < stack.length; i++) {
+            if (stack[i] != null) {
+                callStackPCs[i] = stack[i].returnAddress;
+            } else {
+                callStackPCs[i] = 0;
+            }
+        }
+        return callStackPCs;
+    }
+
+    @Override
     public void addVisualizationListener(VisualizationListener listener) {
         interpreter.addVisualizationListener(listener);
     }

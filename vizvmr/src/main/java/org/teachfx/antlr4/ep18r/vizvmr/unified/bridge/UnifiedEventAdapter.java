@@ -32,6 +32,8 @@ public class UnifiedEventAdapter implements org.teachfx.antlr4.ep18r.stackvm.int
     @Override
     public void beforeInstructionExecute(int pc, int opcode, String instruction) {
         logger.debug("指令执行前: PC={}, Opcode={}, Instruction={}", pc, opcode, instruction);
+        VMEvent event = new VMEvent.InstructionFetchedEvent(pc, opcode, instruction, "");
+        eventBus.publish(event);
     }
 
     @Override

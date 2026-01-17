@@ -2,6 +2,7 @@ package org.teachfx.antlr4.ep18r.vizvmr.ui.javafx;
 
 import javafx.application.Platform;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -14,16 +15,26 @@ import javafx.scene.shape.Rectangle;
 public class CodeView extends VBox {
 
     private final VBox instructionsContainer;
+    private final ScrollPane scrollPane;
     private int currentPC = -1;
 
     public CodeView() {
         this.instructionsContainer = new VBox(5);
         instructionsContainer.setStyle("-fx-background-color: #F5F5F5; -fx-padding: 10;");
 
+        this.scrollPane = new ScrollPane(instructionsContainer);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+
         Label header = new Label("代码视图");
         header.setStyle("-fx-font-weight: bold; -fx-text-fill: #666666;");
 
-        getChildren().addAll(header, instructionsContainer);
+        getChildren().addAll(header, scrollPane);
+
+        setMaxHeight(Double.MAX_VALUE);
+        setMaxWidth(Double.MAX_VALUE);
     }
 
     public void setInstructions(String[] disassembly) {

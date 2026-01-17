@@ -178,7 +178,7 @@ public class UnifiedVizVMRLauncher extends Application {
     }
 
     private void bindDataStreams() {
-        disposables = new Disposable[6];
+        disposables = new Disposable[7];
 
         disposables[0] = stateManager.registers()
             .subscribe(registers -> Platform.runLater(() -> registerView.updateRegisters(registers)));
@@ -209,6 +209,7 @@ public class UnifiedVizVMRLauncher extends Application {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("加载VM代码");
         fileChooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("VM Assembly (*.vmr)", "*.vmr"),
             new FileChooser.ExtensionFilter("VM Assembly (*.vm)", "*.vm"),
             new FileChooser.ExtensionFilter("All Files", "*.*")
         );
@@ -216,10 +217,14 @@ public class UnifiedVizVMRLauncher extends Application {
         File file = fileChooser.showOpenDialog(statusView.getScene().getWindow());
         if (file != null) {
             try (java.io.InputStream is = new java.io.FileInputStream(file)) {
-                stateManager.loadCode(is).thenAccept(result -> {
+                // 先读取全部字节，因为 CompletableFuture 是异步的
+                byte[] bytes = is.readAllBytes();
+                stateManager.loadCode(new java.io.ByteArrayInputStream(bytes)).thenAccept(result -> {
                     Platform.runLater(() -> {
                         if (result.isSuccess()) {
                             logger.info("代码加载成功: {}", file.getName());
+                            String[] disassembly = vm.getDisassembly();
+                            codeView.setInstructions(disassembly);
                         } else {
                             showError("加载失败", result.getMessage());
                         }

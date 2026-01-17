@@ -58,6 +58,16 @@ public interface IVM {
     int getProgramCounter();
 
     /**
+     * 获取反汇编代码数组
+     */
+    String[] getDisassembly();
+
+    /**
+     * 获取调用栈帧
+     */
+    int[] getCallStack();
+
+    /**
      * 添加可视化监听器
      */
     void addVisualizationListener(VisualizationListener listener);

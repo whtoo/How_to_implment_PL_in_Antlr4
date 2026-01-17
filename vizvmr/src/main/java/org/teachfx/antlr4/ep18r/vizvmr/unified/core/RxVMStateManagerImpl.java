@@ -20,6 +20,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javafx.application.Platform;
+
 /**
  * 统一响应式虚拟机状态管理器实现
  *
@@ -59,7 +61,7 @@ public class RxVMStateManagerImpl implements IRxVMStateManager {
 
     // ==================== 配置 ====================
 
-    private volatile int autoStepDelay = 200;
+    private volatile int autoStepDelay = 1000;
     private volatile boolean autoStepMode = false;
 
     // ==================== 性能统计 ====================
@@ -96,8 +98,19 @@ public class RxVMStateManagerImpl implements IRxVMStateManager {
     }
 
     private void registerEventListeners() {
-    vm.addVisualizationListener(eventAdapter);
+        vm.addVisualizationListener(eventAdapter);
         eventBus.registerListener(this);
+
+        // 订阅指令执行事件（执行后），自动同步状态到UI
+        // 使用Schedulers.single()确保状态同步的顺序性
+        eventBus.events(VMEvent.VMEventType.INSTRUCTION_EXECUTED)
+            .observeOn(Schedulers.single())
+            .subscribe(event -> {
+                logger.debug("收到指令执行事件: autoStepMode={}, paused={}", autoStepMode, paused.get());
+                if (autoStepMode && !paused.get()) {
+                    syncStateFromVM();
+                }
+            });
     }
 
     private void setupCommandPipeline() {
@@ -225,6 +238,11 @@ public class RxVMStateManagerImpl implements IRxVMStateManager {
             return;
         }
 
+        // 设置自动步进模式，让UI有时间更新显示
+        autoStepMode = true;
+        vm.setAutoStepMode(true);
+        vm.setAutoStepDelay(autoStepDelay);
+
         vm.setPaused(false);
         vm.setStepMode(false);
         running.set(true);
@@ -234,13 +252,20 @@ public class RxVMStateManagerImpl implements IRxVMStateManager {
         setState(VMTypes.VMState.RUNNING);
         startTime.set(System.currentTimeMillis());
 
-        try {
-            vm.exec();
-            eventAdapter.publishExecutionStopped();
-        } catch (Exception e) {
-            logger.error("VM执行失败", e);
-            handleExecutionError(e);
-        }
+        // 在后台线程中执行VM，避免阻塞UI线程
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                vm.exec();
+                Platform.runLater(() -> {
+                    eventAdapter.publishExecutionStopped();
+                });
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    logger.error("VM执行失败", e);
+                    handleExecutionError(e);
+                });
+            }
+        }, java.util.concurrent.ForkJoinPool.commonPool());
     }
 
     @Override
@@ -477,13 +502,21 @@ public class RxVMStateManagerImpl implements IRxVMStateManager {
             }
             heapSubject.onNext(newHeap);
 
-            int[] newGlobals = new int[globalsSize];
-            for (int i = 0; i < globalsSize; i++) {
-                newGlobals[i] = ((Number) vm.readGlobal(i)).intValue();
+            // 检查 globals 是否已初始化（代码是否已加载）
+            try {
+                vm.readGlobal(0); // 测试是否可以读取全局变量
+                int[] newGlobals = new int[globalsSize];
+                for (int i = 0; i < globalsSize; i++) {
+                    newGlobals[i] = ((Number) vm.readGlobal(i)).intValue();
+                }
+                globalsSubject.onNext(newGlobals);
+            } catch (NullPointerException | IndexOutOfBoundsException e) {
+                // globals 未初始化（代码未加载），发送空数组
+                logger.debug("globals 未初始化，跳过全局变量同步");
+                globalsSubject.onNext(new int[0]);
             }
-            globalsSubject.onNext(newGlobals);
 
-            int[] callStack = new int[0];
+            int[] callStack = vm.getCallStack();
             callStackSubject.onNext(callStack);
 
         } catch (Exception e) {

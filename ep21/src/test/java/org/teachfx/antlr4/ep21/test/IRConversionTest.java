@@ -806,6 +806,60 @@ class IRConversionTest {
             List<LIRNode> result = converter.convert(largeFunction);
             assertEquals(1000, result.size(), "Should convert all 1000 statements");
         }
+
+        @Test
+        @DisplayName("超大规模转换应该保持线性复杂度")
+        void testVeryLargeScaleConversion() {
+            MIRToLIRConverter converter = new MIRToLIRConverter();
+
+            int smallSize = 1000;
+            int largeSize = 10000;
+
+            // 小规模: 1000条语句
+            MIRFunction smallFunction = new MIRFunction("small");
+            for (int i = 0; i < smallSize; i++) {
+                final int idx = i;
+                MIRExpr expr = new MIRExpr() {
+                    @Override
+                    public java.util.Set<String> getUsedVariables() {
+                        return java.util.Set.of("var" + (idx % 200));
+                    }
+                    @Override
+                    public void accept(org.teachfx.antlr4.ep21.ir.mir.MIRVisitor<?> visitor) {}
+                };
+                smallFunction.addStatement(new MIRAssignStmt("x" + i, expr));
+            }
+
+            long startTime = System.nanoTime();
+            List<LIRNode> smallResult = converter.convert(smallFunction);
+            long smallTime = System.nanoTime() - startTime;
+            assertEquals(smallSize, smallResult.size());
+
+            // 大规模: 10000条语句
+            MIRFunction largeFunction = new MIRFunction("large");
+            for (int i = 0; i < largeSize; i++) {
+                final int idx = i;
+                MIRExpr expr = new MIRExpr() {
+                    @Override
+                    public java.util.Set<String> getUsedVariables() {
+                        return java.util.Set.of("var" + (idx % 200));
+                    }
+                    @Override
+                    public void accept(org.teachfx.antlr4.ep21.ir.mir.MIRVisitor<?> visitor) {}
+                };
+                largeFunction.addStatement(new MIRAssignStmt("x" + i, expr));
+            }
+
+            startTime = System.nanoTime();
+            List<LIRNode> largeResult = converter.convert(largeFunction);
+            long largeTime = System.nanoTime() - startTime;
+            assertEquals(largeSize, largeResult.size());
+
+            // 验证时间复杂度接近线性（10x数据量，应该在15x时间以内）
+            double ratio = (double) largeTime / smallTime;
+            assertTrue(ratio < 15.0,
+                       "Time complexity should be near-linear. Ratio: " + ratio + " (expected < 15x for 10x data)");
+        }
     }
 
     /**

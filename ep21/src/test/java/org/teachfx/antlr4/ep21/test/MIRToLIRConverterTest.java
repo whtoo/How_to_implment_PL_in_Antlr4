@@ -240,4 +240,113 @@ class MIRToLIRConverterTest {
             return "TestMIRExpr" + usedVars;
         }
     }
+
+    /**
+     * MIRFunction变量信息缓存测试
+     * 验证缓存机制的正确性和失效逻辑
+     */
+    @Nested
+    @DisplayName("MIRFunction缓存机制测试")
+    class MIRFunctionCacheTests {
+
+        @Test
+        @DisplayName("初始调用应该计算变量信息")
+        void testFirstCallComputesVariables() {
+            MIRFunction func = new MIRFunction("test");
+            func.addStatement(new MIRAssignStmt("a", createMockMIRExpr(Set.of("x"))));
+            func.addStatement(new MIRAssignStmt("b", createMockMIRExpr(Set.of("y"))));
+
+            Set<String> used = func.getUsedVariables();
+            Set<String> defined = func.getDefinedVariables();
+
+            assertTrue(used.contains("x"));
+            assertTrue(used.contains("y"));
+            assertTrue(defined.contains("a"));
+            assertTrue(defined.contains("b"));
+        }
+
+        @Test
+        @DisplayName("后续调用应该使用缓存")
+        void testSubsequentCallsUseCache() {
+            MIRFunction func = new MIRFunction("test");
+            func.addStatement(new MIRAssignStmt("a", createMockMIRExpr(Set.of("x"))));
+
+            Set<String> firstCall = func.getUsedVariables();
+            Set<String> secondCall = func.getUsedVariables();
+
+            assertSame(firstCall, secondCall, "Subsequent calls should return cached set");
+        }
+
+        @Test
+        @DisplayName("添加语句后应该使缓存失效")
+        void testAddingStatementInvalidatesCache() {
+            MIRFunction func = new MIRFunction("test");
+            func.addStatement(new MIRAssignStmt("a", createMockMIRExpr(Set.of("x"))));
+
+            Set<String> cachedSet = func.getUsedVariables();
+            assertSame(cachedSet, func.getUsedVariables());
+
+            func.addStatement(new MIRAssignStmt("b", createMockMIRExpr(Set.of("y"))));
+
+            Set<String> newSet = func.getUsedVariables();
+            assertNotSame(cachedSet, newSet, "Cache should be invalidated after adding statement");
+            assertEquals(2, newSet.size());
+        }
+
+        @Test
+        @DisplayName("添加参数后应该使缓存失效")
+        void testAddingParameterInvalidatesCache() {
+            MIRFunction func = new MIRFunction("test");
+            func.addStatement(new MIRAssignStmt("a", createMockMIRExpr(Set.of("x"))));
+
+            Set<String> cachedSet = func.getUsedVariables();
+
+            func.addParameter("p1");
+
+            Set<String> newSet = func.getUsedVariables();
+            assertNotSame(cachedSet, newSet);
+            assertTrue(newSet.contains("p1"));
+        }
+
+        @Test
+        @DisplayName("多次修改后缓存应该保持一致性")
+        void testCacheConsistencyAfterMultipleModifications() {
+            MIRFunction func = new MIRFunction("test");
+
+            Set<String> result1 = func.getUsedVariables();
+            Set<String> defined1 = func.getDefinedVariables();
+
+            func.addStatement(new MIRAssignStmt("a", createMockMIRExpr(Set.of("x"))));
+
+            Set<String> result2 = func.getUsedVariables();
+            Set<String> defined2 = func.getDefinedVariables();
+
+            func.addLocalVariable("local1");
+
+            Set<String> result3 = func.getUsedVariables();
+            Set<String> defined3 = func.getDefinedVariables();
+
+            assertNotSame(result1, result2);
+            assertNotSame(result2, result3);
+            assertEquals(1, result2.size());
+            assertEquals(2, defined3.size()); // a + local1
+        }
+    }
+
+    /**
+     * 辅助方法：创建模拟MIRExpr
+     */
+    private MIRExpr createMockMIRExpr(Set<String> usedVars) {
+        return new MIRExpr() {
+            @Override
+            public Set<String> getUsedVariables() {
+                return usedVars != null ? usedVars : Set.of();
+            }
+
+            @Override
+            public void accept(MIRVisitor<?> visitor) {
+                visitor.visit(this);
+            }
+        };
+    }
 }

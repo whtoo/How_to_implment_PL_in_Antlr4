@@ -14,11 +14,17 @@ public class MIRFunction extends MIRNode {
     private final Set<String> parameters;
     private final Set<String> localVariables;
     
+    // Cache for variable information to avoid repeated computation
+    private transient Set<String> cachedUsedVariables;
+    private transient Set<String> cachedDefinedVariables;
+    private transient boolean variableInfoValid;
+    
     public MIRFunction(String name) {
         this.name = name;
         this.statements = new ArrayList<>();
         this.parameters = new HashSet<>();
         this.localVariables = new HashSet<>();
+        this.variableInfoValid = false;
     }
     
     @Override
@@ -28,6 +34,15 @@ public class MIRFunction extends MIRNode {
     
     @Override
     public Set<String> getUsedVariables() {
+        if (!variableInfoValid || cachedUsedVariables == null) {
+            cachedUsedVariables = computeUsedVariables();
+            cachedDefinedVariables = computeDefinedVariables();
+            variableInfoValid = true;
+        }
+        return cachedUsedVariables;
+    }
+
+    private Set<String> computeUsedVariables() {
         Set<String> used = new HashSet<>();
         for (MIRStmt stmt : statements) {
             used.addAll(stmt.getUsedVariables());
@@ -38,6 +53,15 @@ public class MIRFunction extends MIRNode {
     
     @Override
     public Set<String> getDefinedVariables() {
+        if (!variableInfoValid || cachedDefinedVariables == null) {
+            cachedUsedVariables = computeUsedVariables();
+            cachedDefinedVariables = computeDefinedVariables();
+            variableInfoValid = true;
+        }
+        return cachedDefinedVariables;
+    }
+
+    private Set<String> computeDefinedVariables() {
         Set<String> defined = new HashSet<>();
         defined.addAll(localVariables);
         defined.addAll(parameters);
@@ -54,6 +78,7 @@ public class MIRFunction extends MIRNode {
     
     public void addStatement(MIRStmt stmt) {
         statements.add(stmt);
+        variableInfoValid = false;
     }
     
     public String getName() {
@@ -66,9 +91,11 @@ public class MIRFunction extends MIRNode {
     
     public void addParameter(String param) {
         parameters.add(param);
+        variableInfoValid = false;
     }
     
     public void addLocalVariable(String var) {
         localVariables.add(var);
+        variableInfoValid = false;
     }
 }

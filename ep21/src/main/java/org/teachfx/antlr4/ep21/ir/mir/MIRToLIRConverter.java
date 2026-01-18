@@ -3,10 +3,13 @@ package org.teachfx.antlr4.ep21.ir.mir;
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
 import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
-import org.teachfx.antlr4.ep21.ir.lir.*;
+import org.teachfx.antlr4.ep21.ir.lir.LIRAssign;
+import org.teachfx.antlr4.ep21.ir.lir.LIRNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * MIR到LIR的转换器
@@ -14,7 +17,7 @@ import java.util.List;
  */
 public class MIRToLIRConverter implements MIRVisitor<Void> {
 
-    private final List<LIRNode> lirInstructions;
+    private final ArrayList<LIRNode> lirInstructions;
     private final MIRToLIRContext context;
 
     public MIRToLIRConverter() {
@@ -33,11 +36,15 @@ public class MIRToLIRConverter implements MIRVisitor<Void> {
         lirInstructions.clear();
         context.reset();
 
+        int expectedSize = mirFunction.getStatements().size();
+        lirInstructions.ensureCapacity(expectedSize);
+
         // 转换函数体中的每个MIR语句
         for (MIRStmt stmt : mirFunction.getStatements()) {
             stmt.accept(this);
         }
 
+        // 返回防御性拷贝以避免内部状态共享
         return new ArrayList<>(lirInstructions);
     }
 
@@ -95,10 +102,11 @@ public class MIRToLIRConverter implements MIRVisitor<Void> {
      * 转换MIR表达式为LIR操作数
      */
     private Operand convertExpressionToOperand(MIRExpr expr) {
+        var usedVars = expr.getUsedVariables();
         // 简单变量引用
-        if (expr.getUsedVariables().size() == 1) {
-            String varName = expr.getUsedVariables().iterator().next();
-            return createOperandFromVariable(varName);
+        if (usedVars.size() == 1) {
+            String varName = usedVars.iterator().next();
+            return context.getOrCreateOperand(varName);
         }
 
         // 复杂表达式需要临时变量
@@ -117,10 +125,12 @@ public class MIRToLIRConverter implements MIRVisitor<Void> {
     }
 
     /**
-     * 从变量名创建操作数
+     * 从变量名创建操作数（已废弃，使用context.getOrCreateOperand）
+     * @deprecated Use context.getOrCreateOperand instead
      */
+    @Deprecated
     private Operand createOperandFromVariable(String varName) {
-        return OperandSlot.genTemp(); // 简化实现
+        return context.getOrCreateOperand(varName);
     }
 
     /**
@@ -131,15 +141,23 @@ public class MIRToLIRConverter implements MIRVisitor<Void> {
     }
 
     /**
-     * 转换上下文，用于管理临时变量和标签
+     * 转换上下文，用于管理临时变量、标签和变量映射
      */
     private static class MIRToLIRContext {
-        private int tempCounter = 0;
         private int labelCounter = 0;
+        private Map<String, Operand> variableMap;
+
+        public MIRToLIRContext() {
+            this.variableMap = new HashMap<>();
+        }
 
         public void reset() {
-            tempCounter = 0;
             labelCounter = 0;
+            variableMap.clear();
+        }
+
+        public Operand getOrCreateOperand(String varName) {
+            return variableMap.computeIfAbsent(varName, k -> OperandSlot.genTemp());
         }
 
         public Operand createTempOperand() {

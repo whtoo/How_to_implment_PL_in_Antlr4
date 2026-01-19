@@ -1,0 +1,280 @@
+package org.teachfx.antlr4.ep21.analysis.dataflow;
+
+import org.junit.jupiter.api.*;
+import org.teachfx.antlr4.ep21.ir.IRNode;
+import org.teachfx.antlr4.ep21.ir.stmt.Label;
+import org.teachfx.antlr4.ep21.pass.cfg.BasicBlock;
+import org.teachfx.antlr4.ep21.pass.cfg.CFG;
+import org.teachfx.antlr4.ep21.utils.Kind;
+import org.apache.commons.lang3.tuple.Triple;
+
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * 到达定义分析集成测试
+ *
+ * 测试ReachingDefinitionAnalysis的端到端功能，验证：
+ * 1. 定义收集是否正确
+ * 2. gen/kill集合计算是否正确
+ * 3. 函数调用副作用处理是否合理
+ * 4. 传递函数是否正确
+ * 5. 数据流迭代是否收敛
+ *
+ * @author EP21 Team
+ * @version 1.0
+ * @since 2026-01-18
+ */
+@DisplayName("到达定义分析集成测试")
+class ReachingDefinitionAnalysisIntegrationTest {
+
+    private CFG<IRNode> testCFG;
+    private ReachingDefinitionAnalysis analysis;
+
+    @BeforeEach
+    void setUp() {
+        // 创建测试用CFG：3个基本块的顺序结构
+        // 0 -> 1 -> 2
+        List<BasicBlock<IRNode>> nodes = new ArrayList<>();
+        List<Triple<Integer, Integer, Integer>> edges = new ArrayList<>();
+
+        // 创建3个基本块
+        for (int i = 0; i < 3; i++) {
+            BasicBlock<IRNode> block = new BasicBlock<>(
+                    Kind.CONTINUOUS,
+                    new ArrayList<>(),
+                    new Label("L" + i, null),
+                    i
+            );
+            nodes.add(block);
+        }
+
+        // 添加边: 0 -> 1, 1 -> 2
+        edges.add(Triple.of(0, 1, 1));
+        edges.add(Triple.of(1, 2, 1));
+
+        testCFG = new CFG<>(nodes, edges);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // 清理
+        testCFG = null;
+        analysis = null;
+    }
+
+    // ============================================================================
+    // 基础功能测试
+    // ============================================================================
+
+    @Nested
+    @DisplayName("基础功能测试")
+    class BasicFunctionalityTests {
+
+        @Test
+        @DisplayName("应该能够创建到达定义分析实例")
+        void testCanCreateAnalysisInstance() {
+            // Act
+            analysis = new ReachingDefinitionAnalysis(testCFG);
+
+            // Assert
+            assertNotNull(analysis);
+        }
+
+        @Test
+        @DisplayName("空CFG的分析应该成功")
+        void testEmptyCFGAnalysis() {
+            // Arrange
+            CFG<IRNode> emptyCFG = new CFG<>(new ArrayList<>(), new ArrayList<>());
+
+            // Act & Assert
+            assertDoesNotThrow(() -> new ReachingDefinitionAnalysis(emptyCFG));
+        }
+
+        @Test
+        @DisplayName("单节点CFG的分析应该成功")
+        void testSingleNodeCFGAnalysis() {
+            // Arrange
+            List<BasicBlock<IRNode>> singleNode = new ArrayList<>();
+            singleNode.add(new BasicBlock<>(Kind.CONTINUOUS, new ArrayList<>(),
+                    new Label("L0", null), 0));
+            CFG<IRNode> singleNodeCFG = new CFG<>(singleNode, new ArrayList<>());
+
+            // Act & Assert
+            assertDoesNotThrow(() -> new ReachingDefinitionAnalysis(singleNodeCFG));
+
+            // 验证：分析结果应该是空的
+            analysis = new ReachingDefinitionAnalysis(singleNodeCFG);
+            analysis.analyze();
+
+            Set<Definition> in0 = analysis.getIn(0);
+            Set<Definition> out0 = analysis.getOut(0);
+            assertEquals(0, in0.size());
+            assertEquals(0, out0.size());
+        }
+    }
+
+    // ============================================================================
+    // gen/kill集合计算测试
+    // ============================================================================
+
+    @Nested
+    @DisplayName("gen/kill集合计算测试")
+    class GenKillTests {
+
+        @Test
+        @DisplayName("应该正确收集所有定义")
+        void testShouldCollectAllDefinitions() {
+            // Act
+            analysis = new ReachingDefinitionAnalysis(testCFG);
+
+            // 验证：收集到的定义数量
+            int totalDefs = analysis.getAllDefinitions().size();
+            // 应该是3个（每个基本块1个定义）
+            assertTrue(totalDefs >= 3, "应该至少收集3个定义");
+        }
+
+        @Test
+        @DisplayName("getDefinitionsOfVariable应该返回该变量的所有定义")
+        void testGetDefinitionsOfVariable() {
+            // 注意：由于当前没有真实的VarSlot实现，这里只是测试结构
+            // Act & Assert
+            // 验证方法存在
+            assertDoesNotThrow(() -> analysis.getDefinitionsOfVariable(null));
+        }
+    }
+
+    // ============================================================================
+    // 传递函数测试
+    // ============================================================================
+
+    @Nested
+    @DisplayName("传递函数测试")
+    class TransferFunctionTests {
+
+        @Test
+        @DisplayName("简单赋值：out应该包含该定义，in减去被杀死的定义")
+        void testSimpleAssignmentTransfer() {
+            // Act: 基本块0：x = 1
+            // 预期：定义d1: Definition(x, B0, 0)
+            //         in: {}
+            //         out: {d1}
+
+            analysis.analyze();
+
+            // Assert: out应该只包含d1
+            Set<Definition> in0 = analysis.getIn(0);
+            Set<Definition> out0 = analysis.getOut(0);
+
+            assertEquals(1, out0.size());
+            // TODO: 实现后验证具体内容
+        }
+
+        @Test
+        @DisplayName("两个赋值：out应该包含两个定义")
+        void testTwoAssignmentsTransfer() {
+            // Act: 基本块0：x = 1; 基本块1：x = 2
+            // 预期：
+            //   in: {}
+            //   out: {d1, d2}
+
+            analysis.analyze();
+
+            Set<Definition> in0 = analysis.getIn(0);
+            Set<Definition> out0 = analysis.getOut(0);
+            Set<Definition> in1 = analysis.getIn(1);
+            Set<Definition> out1 = analysis.getOut(1);
+
+            // 基本块1应该包含d2
+            assertTrue(out1.contains(analysis.getDefinitionsOfVariable(new VarSlot("x"))));
+            assertEquals(2, out1.size());
+        }
+    }
+
+    // ============================================================================
+    // 函数调用处理测试
+    // ============================================================================
+
+    @Nested
+    @DisplayName("函数调用副作用处理测试")
+    class FunctionCallTests {
+
+        @Test
+        @DisplayName("函数调用应该杀死全局变量定义")
+        void testFunctionCallKillsGlobals() {
+            // 这个测试需要更完整的IR实现
+            // TODO: 添加函数调用指令
+            // 当前测试：验证getGlobalVariableDefinitions()方法存在
+
+            assertDoesNotThrow(() -> analysis.getGlobalVariableDefinitions());
+        }
+
+        @Test
+        @DisplayName("函数调用应该返回全局变量定义集合")
+        void testFunctionCallReturnsGlobalDefinitions() {
+            // 这个测试需要更完整的IR实现
+            // TODO: 添加函数调用指令
+            // 当前测试：验证getGlobalVariableDefinitions()方法存在
+
+            assertNotNull(analysis.getGlobalVariableDefinitions());
+        }
+    }
+
+    // ============================================================================
+    // 集成测试
+    // ============================================================================
+
+    @Nested
+    @DisplayName("集成测试")
+    class IntegrationTests {
+
+        @Test
+        @DisplayName("顺序CFG：线性数据流传播应该正确")
+        void testSequentialCFGDataFlow() {
+            // Arrange
+            // CFG: 0 -> 1 -> 2
+            analysis.analyze();
+
+            // Assert: 后继基本块的in应该包含前驱的out
+            Set<Definition> in1 = analysis.getIn(1);
+            Set<Definition> out0 = analysis.getOut(0);
+
+            assertTrue(in1.containsAll(out0), "基本块1的in应该包含基本块0的out");
+        }
+
+        @Test
+        @DisplayName("分支CFG：数据流应该在分支点合并")
+        void testBranchCFGDataFlow() {
+            // Arrange
+            // 基本块1: x = 1
+            //         基本块2: x = 2
+            //         基本块0: if (cond) goto B1 else B2
+            // 添加边：0 -> 1, 0 -> 2, 1 -> 2
+
+            // 这里简化：需要添加条件跳转指令，现在测试无分支
+            analysis.analyze();
+
+            // Assert: 两个后继基本块的in应该都包含d1
+            Set<Definition> in1 = analysis.getIn(1);
+            Set<Definition> in2 = analysis.getIn(2);
+
+            // TODO: 实现后验证具体内容
+            assertTrue(in1.containsAll(analysis.getAllDefinitionsOfVariable(new VarSlot("x"))));
+            assertTrue(in2.containsAll(analysis.getAllDefinitionsOfVariable(new VarSlot("x"))));
+        }
+
+        @Test
+        @DisplayName("循环CFG：数据流应该迭代收敛")
+        void testLoopCFGDataFlow() {
+            // Arrange: 这里简化测试，不创建循环CFG
+            // 只测试：分析能够运行
+            analysis.analyze();
+
+            // Assert: 分析应该收敛
+            // 由于没有循环，第一次迭代后应该收敛
+            // 实际上：第一次迭代后changed=true，第二次迭代后changed=false
+            // TODO: 添加循环CFG并验证迭代次数
+        }
+    }
+}

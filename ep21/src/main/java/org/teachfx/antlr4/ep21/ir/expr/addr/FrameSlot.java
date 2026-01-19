@@ -10,6 +10,9 @@ public class FrameSlot extends VarSlot {
     private final VariableSymbol symbol; // 保存符号引用，用于SSA转换
 
     public static FrameSlot get(VariableSymbol variableSymbol) {
+        if (variableSymbol == null) {
+            throw new IllegalArgumentException("VariableSymbol cannot be null");
+        }
         return new FrameSlot(variableSymbol.getSlotIdx(), variableSymbol);
     }
 

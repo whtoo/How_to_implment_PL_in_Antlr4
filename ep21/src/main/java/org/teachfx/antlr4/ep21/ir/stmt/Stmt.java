@@ -8,6 +8,7 @@ public abstract class Stmt extends IRNode {
         JMP,
         CJMP,
         ASSIGN,
+        ARRAY_ASSIGN,
         LABEL,
         RETURN,
         EXPR

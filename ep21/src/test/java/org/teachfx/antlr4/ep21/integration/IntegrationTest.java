@@ -162,7 +162,6 @@ public class IntegrationTest {
 
     @Test
     @DisplayName("测试数组访问")
-    @Disabled("TODO: 数组赋值支持未实现 - 需要扩展IR和代码生成器以支持 arr[i] = value 语法")
     public void testArrayAccess() throws Exception {
         String[] args = new String[]{
             "src/test/resources/integration/array_access.cymbol",

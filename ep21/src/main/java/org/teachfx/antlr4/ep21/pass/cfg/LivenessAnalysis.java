@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.IRVisitor;
 import org.teachfx.antlr4.ep21.ir.Prog;
+import org.teachfx.antlr4.ep21.ir.expr.ArrayAccess;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
 import org.teachfx.antlr4.ep21.ir.expr.Expr;
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
@@ -361,6 +362,34 @@ public class LivenessAnalysis implements IRVisitor<Void, Void>, IFlowOptimizer<I
     @Override
     public <T> Void visit(ConstVal<T> tConstVal) {
         // 常量不产生use或def
+        return null;
+    }
+
+    @Override
+    public Void visit(ArrayAccess arrayAccess) {
+        // 数组访问会产生数组变量和索引变量的使用
+        if (arrayAccess.getArray() instanceof VarSlot arrayVar) {
+            currentBlock.liveUse.add(arrayVar);
+        }
+        if (arrayAccess.getIndex() instanceof VarSlot indexVar) {
+            currentBlock.liveUse.add(indexVar);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visit(ArrayAssign arrayAssign) {
+        // 数组赋值会产生数组变量、索引变量和值变量的使用
+        ArrayAccess arrayAccess = arrayAssign.getArrayAccess();
+        if (arrayAccess.getArray() instanceof VarSlot arrayVar) {
+            currentBlock.liveUse.add(arrayVar);
+        }
+        if (arrayAccess.getIndex() instanceof VarSlot indexVar) {
+            currentBlock.liveUse.add(indexVar);
+        }
+        if (arrayAssign.getValue() instanceof VarSlot valueVar) {
+            currentBlock.liveUse.add(valueVar);
+        }
         return null;
     }
 }

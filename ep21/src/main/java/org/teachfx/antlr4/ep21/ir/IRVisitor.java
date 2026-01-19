@@ -1,5 +1,6 @@
 package org.teachfx.antlr4.ep21.ir;
 
+import org.teachfx.antlr4.ep21.ir.expr.ArrayAccess;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
 import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
@@ -20,6 +21,7 @@ public interface IRVisitor<S,E> {
     S visit(JMP jmp);
     S visit(CJMP cjmp);
     S visit(Assign assign);
+    S visit(ArrayAssign arrayAssign);
 
     default S visit(Stmt stmt) { return stmt.accept(this);}
 
@@ -33,6 +35,7 @@ public interface IRVisitor<S,E> {
     E visit(FrameSlot frameSlot);
 
     <T> E visit(ConstVal<T> tConstVal);
+    E visit(ArrayAccess arrayAccess);
 
     /// Stmt
 

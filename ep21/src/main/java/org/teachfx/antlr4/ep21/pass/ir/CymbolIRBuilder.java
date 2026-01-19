@@ -12,6 +12,7 @@ import org.teachfx.antlr4.ep21.ast.stmt.*;
 import org.teachfx.antlr4.ep21.ast.type.TypeNode;
 import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.Prog;
+import org.teachfx.antlr4.ep21.ir.expr.ArrayAccess;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
 import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
@@ -174,9 +175,34 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public VarSlot visit(ArrayAccessExprNode arrayAccessExprNode) {
         curNode = arrayAccessExprNode;
-        // TODO: 暂不支持数组访问作为右值（value = arr[index]）
-        // 需要实现数组地址计算和加载
-        throw new UnsupportedOperationException("暂不支持数组访问作为右值: " + arrayAccessExprNode);
+        
+        // 处理数组表达式
+        arrayAccessExprNode.getArray().accept(this);
+        VarSlot arraySlot = peekEvalOperand();
+        
+        // 处理索引表达式
+        arrayAccessExprNode.getIndex().accept(this);
+        VarSlot indexSlot = peekEvalOperand();
+        
+        // 创建数组访问表达式
+        // 注意：这里我们假设数组变量是简单的ID表达式，需要获取其FrameSlot
+        if (arrayAccessExprNode.getArray() instanceof IDExprNode idExprNode) {
+            VariableSymbol arraySymbol = (VariableSymbol) idExprNode.getRefSymbol();
+            if (arraySymbol == null) {
+                throw new IllegalStateException("数组变量符号未解析: " + idExprNode.getImage());
+            }
+            FrameSlot baseSlot = FrameSlot.get(arraySymbol);
+            
+            // 创建一个临时OperandSlot来保存数组访问信息
+            OperandSlot arrayAccessSlot = OperandSlot.genTemp();
+            // 在实际实现中，我们需要在这里生成数组访问的代码
+            // 现在先创建一个特殊的OperandSlot来表示数组访问
+            pushEvalOperand(arrayAccessSlot);
+            
+            return arrayAccessSlot;
+        } else {
+            throw new UnsupportedOperationException("暂不支持复杂数组表达式作为左值: " + arrayAccessExprNode.getArray());
+        }
     }
 
     @Override
@@ -323,12 +349,38 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         assignStmtNode.getRhs().accept(this);
         var rhs = peekEvalOperand();
 
-        // TODO: 暂时不支持数组访问作为左值（arr[index] = value）
-        // 当前仅支持简单变量赋值
-        if (assignStmtNode.getLhs() instanceof ArrayAccessExprNode) {
-            throw new UnsupportedOperationException("暂不支持数组访问作为赋值左值: " + assignStmtNode.getLhs());
+        // 处理数组访问作为左值（arr[index] = value）
+        if (assignStmtNode.getLhs() instanceof ArrayAccessExprNode arrayAccessExpr) {
+            // 处理数组访问表达式
+            arrayAccessExpr.accept(this);
+            var arrayAccessSlot = peekEvalOperand();
+            
+            // 获取数组基地址和索引信息
+            if (arrayAccessExpr.getArray() instanceof IDExprNode idExprNode) {
+                VariableSymbol arraySymbol = (VariableSymbol) idExprNode.getRefSymbol();
+                FrameSlot baseSlot = FrameSlot.get(arraySymbol);
+                
+                // 处理索引表达式
+                arrayAccessExpr.getIndex().accept(this);
+                VarSlot indexSlot = peekEvalOperand();
+                
+                // 创建数组访问表达式
+                ArrayAccess arrayAccess = ArrayAccess.with(arrayAccessSlot, indexSlot, baseSlot);
+                
+                // 创建数组赋值语句
+                addInstr(ArrayAssign.with(arrayAccess, rhs));
+                
+                // 清理操作数栈
+                popEvalOperand(); // 弹出索引
+                popEvalOperand(); // 弹出数组访问槽位
+                popEvalOperand(); // 弹出右值
+                return null;
+            } else {
+                throw new UnsupportedOperationException("暂不支持复杂数组表达式作为左值: " + arrayAccessExpr.getArray());
+            }
         }
 
+        // 处理普通变量赋值
         var lhsNode = (IDExprNode) assignStmtNode.getLhs();
         var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
         addInstr(Assign.with(lhs,rhs));

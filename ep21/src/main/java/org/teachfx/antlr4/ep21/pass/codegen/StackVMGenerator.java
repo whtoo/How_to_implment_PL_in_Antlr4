@@ -5,6 +5,7 @@ import org.teachfx.antlr4.ep18.stackvm.codegen.BytecodeDefinitionInterface.Defau
 import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.IRVisitor;
 import org.teachfx.antlr4.ep21.ir.Prog;
+import org.teachfx.antlr4.ep21.ir.expr.ArrayAccess;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
 import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
@@ -369,6 +370,20 @@ public class StackVMGenerator implements ICodeGenerator {
             } else {
                 errors.add("Unsupported constant type: " + value.getClass().getSimpleName());
             }
+        }
+
+        @Override
+        public Void visit(ArrayAccess arrayAccess) {
+            // TODO: 实现数组访问作为右值
+            errors.add("ArrayAccess not yet implemented for stack VM");
+            return null;
+        }
+
+        @Override
+        public Void visit(ArrayAssign arrayAssign) {
+            // TODO: 实现数组赋值
+            errors.add("ArrayAssign not yet implemented for stack VM");
+            return null;
         }
     }
 

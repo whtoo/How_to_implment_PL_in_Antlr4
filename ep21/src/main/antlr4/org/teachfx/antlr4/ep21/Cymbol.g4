@@ -3,9 +3,14 @@ grammar Cymbol;
 file :   (functionDecl | varDecl)+ #compilationUnit ;
 
 varDecl
-    :   primaryType ID ('=' expr)? ';'
+    :   type ID ('[' expr ']')? ('=' (expr | arrayInitializer))? ';'
     ;
 
+arrayInitializer
+    :   '{' expr (',' expr)* '}'
+    ;
+
+type: primaryType | ID;
 primaryType: 'float' | 'int' | 'void' | 'bool' | 'string' | 'object';
 
 functionDecl
@@ -15,7 +20,7 @@ formalParameters
     :   formalParameter (',' formalParameter)*
     ;
 formalParameter
-    :   primaryType ID
+    :   type ID ('[' expr ']')?  // 支持带大小的数组参数，如 int arr[3] 或不带大小的数组参数，如 int arr[]
     ;
 
 block:  '{' stmts=statement* '}' ;    // possibly empty statement block
@@ -32,6 +37,7 @@ statement:   varDecl             #statVarDecl
     ;
 
 expr:   callFunc=expr '(' ( expr (',' expr)* )? ')' #exprFuncCall   // func call like f(), f(x), f(1,2)
+    |   expr '[' expr ']' #exprArrayAccess    // array access: arr[index]
     |   o='-' expr         #exprUnary       // unary minus
     |   o='!' expr         #exprUnary       // boolean not
     |   expr o=('*'|'/') expr    #exprBinary

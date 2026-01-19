@@ -16,15 +16,17 @@ import java.util.*;
 public class NaturalLoop<I extends IRNode> {
 
     private final BasicBlock<I> header;
-    private final Set<Integer> loopNodes;        // 循环中的所有节点ID
+    private final Set<Integer> loopNodes;        // 循环中的所有节点ID（循环体）
     private final Set<Integer> backEdgeSources;  // 回边的源节点
     private final Map<Integer, Set<Integer>> predecessors;  // 前驱关系
+    private NaturalLoop<I> parentLoop;          // 父循环（用于嵌套循环）
 
     public NaturalLoop(BasicBlock<I> header) {
         this.header = header;
         this.loopNodes = new HashSet<>();
         this.backEdgeSources = new HashSet<>();
         this.predecessors = new HashMap<>();
+        this.parentLoop = null;
     }
 
     /**
@@ -57,10 +59,31 @@ public class NaturalLoop<I extends IRNode> {
     }
 
     /**
-     * 获取循环的所有节点ID
+     * 获取循环的所有节点ID（循环体）
      */
     public Set<Integer> getLoopNodes() {
         return Collections.unmodifiableSet(loopNodes);
+    }
+
+    /**
+     * 获取循环体（与getLoopNodes()同义，为兼容性提供）
+     */
+    public Set<Integer> getBody() {
+        return getLoopNodes();
+    }
+
+    /**
+     * 设置父循环（用于嵌套循环）
+     */
+    public void setParentLoop(NaturalLoop<I> parent) {
+        this.parentLoop = parent;
+    }
+
+    /**
+     * 获取父循环
+     */
+    public NaturalLoop<I> getParentLoop() {
+        return parentLoop;
     }
 
     /**

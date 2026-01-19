@@ -13,6 +13,7 @@ import org.teachfx.antlr4.ep21.ir.IRNode;
 import org.teachfx.antlr4.ep21.ir.stmt.Label;
 import org.teachfx.antlr4.ep21.pass.ast.CymbolASTBuilder;
 import org.teachfx.antlr4.ep21.pass.cfg.CFG;
+import org.teachfx.antlr4.ep21.pass.cfg.EnhancedCFG;
 import org.teachfx.antlr4.ep21.pass.cfg.ControlFlowAnalysis;
 import org.teachfx.antlr4.ep21.pass.cfg.LivenessAnalysis;
 import org.teachfx.antlr4.ep21.analysis.dataflow.ReachingDefinitionAnalysis;
@@ -28,8 +29,8 @@ import org.teachfx.antlr4.ep21.pass.codegen.VMTargetType;
 import org.teachfx.antlr4.ep21.pass.codegen.RegisterVMGenerator;
 import org.teachfx.antlr4.ep21.pass.codegen.IRegisterAllocator;
 import org.teachfx.antlr4.ep21.pass.codegen.EP18RRegisterAllocatorAdapter;
-import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep18r.stackvm.codegen.LinearScanAllocator;
+import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep21.pass.symtab.LocalDefine;
 import org.teachfx.antlr4.ep21.utils.StreamUtils;
 import java.io.*;
@@ -265,12 +266,12 @@ public class Compiler {
                                 .peek(cfgPair -> {
                                     var cfg = cfgPair.getRight();
                                     var idx = cfgPair.getLeft();
-                                    
+
                                     // 生成Mermaid和DOT两种格式的控制流图
                                     String mermaidContent = cfg.toString();
                                     String dotContent = cfg.toDOT();
                                     saveCFGInBothFormats(mermaidContent, dotContent, "%d_origin".formatted(idx));
-                                    
+
                                     // 应用控制流优化
                                     cfg.addOptimizer(new ControlFlowAnalysis<>());
                                     // 应用尾递归优化
@@ -285,17 +286,17 @@ public class Compiler {
                                     // 应用强度削减优化
                                     System.out.println("添加StrengthReductionOptimizer到CFG...");
                                     cfg.addOptimizer(new StrengthReductionOptimizer());
-                                    
+
                                     // 执行到达定义分析
                                     System.out.println("执行到达定义分析...");
-                                    ReachingDefinitionAnalysis reachingAnalysis = 
+                                    ReachingDefinitionAnalysis reachingAnalysis =
                                         new ReachingDefinitionAnalysis(cfg);
                                     reachingAnalysis.analyzeWithWorklist();
-                                    
+
                                     // 应用优化器
                                     System.out.println("应用优化器...");
                                     cfg.applyOptimizers();
-                                    
+
                                     // 保存优化后的控制流图
                                     String optimizedMermaid = cfg.toString();
                                     String optimizedDot = cfg.toDOT();

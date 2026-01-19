@@ -109,6 +109,14 @@ public class ASTBaseVisitor implements ASTVisitor<Void,Void> {
     }
 
     @Override
+    public Void visit(ArrayAccessExprNode arrayAccessExprNode) {
+        // 数组访问：遍历数组和索引表达式
+        arrayAccessExprNode.getArray().accept(this);
+        arrayAccessExprNode.getIndex().accept(this);
+        return null;
+    }
+
+    @Override
     public Void visit(BoolExprNode boolExprNode) {
 
         return null;

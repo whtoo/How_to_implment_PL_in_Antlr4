@@ -52,9 +52,19 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitVarDecl(CymbolParser.VarDeclContext ctx) {
-        var typeNode = (TypeNode)visit(ctx.primaryType());
+        var typeNode = (TypeNode)visit(ctx.type());
         var symbol = new VariableSymbol(ctx.ID().getText(),typeNode.getBaseType());
-        var assignNode  = (ExprNode) visit(ctx.expr());
+        ExprNode assignNode = null;
+
+        // 处理初始化值：优先处理数组初始化，然后处理单个表达式
+        if (ctx.arrayInitializer() != null) {
+            // 数组初始化：{1, 2, 3}
+            assignNode = (ExprNode) visit(ctx.arrayInitializer());
+        } else if (!ctx.expr().isEmpty()) {
+            // 单个表达式初始化：x = 10
+            assignNode = (ExprNode) visit(ctx.expr(0));
+        }
+
         var idExprNode = new IDExprNode(ctx.ID().getText(), ctx);
         idExprNode.setRefSymbol(symbol);
 
@@ -99,7 +109,7 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitFormalParameter(CymbolParser.FormalParameterContext ctx) {
-         TypeNode paramTypeNode = (TypeNode)visit(ctx.primaryType());
+         TypeNode paramTypeNode = (TypeNode)visit(ctx.type());
          String paramName = ctx.ID().getText();
 
          return new VarDeclNode(new VariableSymbol(paramName, paramTypeNode.getBaseType()),null,null,ctx);
@@ -211,6 +221,20 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
     public ASTNode visitExprFuncCall(CymbolParser.ExprFuncCallContext ctx) {
         List<ExprNode> argsNode = ctx.expr().stream().skip(1).map(arg -> (ExprNode) visit(arg)).toList();
         return new CallFuncNode(ctx.expr(0).getText(),argsNode,ctx);
+    }
+
+    @Override
+    public ASTNode visitExprArrayAccess(CymbolParser.ExprArrayAccessContext ctx) {
+        ExprNode arrayExpr = (ExprNode) visit(ctx.expr(0));
+        ExprNode indexExpr = (ExprNode) visit(ctx.expr(1));
+        return new ArrayAccessExprNode(arrayExpr, indexExpr, ctx);
+    }
+
+    @Override
+    public ASTNode visitArrayInitializer(CymbolParser.ArrayInitializerContext ctx) {
+        // TODO: 暂不支持数组初始化语法 {1, 2, 3}
+        // 当前实现返回null，需要添加ArrayInitializerExprNode并实现其访问方法
+        throw new UnsupportedOperationException("数组初始化语法暂不支持: " + ctx.getText());
     }
 
     @Override

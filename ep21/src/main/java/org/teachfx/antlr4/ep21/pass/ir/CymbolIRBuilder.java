@@ -59,6 +59,9 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
 
         // Java 21: 模式匹配改进
         if(varDeclNode.hasInitializer()){
+            if (!(varDeclNode.getIdExprNode() instanceof IDExprNode)) {
+                throw new UnsupportedOperationException("暂不支持数组或复杂类型的变量声明初始化: " + varDeclNode);
+            }
             var lhsNode = (IDExprNode)varDeclNode.getIdExprNode();
             var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
             varDeclNode.getAssignExprNode().accept(this);
@@ -160,12 +163,20 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         if (idExprNode.getRefSymbol() instanceof VariableSymbol) {
             var varSlot = FrameSlot.get((VariableSymbol) idExprNode.getRefSymbol());
 
-            if(!idExprNode.isLValue()) {
+            if(!idExprNode.isLValue()){
                 // RVal
                 pushEvalOperand(varSlot);
             }
         }
         return null;
+    }
+
+    @Override
+    public VarSlot visit(ArrayAccessExprNode arrayAccessExprNode) {
+        curNode = arrayAccessExprNode;
+        // TODO: 暂不支持数组访问作为右值（value = arr[index]）
+        // 需要实现数组地址计算和加载
+        throw new UnsupportedOperationException("暂不支持数组访问作为右值: " + arrayAccessExprNode);
     }
 
     @Override
@@ -311,6 +322,13 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         curNode = assignStmtNode;
         assignStmtNode.getRhs().accept(this);
         var rhs = peekEvalOperand();
+
+        // TODO: 暂时不支持数组访问作为左值（arr[index] = value）
+        // 当前仅支持简单变量赋值
+        if (assignStmtNode.getLhs() instanceof ArrayAccessExprNode) {
+            throw new UnsupportedOperationException("暂不支持数组访问作为赋值左值: " + assignStmtNode.getLhs());
+        }
+
         var lhsNode = (IDExprNode) assignStmtNode.getLhs();
         var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
         addInstr(Assign.with(lhs,rhs));

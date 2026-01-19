@@ -83,7 +83,8 @@ public class FibonacciTailRecursionEndToEndTest {
             }
 
             int main() {
-                print fib(10);
+                int result = fib(10);
+                print(result);
                 return 0;
             }
             """;
@@ -193,7 +194,8 @@ public class FibonacciTailRecursionEndToEndTest {
             }
 
             int main() {
-                print fib(100);
+                int result = fib(100);
+                print(result);
                 return 0;
             }
             """;
@@ -280,7 +282,8 @@ public class FibonacciTailRecursionEndToEndTest {
             }
 
             int main() {
-                print fib(20);
+                int result = fib(20);
+                print(result);
                 return 0;
             }
             """;

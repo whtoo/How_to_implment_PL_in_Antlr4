@@ -9,6 +9,8 @@ import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
 import org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore;
 
 public interface IRVisitor<S,E> {
 
@@ -40,6 +42,8 @@ public interface IRVisitor<S,E> {
 
     /// LIR Instructions
     <S, E> S visit(LIRArrayInit lirArrayInit);
+    <S, E> S visit(LIRArrayLoad lirArrayLoad);
+    <S, E> S visit(LIRArrayStore lirArrayStore);
 
     /// Stmt
 

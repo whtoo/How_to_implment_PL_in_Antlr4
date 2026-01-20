@@ -16,6 +16,8 @@ import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType;
 
@@ -375,6 +377,88 @@ public class StackVMGenerator implements ICodeGenerator {
         @Override
         public <S, E> S visit(LIRArrayInit lirArrayInit) {
             errors.add("LIRArrayInit not yet implemented for Stack VM");
+            return null;
+        }
+
+        @Override
+        public Void visit(LIRArrayLoad lirArrayLoad) {
+            // Load array reference
+            VarSlot arraySlot = lirArrayLoad.getArraySlot();
+            if (arraySlot instanceof FrameSlot frameSlot) {
+                emitInstructionWithOperand("load", frameSlot.getSlotIdx());
+            } else if (arraySlot instanceof OperandSlot) {
+                // OperandSlot should already be evaluated
+                // No action needed
+            } else {
+                errors.add("Unsupported array slot type in LIRArrayLoad: " + arraySlot.getClass().getSimpleName());
+                return null;
+            }
+
+            // Load index
+            Expr indexExpr = lirArrayLoad.getIndex();
+            if (indexExpr instanceof FrameSlot indexSlot) {
+                emitInstructionWithOperand("load", indexSlot.getSlotIdx());
+            } else if (indexExpr instanceof ConstVal) {
+                emitConst((ConstVal<?>) indexExpr);
+            } else {
+                errors.add("Unsupported index type in LIRArrayLoad: " + indexExpr.getClass().getSimpleName());
+                return null;
+            }
+
+            // Emit iaload instruction
+            emitInstruction("iaload");
+
+            // Store result to result slot
+            VarSlot resultSlot = lirArrayLoad.getResultSlot();
+            if (resultSlot instanceof FrameSlot resultFrameSlot) {
+                emitInstructionWithOperand("store", resultFrameSlot.getSlotIdx());
+            } else if (resultSlot instanceof OperandSlot) {
+                // OperandSlot stays on stack
+                // No store needed
+            }
+
+            return null;
+        }
+
+        @Override
+        public Void visit(LIRArrayStore lirArrayStore) {
+            // Load value to store
+            Expr valueExpr = lirArrayStore.getValue();
+            if (valueExpr instanceof FrameSlot valueSlot) {
+                emitInstructionWithOperand("load", valueSlot.getSlotIdx());
+            } else if (valueExpr instanceof ConstVal) {
+                emitConst((ConstVal<?>) valueExpr);
+            } else {
+                errors.add("Unsupported value type in LIRArrayStore: " + valueExpr.getClass().getSimpleName());
+                return null;
+            }
+
+            // Load array reference
+            VarSlot arraySlot = lirArrayStore.getArraySlot();
+            if (arraySlot instanceof FrameSlot frameSlot) {
+                emitInstructionWithOperand("load", frameSlot.getSlotIdx());
+            } else if (arraySlot instanceof OperandSlot) {
+                // OperandSlot should already be evaluated
+                // No action needed
+            } else {
+                errors.add("Unsupported array slot type in LIRArrayStore: " + arraySlot.getClass().getSimpleName());
+                return null;
+            }
+
+            // Load index
+            Expr indexExpr = lirArrayStore.getIndex();
+            if (indexExpr instanceof FrameSlot indexSlot) {
+                emitInstructionWithOperand("load", indexSlot.getSlotIdx());
+            } else if (indexExpr instanceof ConstVal) {
+                emitConst((ConstVal<?>) indexExpr);
+            } else {
+                errors.add("Unsupported index type in LIRArrayStore: " + indexExpr.getClass().getSimpleName());
+                return null;
+            }
+
+            // Emit iastore instruction
+            emitInstruction("iastore");
+
             return null;
         }
 

@@ -28,6 +28,8 @@ public interface ASTVisitor<S,E> {
             return visit((IDExprNode) node);
         } else if (node instanceof ArrayAccessExprNode) {
             return visit((ArrayAccessExprNode) node);
+        } else if (node instanceof ArrayInitializerExprNode) {
+            return visit((ArrayInitializerExprNode) node);
         } else if (node instanceof BoolExprNode) {
             return visit((BoolExprNode) node);
         } else if (node instanceof CallFuncNode) {
@@ -50,6 +52,8 @@ public interface ASTVisitor<S,E> {
     E visit(IDExprNode idExprNode);
 
     E visit(ArrayAccessExprNode arrayAccessExprNode);
+
+    E visit(ArrayInitializerExprNode arrayInitializerExprNode);
 
     /// literal value
     E visit(BoolExprNode boolExprNode);

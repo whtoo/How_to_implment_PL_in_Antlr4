@@ -6,9 +6,17 @@ import org.teachfx.antlr4.ep21.ast.expr.*;
 import org.teachfx.antlr4.ep21.ast.stmt.*;
 import org.teachfx.antlr4.ep21.ast.type.TypeNode;
 import org.teachfx.antlr4.ep21.pass.ast.ASTBaseVisitor;
+import org.teachfx.antlr4.ep21.symtab.type.TypeTable;
+import org.teachfx.antlr4.ep21.symtab.type.ArrayType;
+import org.teachfx.antlr4.ep21.symtab.type.Type;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TypeChecker extends ASTBaseVisitor
 {
+    private final List<String> errors = new ArrayList<>();
+
     public TypeChecker()
     {
 

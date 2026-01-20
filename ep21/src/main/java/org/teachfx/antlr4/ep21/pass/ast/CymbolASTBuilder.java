@@ -14,6 +14,9 @@ import org.teachfx.antlr4.ep21.CymbolVisitor;
 import org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType.BinaryOpType;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType.UnaryOpType;
+import org.teachfx.antlr4.ep21.symtab.type.Type;
+import org.teachfx.antlr4.ep21.symtab.type.ArrayType;
+import org.teachfx.antlr4.ep21.symtab.type.TypeTable;
 
 import java.util.List;
 import java.util.Objects;
@@ -52,23 +55,94 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitVarDecl(CymbolParser.VarDeclContext ctx) {
+        // 支持两种数组声明格式：
+        // 1. C风格: int[5] arr
+        // 2. 原格式: int arr[5]
+
+        Type varType;
+        String varName;
         var typeNode = (TypeNode)visit(ctx.type());
-        var symbol = new VariableSymbol(ctx.ID().getText(),typeNode.getBaseType());
-        ExprNode assignNode = null;
 
-        // 处理初始化值：优先处理数组初始化，然后处理单个表达式
-        if (ctx.arrayInitializer() != null) {
-            // 数组初始化：{1, 2, 3}
-            assignNode = (ExprNode) visit(ctx.arrayInitializer());
-        } else if (!ctx.expr().isEmpty()) {
-            // 单个表达式初始化：x = 10
-            assignNode = (ExprNode) visit(ctx.expr(0));
+        // 检查是否为C风格数组声明：type '[' expr ']' ID
+        // 新语法: (type '[' expr ']' ID | type ID ('[' expr ']')?) ...
+        // 如果第一个expr()存在且是维度表达式（在type之后，ID之前）
+        if (ctx.getChild(1) instanceof CymbolParser.ExprContext &&
+            ctx.getChild(2) != null &&
+            ctx.getChild(2).getText().equals("]") &&
+            ctx.getChild(3) instanceof org.antlr.v4.runtime.tree.TerminalNode &&
+            ((org.antlr.v4.runtime.tree.TerminalNode) ctx.getChild(3)).getSymbol().getType() == CymbolParser.ID) {
+
+            // C风格: int[5] arr
+            varName = ctx.ID().getText();
+
+            // 创建数组类型
+            varType = TypeTable.createArrayType(typeNode.getBaseType());
+            typeNode.setBaseType(varType);
+            typeNode.setDim(1);
+
+            var symbol = new VariableSymbol(varName, varType);
+            ExprNode assignNode = null;
+
+            // 处理初始化值
+            if (ctx.arrayInitializer() != null) {
+                assignNode = (ExprNode) visit(ctx.arrayInitializer());
+            } else if (ctx.getChildCount() > 5 && ctx.getChild(5).getText().equals("=")) {
+                // 找到初始化表达式（在维度表达式和赋值符号之后）
+                int assignIndex = -1;
+                for (int i = 0; i < ctx.getChildCount(); i++) {
+                    if (ctx.getChild(i).getText().equals("=")) {
+                        assignIndex = i + 1;
+                        break;
+                    }
+                }
+                if (assignIndex > 0 && assignIndex < ctx.getChildCount()) {
+                    assignNode = (ExprNode) visit(ctx.getChild(assignIndex));
+                }
+            }
+
+            var idExprNode = new IDExprNode(varName, ctx);
+            idExprNode.setRefSymbol(symbol);
+
+            return new VarDeclNode(symbol, assignNode, idExprNode, ctx);
+        } else {
+            // 原格式: int arr[5] 或 int arr
+            // 检查是否为数组声明（语法：type ID['expr']?）
+            varType = typeNode.getBaseType();
+            if (ctx.expr() != null && !ctx.expr().isEmpty()) {
+                // 数组声明：int arr[10] 或 int arr[]
+                // 创建数组类型
+                varType = TypeTable.createArrayType(varType);
+                // 更新TypeNode的维度信息
+                typeNode.setBaseType(varType);
+                typeNode.setDim(1);
+            }
+
+            var symbol = new VariableSymbol(ctx.ID().getText(), varType);
+            ExprNode assignNode = null;
+
+            // 处理初始化值：优先处理数组初始化，然后处理单个表达式
+            if (ctx.arrayInitializer() != null) {
+                // 数组初始化：{1, 2, 3}
+                assignNode = (ExprNode) visit(ctx.arrayInitializer());
+            } else {
+                // 查找赋值符号
+                int assignIndex = -1;
+                for (int i = 0; i < ctx.getChildCount(); i++) {
+                    if (ctx.getChild(i).getText().equals("=")) {
+                        assignIndex = i + 1;
+                        break;
+                    }
+                }
+                if (assignIndex > 0 && assignIndex < ctx.getChildCount()) {
+                    assignNode = (ExprNode) visit(ctx.getChild(assignIndex));
+                }
+            }
+
+            var idExprNode = new IDExprNode(ctx.ID().getText(), ctx);
+            idExprNode.setRefSymbol(symbol);
+
+            return new VarDeclNode(symbol, assignNode, idExprNode, ctx);
         }
-
-        var idExprNode = new IDExprNode(ctx.ID().getText(), ctx);
-        idExprNode.setRefSymbol(symbol);
-
-        return new VarDeclNode(symbol,assignNode,idExprNode,ctx);
     }
 
     @Override
@@ -232,9 +306,14 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitArrayInitializer(CymbolParser.ArrayInitializerContext ctx) {
-        // TODO: 暂不支持数组初始化语法 {1, 2, 3}
-        // 当前实现返回null，需要添加ArrayInitializerExprNode并实现其访问方法
-        throw new UnsupportedOperationException("数组初始化语法暂不支持: " + ctx.getText());
+        // 处理数组初始化语法：{expr, expr, ...}
+        // 收集所有初始化元素表达式
+        List<ExprNode> elements = ctx.expr().stream()
+                .map(exprCtx -> (ExprNode) visit(exprCtx))
+                .toList();
+
+        // 创建数组初始化表达式节点
+        return new ArrayInitializerExprNode(elements, ctx);
     }
 
     @Override

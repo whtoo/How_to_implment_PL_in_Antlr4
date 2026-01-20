@@ -1,7 +1,7 @@
 package org.teachfx.antlr4.ep21.pass.codegen;
 
 import org.teachfx.antlr4.ep18r.stackvm.codegen.IRegisterAllocator;
-import org.teachfx.antlr4.ep18r.stackvm.codegen.LinearScanAllocator;
+import org.teachfx.antlr4.ep21.pass.codegen.LinearScanAllocator;
 import org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol;
 
 import java.util.HashMap;

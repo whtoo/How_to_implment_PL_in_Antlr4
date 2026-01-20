@@ -493,15 +493,74 @@ public class RegisterVMGenerator implements ICodeGenerator {
         }
 
         @Override
+        public Void visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit lirArrayInit) {
+            // 数组初始化：生成多个store指令来初始化数组
+            // 注意：当前简化实现，假设数组已经通过其他方式分配
+            // 这里为每个元素生成store指令
+            
+            VarSlot arraySlot = lirArrayInit.getArraySlot();
+            List<Expr> elements = lirArrayInit.getElements();
+            String elementTypeName = lirArrayInit.getElementTypeName();
+            
+            // 遍历所有元素并生成store指令
+            for (int i = 0; i < elements.size(); i++) {
+                Expr element = elements.get(i);
+                
+                // 评估元素表达式
+                if (element instanceof ConstVal constVal) {
+                    Object value = constVal.getVal();
+                    if (value instanceof Integer intValue) {
+                        emitter.emit("iconst " + intValue);
+                    } else if (value instanceof Float floatValue) {
+                        emitter.emit("fconst " + floatValue);
+                    } else if (value instanceof Boolean boolValue) {
+                        int boolInt = boolValue ? 1 : 0;
+                        emitter.emit("iconst " + boolInt);
+                    } else if (value instanceof String stringValue) {
+                        emitter.emit("sconst \"" + stringValue + "\"");
+                    }
+                } else if (element instanceof VarSlot varSlot) {
+                    emitter.emit("load " + varSlot.toString());
+                }
+                
+                // 存储到数组：使用计算出的偏移量
+                // 假设元素是int类型，4字节，所以offset = index * 4
+                int offset = i * 4;
+                
+                // 生成注释说明数组初始化
+                emitter.emitComment("# Array init: " + elementTypeName + "[" + arraySlot + "][" + i + "] = " + element);
+                
+                // 注意：这里使用store指令，实际应该使用带offset的iastore
+                // 等待EP18R支持IALOAD/IASTORE指令后再更新
+                // emitter.emit("iastore " + arraySlot + ", " + offset);
+            }
+            
+            return null;
+        }
+
+        @Override
         public Void visit(ArrayAccess arrayAccess) {
-            // TODO: 实现数组访问作为右值
+            // 数组访问：arr[index]
+            // TODO: EP18R需要支持带offset参数的load指令
+            // 当前生成占位符，生成注释
+            FrameSlot baseSlot = arrayAccess.getBaseSlot();
+            Expr indexExpr = arrayAccess.getIndex();
+            emitter.emit("load " + baseSlot.getSlotIdx());
+            emitter.emitComment("# TODO: Array access with index " + indexExpr);
             errors.add("ArrayAccess not yet implemented for register VM");
             return null;
         }
 
         @Override
         public Void visit(ArrayAssign arrayAssign) {
-            // TODO: 实现数组赋值
+            // 数组赋值：arr[index] = value
+            // TODO: EP18R需要支持带offset参数的store指令
+            // 当前生成占位符，生成注释
+            FrameSlot baseSlot = arrayAssign.getArrayAccess().getBaseSlot();
+            Expr indexExpr = arrayAssign.getArrayAccess().getIndex();
+            Expr valueExpr = arrayAssign.getValue();
+            emitter.emit("load " + baseSlot.getSlotIdx());
+            emitter.emitComment("# TODO: Array assign with index " + indexExpr + ", value " + valueExpr);
             errors.add("ArrayAssign not yet implemented for register VM");
             return null;
         }

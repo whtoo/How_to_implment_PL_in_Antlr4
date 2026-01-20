@@ -3,7 +3,7 @@ grammar Cymbol;
 file :   (functionDecl | varDecl)+ #compilationUnit ;
 
 varDecl
-    :   type ID ('[' expr ']')? ('=' (expr | arrayInitializer))? ';'
+    :   (type '[' expr ']' ID | type ID ('[' expr ']')?) ('=' (expr | arrayInitializer))? ';'
     ;
 
 arrayInitializer

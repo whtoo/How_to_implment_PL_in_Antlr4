@@ -86,8 +86,14 @@ public class InstructionFactory {
         registerInstruction(new GLoadInstruction());
         registerInstruction(new GStoreInstruction());
         registerInstruction(new FLoadInstruction());
-        registerInstruction(new FStoreInstruction());
-        registerInstruction(new StructInstruction());
+         registerInstruction(new FStoreInstruction());
+         registerInstruction(new StructInstruction());
+
+         // 数组指令
+         registerInstruction(new IALOADInstruction());
+         registerInstruction(new IASTOREInstruction());
+         registerInstruction(new NEWARRAYInstruction());
+         registerInstruction(new NEWARRAYInstruction());
     }
 
     /**

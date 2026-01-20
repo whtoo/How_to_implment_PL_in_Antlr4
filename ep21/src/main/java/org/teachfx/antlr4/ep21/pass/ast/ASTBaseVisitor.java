@@ -117,6 +117,15 @@ public class ASTBaseVisitor implements ASTVisitor<Void,Void> {
     }
 
     @Override
+    public Void visit(ArrayInitializerExprNode arrayInitializerExprNode) {
+        // 数组初始化：遍历所有初始化元素
+        for (var element : arrayInitializerExprNode.getElements()) {
+            element.accept(this);
+        }
+        return null;
+    }
+
+    @Override
     public Void visit(BoolExprNode boolExprNode) {
 
         return null;

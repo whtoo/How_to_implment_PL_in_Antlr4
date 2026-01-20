@@ -16,5 +16,16 @@ public class TypeTable {
     public static Integer TRUE = 1;
     public static Integer FALSE = 0;
 
+    /**
+     * Helper method to create array types.
+     * This provides a consistent way to create ArrayType instances across the compiler.
+     *
+     * @param elementType the type of array elements
+     * @return a new ArrayType instance
+     * @throws IllegalArgumentException if elementType is null
+     */
+    public static ArrayType createArrayType(Type elementType) {
+        return new ArrayType(elementType);
+    }
 
 }

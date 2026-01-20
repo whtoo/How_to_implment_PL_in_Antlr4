@@ -378,6 +378,18 @@ public class LivenessAnalysis implements IRVisitor<Void, Void>, IFlowOptimizer<I
     }
 
     @Override
+    public Void visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit lirArrayInit) {
+        // 数组初始化：会使用数组和所有初始化元素
+        lirArrayInit.getElements().forEach(element -> {
+            if (element instanceof VarSlot varSlot) {
+                currentBlock.liveUse.add(varSlot);
+            }
+        });
+        currentBlock.liveUse.add(lirArrayInit.getArraySlot());
+        return null;
+    }
+
+    @Override
     public Void visit(ArrayAssign arrayAssign) {
         // 数组赋值会产生数组变量、索引变量和值变量的使用
         ArrayAccess arrayAccess = arrayAssign.getArrayAccess();

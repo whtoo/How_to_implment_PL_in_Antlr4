@@ -1,4 +1,4 @@
-package org.teachfx.antlr4.ep18r.stackvm.codegen;
+package org.teachfx.antlr4.ep21.pass.codegen;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.*;
 @DisplayName("LinearScanAllocator Tests")
 class LinearScanAllocatorTest {
 
-    private IRegisterAllocator allocator;
+    private org.teachfx.antlr4.ep18r.stackvm.codegen.IRegisterAllocator allocator;
 
     @BeforeEach
     void setUp() {
@@ -502,8 +502,8 @@ class LinearScanAllocatorTest {
         @Test
         @DisplayName("Should handle multiple allocators independently")
         void testMultipleAllocators() {
-            IRegisterAllocator alloc1 = new LinearScanAllocator();
-            IRegisterAllocator alloc2 = new LinearScanAllocator();
+            org.teachfx.antlr4.ep18r.stackvm.codegen.IRegisterAllocator alloc1 = new LinearScanAllocator();
+            org.teachfx.antlr4.ep18r.stackvm.codegen.IRegisterAllocator alloc2 = new LinearScanAllocator();
 
             int reg1 = alloc1.allocate("x");
             int reg2 = alloc2.allocate("x");
@@ -520,7 +520,7 @@ class LinearScanAllocatorTest {
         @Test
         @DisplayName("Should create allocator with caller-saved priority")
         void testCallerSavedPriorityAllocator() {
-            IRegisterAllocator alloc = new LinearScanAllocator(false);
+            org.teachfx.antlr4.ep18r.stackvm.codegen.IRegisterAllocator alloc = new LinearScanAllocator(false);
 
             int reg1 = alloc.allocate("x");
             int reg2 = alloc.allocate("y");

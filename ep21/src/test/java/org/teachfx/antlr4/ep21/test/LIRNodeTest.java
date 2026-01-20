@@ -102,9 +102,12 @@ class LIRNodeTest {
                 @Override public Object visit(org.teachfx.antlr4.ep21.ir.stmt.Assign node) { return null; }
                 @Override public Object visit(org.teachfx.antlr4.ep21.ir.stmt.ReturnVal node) { return null; }
                 @Override public Object visit(org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot node) { return null; }
-                @Override public Object visit(org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot node) { return null; }
-                @Override public <T> Object visit(org.teachfx.antlr4.ep21.ir.expr.val.ConstVal<T> node) { return null; }
-            }));
+                 @Override public Object visit(org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot node) { return null; }
+                 @Override public <T> Object visit(org.teachfx.antlr4.ep21.ir.expr.val.ConstVal<T> node) { return null; }
+                 @Override public Object visit(org.teachfx.antlr4.ep21.ir.expr.ArrayAccess node) { return null; }
+                 @Override public Object visit(org.teachfx.antlr4.ep21.ir.stmt.ArrayAssign node) { return null; }
+                 @Override public Object visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit node) { return null; }
+              }));
         }
     }
 

@@ -16,6 +16,7 @@ import org.teachfx.antlr4.ep21.ir.expr.ArrayAccess;
 import org.teachfx.antlr4.ep21.ir.expr.CallFunc;
 import org.teachfx.antlr4.ep21.ir.expr.Operand;
 import org.teachfx.antlr4.ep21.ir.expr.VarSlot;
+import org.teachfx.antlr4.ep21.ir.expr.Expr;
 import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
@@ -23,6 +24,11 @@ import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
 import org.teachfx.antlr4.ep21.pass.cfg.CFG;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Objects;
 import org.teachfx.antlr4.ep21.pass.cfg.CFGBuilder;
 import org.teachfx.antlr4.ep21.pass.cfg.LinearIRBlock;
 import org.teachfx.antlr4.ep21.symtab.scope.Scope;
@@ -47,17 +53,20 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     private MethodSymbol currentMethodSymbol = null;
     @Override
     public Void visit(CompileUnit compileUnit) {
+        logger.debug("visit CompileUnit: {}", compileUnit);
         prog = new Prog();
-        logger.debug("visit root");
         compileUnit.getFuncDeclarations().forEach(x -> x.accept(this));
-
+        compileUnit.getVarDeclarations().forEach(x -> x.accept(this));
+        
+        logger.debug("After AST processing - FuncDecl nodes: {}, VarDecl nodes: {}", 
+            compileUnit.getFuncDeclarations(),
+            compileUnit.getVarDeclarations());
+        
         return null;
     }
 
     @Override
     public Void visit(VarDeclNode varDeclNode) {
-        logger.debug("visit %s".formatted(varDeclNode.toString()));
-
         // Java 21: 模式匹配改进
         if(varDeclNode.hasInitializer()){
             if (!(varDeclNode.getIdExprNode() instanceof IDExprNode)) {
@@ -65,8 +74,11 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
             }
             var lhsNode = (IDExprNode)varDeclNode.getIdExprNode();
             var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
+
+            // 评估表达式以生成RHS
             varDeclNode.getAssignExprNode().accept(this);
             var rhs = peekEvalOperand();
+
             addInstr(Assign.with(lhs, rhs));
             popEvalOperand();
         }
@@ -132,16 +144,24 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public VarSlot visit(BinaryExprNode binaryExprNode) {
         curNode = binaryExprNode;
+        logger.debug("visit BinaryExprNode: op={}, lhs={}, rhs={}",
+            binaryExprNode.getOpType(),
+            binaryExprNode.getLhs(),
+            binaryExprNode.getRhs());
 
         binaryExprNode.getLhs().accept(this);
         var lhs = peekEvalOperand();
+        logger.debug("BinaryExpr LHS evaluated to: {}", lhs);
 
         binaryExprNode.getRhs().accept(this);
         var rhs = peekEvalOperand();
+        logger.debug("BinaryExpr RHS evaluated to: {}", rhs);
 
         var res = addInstr(BinExpr.with(binaryExprNode.getOpType(),lhs,rhs));
+        logger.debug("BinExpr created: {}, result: {}", res, res.isPresent() ? "PRESENT" : "MISSING");
 
         res.ifPresent(this::pushEvalOperand);
+        logger.debug("After BinExpr, evalExprStack size: {}", evalExprStack != null ? evalExprStack.size() : "null");
 
         return null;
     }
@@ -175,31 +195,32 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public VarSlot visit(ArrayAccessExprNode arrayAccessExprNode) {
         curNode = arrayAccessExprNode;
-        
-        // 处理数组表达式
+
+        // 处理数组表达式（数组变量本身）
         arrayAccessExprNode.getArray().accept(this);
         VarSlot arraySlot = peekEvalOperand();
-        
+
         // 处理索引表达式
         arrayAccessExprNode.getIndex().accept(this);
         VarSlot indexSlot = peekEvalOperand();
-        
+
         // 创建数组访问表达式
-        // 注意：这里我们假设数组变量是简单的ID表达式，需要获取其FrameSlot
         if (arrayAccessExprNode.getArray() instanceof IDExprNode idExprNode) {
             VariableSymbol arraySymbol = (VariableSymbol) idExprNode.getRefSymbol();
             if (arraySymbol == null) {
                 throw new IllegalStateException("数组变量符号未解析: " + idExprNode.getImage());
             }
             FrameSlot baseSlot = FrameSlot.get(arraySymbol);
-            
-            // 创建一个临时OperandSlot来保存数组访问信息
-            OperandSlot arrayAccessSlot = OperandSlot.genTemp();
-            // 在实际实现中，我们需要在这里生成数组访问的代码
-            // 现在先创建一个特殊的OperandSlot来表示数组访问
-            pushEvalOperand(arrayAccessSlot);
-            
-            return arrayAccessSlot;
+
+            // 创建ArrayAccess IR节点
+            ArrayAccess arrayAccess = ArrayAccess.with(arraySlot, indexSlot, baseSlot);
+
+            // 创建临时槽位来接收数组访问的结果
+            VarSlot resultSlot = OperandSlot.genTemp();
+            addInstr(arrayAccess);  // ArrayAccess会被后续的VM generator转换为load指令
+
+            pushEvalOperand(resultSlot);
+            return resultSlot;
         } else {
             throw new UnsupportedOperationException("暂不支持复杂数组表达式作为左值: " + arrayAccessExprNode.getArray());
         }
@@ -245,6 +266,55 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         callExprNode.getArgsNode().forEach(x -> x.accept(this));
         addInstr(new CallFunc(funcName,args,methodSymbol));
         return null;
+    }
+
+    @Override
+    public VarSlot visit(ArrayInitializerExprNode arrayInitializerExprNode) {
+        curNode = arrayInitializerExprNode;
+
+        // 数组初始化需要：
+        // 1. 评估所有初始化元素
+        // 2. 创建LIRArrayInit节点来表示数组初始化
+        // 3. 后续代码生成器会将其转换为具体的数组初始化指令
+
+        // 1. 获取数组变量符号
+        // 在CymbolASTBuilder.visitVarDecl中，数组变量符号的类型是ArrayType
+        // 但是当前AST没有直接关联到符号，所以我们需要从上下文中推断
+        
+        // 评估所有初始化元素
+        List<Expr> elements = new java.util.ArrayList<>();
+        for (ExprNode element : arrayInitializerExprNode.getElements()) {
+            element.accept(this);
+            Expr evaluated = popEvalOperand();
+            elements.add(evaluated);
+        }
+
+        // 2. 获取数组槽位（假设是当前正在声明的变量）
+        // 注意：这里简化处理，实际应该从符号表获取
+        // 由于数组符号表关联的复杂性，我们使用临时槽位
+        
+        // 创建LIRArrayInit节点
+        // 注意：这里使用占位的FrameSlot，实际实现需要更完善的符号表集成
+        VarSlot arraySlot = OperandSlot.genTemp();
+        
+        // 创建数组初始化LIR指令
+        LIRArrayInit arrayInit = new LIRArrayInit(
+                arraySlot,
+                arrayInitializerExprNode.getSize(),
+                elements,
+                arrayInitializerExprNode.getExprType() != null 
+                    ? arrayInitializerExprNode.getExprType().getName() 
+                    : "unknown"
+        );
+        
+        addInstr(arrayInit);
+        
+        logger.info("Generated array initialization IR: {}", arrayInit);
+        
+        // 返回数组槽位作为结果
+        pushEvalOperand(arraySlot);
+        
+        return arraySlot;
     }
 
     @Override
@@ -346,34 +416,44 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public Void visit(AssignStmtNode assignStmtNode) {
         curNode = assignStmtNode;
-        assignStmtNode.getRhs().accept(this);
-        var rhs = peekEvalOperand();
+        logger.debug("visit AssignStmtNode: LHS={}, RHS={}", 
+            assignStmtNode.getLhs(), assignStmtNode.getRhs());
 
         // 处理数组访问作为左值（arr[index] = value）
         if (assignStmtNode.getLhs() instanceof ArrayAccessExprNode arrayAccessExpr) {
-            // 处理数组访问表达式
-            arrayAccessExpr.accept(this);
-            var arrayAccessSlot = peekEvalOperand();
-            
-            // 获取数组基地址和索引信息
+            logger.debug("Processing array access as LHS: arr[index] = value");
+            // 首先处理右值（RHS）
+            assignStmtNode.getRhs().accept(this);
+            var rhs = peekEvalOperand();
+            logger.debug("Array access RHS evaluated: {}", rhs);
+
+            // 处理数组访问左值（LHS）
             if (arrayAccessExpr.getArray() instanceof IDExprNode idExprNode) {
                 VariableSymbol arraySymbol = (VariableSymbol) idExprNode.getRefSymbol();
+                if (arraySymbol == null) {
+                    logger.error("数组变量符号未解析: {}", idExprNode.getImage());
+                    throw new IllegalStateException("数组变量符号未解析: " + idExprNode.getImage());
+                }
                 FrameSlot baseSlot = FrameSlot.get(arraySymbol);
-                
+                logger.debug("Created FrameSlot for array variable: {}", idExprNode.getImage());
+
                 // 处理索引表达式
                 arrayAccessExpr.getIndex().accept(this);
-                VarSlot indexSlot = peekEvalOperand();
-                
+                var indexSlot = peekEvalOperand();
+                logger.debug("Array index evaluated to: {}", indexSlot);
+
                 // 创建数组访问表达式
-                ArrayAccess arrayAccess = ArrayAccess.with(arrayAccessSlot, indexSlot, baseSlot);
-                
+                ArrayAccess arrayAccess = ArrayAccess.with(null, indexSlot, baseSlot);
+                logger.debug("Created ArrayAccess for LHS: {}", arrayAccess);
+
                 // 创建数组赋值语句
                 addInstr(ArrayAssign.with(arrayAccess, rhs));
-                
-                // 清理操作数栈
+                logger.debug("Created ArrayAssign instruction");
+
+                // 清理操作数栈（弹出索引和右值）
                 popEvalOperand(); // 弹出索引
-                popEvalOperand(); // 弹出数组访问槽位
                 popEvalOperand(); // 弹出右值
+
                 return null;
             } else {
                 throw new UnsupportedOperationException("暂不支持复杂数组表达式作为左值: " + arrayAccessExpr.getArray());
@@ -381,10 +461,19 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         }
 
         // 处理普通变量赋值
+        logger.debug("Processing simple variable assignment");
+        assignStmtNode.getRhs().accept(this);
+        var rhs = peekEvalOperand();
+        logger.debug("RHS expression evaluated to: {}", rhs);
+
         var lhsNode = (IDExprNode) assignStmtNode.getLhs();
         var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
-        addInstr(Assign.with(lhs,rhs));
+        logger.debug("Created FrameSlot for LHS: {}", lhsNode.getImage());
+
+        addInstr(Assign.with(lhs, rhs));
         popEvalOperand();
+        logger.debug("Created Assign instruction: {} = {}", lhs, rhs);
+
         return null;
     }
 
@@ -518,18 +607,12 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     }
     static int cnt = 0;
     protected VarSlot pushEvalOperand(Operand operand) {
-
-        // 日志验证：检查evalExprStack状态 - Java 21: 使用字符串模板
-        System.out.println("DEBUG CymbolIRBuilder: pushEvalOperand called, evalExprStack=" +
-                          (evalExprStack == null ? "null" : "initialized"));
-
         if (curNode != null) {
             logger.debug(curNode.toString());
         }
 
         // 空检查
         if (evalExprStack == null) {
-            System.out.println("DEBUG CymbolIRBuilder: evalExprStack is null, throwing exception");
             throw new NullPointerException("evalExprStack is not initialized");
         }
 

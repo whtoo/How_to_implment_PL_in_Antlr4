@@ -15,6 +15,7 @@ import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType;
 
@@ -361,28 +362,71 @@ public class StackVMGenerator implements ICodeGenerator {
             if (value instanceof Integer) {
                 emitInstructionWithOperand("iconst", (Integer) value);
             } else if (value instanceof Float) {
-                // For float constants, we need to use the constant pool
-                emitInstructionWithOperand("fconst", 0); // Placeholder pool index
+                emitInstructionWithOperand("fconst", 0);
             } else if (value instanceof Boolean bool) {
                 emitInstructionWithOperand("cconst", bool ? 1 : 0);
             } else if (value instanceof String) {
-                emitInstructionWithOperand("sconst", 0); // Placeholder pool index
+                emitInstructionWithOperand("sconst", 0);
             } else {
                 errors.add("Unsupported constant type: " + value.getClass().getSimpleName());
             }
         }
 
         @Override
+        public <S, E> S visit(LIRArrayInit lirArrayInit) {
+            errors.add("LIRArrayInit not yet implemented for Stack VM");
+            return null;
+        }
+
+        @Override
         public Void visit(ArrayAccess arrayAccess) {
-            // TODO: 实现数组访问作为右值
-            errors.add("ArrayAccess not yet implemented for stack VM");
+            FrameSlot baseSlot = arrayAccess.getBaseSlot();
+            emitInstructionWithOperand("load", baseSlot.getSlotIdx());
+
+            Expr indexExpr = arrayAccess.getIndex();
+            if (indexExpr instanceof FrameSlot indexSlot) {
+                emitInstructionWithOperand("load", indexSlot.getSlotIdx());
+            } else if (indexExpr instanceof ConstVal) {
+                emitConst((ConstVal<?>) indexExpr);
+            } else {
+                errors.add("Unsupported index type in ArrayAccess: " + indexExpr.getClass().getSimpleName());
+                return null;
+            }
+
+            emitInstruction("iaload");
+
             return null;
         }
 
         @Override
         public Void visit(ArrayAssign arrayAssign) {
-            // TODO: 实现数组赋值
-            errors.add("ArrayAssign not yet implemented for stack VM");
+            ArrayAccess arrayAccess = arrayAssign.getArrayAccess();
+
+            Expr valueExpr = arrayAssign.getValue();
+            if (valueExpr instanceof FrameSlot valueSlot) {
+                emitInstructionWithOperand("load", valueSlot.getSlotIdx());
+            } else if (valueExpr instanceof ConstVal) {
+                emitConst((ConstVal<?>) valueExpr);
+            } else {
+                errors.add("Unsupported RHS type in ArrayAssign: " + valueExpr.getClass().getSimpleName());
+                return null;
+            }
+
+            FrameSlot baseSlot = arrayAccess.getBaseSlot();
+            emitInstructionWithOperand("load", baseSlot.getSlotIdx());
+
+            Expr indexExpr = arrayAccess.getIndex();
+            if (indexExpr instanceof FrameSlot indexSlot) {
+                emitInstructionWithOperand("load", indexSlot.getSlotIdx());
+            } else if (indexExpr instanceof ConstVal) {
+                emitConst((ConstVal<?>) indexExpr);
+            } else {
+                errors.add("Unsupported index type in ArrayAssign: " + indexExpr.getClass().getSimpleName());
+                return null;
+            }
+
+            emitInstruction("iastore");
+
             return null;
         }
     }

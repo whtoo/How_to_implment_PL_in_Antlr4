@@ -29,7 +29,7 @@ import org.teachfx.antlr4.ep21.pass.codegen.VMTargetType;
 import org.teachfx.antlr4.ep21.pass.codegen.RegisterVMGenerator;
 import org.teachfx.antlr4.ep21.pass.codegen.IRegisterAllocator;
 import org.teachfx.antlr4.ep21.pass.codegen.EP18RRegisterAllocatorAdapter;
-import org.teachfx.antlr4.ep18r.stackvm.codegen.LinearScanAllocator;
+import org.teachfx.antlr4.ep21.pass.codegen.LinearScanAllocator;
 import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep21.pass.symtab.LocalDefine;
 import org.teachfx.antlr4.ep21.utils.StreamUtils;

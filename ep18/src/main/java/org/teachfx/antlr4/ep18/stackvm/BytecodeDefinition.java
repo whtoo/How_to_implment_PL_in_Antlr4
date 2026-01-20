@@ -16,7 +16,6 @@ public class BytecodeDefinition {
     public static final short INSTR_IADD = 1; // int add
     public static final short INSTR_ISUB = 2; // int subtract
     public static final short INSTR_IMUL = 3; // int mul
-    // generate other cases for `instructions`
     public static final short INSTR_IDIV = 4; // int divide
     public static final short INSTR_ILT = 5; // int less than
     public static final short INSTR_ILE = 6; // int less or equal
@@ -39,7 +38,6 @@ public class BytecodeDefinition {
     public static final short INSTR_CALL = 23; // call
     public static final short INSTR_RET = 24; // return
     public static final short INSTR_BR = 25;
-    // generate other cases for `instructions`
     public static final short INSTR_BRT = 26;
     public static final short INSTR_BRF = 27;
     public static final short INSTR_CCONST = 28; // const
@@ -57,7 +55,9 @@ public class BytecodeDefinition {
     public static final short INSTR_NULL = 40;
     public static final short INSTR_POP = 41;
     public static final short INSTR_HALT = 42;
-
+    public static final short INSTR_IALOAD = 43; // 数组加载
+    public static final short INSTR_IASTORE = 44; // 数组存储
+    public static final short INSTR_NEWARRAY = 45; // 数组分配
 
     // all instructions
     public static Instruction[] instructions = new Instruction[]{
@@ -83,7 +83,7 @@ public class BytecodeDefinition {
             new Instruction("fdiv"), // index 19
             new Instruction("flt"), // index 20
             new Instruction("feq"), // index 21
-            new Instruction("itof"), // index 22 - FIXED: was "ixor"
+            new Instruction("itof"), // index 22
             new Instruction("call", FUNC), // index 23
             new Instruction("ret"), // index 24
             new Instruction("br", INT), // index 25
@@ -104,6 +104,9 @@ public class BytecodeDefinition {
             new Instruction("null"), // index 40
             new Instruction("pop"), // index 41
             new Instruction("halt"), // index 42
+            new Instruction("iaload", INT), // index 43
+            new Instruction("iastore", INT), // index 44
+            new Instruction("newarray", INT), // index 45
     };
 
     public static class Instruction {
@@ -134,5 +137,4 @@ public class BytecodeDefinition {
             n = 3;
         }
     }
-
 }

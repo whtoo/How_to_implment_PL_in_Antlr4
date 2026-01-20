@@ -390,6 +390,31 @@ public class LivenessAnalysis implements IRVisitor<Void, Void>, IFlowOptimizer<I
     }
 
     @Override
+    public Void visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad lirArrayLoad) {
+        // 数组加载：会使用数组槽位和索引表达式
+        currentBlock.liveUse.add(lirArrayLoad.getArraySlot());
+        if (lirArrayLoad.getIndex() instanceof VarSlot indexSlot) {
+            currentBlock.liveUse.add(indexSlot);
+        }
+        // 结果槽位被定义
+        currentBlock.def.add(lirArrayLoad.getResultSlot());
+        return null;
+    }
+
+    @Override
+    public Void visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore lirArrayStore) {
+        // 数组存储：会使用数组槽位、索引表达式和值表达式
+        currentBlock.liveUse.add(lirArrayStore.getArraySlot());
+        if (lirArrayStore.getIndex() instanceof VarSlot indexSlot) {
+            currentBlock.liveUse.add(indexSlot);
+        }
+        if (lirArrayStore.getValue() instanceof VarSlot valueSlot) {
+            currentBlock.liveUse.add(valueSlot);
+        }
+        return null;
+    }
+
+    @Override
     public Void visit(ArrayAssign arrayAssign) {
         // 数组赋值会产生数组变量、索引变量和值变量的使用
         ArrayAccess arrayAccess = arrayAssign.getArrayAccess();

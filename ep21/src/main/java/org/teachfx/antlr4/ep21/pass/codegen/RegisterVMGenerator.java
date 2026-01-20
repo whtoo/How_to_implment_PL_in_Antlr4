@@ -225,11 +225,11 @@ public class RegisterVMGenerator implements ICodeGenerator {
                 }
             }
         }
-        return null;
-    }
+            return null;
+        }
 
-    /**
-     * Gets the last generated assembly output.
+     /**
+      * Gets the last generated assembly output.
      *
      * @return the assembly output string
      */
@@ -535,6 +535,77 @@ public class RegisterVMGenerator implements ICodeGenerator {
                 // emitter.emit("iastore " + arraySlot + ", " + offset);
             }
             
+            return null;
+        }
+
+        @Override
+        public Void visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad lirArrayLoad) {
+            // 数组加载：加载地址，加载索引，执行iaload
+            VarSlot arraySlot = lirArrayLoad.getArraySlot();
+            Expr indexExpr = lirArrayLoad.getIndex();
+            VarSlot resultSlot = lirArrayLoad.getResultSlot();
+
+            // 加载数组地址
+            if (arraySlot instanceof FrameSlot frameSlot) {
+                emitter.emit("load " + frameSlot.getSlotIdx());
+            }
+
+            // 加载索引
+            if (indexExpr instanceof ConstVal constVal) {
+                Object value = constVal.getVal();
+                if (value instanceof Integer intValue) {
+                    emitter.emit("iconst " + intValue);
+                }
+            } else if (indexExpr instanceof FrameSlot frameSlot) {
+                emitter.emit("load " + frameSlot.getSlotIdx());
+            }
+
+            // 执行iaload
+            emitter.emit("iaload");
+
+            // 存储结果
+            if (resultSlot instanceof FrameSlot resultFrameSlot) {
+                emitter.emit("store " + resultFrameSlot.getSlotIdx());
+            }
+
+            return null;
+        }
+
+        @Override
+        public Void visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore lirArrayStore) {
+            // 数组存储：加载值，加载地址，加载索引，执行iastore
+            Expr valueExpr = lirArrayStore.getValue();
+            VarSlot arraySlot = lirArrayStore.getArraySlot();
+            Expr indexExpr = lirArrayStore.getIndex();
+
+            // 加载值
+            if (valueExpr instanceof ConstVal constVal) {
+                Object value = constVal.getVal();
+                if (value instanceof Integer intValue) {
+                    emitter.emit("iconst " + intValue);
+                }
+            } else if (valueExpr instanceof FrameSlot frameSlot) {
+                emitter.emit("load " + frameSlot.getSlotIdx());
+            }
+
+            // 加载数组地址
+            if (arraySlot instanceof FrameSlot frameSlot) {
+                emitter.emit("load " + frameSlot.getSlotIdx());
+            }
+
+            // 加载索引
+            if (indexExpr instanceof ConstVal constVal) {
+                Object value = constVal.getVal();
+                if (value instanceof Integer intValue) {
+                    emitter.emit("iconst " + intValue);
+                }
+            } else if (indexExpr instanceof FrameSlot frameSlot) {
+                emitter.emit("load " + frameSlot.getSlotIdx());
+            }
+
+            // 执行iastore
+            emitter.emit("iastore");
+
             return null;
         }
 

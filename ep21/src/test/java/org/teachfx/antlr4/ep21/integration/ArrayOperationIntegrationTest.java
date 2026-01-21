@@ -15,7 +15,7 @@ import org.teachfx.antlr4.ep21.ir.Prog;
 import org.teachfx.antlr4.ep21.pass.ast.CymbolASTBuilder;
 import org.teachfx.antlr4.ep21.pass.codegen.CodeGenerationResult;
 import org.teachfx.antlr4.ep21.pass.codegen.ICodeGenerator;
-import org.teachfx.antlr4.ep21.pass.codegen.StackVMGenerator;
+import org.teachfx.antlr4.ep21.pass.codegen.RegisterVMGenerator;
 import org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder;
 import org.teachfx.antlr4.ep21.pass.symtab.LocalDefine;
 
@@ -40,21 +40,21 @@ public class ArrayOperationIntegrationTest {
 
     private static final String ARRAY_DECLARATION_PROGRAM = """
             int main() {
-                int arr[5];
+                int[5] arr;
                 return 0;
             }
             """;
 
     private static final String ARRAY_INITIALIZATION_PROGRAM = """
             int main() {
-                int arr[3] = {1, 2, 3};
+                int[3] arr = {1, 2, 3};
                 return 0;
             }
             """;
 
     private static final String ARRAY_ACCESS_PROGRAM = """
             int main() {
-                int arr[3] = {10, 20, 30};
+                int[3] arr = {10, 20, 30};
                 int x = arr[1];
                 print(x);
                 return 0;
@@ -63,7 +63,7 @@ public class ArrayOperationIntegrationTest {
 
     private static final String ARRAY_ASSIGN_PROGRAM = """
             int main() {
-                int arr[3] = {1, 2, 3};
+                int[3] arr = {1, 2, 3};
                 arr[1] = 42;
                 print(arr[1]);
                 return 0;
@@ -72,7 +72,7 @@ public class ArrayOperationIntegrationTest {
 
     private static final String ARRAY_LOOP_PROGRAM = """
             int main() {
-                int arr[5] = {1, 2, 3, 4, 5};
+                int[5] arr = {1, 2, 3, 4, 5};
                 int sum = 0;
                 int i = 0;
                 while (i < 5) {
@@ -86,7 +86,7 @@ public class ArrayOperationIntegrationTest {
 
     private static final String ARRAY_BOUNDARIES_PROGRAM = """
             int main() {
-                int arr[3];
+                int[3] arr;
                 arr[0] = 10;
                 arr[2] = 30;
                 print(arr[0]);
@@ -135,7 +135,8 @@ public class ArrayOperationIntegrationTest {
     }
 
     private String generateBytecode() {
-        ICodeGenerator codeGenerator = new StackVMGenerator();
+        // EP21默认使用寄存器虚拟机(EP18R)，优先测试寄存器虚拟机
+        ICodeGenerator codeGenerator = new RegisterVMGenerator();
         CodeGenerationResult result = codeGenerator.generate(irProgram);
 
         System.err.println("Code generation result: success=" + result.isSuccess() + ", errors=" + result.getErrors() + ", output length=" + (result.getOutput() != null ? result.getOutput().length() : 0));
@@ -162,7 +163,8 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-        assertThat(bytecode).contains("newarray");
+        // Register VM uses 'struct' for array allocation
+        assertThat(bytecode).contains("struct");
     }
 
     @Test
@@ -174,8 +176,8 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-        // Should contain newarray and initialization
-        assertThat(bytecode).contains("newarray");
+        // Register VM uses 'struct' for array allocation
+        assertThat(bytecode).contains("struct");
     }
 
     @Test
@@ -187,8 +189,8 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-        // Should contain iaload instruction
-        assertThat(bytecode).contains("iaload");
+        // Register VM uses 'lw' (load word) for array element access
+        assertThat(bytecode).contains("lw");
     }
 
     @Test
@@ -200,8 +202,8 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-        // Should contain iastore instruction
-        assertThat(bytecode).contains("iastore");
+        // Register VM uses 'sw' (store word) for array element assignment
+        assertThat(bytecode).contains("sw");
     }
 
     @Test
@@ -213,9 +215,9 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-        // Should contain both iaload and iastore
-        assertThat(bytecode).contains("iaload");
-        assertThat(bytecode).contains("iastore");
+        // Register VM uses 'lw' for load and 'sw' for store
+        assertThat(bytecode).contains("lw");
+        assertThat(bytecode).contains("sw");
     }
 
     @Test
@@ -227,8 +229,8 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-        // Should contain both iaload and iastore
-        assertThat(bytecode).contains("iaload");
-        assertThat(bytecode).contains("iastore");
+        // Register VM uses 'lw' for load and 'sw' for store
+        assertThat(bytecode).contains("lw");
+        assertThat(bytecode).contains("sw");
     }
 }

@@ -14,12 +14,26 @@ public class VarDeclNode extends DeclNode {
 
     private ExprNode assignExprNode;
 
+    private ExprNode arraySizeExpr;  // Array size expression for array declarations
+
     public ExprNode initializerExpr() {
         return assignExprNode;
     }
 
     public boolean hasInitializer() {
         return Objects.nonNull(assignExprNode);
+    }
+
+    public boolean hasArraySize() {
+        return Objects.nonNull(arraySizeExpr);
+    }
+
+    public ExprNode getArraySizeExpr() {
+        return arraySizeExpr;
+    }
+
+    public void setArraySizeExpr(ExprNode arraySizeExpr) {
+        this.arraySizeExpr = arraySizeExpr;
     }
 
 
@@ -55,6 +69,7 @@ public class VarDeclNode extends DeclNode {
         d.printMember("name",getDeclName());
         d.printMember("type",getRefSymbol().getType());
         if (Objects.nonNull(assignExprNode)) d.printMember("assignee",assignExprNode);
+        if (Objects.nonNull(arraySizeExpr)) d.printMember("arraySize",arraySizeExpr);
     }
 
     public IDExprNode getIdExprNode() {

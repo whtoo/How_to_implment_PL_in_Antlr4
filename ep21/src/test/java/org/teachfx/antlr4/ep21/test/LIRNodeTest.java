@@ -106,9 +106,9 @@ class LIRNodeTest {
                  @Override public <T> Object visit(org.teachfx.antlr4.ep21.ir.expr.val.ConstVal<T> node) { return null; }
                  @Override public Object visit(org.teachfx.antlr4.ep21.ir.expr.ArrayAccess node) { return null; }
                  @Override public Object visit(org.teachfx.antlr4.ep21.ir.stmt.ArrayAssign node) { return null; }
-                 @Override public Object visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit node) { return null; }
-                 @Override public Object visit(org.teachfx.antlr4.ep21.ir.lir.LIRNewArray node) { return null; }
-                 @Override public Object visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad node) { return null; }
+                  @Override public Object visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit node) { return null; }
+                  @Override public Object visit(org.teachfx.antlr4.ep21.ir.lir.LIRNewArray node) { return null; }
+                  @Override public Object visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad node) { return null; }
                  @Override public Object visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore node) { return null; }
                }));
         }

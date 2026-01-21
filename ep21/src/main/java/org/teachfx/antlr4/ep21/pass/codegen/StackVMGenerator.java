@@ -546,6 +546,8 @@ public class StackVMGenerator implements ICodeGenerator {
             return null;
         }
 
+
+
         @Override
         public Void visit(ArrayAccess arrayAccess) {
             FrameSlot baseSlot = arrayAccess.getBaseSlot();

@@ -39,27 +39,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ArrayOperationIntegrationTest {
 
     private static final String ARRAY_DECLARATION_PROGRAM = """
-
             int main() {
-                int[5] arr;
+                int arr[5];
                 return 0;
             }
             """;
 
     private static final String ARRAY_INITIALIZATION_PROGRAM = """
-
             int main() {
-                int[3] arr = {10, 20, 30};
-                int x = arr[1];
-                print(x);
+                int arr[3] = {1, 2, 3};
                 return 0;
             }
             """;
 
     private static final String ARRAY_ACCESS_PROGRAM = """
-
             int main() {
-                int[3] arr = {10, 20, 30};
+                int arr[3] = {10, 20, 30};
                 int x = arr[1];
                 print(x);
                 return 0;
@@ -67,9 +62,8 @@ public class ArrayOperationIntegrationTest {
             """;
 
     private static final String ARRAY_ASSIGN_PROGRAM = """
-
             int main() {
-                int[3] arr = {1, 2, 3};
+                int arr[3] = {1, 2, 3};
                 arr[1] = 42;
                 print(arr[1]);
                 return 0;
@@ -77,9 +71,8 @@ public class ArrayOperationIntegrationTest {
             """;
 
     private static final String ARRAY_LOOP_PROGRAM = """
-
             int main() {
-                int[5] arr = {1, 2, 3, 4, 5};
+                int arr[5] = {1, 2, 3, 4, 5};
                 int sum = 0;
                 int i = 0;
                 while (i < 5) {
@@ -92,9 +85,8 @@ public class ArrayOperationIntegrationTest {
             """;
 
     private static final String ARRAY_BOUNDARIES_PROGRAM = """
-
             int main() {
-                int[3] arr;
+                int arr[3];
                 arr[0] = 10;
                 arr[2] = 30;
                 print(arr[0]);
@@ -170,7 +162,6 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-
         assertThat(bytecode).contains("newarray");
     }
 
@@ -183,7 +174,6 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-
         // Should contain newarray and initialization
         assertThat(bytecode).contains("newarray");
     }
@@ -197,7 +187,6 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-
         // Should contain iaload instruction
         assertThat(bytecode).contains("iaload");
     }
@@ -211,7 +200,6 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-
         // Should contain iastore instruction
         assertThat(bytecode).contains("iastore");
     }
@@ -225,7 +213,6 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-
         // Should contain both iaload and iastore
         assertThat(bytecode).contains("iaload");
         assertThat(bytecode).contains("iastore");
@@ -240,7 +227,6 @@ public class ArrayOperationIntegrationTest {
         assertThat(irProgram.instrs).isNotNull();
 
         String bytecode = generateBytecode();
-
         // Should contain both iaload and iastore
         assertThat(bytecode).contains("iaload");
         assertThat(bytecode).contains("iastore");

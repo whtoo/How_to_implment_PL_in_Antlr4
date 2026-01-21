@@ -14,6 +14,9 @@ import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore;
+import org.teachfx.antlr4.ep21.ir.lir.LIRNewArray;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType;
 import org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol;
 
@@ -538,101 +541,310 @@ public class RegisterVMGenerator implements ICodeGenerator {
             return null;
         }
 
+
+
+
+
         @Override
-        public Void visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad lirArrayLoad) {
-            // 数组加载：加载地址，加载索引，执行iaload
-            VarSlot arraySlot = lirArrayLoad.getArraySlot();
-            Expr indexExpr = lirArrayLoad.getIndex();
-            VarSlot resultSlot = lirArrayLoad.getResultSlot();
-
-            // 加载数组地址
+        public Void visit(LIRArrayStore lirArrayStore) {
+            
+            // 数组存储：arr[index] = value
+            Expr valueExpr = lirArrayStore.getValue();
+            VarSlot arraySlot = lirArrayStore.getArraySlot();
+            Expr indexExpr = lirArrayStore.getIndex();
+            
+            // 加载值到寄存器
+            int valueReg;
+            if (valueExpr instanceof FrameSlot valueSlot) {
+                valueReg = loadToRegister(valueSlot);
+            } else if (valueExpr instanceof ConstVal<?> constVal) {
+                valueReg = loadToRegister(constVal);
+            } else if (valueExpr instanceof OperandSlot operandSlot) {
+                valueReg = loadToRegister(operandSlot);
+            } else {
+                errors.add("Unsupported value type in LIRArrayStore: " + valueExpr.getClass().getSimpleName());
+                return null;
+            }
+            
+            // 加载数组基址到寄存器
+            int baseReg;
             if (arraySlot instanceof FrameSlot frameSlot) {
-                emitter.emit("load " + frameSlot.getSlotIdx());
+                baseReg = loadToRegister(frameSlot);
+            } else if (arraySlot instanceof OperandSlot operandSlot) {
+                baseReg = loadToRegister(operandSlot);
+            } else {
+                errors.add("Unsupported array slot type in LIRArrayStore: " + arraySlot.getClass().getSimpleName());
+                freeTemp(valueReg);
+                return null;
             }
-
-            // 加载索引
-            if (indexExpr instanceof ConstVal constVal) {
-                Object value = constVal.getVal();
-                if (value instanceof Integer intValue) {
-                    emitter.emit("iconst " + intValue);
-                }
-            } else if (indexExpr instanceof FrameSlot frameSlot) {
-                emitter.emit("load " + frameSlot.getSlotIdx());
+            
+            // 加载索引到寄存器
+            int indexReg;
+            if (indexExpr instanceof FrameSlot indexSlot) {
+                indexReg = loadToRegister(indexSlot);
+            } else if (indexExpr instanceof ConstVal<?> constVal) {
+                indexReg = loadToRegister(constVal);
+            } else if (indexExpr instanceof OperandSlot operandSlot) {
+                indexReg = loadToRegister(operandSlot);
+            } else {
+                errors.add("Unsupported index type in LIRArrayStore: " + indexExpr.getClass().getSimpleName());
+                freeTemp(valueReg);
+                freeTemp(baseReg);
+                return null;
             }
-
-            // 执行iaload
-            emitter.emit("iaload");
-
-            // 存储结果
-            if (resultSlot instanceof FrameSlot resultFrameSlot) {
-                emitter.emit("store " + resultFrameSlot.getSlotIdx());
-            }
-
+            
+            // 计算偏移量：index * 4（int类型大小为4字节）
+            int const4Reg = allocateTemp();
+            emitInstruction("li r" + const4Reg + ", 4");
+            emitInstruction("mul r" + indexReg + ", r" + indexReg + ", r" + const4Reg);
+            freeTemp(const4Reg);
+            
+            // 计算地址：baseReg + indexReg
+            emitInstruction("add r" + baseReg + ", r" + baseReg + ", r" + indexReg);
+            freeTemp(indexReg);
+            
+            // 存储值到数组元素：memory[baseReg] = valueReg
+            emitInstruction("sw r" + valueReg + ", r" + baseReg + ", 0");
+            
+            // 释放所有临时寄存器
+            freeTemp(valueReg);
+            freeTemp(baseReg);
+            
             return null;
         }
 
         @Override
-        public Void visit(org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore lirArrayStore) {
-            // 数组存储：加载值，加载地址，加载索引，执行iastore
-            Expr valueExpr = lirArrayStore.getValue();
-            VarSlot arraySlot = lirArrayStore.getArraySlot();
-            Expr indexExpr = lirArrayStore.getIndex();
-
-            // 加载值
-            if (valueExpr instanceof ConstVal constVal) {
-                Object value = constVal.getVal();
-                if (value instanceof Integer intValue) {
-                    emitter.emit("iconst " + intValue);
-                }
-            } else if (valueExpr instanceof FrameSlot frameSlot) {
-                emitter.emit("load " + frameSlot.getSlotIdx());
+        public Void visit(LIRNewArray lirNewArray) {
+            // 数组分配：使用EP18R struct指令分配连续内存
+            Expr sizeExpr = lirNewArray.getSize();
+            VarSlot resultSlot = lirNewArray.getResultSlot();
+            String elementTypeName = lirNewArray.getElementTypeName();
+            
+            // 只支持常量数组大小（struct指令需要立即数）
+            if (!(sizeExpr instanceof ConstVal constVal)) {
+                errors.add("Unsupported size expression type in LIRNewArray for register VM: " + 
+                          sizeExpr.getClass().getSimpleName() + " (only constant sizes supported)");
+                return null;
             }
+            
+            Object value = constVal.getVal();
+            if (!(value instanceof Integer intValue)) {
+                errors.add("Unsupported size type in LIRNewArray: " + value.getClass().getSimpleName());
+                return null;
+            }
+            
+            // 检查数组大小是否在struct指令的立即数范围内（16位有符号）
+            if (intValue < 0 || intValue > 32767) {
+                errors.add("Array size out of range for struct instruction: " + intValue + " (must be 0-32767)");
+                return null;
+            }
+            
+            // 分配临时寄存器用于存储数组地址
+            int addrReg = allocateTemp();
+            
+            // 生成struct指令：struct rd, size
+            emitInstruction("struct r" + addrReg + ", " + intValue);
+            
+            // 存储数组地址到结果槽位
+            if (resultSlot instanceof FrameSlot frameSlot) {
+                // 计算帧槽位偏移：每个槽位4字节
+                int offset = frameSlot.getSlotIdx() * 4;
+                // 存储地址到帧槽位：sw addrReg, fp, offset
+                emitInstruction("sw r" + addrReg + ", r14, " + offset);
+                freeTemp(addrReg);
+            } else if (resultSlot instanceof OperandSlot) {
+                // OperandSlot结果留在寄存器addrReg中，调用者负责处理
+                // 不需要释放寄存器，由调用者释放
+            } else {
+                errors.add("Unsupported result slot type in LIRNewArray: " + resultSlot.getClass().getSimpleName());
+                freeTemp(addrReg);
+                return null;
+            }
+            
+            emitter.emitComment("# Array allocation using struct: " + elementTypeName + "[" + intValue + "] -> " + resultSlot);
+            return null;
+        }
 
-            // 加载数组地址
+        @Override
+        public Void visit(LIRArrayLoad lirArrayLoad) {
+            
+            // 数组加载：result = arr[index]
+            VarSlot arraySlot = lirArrayLoad.getArraySlot();
+            Expr indexExpr = lirArrayLoad.getIndex();
+            VarSlot resultSlot = lirArrayLoad.getResultSlot();
+            
+            // 加载数组基址到寄存器
+            int baseReg;
             if (arraySlot instanceof FrameSlot frameSlot) {
-                emitter.emit("load " + frameSlot.getSlotIdx());
+                baseReg = loadToRegister(frameSlot);
+            } else if (arraySlot instanceof OperandSlot operandSlot) {
+                baseReg = loadToRegister(operandSlot);
+            } else {
+                errors.add("Unsupported array slot type in LIRArrayLoad: " + arraySlot.getClass().getSimpleName());
+                return null;
             }
-
-            // 加载索引
-            if (indexExpr instanceof ConstVal constVal) {
-                Object value = constVal.getVal();
-                if (value instanceof Integer intValue) {
-                    emitter.emit("iconst " + intValue);
-                }
-            } else if (indexExpr instanceof FrameSlot frameSlot) {
-                emitter.emit("load " + frameSlot.getSlotIdx());
+            
+            // 加载索引到寄存器
+            int indexReg;
+            if (indexExpr instanceof FrameSlot indexSlot) {
+                indexReg = loadToRegister(indexSlot);
+            } else if (indexExpr instanceof ConstVal<?> constVal) {
+                indexReg = loadToRegister(constVal);
+            } else if (indexExpr instanceof OperandSlot operandSlot) {
+                indexReg = loadToRegister(operandSlot);
+            } else {
+                errors.add("Unsupported index type in LIRArrayLoad: " + indexExpr.getClass().getSimpleName());
+                freeTemp(baseReg);
+                return null;
             }
-
-            // 执行iastore
-            emitter.emit("iastore");
-
+            
+            // 计算偏移量：index * 4（int类型大小为4字节）
+            int const4Reg = allocateTemp();
+            emitInstruction("li r" + const4Reg + ", 4");
+            emitInstruction("mul r" + indexReg + ", r" + indexReg + ", r" + const4Reg);
+            freeTemp(const4Reg);
+            
+            // 计算地址：baseReg + indexReg
+            emitInstruction("add r" + baseReg + ", r" + baseReg + ", r" + indexReg);
+            freeTemp(indexReg);
+            
+            // 加载数组元素：result = memory[baseReg]
+            emitInstruction("lw r" + baseReg + ", r" + baseReg + ", 0");
+            
+            // 存储结果到resultSlot（如果需要）
+            if (resultSlot instanceof FrameSlot resultFrameSlot) {
+                // 需要将值从寄存器存储到帧槽位
+                int resultReg = baseReg; // 结果已经在baseReg中
+                // 分配新寄存器来加载地址？
+                // 简化：假设resultSlot是FrameSlot，需要store指令
+                // 但EP18R使用sw指令存储到内存地址，需要计算帧槽位地址
+                // 这比较复杂，暂时先标记为不支持
+                errors.add("TODO: Store to FrameSlot result not yet implemented for LIRArrayLoad");
+                freeTemp(resultReg);
+                return null;
+            } else if (resultSlot instanceof OperandSlot) {
+                // OperandSlot结果留在寄存器baseReg中，调用者负责处理
+                // 不需要额外操作
+            } else {
+                errors.add("Unsupported result slot type in LIRArrayLoad: " + resultSlot.getClass().getSimpleName());
+                freeTemp(baseReg);
+                return null;
+            }
+            
+            // 结果在baseReg寄存器中
             return null;
         }
 
         @Override
         public Void visit(ArrayAccess arrayAccess) {
+            // DEBUG: ArrayAccess visited
+            errors.add("DEBUG: ArrayAccess visited - baseSlot: " + arrayAccess.getBaseSlot() + ", indexExpr: " + arrayAccess.getIndex());
+            
             // 数组访问：arr[index]
-            // TODO: EP18R需要支持带offset参数的load指令
-            // 当前生成占位符，生成注释
             FrameSlot baseSlot = arrayAccess.getBaseSlot();
             Expr indexExpr = arrayAccess.getIndex();
-            emitter.emit("load " + baseSlot.getSlotIdx());
-            emitter.emitComment("# TODO: Array access with index " + indexExpr);
-            errors.add("ArrayAccess not yet implemented for register VM");
+            
+            // 加载数组基址到寄存器
+            int baseReg = loadToRegister(baseSlot);
+            
+            // 加载索引到寄存器
+            int indexReg;
+            if (indexExpr instanceof FrameSlot indexSlot) {
+                indexReg = loadToRegister(indexSlot);
+            } else if (indexExpr instanceof ConstVal<?> constVal) {
+                indexReg = loadToRegister(constVal);
+            } else if (indexExpr instanceof OperandSlot) {
+                // OperandSlot已在操作数栈中，需要加载到寄存器
+                indexReg = loadToRegister((OperandSlot) indexExpr);
+            } else {
+                errors.add("Unsupported index type in ArrayAccess: " + indexExpr.getClass().getSimpleName());
+                return null;
+            }
+            
+            // 计算偏移量：index * 4（int类型大小为4字节）
+            // 首先加载常数4到临时寄存器
+            int const4Reg = allocateTemp();
+            emitInstruction("li r" + const4Reg + ", 4");
+            // 乘法：indexReg = indexReg * 4
+            emitInstruction("mul r" + indexReg + ", r" + indexReg + ", r" + const4Reg);
+            freeTemp(const4Reg);
+            
+            // 计算地址：baseReg + indexReg
+            emitInstruction("add r" + baseReg + ", r" + baseReg + ", r" + indexReg);
+            freeTemp(indexReg);
+            
+            // 加载数组元素：result = memory[baseReg]
+            // 结果放在baseReg中（重用baseReg作为结果寄存器）
+            emitInstruction("lw r" + baseReg + ", r" + baseReg + ", 0");
+            
+            // 注意：baseReg现在包含数组元素值，需要保持分配状态供调用者使用
+            // 类似于BinExpr模式，结果留在第一个操作数的寄存器中
             return null;
         }
 
         @Override
         public Void visit(ArrayAssign arrayAssign) {
+            // DEBUG: ArrayAssign visited
+            errors.add("DEBUG: ArrayAssign visited - arrayAccess: " + arrayAssign.getArrayAccess() + ", valueExpr: " + arrayAssign.getValue());
+            
             // 数组赋值：arr[index] = value
-            // TODO: EP18R需要支持带offset参数的store指令
-            // 当前生成占位符，生成注释
-            FrameSlot baseSlot = arrayAssign.getArrayAccess().getBaseSlot();
-            Expr indexExpr = arrayAssign.getArrayAccess().getIndex();
+            ArrayAccess arrayAccess = arrayAssign.getArrayAccess();
             Expr valueExpr = arrayAssign.getValue();
-            emitter.emit("load " + baseSlot.getSlotIdx());
-            emitter.emitComment("# TODO: Array assign with index " + indexExpr + ", value " + valueExpr);
-            errors.add("ArrayAssign not yet implemented for register VM");
+            
+            // 加载值到寄存器
+            int valueReg;
+            if (valueExpr instanceof FrameSlot valueSlot) {
+                valueReg = loadToRegister(valueSlot);
+            } else if (valueExpr instanceof ConstVal<?> constVal) {
+                valueReg = loadToRegister(constVal);
+            } else if (valueExpr instanceof OperandSlot) {
+                // OperandSlot已在操作数栈中，需要加载到寄存器
+                valueReg = loadToRegister((OperandSlot) valueExpr);
+            } else {
+                errors.add("Unsupported RHS type in ArrayAssign: " + valueExpr.getClass().getSimpleName());
+                return null;
+            }
+            
+            // 加载数组基址到寄存器
+            FrameSlot baseSlot = arrayAccess.getBaseSlot();
+            int baseReg = loadToRegister(baseSlot);
+            
+            // 加载索引到寄存器
+            Expr indexExpr = arrayAccess.getIndex();
+            int indexReg;
+            if (indexExpr instanceof FrameSlot indexSlot) {
+                indexReg = loadToRegister(indexSlot);
+            } else if (indexExpr instanceof ConstVal<?> constVal) {
+                indexReg = loadToRegister(constVal);
+            } else if (indexExpr instanceof OperandSlot) {
+                // OperandSlot已在操作数栈中，需要加载到寄存器
+                indexReg = loadToRegister((OperandSlot) indexExpr);
+            } else {
+                errors.add("Unsupported index type in ArrayAssign: " + indexExpr.getClass().getSimpleName());
+                freeTemp(valueReg);
+                freeTemp(baseReg);
+                return null;
+            }
+            
+            // 计算偏移量：index * 4（int类型大小为4字节）
+            // 首先加载常数4到临时寄存器
+            int const4Reg = allocateTemp();
+            emitInstruction("li r" + const4Reg + ", 4");
+            // 乘法：indexReg = indexReg * 4
+            emitInstruction("mul r" + indexReg + ", r" + indexReg + ", r" + const4Reg);
+            freeTemp(const4Reg);
+            
+            // 计算地址：baseReg + indexReg
+            emitInstruction("add r" + baseReg + ", r" + baseReg + ", r" + indexReg);
+            freeTemp(indexReg);
+            
+            // 存储值到数组元素：memory[baseReg] = valueReg
+            emitInstruction("sw r" + valueReg + ", r" + baseReg + ", 0");
+            
+            // 释放所有临时寄存器（值已存储，不再需要）
+            freeTemp(valueReg);
+            freeTemp(baseReg);
+            
             return null;
         }
     }

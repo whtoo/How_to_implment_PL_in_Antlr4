@@ -41,7 +41,7 @@ public class NEWARRAYInstruction extends BaseInstruction {
     public void execute(VMExecutionContext context, int operand) throws Exception {
         // 解码操作数
         int type = (operand >>> 16) & 0x0F;  // 低16位：类型
-        int size = operand >>> 16;                 // 高16位：大小
+        int size = operand & 0xFFFF;              // 低16位：大小
 
         // 验证类型
         if (type < TYPE_INT || type > TYPE_STRING) {

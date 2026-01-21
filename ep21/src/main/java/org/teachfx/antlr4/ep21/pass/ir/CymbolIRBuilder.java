@@ -23,13 +23,17 @@ import org.teachfx.antlr4.ep21.ir.expr.arith.BinExpr;
 import org.teachfx.antlr4.ep21.ir.expr.arith.UnaryExpr;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
-import org.teachfx.antlr4.ep21.pass.cfg.CFG;
+import org.teachfx.antlr4.ep21.ir.stmt.FuncEntryLabel;
 import org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore;
+import org.teachfx.antlr4.ep21.ir.lir.LIRNewArray;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Objects;
 import org.teachfx.antlr4.ep21.pass.cfg.CFGBuilder;
+import org.teachfx.antlr4.ep21.pass.cfg.CFG;
 import org.teachfx.antlr4.ep21.pass.cfg.LinearIRBlock;
 import org.teachfx.antlr4.ep21.symtab.scope.Scope;
 import org.teachfx.antlr4.ep21.symtab.symbol.MethodSymbol;
@@ -41,16 +45,22 @@ import java.util.Stack;
 
 public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     private final Logger logger = LogManager.getLogger(CymbolIRBuilder.class);
-    public Prog prog = null;
-
+    public Prog prog = new Prog();
     private LinearIRBlock currentBlock = null;
     private LinearIRBlock exitBlock = null;
     private Stack<LinearIRBlock> breakStack;
     private Stack<LinearIRBlock> continueStack;
     private Stack<VarSlot> evalExprStack = null; // 显式初始化为null
-
+    private Expr lValueIndexExpr = null; // 保存LValue情况下的数组索引表达式
+    private VarSlot currentArraySlot = null; // 当前正在初始化的数组槽位
     private ASTNode curNode = null;
     private MethodSymbol currentMethodSymbol = null;
+
+    // Public getter for prog field access
+    public Prog getProg() {
+        return prog;
+    }
+
     @Override
     public Void visit(CompileUnit compileUnit) {
         logger.debug("visit CompileUnit: {}", compileUnit);
@@ -67,20 +77,80 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
 
     @Override
     public Void visit(VarDeclNode varDeclNode) {
-        // Java 21: 模式匹配改进
-        if(varDeclNode.hasInitializer()){
-            if (!(varDeclNode.getIdExprNode() instanceof IDExprNode)) {
-                throw new UnsupportedOperationException("暂不支持数组或复杂类型的变量声明初始化: " + varDeclNode);
-            }
-            var lhsNode = (IDExprNode)varDeclNode.getIdExprNode();
-            var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
+        logger.debug("visit(VarDeclNode): {}", varDeclNode);
+        System.out.println("[DEBUG] visit(VarDeclNode) object: " + System.identityHashCode(varDeclNode)
+            + ", assignExprNode: " + (varDeclNode.getAssignExprNode() != null ? 
+                varDeclNode.getAssignExprNode() + " (object: " + System.identityHashCode(varDeclNode.getAssignExprNode()) + ")" : "null")
+            + ", idExprNode: " + varDeclNode.getIdExprNode() + " (object: " + System.identityHashCode(varDeclNode.getIdExprNode()) + ")");
+        logger.debug("hasArraySize: {}, arraySizeExpr: {}", 
+            varDeclNode.hasArraySize(), varDeclNode.getArraySizeExpr());
+        
+        FrameSlot arraySlot = null; // 数组变量的FrameSlot
+        
+        // 处理数组声明
+        if (varDeclNode.hasArraySize()) {
+            logger.debug("Processing array declaration: {}", varDeclNode);
+            
+            // 1. 创建FrameSlot
+            arraySlot = FrameSlot.get((VariableSymbol) varDeclNode.getIdExprNode().getRefSymbol());
+            logger.debug("Created FrameSlot for array variable: {}", arraySlot);
 
-            // 评估表达式以生成RHS
-            varDeclNode.getAssignExprNode().accept(this);
-            var rhs = peekEvalOperand();
-
-            addInstr(Assign.with(lhs, rhs));
+            // 2. 评估大小表达式（推送到表达式栈）
+            varDeclNode.getArraySizeExpr().accept(this);
+            
+            // 3. 从栈弹出大小表达式
+            Expr sizeExpr = peekEvalOperand();
+            logger.debug("Array size expression type: {}, value: {}", 
+                sizeExpr.getClass().getSimpleName(), sizeExpr);
             popEvalOperand();
+
+            // 4. 创建LIRNewArray指令
+            String elementTypeName = "int"; // TODO: get actual element type from symbol
+            LIRNewArray newArrayInstr = new LIRNewArray(sizeExpr, arraySlot, elementTypeName);
+            logger.debug("Created LIRNewArray instruction: {}", newArrayInstr);
+
+            // 5. 添加到当前基本块
+            logger.debug("Current block before addInstr: {}", getCurrentBlock());
+            addInstr(newArrayInstr);
+            logger.debug("After addInstr for LIRNewArray");
+            
+            logger.debug("Created LIRNewArray instruction for array declaration: {}", newArrayInstr);
+        }
+        
+        // 处理初始化（如果有）
+        if (varDeclNode.hasInitializer()) {
+            if (varDeclNode.getAssignExprNode() instanceof ArrayInitializerExprNode) {
+                // 数组初始化器：需要生成LIRArrayInit指令
+                logger.debug("Processing array initializer for array variable: {}", arraySlot);
+                
+                if (arraySlot == null) {
+                    // 非数组变量的数组初始化器？理论上不应该发生
+                    throw new UnsupportedOperationException("Array initializer without array declaration not supported: " + varDeclNode);
+                }
+                
+                // 设置当前数组槽位上下文，供ArrayInitializerExprNode使用
+                currentArraySlot = arraySlot;
+                try {
+                    // 访问数组初始化器表达式，它会创建LIRArrayInit指令
+                    varDeclNode.getAssignExprNode().accept(this);
+                } finally {
+                    currentArraySlot = null; // 清理上下文
+                }
+            } else {
+                // 普通初始化器
+                if (!(varDeclNode.getIdExprNode() instanceof IDExprNode)) {
+                    throw new UnsupportedOperationException("暂不支持数组或复杂类型的变量声明初始化: " + varDeclNode);
+                }
+                var lhsNode = (IDExprNode)varDeclNode.getIdExprNode();
+                var lhs = FrameSlot.get((VariableSymbol) lhsNode.getRefSymbol());
+
+                // 评估表达式以生成RHS
+                varDeclNode.getAssignExprNode().accept(this);
+                var rhs = peekEvalOperand();
+
+                addInstr(Assign.with(lhs, rhs));
+                popEvalOperand();
+            }
         }
         return null;
     }
@@ -129,9 +199,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public Void visit(VarDeclStmtNode varDeclStmtNode) {
         logger.debug("visit %s".formatted(varDeclStmtNode.toString()));
-        if (varDeclStmtNode.getVarDeclNode().hasInitializer()) {
-            varDeclStmtNode.getVarDeclNode().accept(this);
-        }
+        varDeclStmtNode.getVarDeclNode().accept(this);
 
         return null;
     }
@@ -195,34 +263,62 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     @Override
     public VarSlot visit(ArrayAccessExprNode arrayAccessExprNode) {
         curNode = arrayAccessExprNode;
+        System.out.println("[DEBUG] Entering visit(ArrayAccessExprNode) for " + arrayAccessExprNode
+            + " (object: " + System.identityHashCode(arrayAccessExprNode) + ")");
 
-        // 处理数组表达式（数组变量本身）
-        arrayAccessExprNode.getArray().accept(this);
-        VarSlot arraySlot = peekEvalOperand();
-
-        // 处理索引表达式
-        arrayAccessExprNode.getIndex().accept(this);
-        VarSlot indexSlot = peekEvalOperand();
-
-        // 创建数组访问表达式
+        // 根据isLValue()决定生成什么IR指令
         if (arrayAccessExprNode.getArray() instanceof IDExprNode idExprNode) {
+            System.out.println("[DEBUG] Processing array access for variable: " + idExprNode.getImage()
+                + " (IDExprNode object: " + System.identityHashCode(idExprNode) + ")"
+                + ", refSymbol: " + idExprNode.getRefSymbol()
+                + ", ArrayAccessExprNode object: " + System.identityHashCode(arrayAccessExprNode));
+
+            // 直接通过符号获取数组变量的FrameSlot，不依赖评估栈
             VariableSymbol arraySymbol = (VariableSymbol) idExprNode.getRefSymbol();
             if (arraySymbol == null) {
+                System.out.println("[ERROR] 数组变量符号未解析: " + idExprNode.getImage()
+                    + " (IDExprNode object: " + System.identityHashCode(idExprNode) + ")"
+                    + ", refSymbol: " + idExprNode.getRefSymbol()
+                    + ", ArrayAccessExprNode object: " + System.identityHashCode(arrayAccessExprNode));
                 throw new IllegalStateException("数组变量符号未解析: " + idExprNode.getImage());
             }
             FrameSlot baseSlot = FrameSlot.get(arraySymbol);
+            System.out.println("[DEBUG] Got FrameSlot for array variable " + idExprNode.getImage() + ": " + baseSlot);
 
-            // 创建ArrayAccess IR节点
-            ArrayAccess arrayAccess = ArrayAccess.with(arraySlot, indexSlot, baseSlot);
+            // 处理数组表达式（清理可能存在的栈推送）
+            try {
+                arrayAccessExprNode.getArray().accept(this);
+                // 如果数组表达式推送了FrameSlot到栈，弹出它
+                peekEvalOperand();
+                popEvalOperand();
+                logger.debug("清理了数组变量 {} 的栈推送", idExprNode.getImage());
+            } catch (IllegalStateException e) {
+                // 栈为空，正常情况
+                logger.debug("数组变量 {} 未推送FrameSlot到评估栈", idExprNode.getImage());
+            }
 
-            // 创建临时槽位来接收数组访问的结果
-            VarSlot resultSlot = OperandSlot.genTemp();
-            addInstr(arrayAccess);  // ArrayAccess会被后续的VM generator转换为load指令
+            // 处理索引表达式
+            arrayAccessExprNode.getIndex().accept(this);
+            Expr indexExpr = peekEvalOperand();
 
-            pushEvalOperand(resultSlot);
-            return resultSlot;
+            if (!arrayAccessExprNode.isLValue()) {
+                // RValue: 生成LIRArrayLoad指令（读取数组元素）
+                VarSlot resultSlot = OperandSlot.genTemp();
+                LIRArrayLoad arrayLoadInstr = new LIRArrayLoad(baseSlot, indexExpr, resultSlot);
+                addInstr(arrayLoadInstr);
+                popEvalOperand();  // 弹出索引表达式
+                pushEvalOperand(resultSlot);
+                return resultSlot;
+            } else {
+                // LValue: 推送baseSlot到栈，供AssignStmtNode使用
+                // AssignStmtNode会从栈弹出baseSlot并从成员变量获取indexExpr，然后生成LIRArrayStore指令
+                pushEvalOperand(baseSlot);
+                setLValueIndexExpr(indexExpr);
+                popEvalOperand();  // 弹出索引表达式
+                return null;
+            }
         } else {
-            throw new UnsupportedOperationException("暂不支持复杂数组表达式作为左值: " + arrayAccessExprNode.getArray());
+            throw new UnsupportedOperationException("暂不支持复杂数组表达式: " + arrayAccessExprNode.getArray());
         }
     }
 
@@ -276,10 +372,6 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         // 1. 评估所有初始化元素
         // 2. 创建LIRArrayInit节点来表示数组初始化
         // 3. 后续代码生成器会将其转换为具体的数组初始化指令
-
-        // 1. 获取数组变量符号
-        // 在CymbolASTBuilder.visitVarDecl中，数组变量符号的类型是ArrayType
-        // 但是当前AST没有直接关联到符号，所以我们需要从上下文中推断
         
         // 评估所有初始化元素
         List<Expr> elements = new java.util.ArrayList<>();
@@ -289,13 +381,17 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
             elements.add(evaluated);
         }
 
-        // 2. 获取数组槽位（假设是当前正在声明的变量）
-        // 注意：这里简化处理，实际应该从符号表获取
-        // 由于数组符号表关联的复杂性，我们使用临时槽位
-        
-        // 创建LIRArrayInit节点
-        // 注意：这里使用占位的FrameSlot，实际实现需要更完善的符号表集成
-        VarSlot arraySlot = OperandSlot.genTemp();
+        // 获取数组槽位：优先使用当前数组声明上下文中的槽位
+        VarSlot arraySlot;
+        if (currentArraySlot != null) {
+            // 在数组变量声明上下文中，使用已经分配的FrameSlot
+            arraySlot = currentArraySlot;
+            logger.debug("Using current array slot from declaration context: {}", arraySlot);
+        } else {
+            // 独立数组初始化表达式（理论上不应该发生，但保留兼容性）
+            logger.warn("Array initializer without declaration context, using temporary slot");
+            arraySlot = OperandSlot.genTemp();
+        }
         
         // 创建数组初始化LIR指令
         LIRArrayInit arrayInit = new LIRArrayInit(
@@ -352,8 +448,11 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     public Void visit(WhileStmtNode whileStmtNode) {
         curNode = whileStmtNode;
         var condBlock = new LinearIRBlock(currentBlock.getScope());
+        condBlock.addStmt(new Label(condBlock.getScope()));
         var doBlock = new LinearIRBlock(currentBlock.getScope());
+        doBlock.addStmt(new Label(doBlock.getScope()));
         var endBlock = new LinearIRBlock(currentBlock.getScope());
+        endBlock.addStmt(new Label(endBlock.getScope()));
 
         // Add all blocks to prog
         prog.addBlock(condBlock);
@@ -390,7 +489,9 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         ifStmtNode.getCondExpr().accept(this);
         var cond = peekEvalOperand();
         var thenBlock = new LinearIRBlock(currentBlock.getScope());
+        thenBlock.addStmt(new Label(thenBlock.getScope()));
         var endBlock = new LinearIRBlock(currentBlock.getScope());
+        endBlock.addStmt(new Label(endBlock.getScope()));
 
         prog.addBlock(thenBlock);
         prog.addBlock(endBlock);
@@ -401,6 +502,7 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
             ifStmtNode.getThenBlock().accept(this);
         }else {
             var elseBlock = new LinearIRBlock(currentBlock.getScope());
+            elseBlock.addStmt(new Label(elseBlock.getScope()));
             prog.addBlock(elseBlock);
             jumpIf(cond,thenBlock,elseBlock);
             setCurrentBlock(thenBlock);
@@ -422,41 +524,65 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
         // 处理数组访问作为左值（arr[index] = value）
         if (assignStmtNode.getLhs() instanceof ArrayAccessExprNode arrayAccessExpr) {
             logger.debug("Processing array access as LHS: arr[index] = value");
-            // 首先处理右值（RHS）
-            assignStmtNode.getRhs().accept(this);
-            var rhs = peekEvalOperand();
-            logger.debug("Array access RHS evaluated: {}", rhs);
 
-            // 处理数组访问左值（LHS）
-            if (arrayAccessExpr.getArray() instanceof IDExprNode idExprNode) {
-                VariableSymbol arraySymbol = (VariableSymbol) idExprNode.getRefSymbol();
-                if (arraySymbol == null) {
-                    logger.error("数组变量符号未解析: {}", idExprNode.getImage());
-                    throw new IllegalStateException("数组变量符号未解析: " + idExprNode.getImage());
-                }
-                FrameSlot baseSlot = FrameSlot.get(arraySymbol);
-                logger.debug("Created FrameSlot for array variable: {}", idExprNode.getImage());
+            // 首先处理左值数组访问（标记为LValue）
+            arrayAccessExpr.accept(this);
+            
+            // 检查是否有保存的LValue索引表达式（来自ArrayAccessExprNode.visit）
+            if (lValueIndexExpr != null) {
+                // 此时栈顶应该是baseSlot
+                
+                // 处理右值（RHS）
+                assignStmtNode.getRhs().accept(this);
+                Expr rhs = popEvalOperand();  // 弹出rhs
+                VarSlot baseSlot = popEvalOperand();  // 弹出baseSlot
 
-                // 处理索引表达式
-                arrayAccessExpr.getIndex().accept(this);
-                var indexSlot = peekEvalOperand();
-                logger.debug("Array index evaluated to: {}", indexSlot);
+                // 生成LIRArrayStore指令
+                LIRArrayStore arrayStoreInstr = new LIRArrayStore(baseSlot, lValueIndexExpr, rhs);
+                addInstr(arrayStoreInstr);
+                logger.debug("Created LIRArrayStore instruction");
 
-                // 创建数组访问表达式
-                ArrayAccess arrayAccess = ArrayAccess.with(null, indexSlot, baseSlot);
-                logger.debug("Created ArrayAccess for LHS: {}", arrayAccess);
-
-                // 创建数组赋值语句
-                addInstr(ArrayAssign.with(arrayAccess, rhs));
-                logger.debug("Created ArrayAssign instruction");
-
-                // 清理操作数栈（弹出索引和右值）
-                popEvalOperand(); // 弹出索引
-                popEvalOperand(); // 弹出右值
+                // 清除LValue索引表达式
+                lValueIndexExpr = null;
 
                 return null;
             } else {
-                throw new UnsupportedOperationException("暂不支持复杂数组表达式作为左值: " + arrayAccessExpr.getArray());
+                // 回退到旧的ArrayAssign方式（如果LValue索引表达式不存在）
+                // 处理数组访问左值（LHS）
+                if (arrayAccessExpr.getArray() instanceof IDExprNode idExprNode) {
+                    VariableSymbol arraySymbol = (VariableSymbol) idExprNode.getRefSymbol();
+                    if (arraySymbol == null) {
+                        logger.error("数组变量符号未解析: {}", idExprNode.getImage());
+                        throw new IllegalStateException("数组变量符号未解析: " + idExprNode.getImage());
+                    }
+                    FrameSlot baseSlot = FrameSlot.get(arraySymbol);
+                    logger.debug("Created FrameSlot for array variable: {}", idExprNode.getImage());
+
+                    // 处理索引表达式
+                    arrayAccessExpr.getIndex().accept(this);
+                    var indexSlot = peekEvalOperand();
+                    logger.debug("Array index evaluated to: {}", indexSlot);
+
+                    // 处理右值（RHS）
+                    assignStmtNode.getRhs().accept(this);
+                    var rhs = peekEvalOperand();
+
+                    // 创建数组访问表达式
+                    ArrayAccess arrayAccess = ArrayAccess.with(null, indexSlot, baseSlot);
+                    logger.debug("Created ArrayAccess for LHS: {}", arrayAccess);
+
+                    // 创建数组赋值语句
+                    addInstr(ArrayAssign.with(arrayAccess, rhs));
+                    logger.debug("Created ArrayAssign instruction");
+
+                    // 清理操作数栈（弹出索引和右值）
+                    popEvalOperand(); // 弹出索引
+                    popEvalOperand(); // 弹出右值
+
+                    return null;
+                } else {
+                    throw new UnsupportedOperationException("暂不支持复杂数组表达式作为左值: " + arrayAccessExpr.getArray());
+                }
             }
         }
 
@@ -538,13 +664,18 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
             throw new NullPointerException("stmt cannot be null");
         }
 
+        logger.debug("addInstr called with IRNode type: {}", stmt.getClass().getSimpleName());
+        
         // 检查当前块是否存在
         if (getCurrentBlock() == null) {
             logger.error("addInstr called with null currentBlock");
             throw new IllegalStateException("Current block is not initialized. Call forkNewBlock() first.");
         }
 
+        logger.debug("Current block is not null, adding statement");
         getCurrentBlock().addStmt(stmt);
+        logger.debug("Statement added to current block");
+        
         // Java 21: 改进的switch表达式模式匹配
         return switch (stmt) {
             case BinExpr binExpr -> {
@@ -644,7 +775,18 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
     }
 
     protected VarSlot peekEvalOperand() {
+        if (evalExprStack.isEmpty()) {
+            throw new IllegalStateException(
+                "Expression evaluation stack is empty when trying to peek. " +
+                "This indicates that a previous expression evaluation did not push a value to stack. " +
+                "Current node: " + (curNode != null ? curNode.toString() : "null")
+            );
+        }
         return evalExprStack.peek();
+    }
+
+    protected void setLValueIndexExpr(Expr expr) {
+        this.lValueIndexExpr = expr;
     }
 
     public CFG<IRNode> getCFG(LinearIRBlock startBlocks) {

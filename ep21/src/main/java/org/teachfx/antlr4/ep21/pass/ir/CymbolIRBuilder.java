@@ -97,14 +97,26 @@ public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
 
             // 2. 评估大小表达式（推送到表达式栈）
             varDeclNode.getArraySizeExpr().accept(this);
-            
+
             // 3. 从栈弹出大小表达式
             Expr sizeExpr = peekEvalOperand();
-            logger.debug("Array size expression type: {}, value: {}", 
+            logger.debug("Array size expression type: {}, value: {}",
                 sizeExpr.getClass().getSimpleName(), sizeExpr);
             popEvalOperand();
 
-            // 4. 创建LIRNewArray指令
+            // 4. 如果sizeExpr是从常量转换来的OperandSlot，尝试提取常量值
+            // 这样可以避免生成不必要的Assign指令
+            if (sizeExpr instanceof VarSlot) {
+                // 检查原始表达式是否为IntExprNode常量
+                var originalExpr = varDeclNode.getArraySizeExpr();
+                if (originalExpr instanceof IntExprNode intExpr) {
+                    // 直接使用常量值
+                    sizeExpr = ConstVal.valueOf(intExpr.getRawValue());
+                    logger.debug("Converted array size to ConstVal: {}", sizeExpr);
+                }
+            }
+
+            // 5. 创建LIRNewArray指令
             String elementTypeName = "int"; // TODO: get actual element type from symbol
             LIRNewArray newArrayInstr = new LIRNewArray(sizeExpr, arraySlot, elementTypeName);
             logger.debug("Created LIRNewArray instruction: {}", newArrayInstr);

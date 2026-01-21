@@ -14,8 +14,10 @@ import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit;
 import org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad;
 import org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore;
+import org.teachfx.antlr4.ep21.ir.lir.LIRNode;
 import org.teachfx.antlr4.ep21.ir.lir.LIRNewArray;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType;
 import org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol;
@@ -175,6 +177,9 @@ public class RegisterVMGenerator implements ICodeGenerator {
                     stmt.accept(visitor);
                 } else if (node instanceof Expr expr) {
                     expr.accept(visitor);
+                } else if (node instanceof LIRNode lirNode) {
+                    // Handle LIR nodes (array operations, etc.)
+                    lirNode.accept(visitor);
                 } else {
                     errors.add("Unknown IR node type: " + node.getClass().getSimpleName());
                 }
@@ -784,9 +789,6 @@ public class RegisterVMGenerator implements ICodeGenerator {
 
         @Override
         public Void visit(ArrayAssign arrayAssign) {
-            // DEBUG: ArrayAssign visited
-            errors.add("DEBUG: ArrayAssign visited - arrayAccess: " + arrayAssign.getArrayAccess() + ", valueExpr: " + arrayAssign.getValue());
-            
             // 数组赋值：arr[index] = value
             ArrayAccess arrayAccess = arrayAssign.getArrayAccess();
             Expr valueExpr = arrayAssign.getValue();

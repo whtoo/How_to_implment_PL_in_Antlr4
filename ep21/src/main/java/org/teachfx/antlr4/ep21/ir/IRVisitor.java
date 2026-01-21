@@ -11,6 +11,7 @@ import org.teachfx.antlr4.ep21.ir.stmt.*;
 import org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit;
 import org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad;
 import org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore;
+import org.teachfx.antlr4.ep21.ir.lir.LIRNewArray;
 
 public interface IRVisitor<S,E> {
 
@@ -44,6 +45,7 @@ public interface IRVisitor<S,E> {
     <S, E> S visit(LIRArrayInit lirArrayInit);
     <S, E> S visit(LIRArrayLoad lirArrayLoad);
     <S, E> S visit(LIRArrayStore lirArrayStore);
+    <S, E> S visit(LIRNewArray lirNewArray);
 
     /// Stmt
 

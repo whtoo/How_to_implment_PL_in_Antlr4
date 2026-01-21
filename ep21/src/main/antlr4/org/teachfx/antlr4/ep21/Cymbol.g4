@@ -20,7 +20,7 @@ formalParameters
     :   formalParameter (',' formalParameter)*
     ;
 formalParameter
-    :   type ID ('[' expr ']')?  // 支持带大小的数组参数，如 int arr[3] 或不带大小的数组参数，如 int arr[]
+    :   (type '[' expr ']' ID | type ID ('[' expr ']')?)  // 支持两种数组参数格式：int[10] arr 和 int arr[10]
     ;
 
 block:  '{' stmts=statement* '}' ;    // possibly empty statement block
@@ -55,7 +55,7 @@ primary:    ID                   #primaryID   // variable reference
     |       BOOLEAN              #primaryBOOL
     ;
 
-ID  :   LETTER (LETTER | [0-9])* ;
+ID  :   LETTER (LETTER | [0-9] | '_')* ;
 BOOLEAN: 'true' | 'false';
 NULL : 'null';
 

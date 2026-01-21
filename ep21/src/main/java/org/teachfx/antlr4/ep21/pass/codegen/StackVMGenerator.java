@@ -16,6 +16,10 @@ import org.teachfx.antlr4.ep21.ir.expr.addr.FrameSlot;
 import org.teachfx.antlr4.ep21.ir.expr.addr.OperandSlot;
 import org.teachfx.antlr4.ep21.ir.expr.val.ConstVal;
 import org.teachfx.antlr4.ep21.ir.lir.LIRArrayInit;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayLoad;
+import org.teachfx.antlr4.ep21.ir.lir.LIRArrayStore;
+import org.teachfx.antlr4.ep21.ir.lir.LIRNewArray;
+import org.teachfx.antlr4.ep21.ir.lir.LIRNode;
 import org.teachfx.antlr4.ep21.ir.stmt.*;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType;
 
@@ -85,6 +89,9 @@ public class StackVMGenerator implements ICodeGenerator {
             long generationTime = System.currentTimeMillis() - startTime;
             String output = emitter.flush();
 
+            if (!errors.isEmpty()) {
+                System.err.println("Code generation errors: " + errors);
+            }
             return errors.isEmpty()
                     ? CodeGenerationResult.success(output, TARGET_VM, instructionCount, generationTime)
                     : CodeGenerationResult.failure(errors, TARGET_VM);
@@ -183,7 +190,10 @@ public class StackVMGenerator implements ICodeGenerator {
                 stmt.accept(visitor);
             } else if (node instanceof Expr expr) {
                 expr.accept(visitor);
+            } else if (node instanceof LIRNode lirNode) {
+                lirNode.accept(visitor);
             } else {
+                System.err.println("Unknown IR node type: " + node.getClass().getSimpleName());
                 errors.add("Unknown IR node type: " + node.getClass().getSimpleName());
             }
         }
@@ -374,7 +384,165 @@ public class StackVMGenerator implements ICodeGenerator {
 
         @Override
         public <S, E> S visit(LIRArrayInit lirArrayInit) {
-            errors.add("LIRArrayInit not yet implemented for Stack VM");
+            // Load array reference
+            VarSlot arraySlot = lirArrayInit.getArraySlot();
+            if (arraySlot instanceof FrameSlot frameSlot) {
+                // Load array reference for each element initialization
+                // We'll load it inside the loop for each store operation
+            } else if (arraySlot instanceof OperandSlot) {
+                // OperandSlot should already be on stack
+            } else {
+                errors.add("Unsupported array slot type in LIRArrayInit: " + arraySlot.getClass().getSimpleName());
+                return null;
+            }
+            
+            // Initialize each element
+            List<Expr> elements = lirArrayInit.getElements();
+            for (int i = 0; i < elements.size(); i++) {
+                Expr element = elements.get(i);
+                
+                // Load value to store
+                if (element instanceof FrameSlot valueSlot) {
+                    emitInstructionWithOperand("load", valueSlot.getSlotIdx());
+                } else if (element instanceof ConstVal) {
+                    emitConst((ConstVal<?>) element);
+                } else if (element instanceof OperandSlot) {
+                    // OperandSlot represents a value already on stack, no action needed
+                } else {
+                    errors.add("Unsupported element type in LIRArrayInit: " + element.getClass().getSimpleName());
+                    return null;
+                }
+                
+                // Load array reference (load fresh copy for each store)
+                if (arraySlot instanceof FrameSlot frameSlot) {
+                    emitInstructionWithOperand("load", frameSlot.getSlotIdx());
+                } // else OperandSlot is already on stack
+                
+                // Load index
+                emitInstructionWithOperand("iconst", i);
+                
+                // Store element into array
+                emitInstruction("iastore");
+            }
+            
+            return null;
+        }
+
+        @Override
+        public Void visit(LIRArrayLoad lirArrayLoad) {
+            // Load array reference
+            VarSlot arraySlot = lirArrayLoad.getArraySlot();
+            if (arraySlot instanceof FrameSlot frameSlot) {
+                emitInstructionWithOperand("load", frameSlot.getSlotIdx());
+            } else if (arraySlot instanceof OperandSlot) {
+                // OperandSlot should already be evaluated
+                // No action needed
+            } else {
+                errors.add("Unsupported array slot type in LIRArrayLoad: " + arraySlot.getClass().getSimpleName());
+                return null;
+            }
+
+            // Load index
+            Expr indexExpr = lirArrayLoad.getIndex();
+            if (indexExpr instanceof FrameSlot indexSlot) {
+                emitInstructionWithOperand("load", indexSlot.getSlotIdx());
+            } else if (indexExpr instanceof ConstVal) {
+                emitConst((ConstVal<?>) indexExpr);
+            } else if (indexExpr instanceof OperandSlot) {
+                // OperandSlot represents a value already on stack, no action needed
+            } else {
+                errors.add("Unsupported index type in LIRArrayLoad: " + indexExpr.getClass().getSimpleName());
+                return null;
+            }
+
+            // Emit iaload instruction
+            emitInstruction("iaload");
+
+            // Store result to result slot
+            VarSlot resultSlot = lirArrayLoad.getResultSlot();
+            if (resultSlot instanceof FrameSlot resultFrameSlot) {
+                emitInstructionWithOperand("store", resultFrameSlot.getSlotIdx());
+            } else if (resultSlot instanceof OperandSlot) {
+                // OperandSlot stays on stack
+                // No store needed
+            }
+
+            return null;
+        }
+
+        @Override
+        public Void visit(LIRArrayStore lirArrayStore) {
+            // Load value to store
+            Expr valueExpr = lirArrayStore.getValue();
+            if (valueExpr instanceof FrameSlot valueSlot) {
+                emitInstructionWithOperand("load", valueSlot.getSlotIdx());
+            } else if (valueExpr instanceof ConstVal) {
+                emitConst((ConstVal<?>) valueExpr);
+            } else if (valueExpr instanceof OperandSlot) {
+                // OperandSlot represents a value already on stack, no action needed
+            } else {
+                errors.add("Unsupported value type in LIRArrayStore: " + valueExpr.getClass().getSimpleName());
+                return null;
+            }
+
+            // Load array reference
+            VarSlot arraySlot = lirArrayStore.getArraySlot();
+            if (arraySlot instanceof FrameSlot frameSlot) {
+                emitInstructionWithOperand("load", frameSlot.getSlotIdx());
+            } else if (arraySlot instanceof OperandSlot) {
+                // OperandSlot should already be evaluated
+                // No action needed
+            } else {
+                errors.add("Unsupported array slot type in LIRArrayStore: " + arraySlot.getClass().getSimpleName());
+                return null;
+            }
+
+            // Load index
+            Expr indexExpr = lirArrayStore.getIndex();
+            if (indexExpr instanceof FrameSlot indexSlot) {
+                emitInstructionWithOperand("load", indexSlot.getSlotIdx());
+            } else if (indexExpr instanceof ConstVal) {
+                emitConst((ConstVal<?>) indexExpr);
+            } else if (indexExpr instanceof OperandSlot) {
+                // OperandSlot represents a value already on stack, no action needed
+            } else {
+                errors.add("Unsupported index type in LIRArrayStore: " + indexExpr.getClass().getSimpleName());
+                return null;
+            }
+
+            // Emit iastore instruction
+            emitInstruction("iastore");
+
+            return null;
+        }
+
+        @Override
+        public Void visit(LIRNewArray lirNewArray) {
+            // Load array size (can be ConstVal or OperandSlot)
+            Expr sizeExpr = lirNewArray.getSize();
+            if (sizeExpr instanceof ConstVal) {
+                emitConst((ConstVal<?>) sizeExpr);
+            } else if (sizeExpr instanceof OperandSlot) {
+                // OperandSlot represents a value already on stack, no action needed
+            } else if (sizeExpr instanceof FrameSlot frameSlot) {
+                emitInstructionWithOperand("load", frameSlot.getSlotIdx());
+            } else {
+                errors.add("Unsupported size type in LIRNewArray: " + sizeExpr.getClass().getSimpleName());
+                return null;
+            }
+
+            // Emit newarray instruction
+            emitInstruction("newarray");
+
+            // Store array reference to result slot
+            VarSlot resultSlot = lirNewArray.getResultSlot();
+            if (resultSlot instanceof FrameSlot frameSlot) {
+                emitInstructionWithOperand("store", frameSlot.getSlotIdx());
+            } else {
+                errors.add("Unsupported result slot type in LIRNewArray: " + resultSlot.getClass().getSimpleName());
+                return null;
+            }
+
             return null;
         }
 
@@ -407,6 +575,8 @@ public class StackVMGenerator implements ICodeGenerator {
                 emitInstructionWithOperand("load", valueSlot.getSlotIdx());
             } else if (valueExpr instanceof ConstVal) {
                 emitConst((ConstVal<?>) valueExpr);
+            } else if (valueExpr instanceof OperandSlot) {
+                // OperandSlot represents a value already on stack, no action needed
             } else {
                 errors.add("Unsupported RHS type in ArrayAssign: " + valueExpr.getClass().getSimpleName());
                 return null;
@@ -420,6 +590,8 @@ public class StackVMGenerator implements ICodeGenerator {
                 emitInstructionWithOperand("load", indexSlot.getSlotIdx());
             } else if (indexExpr instanceof ConstVal) {
                 emitConst((ConstVal<?>) indexExpr);
+            } else if (indexExpr instanceof OperandSlot) {
+                // OperandSlot represents a value already on stack, no action needed
             } else {
                 errors.add("Unsupported index type in ArrayAssign: " + indexExpr.getClass().getSimpleName());
                 return null;
@@ -430,6 +602,8 @@ public class StackVMGenerator implements ICodeGenerator {
             return null;
         }
     }
+
+
 
     /**
      * Default stack VM instruction emitter.

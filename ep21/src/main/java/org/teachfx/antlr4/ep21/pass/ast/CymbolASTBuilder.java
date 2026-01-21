@@ -11,18 +11,28 @@ import org.teachfx.antlr4.ep21.ast.type.TypeNode;
 import org.teachfx.antlr4.ep21.CymbolBaseVisitor;
 import org.teachfx.antlr4.ep21.CymbolParser;
 import org.teachfx.antlr4.ep21.CymbolVisitor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType.BinaryOpType;
 import org.teachfx.antlr4.ep21.symtab.type.OperatorType.UnaryOpType;
 import org.teachfx.antlr4.ep21.symtab.type.Type;
+import org.teachfx.antlr4.ep21.symtab.type.TypeTable;
 import org.teachfx.antlr4.ep21.symtab.type.ArrayType;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.teachfx.antlr4.ep21.symtab.type.TypeTable;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Objects;
 
 
 public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements CymbolVisitor<ASTNode> {
+
+    private static final Logger logger = LogManager.getLogger(CymbolASTBuilder.class);
+    private final Map<ParserRuleContext, ASTNode> astCache = new HashMap<>();
 
     public CymbolASTBuilder() {
         super();
@@ -62,15 +72,24 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
         Type varType;
         String varName;
         var typeNode = (TypeNode)visit(ctx.type());
+        
+        // Debug logging to see children
+        logger.debug("visitVarDecl: text={}, childCount={}", ctx.getText(), ctx.getChildCount());
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            var child = ctx.getChild(i);
+            logger.debug("  child[{}]: {} - {}", i, child.getClass().getSimpleName(), child.getText());
+        }
 
         // 检查是否为C风格数组声明：type '[' expr ']' ID
         // 新语法: (type '[' expr ']' ID | type ID ('[' expr ']')?) ...
         // 如果第一个expr()存在且是维度表达式（在type之后，ID之前）
-        if (ctx.getChild(1) instanceof CymbolParser.ExprContext &&
-            ctx.getChild(2) != null &&
-            ctx.getChild(2).getText().equals("]") &&
-            ctx.getChild(3) instanceof org.antlr.v4.runtime.tree.TerminalNode &&
-            ((org.antlr.v4.runtime.tree.TerminalNode) ctx.getChild(3)).getSymbol().getType() == CymbolParser.ID) {
+        if (ctx.getChildCount() >= 5 &&
+            ctx.getChild(1).getText().equals("[") &&
+            ctx.getChild(2) instanceof CymbolParser.ExprContext &&
+            ctx.getChild(3).getText().equals("]") &&
+            ctx.getChild(4) instanceof org.antlr.v4.runtime.tree.TerminalNode &&
+            ((org.antlr.v4.runtime.tree.TerminalNode) ctx.getChild(4)).getSymbol().getType() == CymbolParser.ID) {
+            logger.debug("Detected C-style array declaration: type '[' expr ']' ID");
 
             // C风格: int[5] arr
             varName = ctx.ID().getText();
@@ -83,11 +102,17 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
             var symbol = new VariableSymbol(varName, varType);
             ExprNode assignNode = null;
 
-            // 处理初始化值
+            // Extract array size expression from ctx.getChild(2) (expr after '[')
+            ExprNode sizeExpr = (ExprNode) visit(ctx.getChild(2));
+
+            // 处理初始化值 - 临时跳过以避免EmptyStack错误
+            // 后续需要正确的数组初始化处理
             if (ctx.arrayInitializer() != null) {
-                assignNode = (ExprNode) visit(ctx.arrayInitializer());
+                // TODO: 实现数组初始化处理
+                logger.debug("Array initializer detected - skipping for now");
+                assignNode = null;
             } else if (ctx.getChildCount() > 5 && ctx.getChild(5).getText().equals("=")) {
-                // 找到初始化表达式（在维度表达式和赋值符号之后）
+                // 处理简单表达式赋值
                 int assignIndex = -1;
                 for (int i = 0; i < ctx.getChildCount(); i++) {
                     if (ctx.getChild(i).getText().equals("=")) {
@@ -103,20 +128,49 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
             var idExprNode = new IDExprNode(varName, ctx);
             idExprNode.setRefSymbol(symbol);
 
-            return new VarDeclNode(symbol, assignNode, idExprNode, ctx);
+            var varDeclNode = new VarDeclNode(symbol, assignNode, idExprNode, ctx);
+            varDeclNode.setArraySizeExpr(sizeExpr);
+            return varDeclNode;
         } else {
+            logger.debug("Detected old-style array declaration or non-array declaration");
             // 原格式: int arr[5] 或 int arr
             // 检查是否为数组声明（语法：type ID['expr']?）
             varType = typeNode.getBaseType();
-            if (ctx.expr() != null && !ctx.expr().isEmpty()) {
-                // 数组声明：int arr[10] 或 int arr[]
-                // 创建数组类型
+            ExprNode sizeExpr = null;
+            
+            // Detect array size expression by looking for '[' after ID
+            boolean hasArrayBrackets = false;
+            int openBracketIndex = -1;
+            int closeBracketIndex = -1;
+            for (int i = 0; i < ctx.getChildCount(); i++) {
+                var child = ctx.getChild(i);
+                if (child instanceof org.antlr.v4.runtime.tree.TerminalNode) {
+                    var term = (org.antlr.v4.runtime.tree.TerminalNode) child;
+                    if (term.getText().equals("[")) {
+                        openBracketIndex = i;
+                    } else if (term.getText().equals("]")) {
+                        closeBracketIndex = i;
+                    }
+                }
+            }
+            if (openBracketIndex != -1 && closeBracketIndex != -1 && openBracketIndex < closeBracketIndex) {
+                // There is an array size expression between brackets
+                hasArrayBrackets = true;
+                // Find expr child between openBracketIndex and closeBracketIndex
+                for (int i = openBracketIndex + 1; i < closeBracketIndex; i++) {
+                    var child = ctx.getChild(i);
+                    if (child instanceof CymbolParser.ExprContext) {
+                        sizeExpr = (ExprNode) visit(child);
+                        break;
+                    }
+                }
+                // If no expr found between brackets, sizeExpr remains null (empty array size)
+                // Create array type
                 varType = TypeTable.createArrayType(varType);
-                // 更新TypeNode的维度信息
                 typeNode.setBaseType(varType);
                 typeNode.setDim(1);
             }
-
+            
             var symbol = new VariableSymbol(ctx.ID().getText(), varType);
             ExprNode assignNode = null;
 
@@ -141,7 +195,9 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
             var idExprNode = new IDExprNode(ctx.ID().getText(), ctx);
             idExprNode.setRefSymbol(symbol);
 
-            return new VarDeclNode(symbol, assignNode, idExprNode, ctx);
+            var varDeclNode = new VarDeclNode(symbol, assignNode, idExprNode, ctx);
+            varDeclNode.setArraySizeExpr(sizeExpr);
+            return varDeclNode;
         }
     }
 
@@ -299,9 +355,27 @@ public class CymbolASTBuilder extends CymbolBaseVisitor<ASTNode> implements Cymb
 
     @Override
     public ASTNode visitExprArrayAccess(CymbolParser.ExprArrayAccessContext ctx) {
+        // Check cache
+        if (astCache.containsKey(ctx)) {
+            System.out.println("[ASTBuilder] Returning cached ArrayAccessExprNode for ctx: " + System.identityHashCode(ctx));
+            return astCache.get(ctx);
+        }
+        
         ExprNode arrayExpr = (ExprNode) visit(ctx.expr(0));
         ExprNode indexExpr = (ExprNode) visit(ctx.expr(1));
-        return new ArrayAccessExprNode(arrayExpr, indexExpr, ctx);
+        System.out.println("[ASTBuilder] Creating ArrayAccessExprNode for arrayExpr: " + arrayExpr
+            + ", indexExpr: " + indexExpr
+            + ", ctx object: " + System.identityHashCode(ctx)
+            + ", ctx text: " + ctx.getText()
+            + ", parent: " + (ctx.parent != null ? ctx.parent.getClass().getSimpleName() : "null"));
+        if (arrayExpr instanceof IDExprNode idExprNode) {
+            System.out.println("[ASTBuilder] IDExprNode refSymbol: " + idExprNode.getRefSymbol()
+                + " (object: " + System.identityHashCode(idExprNode) + ")");
+        }
+        ArrayAccessExprNode node = new ArrayAccessExprNode(arrayExpr, indexExpr, ctx);
+        System.out.println("[ASTBuilder] Created ArrayAccessExprNode object: " + System.identityHashCode(node));
+        astCache.put(ctx, node);
+        return node;
     }
 
     @Override

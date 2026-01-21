@@ -215,6 +215,41 @@ public class Compiler {
     }
 
     /**
+     * 解析命令行参数，返回目标VM类型和源文件名
+     * 
+     * @param args 命令行参数
+     * @return Pair<targetType, fileName> 目标类型和源文件名
+     */
+    private static Pair<VMTargetType, String> parseCommandLineArgs(String[] args) {
+        VMTargetType targetType = VMTargetType.REGISTER_VM; // 默认使用寄存器VM
+        String fileName = null;
+        
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            if (arg.equals("--target") || arg.equals("-t")) {
+                if (i + 1 < args.length) {
+                    String targetArg = args[++i];
+                    try {
+                        targetType = VMTargetType.valueOf(targetArg.toUpperCase());
+                        logger.info("使用目标VM类型: {}", targetType);
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("无效的目标VM类型: '{}'，使用默认值: {}", targetArg, targetType);
+                    }
+                } else {
+                    logger.warn("--target 参数缺少值，使用默认值: {}", targetType);
+                }
+            } else if (!arg.startsWith("-")) {
+                // 第一个非选项参数作为文件名
+                if (fileName == null) {
+                    fileName = arg;
+                }
+            }
+        }
+        
+        return Pair.of(targetType, fileName);
+    }
+
+    /**
      * 编译器主函数，负责整个编译流程的执行
      * 
      * @param args 命令行参数，第一个参数为待编译的源文件路径
@@ -224,12 +259,15 @@ public class Compiler {
         // 首先检查ANTLR版本
         checkANTLRVersions();
         
-        String fileName = args.length > 0 ? args[0] : null;
+        // 解析命令行参数
+        Pair<VMTargetType, String> parsedArgs = parseCommandLineArgs(args);
+        VMTargetType targetType = parsedArgs.getLeft();
+        String fileName = parsedArgs.getRight();
+        
         InputStream is = System.in;
         if (fileName != null) {
             is = new FileInputStream(fileName);
         } else {
-
             is = Compiler.class.getClassLoader().getResourceAsStream("t.cymbol");
             if (is == null) {
                 fileName = "src/main/resources/t.cymbol";
@@ -257,11 +295,11 @@ public class Compiler {
         astRoot.accept(irBuilder);
 
         // 优化基本块
-        irBuilder.prog.optimizeBasicBlock();
+        irBuilder.getProg().optimizeBasicBlock();
 
         // 控制流图生成和优化处理
         Stream.of(
-                        StreamUtils.indexStream(irBuilder.prog.blockList.stream()
+                        StreamUtils.indexStream(irBuilder.getProg().blockList.stream()
                                         .map(irBuilder::getCFG))
                                 .peek(cfgPair -> {
                                     var cfg = cfgPair.getRight();
@@ -309,8 +347,7 @@ public class Compiler {
                                     return a;
                                 })
                 )
-.forEach(irNodeList -> {
-                    VMTargetType targetType = VMTargetType.STACK_VM;
+        .forEach(irNodeList -> {
                     logger.info("开始为 {} 生成字节码", targetType.getIdentifier());
                     logger.debug("IR节点数量: {}", irNodeList.size());
  

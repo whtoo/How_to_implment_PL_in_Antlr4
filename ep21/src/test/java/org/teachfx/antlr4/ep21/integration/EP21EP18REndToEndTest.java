@@ -8,8 +8,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.teachfx.antlr4.ep21.Compiler;
 import org.teachfx.antlr4.ep21.pass.codegen.EP18RRegisterAllocatorAdapter;
 import org.teachfx.antlr4.ep21.pass.codegen.IRegisterAllocator;
+import org.teachfx.antlr4.ep21.pass.codegen.LinearScanAllocator;
 import org.teachfx.antlr4.ep21.pass.codegen.VMTargetType;
-import org.teachfx.antlr4.ep18r.stackvm.codegen.LinearScanAllocator;
 import org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol;
 
 import java.io.IOException;
@@ -329,8 +329,7 @@ class EP21EP18REndToEndTest {
     }
 
     @Test
-    @DisplayName("TC-INT-07: Should compile array access with register allocator [PENDING]")
-    @org.junit.jupiter.api.Disabled("Array access code generation not yet fully supported")
+    @DisplayName("TC-INT-07: Should compile array access with register allocator")
     void testArrayAccessWithRegisterAllocator() throws IOException {
         compileSuccessfully(ARRAY_ACCESS, "array_access");
     }
@@ -404,31 +403,40 @@ class EP21EP18REndToEndTest {
     }
 
     @Test
-    @DisplayName("TC-ALLOC-02: Adapter should handle register allocation")
-    void testAdapterAllocation() {
+    @DisplayName("TC-ALLOC-01: Adapter should handle register allocation")
+    public void testAdapterAllocation() {
         IRegisterAllocator adapter = new EP18RRegisterAllocatorAdapter(new LinearScanAllocator());
+        
+        org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol var1 =
+            new org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol("x");
+        org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol var2 =
+            new org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol("y");
+        org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol var3 =
+            new org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol("z");
 
-        for (int i = 0; i < 10; i++) {
-            org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol var =
-                new org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol("var" + i);
-            adapter.allocateRegister(var);
-        }
+        int reg1 = adapter.allocateRegister(var1);
+        int reg2 = adapter.allocateRegister(var2);
+        int reg3 = adapter.allocateRegister(var3);
 
-        assertTrue(adapter.getAllocatedRegisterCount() > 0);
-        assertTrue(adapter.getAllocatedRegisterCount() <= 13, "Should not exceed available registers");
+        assertNotEquals(reg1, reg2);
+        assertNotEquals(reg2, reg3);
+        assertNotEquals(reg1, reg3);
+        assertEquals(3, adapter.getAllocatedRegisterCount());
     }
+
+
 
     @Test
     @DisplayName("TC-ALLOC-03: Adapter should reset correctly")
     void testAdapterReset() {
         IRegisterAllocator adapter = new EP18RRegisterAllocatorAdapter(new LinearScanAllocator());
-
+        
         org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol var1 =
             new org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol("x");
         adapter.allocateRegister(var1);
-
+        
         assertEquals(1, adapter.getAllocatedRegisterCount());
-
+        
         adapter.reset();
 
         assertEquals(0, adapter.getAllocatedRegisterCount());
@@ -438,20 +446,19 @@ class EP21EP18REndToEndTest {
     @DisplayName("TC-ALLOC-04: Adapter should handle overflow to stack")
     void testAdapterOverflow() {
         IRegisterAllocator adapter = new EP18RRegisterAllocatorAdapter(new LinearScanAllocator());
-
+        
         for (int i = 0; i < 20; i++) {
             org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol var =
                 new org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol("var" + i);
             int reg = adapter.allocateRegister(var);
             assertTrue(reg >= -1, "Register allocation should return valid ID or -1 for spill");
         }
-
+        
         assertTrue(adapter.getAllocatedRegisterCount() > 0);
     }
 
     @Test
-    @DisplayName("TC-INT-15: Should compile and run array access [PENDING]")
-    @org.junit.jupiter.api.Disabled("Array access code generation not yet fully supported")
+    @DisplayName("TC-INT-15: Should compile and run array access")
     void testArrayAccessEndToEnd() throws IOException {
         compileSuccessfully(ARRAY_ACCESS, "array_access");
     }

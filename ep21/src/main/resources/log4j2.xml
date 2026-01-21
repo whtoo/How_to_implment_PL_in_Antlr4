@@ -9,6 +9,12 @@
         </File>
     </Appenders>
     <Loggers>
+        <Logger name="org.teachfx.antlr4.ep21.pass.ir.CymbolIRBuilder" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.teachfx.antlr4.ep21.pass.ast.CymbolASTBuilder" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>

@@ -3,7 +3,9 @@ package org.teachfx.antlr4.ep21.pass.symtab;
 import org.teachfx.antlr4.ep21.ast.CompileUnit;
 import org.teachfx.antlr4.ep21.ast.decl.FuncDeclNode;
 import org.teachfx.antlr4.ep21.ast.decl.VarDeclNode;
+import org.teachfx.antlr4.ep21.ast.expr.ArrayAccessExprNode;
 import org.teachfx.antlr4.ep21.ast.expr.CallFuncNode;
+import org.teachfx.antlr4.ep21.ast.expr.ExprNode;
 import org.teachfx.antlr4.ep21.ast.expr.IDExprNode;
 import org.teachfx.antlr4.ep21.ast.stmt.*;
 import org.teachfx.antlr4.ep21.pass.ast.ASTBaseVisitor;
@@ -39,21 +41,58 @@ public class LocalDefine extends ASTBaseVisitor {
     // visit IDExprNode
     @Override
     public Void visit(IDExprNode idExprNode) {
+        System.out.println("[LocalDefine] Visiting IDExprNode: " + idExprNode.getImage()
+            + " (object: " + System.identityHashCode(idExprNode) + ")"
+            + ", currentScope: " + currentScope);
         Symbol symbol = currentScope.resolve(idExprNode.getImage());
+        System.out.println("[LocalDefine] Resolving symbol: " + idExprNode.getImage()
+            + ", found: " + (symbol != null ? symbol.getClass().getSimpleName() : "null"));
         if (Objects.nonNull(symbol)) {
             idExprNode.setRefSymbol(symbol);
+            System.out.println("[LocalDefine] Set refSymbol for " + idExprNode.getImage()
+                + ": " + symbol);
         } else {
-            System.out.println("Undefined symbol: " + idExprNode.getImage());
+            System.out.println("[LocalDefine] Undefined symbol: " + idExprNode.getImage());
+            // Print scope hierarchy
+            Scope scope = currentScope;
+            int depth = 0;
+            while (scope != null) {
+                System.out.println("[LocalDefine]   Scope depth " + depth + ": " + scope);
+                scope = scope.getEnclosingScope();
+                depth++;
+            }
         }
         return null;
     }
 
     @Override
     public Void visit(VarDeclNode varDeclNode) {
+        System.out.println("[LocalDefine] Visiting VarDeclNode: " + varDeclNode.getDeclName()
+            + " (object: " + System.identityHashCode(varDeclNode) + ")"
+            + ", refSymbol: " + varDeclNode.getRefSymbol()
+            + ", assignExprNode: " + (varDeclNode.getAssignExprNode() != null ?
+                varDeclNode.getAssignExprNode() + " (object: " + System.identityHashCode(varDeclNode.getAssignExprNode()) + ")" : "null")
+            + ", idExprNode: " + varDeclNode.getIdExprNode() + " (object: " + System.identityHashCode(varDeclNode.getIdExprNode()) + ")");
         super.visit(varDeclNode);
         currentScope.define(varDeclNode.getRefSymbol());
+        System.out.println("[LocalDefine] Defined symbol: " + varDeclNode.getRefSymbol());
 
         return null;
+    }
+
+    @Override
+    public Void visit(ArrayAccessExprNode arrayAccessExprNode) {
+        System.out.println("[LocalDefine] Visiting ArrayAccessExprNode: " + arrayAccessExprNode
+            + " (object: " + System.identityHashCode(arrayAccessExprNode) + ")");
+        ExprNode arrayExpr = arrayAccessExprNode.getArray();
+        System.out.println("[LocalDefine] Array access array expression: " + arrayExpr
+            + " (object: " + System.identityHashCode(arrayExpr) + ")");
+        if (arrayExpr instanceof IDExprNode idExprNode) {
+            System.out.println("[LocalDefine] Array expression is IDExprNode: " + idExprNode.getImage()
+                + " (object: " + System.identityHashCode(idExprNode) + ")"
+                + ", refSymbol before: " + idExprNode.getRefSymbol());
+        }
+        return super.visit(arrayAccessExprNode);
     }
 
     @Override

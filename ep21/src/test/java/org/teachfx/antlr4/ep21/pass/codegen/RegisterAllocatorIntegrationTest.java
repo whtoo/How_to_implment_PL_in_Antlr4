@@ -1,7 +1,7 @@
 package org.teachfx.antlr4.ep21.pass.codegen;
 
 import org.junit.jupiter.api.Test;
-import org.teachfx.antlr4.ep18r.stackvm.codegen.LinearScanAllocator;
+import org.teachfx.antlr4.ep21.pass.codegen.LinearScanAllocator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RegisterAllocatorIntegrationTest {

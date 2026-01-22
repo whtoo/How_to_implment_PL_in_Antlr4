@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.teachfx.antlr4.ep18r.stackvm.codegen.LinearScanAllocator;
+import org.teachfx.antlr4.ep21.pass.codegen.LinearScanAllocator;
 import org.teachfx.antlr4.ep21.symtab.symbol.VariableSymbol;
 
 class EP18RRegisterAllocatorAdapterTest {

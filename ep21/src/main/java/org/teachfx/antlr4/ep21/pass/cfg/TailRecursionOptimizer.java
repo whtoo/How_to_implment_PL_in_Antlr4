@@ -48,7 +48,6 @@ public class TailRecursionOptimizer implements IFlowOptimizer<IRNode> {
 
     @Override
     public void onHandle(CFG<IRNode> cfg) {
-        System.out.println("[TailRecursionOptimizer] 开始尾递归优化...");
         logger.info("开始尾递归优化...");
 
         // 重置统计信息
@@ -67,7 +66,6 @@ public class TailRecursionOptimizer implements IFlowOptimizer<IRNode> {
 
         logger.info("尾递归优化完成: 优化了 {} 个函数, 检测到 {} 个尾调用",
                     functionsOptimized, tailCallsDetected);
-        System.out.println("[TailRecursionOptimizer] 优化完成: 优化了 " + functionsOptimized + " 个函数");
     }
 
     /**
@@ -102,7 +100,6 @@ public class TailRecursionOptimizer implements IFlowOptimizer<IRNode> {
         // 策略1: 检测Fibonacci模式
         if (isFibonacciPattern()) {
             logger.info("检测到Fibonacci模式: {}", currentFunctionName);
-            System.out.println("[TailRecursionOptimizer] 检测到Fibonacci模式: " + currentFunctionName);
 
             // Path B: 标记函数，实际转换由代码生成器完成
             // RegisterVMGenerator.TROHelper.generateFibonacciIterative()
@@ -163,8 +160,7 @@ public class TailRecursionOptimizer implements IFlowOptimizer<IRNode> {
         }
 
         boolean isFib = recursiveCallCount == 2;
-        System.out.println("[TailRecursionOptimizer] 函数 " + currentFunctionName +
-                          " 递归调用计数: " + recursiveCallCount + ", Fibonacci模式: " + isFib);
+        logger.debug("函数 {} 递归调用计数: {}, Fibonacci模式: {}", currentFunctionName, recursiveCallCount, isFib);
         return isFib;
     }
 

@@ -718,15 +718,9 @@ public class RegisterVMGenerator implements ICodeGenerator {
             
             // 存储结果到resultSlot（如果需要）
             if (resultSlot instanceof FrameSlot resultFrameSlot) {
-                // 需要将值从寄存器存储到帧槽位
-                int resultReg = baseReg; // 结果已经在baseReg中
-                // 分配新寄存器来加载地址？
-                // 简化：假设resultSlot是FrameSlot，需要store指令
-                // 但EP18R使用sw指令存储到内存地址，需要计算帧槽位地址
-                // 这比较复杂，暂时先标记为不支持
-                errors.add("TODO: Store to FrameSlot result not yet implemented for LIRArrayLoad");
-                freeTemp(resultReg);
-                return null;
+                // 将值从baseReg寄存器存储到帧槽位
+                int offset = resultFrameSlot.getSlotIdx() * 4;
+                emitInstruction("sw r" + baseReg + ", fp, " + offset);
             } else if (resultSlot instanceof OperandSlot) {
                 // OperandSlot结果留在寄存器baseReg中，调用者负责处理
                 // 不需要额外操作

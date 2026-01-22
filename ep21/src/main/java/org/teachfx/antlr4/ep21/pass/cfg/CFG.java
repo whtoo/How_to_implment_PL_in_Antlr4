@@ -26,26 +26,23 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
     private final List<IFlowOptimizer<I>> optimizers = new ArrayList<>();
 
     public CFG(List<BasicBlock<I>> nodes, List<Triple<Integer, Integer,Integer>> edges) {
-        // 日志验证：检查nodes列表状态
-        System.out.println("DEBUG CFG: Constructor called with " + nodes.size() + " nodes and " + edges.size() + " edges");
-        
         // Generate init
         if (nodes.isEmpty()) {
-            System.out.println("DEBUG CFG: Empty nodes list - handling gracefully");
+            logger.debug("Empty nodes list - handling gracefully");
             this.nodes = nodes;
             this.edges = edges;
             this.links = new ArrayList<>();
             return;
         }
-        
+
         // 计算最大索引，确保数组大小足够容纳所有节点
         int maxNodeId = nodes.stream().mapToInt(BasicBlock::getId).max().orElse(0);
         int maxEdgeFrom = edges.stream().mapToInt(Triple::getLeft).max().orElse(0);
         int maxEdgeTo = edges.stream().mapToInt(Triple::getMiddle).max().orElse(0);
         int maxOrd = Math.max(Math.max(maxNodeId, maxEdgeFrom), maxEdgeTo) + 1;
-        
-        System.out.println("DEBUG CFG: maxNodeId=" + maxNodeId + ", maxEdgeFrom=" + maxEdgeFrom +
-                          ", maxEdgeTo=" + maxEdgeTo + ", maxOrd=" + maxOrd);
+
+        logger.debug("CFG initialized: {} nodes, maxNodeId={}, maxOrd={}",
+                    nodes.size(), maxNodeId, maxOrd);
         this.nodes = nodes;
         
         // 重复边检测和去重逻辑 - 基于节点对（源节点->目标节点）去重
@@ -82,12 +79,11 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
         for (var edge : deduplicatedEdges) {
             var u = edge.getLeft();
             var v = edge.getMiddle();
-            System.out.println("DEBUG CFG: Processing edge from " + u + " to " + v);
             if (u < links.size() && v < links.size()) {
                 links.get(u).getRight().add(v);
                 links.get(v).getLeft().add(u);
             } else {
-                System.out.println("DEBUG CFG: Edge indices out of bounds - u=" + u + ", v=" + v + ", links.size=" + links.size());
+                logger.warn("Edge indices out of bounds - u={}, v={}, links.size={}", u, v, links.size());
             }
         }
     }
@@ -179,6 +175,29 @@ public class CFG<I extends IRNode> implements Iterable<BasicBlock<I>> {
     // 这个方法是用来获取节点的出度的，出度就是该节点的后继节点的数量。
     public int getOutDegree(int id) {
         return links.get(id).getRight().size();
+    }
+
+    /**
+     * 获取CFG的链接关系列表（前驱/后继映射）
+     * 
+     * <p>返回的列表中，每个位置的索引对应节点ID，
+     * 值是对应的Pair，前驱集合在left，后继集合在right。</p>
+     * 
+     * @return 链接关系列表（不可修改视图）
+     */
+    public List<Pair<Set<Integer>, Set<Integer>>> getLinks() {
+        return Collections.unmodifiableList(links);
+    }
+
+    /**
+     * 确保指定节点ID的链接条目存在
+     * 
+     * @param id 节点ID
+     */
+    public void ensureLinkExists(int id) {
+        while (links.size() <= id) {
+            links.add(org.apache.commons.lang3.tuple.Pair.of(new TreeSet<>(), new TreeSet<>()));
+        }
     }
 
     @NotNull

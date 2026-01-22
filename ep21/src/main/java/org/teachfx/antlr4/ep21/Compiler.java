@@ -18,6 +18,9 @@ import org.teachfx.antlr4.ep21.pass.cfg.ControlFlowAnalysis;
 import org.teachfx.antlr4.ep21.pass.cfg.LivenessAnalysis;
 import org.teachfx.antlr4.ep21.analysis.dataflow.ReachingDefinitionAnalysis;
 import org.teachfx.antlr4.ep21.pass.cfg.TailRecursionOptimizer;
+import org.teachfx.antlr4.ep21.pass.cfg.EnhancedTailRecursionOptimizer;
+import org.teachfx.antlr4.ep21.pass.cfg.AccumulatorTransformer;
+import org.teachfx.antlr4.ep21.pass.cfg.StackSimulator;
 import org.teachfx.antlr4.ep21.pass.cfg.LoopInvariantCodeMotionOptimizer;
 import org.teachfx.antlr4.ep21.pass.cfg.LoopUnrollingOptimizer;
 import org.teachfx.antlr4.ep21.pass.cfg.StrengthReductionOptimizer;
@@ -313,26 +316,32 @@ public class Compiler {
                                     // 应用控制流优化
                                     cfg.addOptimizer(new ControlFlowAnalysis<>());
                                     // 应用尾递归优化
-                                    System.out.println("添加TailRecursionOptimizer到CFG...");
+                                    logger.info("添加TailRecursionOptimizer到CFG...");
                                     cfg.addOptimizer(new TailRecursionOptimizer());
+                                    // 应用增强尾递归优化
+                                    logger.info("添加EnhancedTailRecursionOptimizer到CFG...");
+                                    cfg.addOptimizer(new EnhancedTailRecursionOptimizer());
+                                    // 应用累加器变换
+                                    logger.info("添加AccumulatorTransformer到CFG...");
+                                    cfg.addOptimizer(new AccumulatorTransformer());
                                     // 应用循环不变代码外提
-                                    System.out.println("添加LoopInvariantCodeMotionOptimizer到CFG...");
+                                    logger.info("添加LoopInvariantCodeMotionOptimizer到CFG...");
                                     cfg.addOptimizer(new LoopInvariantCodeMotionOptimizer());
                                     // 应用循环展开优化
-                                    System.out.println("添加LoopUnrollingOptimizer到CFG...");
+                                    logger.info("添加LoopUnrollingOptimizer到CFG...");
                                     cfg.addOptimizer(new LoopUnrollingOptimizer());
                                     // 应用强度削减优化
-                                    System.out.println("添加StrengthReductionOptimizer到CFG...");
+                                    logger.info("添加StrengthReductionOptimizer到CFG...");
                                     cfg.addOptimizer(new StrengthReductionOptimizer());
 
                                     // 执行到达定义分析
-                                    System.out.println("执行到达定义分析...");
+                                    logger.info("执行到达定义分析...");
                                     ReachingDefinitionAnalysis reachingAnalysis =
                                         new ReachingDefinitionAnalysis(cfg);
                                     reachingAnalysis.analyzeWithWorklist();
 
                                     // 应用优化器
-                                    System.out.println("应用优化器...");
+                                    logger.info("应用优化器...");
                                     cfg.applyOptimizers();
 
                                     // 保存优化后的控制流图

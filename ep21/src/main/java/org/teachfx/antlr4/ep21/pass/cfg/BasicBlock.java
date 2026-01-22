@@ -156,13 +156,22 @@ public class BasicBlock<I extends IRNode> implements Comparable<BasicBlock<I>>, 
     }
 
     /**
-     * Gets the label of the basic block.
+     * Returns the label of the basic block.
      * 
      * @return the label (never null)
      */
     @NotNull
     public Label getLabel() {
         return label;
+    }
+
+    /**
+     * Sets the label of the basic block.
+     * 
+     * @param label the new label (must not be null)
+     */
+    public void setLabel(@NotNull Label label) {
+        this.label = Objects.requireNonNull(label, "label cannot be null");
     }
 
     /**

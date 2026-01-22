@@ -336,7 +336,7 @@ class EP21EP18REndToEndTest {
 
     @Test
     @DisplayName("TC-INT-08: Should compile global variables with register allocator [PENDING]")
-    @org.junit.jupiter.api.Disabled("Global variable code generation not yet fully supported")
+    @org.junit.jupiter.api.Disabled("Global variable code generation not yet fully supported - type system issue")
     void testGlobalVariablesWithRegisterAllocator() throws IOException {
         compileSuccessfully(GLOBAL_VARIABLES, "global_variables");
     }
@@ -462,8 +462,8 @@ class EP21EP18REndToEndTest {
     }
 
     @Test
-    @DisplayName("TC-INT-16: Should compile and run global variables [PENDING]")
-    @org.junit.jupiter.api.Disabled("Global variable code generation not yet fully supported")
+    @DisplayName("TC-INT-16: Should compile global variables [PENDING]")
+    @org.junit.jupiter.api.Disabled("Global variable code generation not yet fully supported - type system issue")
     void testGlobalVariablesEndToEnd() throws IOException {
         compileSuccessfully(GLOBAL_VARIABLES, "global_variables");
     }

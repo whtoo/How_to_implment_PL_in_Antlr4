@@ -354,15 +354,13 @@ class EP21EP18REndToEndTest {
     }
 
     @Test
-    @DisplayName("TC-INT-11: Should compile dead code elimination with register allocator [PENDING]")
-    @org.junit.jupiter.api.Disabled("Dead code elimination optimization not yet implemented")
+    @DisplayName("TC-INT-11: Should compile dead code elimination with register allocator")
     void testDeadCodeWithRegisterAllocator() throws IOException {
         compileSuccessfully(DEAD_CODE, "dead_code");
     }
 
     @Test
-    @DisplayName("TC-INT-12: Should compile constant folding with register allocator [PENDING]")
-    @org.junit.jupiter.api.Disabled("Constant folding optimization not yet implemented")
+    @DisplayName("TC-INT-12: Should compile constant folding with register allocator")
     void testConstantFoldingWithRegisterAllocator() throws IOException {
         compileSuccessfully(CONSTANT_FOLDING, "constant_folding");
     }
@@ -478,15 +476,13 @@ class EP21EP18REndToEndTest {
     }
 
     @Test
-    @DisplayName("TC-INT-18: Should compile dead code elimination [PENDING]")
-    @org.junit.jupiter.api.Disabled("Dead code elimination optimization not yet implemented")
+    @DisplayName("TC-INT-18: Should compile dead code elimination")
     void testDeadCodeEndToEnd() throws IOException {
         compileSuccessfully(DEAD_CODE, "dead_code");
     }
 
     @Test
-    @DisplayName("TC-INT-19: Should compile constant folding [PENDING]")
-    @org.junit.jupiter.api.Disabled("Constant folding optimization not yet implemented")
+    @DisplayName("TC-INT-19: Should compile constant folding")
     void testConstantFoldingEndToEnd() throws IOException {
         compileSuccessfully(CONSTANT_FOLDING, "constant_folding");
     }

@@ -1,0 +1,23 @@
+// EP05 Sample: nested scopes
+int g = 1;
+
+int add(int a, int b) {
+    int sum = a + b;
+    return sum;
+}
+
+float compute(float x) {
+    float y = x * 2.0;
+    if (y > 10.0) {
+        int temp = 5;
+        y = y + temp;
+    }
+    return y;
+}
+
+void main() {
+    int a = 10;
+    int b = 20;
+    int c = add(a, b);
+    float result = compute(3.14);
+}

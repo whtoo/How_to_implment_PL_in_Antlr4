@@ -1,0 +1,12 @@
+// EP03 sample — nested expressions demonstrating precedence
+// Watch how the parse tree groups these!
+3 + 4 * 5;
+// MulDiv (4*5) is a child of AddSub — * binds tighter than +
+x = 10;
+y = x + 7;
+// Nested expressions
+x + y * 2;
+// Parentheses override precedence
+(1 + 2) * (3 + 4);
+// Deep nesting
+a = (b + c) * (d - e) / (f + g);

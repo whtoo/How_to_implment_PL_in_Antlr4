@@ -1,0 +1,21 @@
+// EP06 Sample: Type checking — catching bugs
+int g = 1;
+
+int add(int a, int b) {
+    int sum = a + b;
+    return sum;
+}
+
+float compute(float x) {
+    float y = x * 2.0;
+    int bad = x + 1;
+    return y;
+}
+
+void main() {
+    int a = 10;
+    int b = 20;
+    int c = add(a, b);
+    float result = compute(3.14);
+    int bad_assign = 3.14;
+}

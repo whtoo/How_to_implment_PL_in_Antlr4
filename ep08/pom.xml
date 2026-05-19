@@ -1,0 +1,52 @@
+<!-- EP08 POM - Hello, Compiler -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.teachfx</groupId>
+        <artifactId>antlr4-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>ep08</artifactId>
+    <version>1.0.0</version>
+    <name>EP08 - IR: Three-Address Code</name>
+    <description>Intermediate Representation — generating Three-Address Code (TAC) from AST.</description>
+
+    <properties>
+        <parser.g4.dir>src/main/java/org/teachfx/antlr4/ep08/parser</parser.g4.dir>
+        <run.main.entry>org.teachfx.antlr4.ep08.Compiler</run.main.entry>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>${antlr4.version}</version>
+                <executions>
+                    <execution>
+                        <goals><goal>antlr4</goal></goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <visitor>true</visitor>
+                    <outputDirectory>${basedir}/target/generated-sources/antlr4</outputDirectory>
+                    <libDirectory>${basedir}/src/main/antlr4</libDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <targetPath>${project.build.directory}/classes</targetPath>
+                <includes>
+                    <include>**/*.cymbol</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+</project>

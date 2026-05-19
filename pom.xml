@@ -16,7 +16,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <parser.g4.file></parser.g4.file>
         <antlr4.version>4.13.2</antlr4.version>
-        <run.main.entry>org.teachfx.antlr4.ep20.Compiler</run.main.entry>
+        <run.main.entry>org.teachfx.antlr4.ep15.Compiler</run.main.entry>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.release>21</maven.compiler.release>
@@ -196,28 +196,26 @@
     </build>
 
     <modules>
-        <!-- <module>ep1</module>
-        <module>ep2</module>
-        <module>ep3</module>
-        <module>ep4</module>
-        <module>ep5</module>
-        <module>ep6</module>
-        <module>ep7</module>
-        <module>ep8</module>
-        <module>ep9</module>
+        <!-- Phase 0: Motivation -->
+        <module>ep01</module>
+        <!-- Phase 1: Parsing -->
+        <module>ep02</module>
+        <module>ep03</module>
+        <module>ep04</module>
+        <!-- Phase 2: Meaning -->
+        <module>ep05</module>
+        <module>ep06</module>
+        <module>ep07</module>
+        <!-- Phase 3: IR & Flow -->
+        <module>ep08</module>
+        <module>ep09</module>
+        <!-- Phase 4: Execution -->
         <module>ep10</module>
         <module>ep11</module>
-        <module>ep12</module> -->
-        <!-- <module>ep13</module>
+        <module>ep12</module>
+        <!-- Phase 5: Optimization -->
+        <module>ep13</module>
         <module>ep14</module>
         <module>ep15</module>
-        <module>ep16</module> -->
-        <module>ep17</module>
-        <module>ep18</module>
-        <module>ep18r</module>
-        <module>ep19</module>
-        <module>ep20</module>
-        <!-- 添加其他子模块的名称 -->
-        <module>ep21</module>
     </modules>
 </project>

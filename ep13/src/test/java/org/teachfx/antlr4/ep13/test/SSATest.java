@@ -102,4 +102,94 @@ public class SSATest {
         cfg.addEdge(2, 3);
         return cfg;
     }
+
+    @Test
+    void testDominationSelfDominates() {
+        var cfg = buildIfElseCFG();
+        var dom = new DominatorAnalysis(cfg);
+        dom.analyze();
+
+        // Every block dominates itself
+        assertTrue(dom.dominates(0, 0));
+        assertTrue(dom.dominates(1, 1));
+        assertTrue(dom.dominates(2, 2));
+        assertTrue(dom.dominates(3, 3));
+    }
+
+    @Test
+    void testImmediateDominatorForIfElse() {
+        var cfg = buildIfElseCFG();
+        var dom = new DominatorAnalysis(cfg);
+        dom.analyze();
+
+        // idom of B1 (then) and B2 (else) should be B0 (entry)
+        assertEquals(0, dom.getImmediateDominators().get(1));
+        assertEquals(0, dom.getImmediateDominators().get(2));
+    }
+
+    @Test
+    void testSSATransformPreservesBlockCount() {
+        var cfg = buildIfElseCFG();
+        var dom = new DominatorAnalysis(cfg);
+        dom.analyze();
+        var ssa = new SSATransformer(cfg, dom);
+        ssa.transform();
+
+        var ssaInstrs = ssa.getSSAInstructions();
+        assertEquals(4, ssaInstrs.size(), "SSA should preserve block count");
+    }
+
+    @Test
+    void testStraightLineCFGNoPhi() {
+        var cfg = new SimpleCFG();
+        cfg.addBlock(0, "entry").add("x = 1").add("y = 2").add("z = x + y").add("return z");
+        // single block, no edges needed
+
+        var dom = new DominatorAnalysis(cfg);
+        dom.analyze();
+        var ssa = new SSATransformer(cfg, dom);
+        ssa.transform();
+
+        // Straight-line code should have no phi nodes
+        var phis = ssa.getPhiFunctions();
+        assertTrue(phis.isEmpty() || !phis.containsKey(0),
+            "Straight-line CFG should have no phi nodes");
+    }
+
+    @Test
+    void testDominatorTreeOnIfElse() {
+        var cfg = buildIfElseCFG();
+        var dom = new DominatorAnalysis(cfg);
+        dom.analyze();
+
+        // B0 (entry) dominates B3 (merge)
+        assertTrue(dom.dominates(0, 3));
+        // B1 (then) does NOT dominate B3 (merge)
+        assertFalse(dom.dominates(1, 3));
+    }
+
+    @Test
+    void testDominanceFrontierForSingleBlock() {
+        var cfg = new SimpleCFG();
+        cfg.addBlock(0, "entry").add("x = 1").add("return x");
+
+        var dom = new DominatorAnalysis(cfg);
+        dom.analyze();
+
+        assertNotNull(dom.getDominanceFrontier(0));
+    }
+
+    @Test
+    void testDiamondCFGSsaPhiInMerge() {
+        // Diamond if-else: a define in both branches → phi in merge
+        var cfg = buildIfElseCFG();
+        var dom = new DominatorAnalysis(cfg);
+        dom.analyze();
+        var ssa = new SSATransformer(cfg, dom);
+        ssa.transform();
+
+        var phis = ssa.getPhiFunctions();
+        // Merge block should have phi for x (defined in both branches)
+        assertTrue(phis.containsKey(3), "Merge block (B3) should have phi");
+    }
 }

@@ -70,4 +70,47 @@ class Ep06TypeTest {
         assertEquals("int", func.getTypeName());
         assertEquals("add", func.getScopeName());
     }
+
+    @Test
+    void typeToString() {
+        assertEquals("int", TypeTable.INT.toString());
+        assertEquals("float", TypeTable.FLOAT.toString());
+        assertEquals("bool", TypeTable.BOOL.toString());
+    }
+
+    @Test
+    void builtInTypeConstructor() {
+        BuiltInType t = new BuiltInType("int");
+        assertEquals("int", t.getName());
+        assertTrue(t.isPrimitive());
+    }
+
+    @Test
+    void builtInTypeEqualityByName() {
+        BuiltInType a = new BuiltInType("int");
+        BuiltInType b = new BuiltInType("int");
+        BuiltInType c = new BuiltInType("float");
+        assertEquals(a, b);
+        assertNotEquals(a, c);
+    }
+
+    @Test
+    void symbolKindValues() {
+        assertEquals("VARIABLE", Symbol.Kind.VARIABLE.name());
+        assertEquals("PARAMETER", Symbol.Kind.PARAMETER.name());
+        assertEquals("FUNCTION", Symbol.Kind.FUNCTION.name());
+    }
+
+    @Test
+    void functionSymbolEnclosingScope() {
+        SymbolTable global = new SymbolTable("global", null);
+        FunctionSymbol func = new FunctionSymbol("f", "void", "global", 1, global);
+        assertEquals(global, func.getEnclosingScope());
+    }
+
+    @Test
+    void voidTypeIsPrimitive() {
+        Type voidType = new BuiltInType("void");
+        assertTrue(voidType.isPrimitive());
+    }
 }

@@ -54,4 +54,86 @@ public class GCTest {
         ReferenceCountingGC gc = new ReferenceCountingGC(64);
         assertThrows(OutOfMemoryError.class, () -> gc.allocate(128), "Should throw when requesting more than available");
     }
+
+    @Test
+    void testCollectAfterMultipleAllocations() {
+        ReferenceCountingGC gc = new ReferenceCountingGC(1024);
+        int a = gc.allocate(100);
+        int b = gc.allocate(200);
+        int c = gc.allocate(300);
+
+        gc.decrementRef(a);
+        gc.decrementRef(b);
+        gc.collect();
+
+        assertFalse(gc.isObjectAlive(a));
+        assertFalse(gc.isObjectAlive(b));
+        assertTrue(gc.isObjectAlive(c));
+    }
+
+    @Test
+    void testIncrementRefOnMultipleObjects() {
+        ReferenceCountingGC gc = new ReferenceCountingGC(1024);
+        int a = gc.allocate(100);
+        int b = gc.allocate(100);
+
+        gc.incrementRef(a);
+        gc.incrementRef(a);
+        gc.incrementRef(b);
+
+        gc.decrementRef(a);
+        assertTrue(gc.isObjectAlive(a)); // refcount still > 0
+
+        gc.decrementRef(a);
+        gc.decrementRef(a); // should free a
+
+        assertFalse(gc.isObjectAlive(a));
+        assertTrue(gc.isObjectAlive(b)); // still has refcount = 2
+    }
+
+    @Test
+    void testAllocateNegativeSizeThrows() {
+        ReferenceCountingGC gc = new ReferenceCountingGC(1024);
+        assertThrows(IllegalArgumentException.class, () -> gc.allocate(-1));
+        assertThrows(IllegalArgumentException.class, () -> gc.allocate(0));
+    }
+
+    @Test
+    void testNegativeHeapSizeThrows() {
+        assertThrows(IllegalArgumentException.class, () -> new ReferenceCountingGC(-1));
+        assertThrows(IllegalArgumentException.class, () -> new ReferenceCountingGC(0));
+    }
+
+    @Test
+    void testStatsTracksCollection() {
+        ReferenceCountingGC gc = new ReferenceCountingGC(1024);
+        int addr = gc.allocate(100);
+        gc.decrementRef(addr);
+        gc.collect();
+
+        GCStats stats = gc.getStats();
+        assertNotNull(stats);
+    }
+
+    @Test
+    void testManySmallAllocations() {
+        ReferenceCountingGC gc = new ReferenceCountingGC(1024);
+        for (int i = 0; i < 10; i++) {
+            int addr = gc.allocate(50);
+            assertTrue(addr >= 0);
+        }
+    }
+
+    @Test
+    void testFreeMemoryReuse() {
+        ReferenceCountingGC gc = new ReferenceCountingGC(512);
+        int a = gc.allocate(200);
+        gc.decrementRef(a);
+        gc.collect();
+
+        // A new allocation should be able to reuse freed space
+        int b = gc.allocate(200);
+        assertTrue(b >= 0);
+        assertTrue(gc.isObjectAlive(b));
+    }
 }

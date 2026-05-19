@@ -69,4 +69,59 @@ public class OptimizerTest {
 
         assertTrue(step4.size() <= 2, "Pipeline should reduce to ~1-2 instructions");
     }
+
+    @Test
+    void testDCEKeepsReturnValue() throws Exception {
+        Method dce = Compiler.class.getDeclaredMethod("dce", List.class);
+        dce.setAccessible(true);
+        var prog = List.of("x = 10", "return x");
+        @SuppressWarnings("unchecked")
+        var result = (List<String>) dce.invoke(null, prog);
+        assertEquals(2, result.size(), "Should keep x since it's used in return");
+    }
+
+    @Test
+    void testDCERemovesMultipleDeadVars() throws Exception {
+        Method dce = Compiler.class.getDeclaredMethod("dce", List.class);
+        dce.setAccessible(true);
+        var prog = List.of("a = 1", "b = 2", "c = 3", "d = 4", "return c");
+        @SuppressWarnings("unchecked")
+        var result = (List<String>) dce.invoke(null, prog);
+        assertEquals(2, result.size(), "Should keep only c and return");
+    }
+
+    @Test
+    void testConstantPropSimpleFold() throws Exception {
+        Method cp = Compiler.class.getDeclaredMethod("constantProp", List.class);
+        cp.setAccessible(true);
+        var prog = List.of("a = 5", "b = a + a", "return b");
+        @SuppressWarnings("unchecked")
+        var result = (List<String>) cp.invoke(null, prog);
+        assertTrue(result.get(1).contains("10"), "a+a should fold to 10 when a=5");
+    }
+
+    @Test
+    void testCSEWithMultipleCommonSubexpressions() throws Exception {
+        Method cse = Compiler.class.getDeclaredMethod("cse", List.class);
+        cse.setAccessible(true);
+        var prog = List.of("t1 = a + b", "t2 = a + b", "t3 = c * d", "t4 = c * d", "return t1");
+        @SuppressWarnings("unchecked")
+        var result = (List<String>) cse.invoke(null, prog);
+        // Should have CSE markings for both duplicates
+        long cseCount = result.stream().filter(s -> s.contains("CSE")).count();
+        assertTrue(cseCount >= 2, "Should have at least 2 CSE eliminations");
+    }
+
+    @Test
+    void testCopyPropagationChain() throws Exception {
+        Method copyProp = Compiler.class.getDeclaredMethod("copyProp", List.class);
+        copyProp.setAccessible(true);
+        var prog = List.of("a = b", "c = a", "d = c", "return d");
+        @SuppressWarnings("unchecked")
+        var result = (List<String>) copyProp.invoke(null, prog);
+        // Copy propagation replaces c with a in "d = c" → "d = a"
+        String assignD = result.get(2);
+        assertTrue(assignD.contains("a") || assignD.contains("d = a"),
+            "d should be assigned from a after copy propagation: " + assignD);
+    }
 }

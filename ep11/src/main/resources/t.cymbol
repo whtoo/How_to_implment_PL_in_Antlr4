@@ -1,0 +1,23 @@
+// EP11 Test: Functions calling each other
+// Demonstrates full pipeline: parse -> IR -> bytecode -> VM execution
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int mul(int a, int b) {
+    return a * b;
+}
+
+// Calls add() and mul()
+int combine(int x, int y) {
+    int s = add(x, y);
+    int p = mul(x, y);
+    return s + p;
+}
+
+// Calls combine() which calls add() and mul()
+int main() {
+    int result = combine(3, 4);
+    return result;
+}

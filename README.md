@@ -4,86 +4,137 @@ A progressive, hands-on guide to building a complete compiler from scratch using
 
 ## 📖 Overview
 
-This educational project teaches compiler construction through **21 progressive episodes (EPs)**, each building upon the previous. Starting with basic parsing and advancing to sophisticated optimizations, you'll build a complete compiler for the **Cymbol** programming language.
+This educational project teaches compiler construction through **progressive episodes (EPs)**, each building upon the previous. Starting with basic parsing and advancing to code generation, you'll build a complete compiler for the **Cymbol** programming language.
 
 ### What You'll Build
 
-- A full-featured compiler pipeline: **lexing → parsing → AST → type checking → IR generation → optimization → code generation**
-- A virtual machine (VM) with garbage collection for executing compiled programs
-- Advanced compiler optimizations: SSA, dataflow analysis, tail recursion optimization
-- Tools for analysis: call graphs, control flow graphs, symbol tables
+- A full-featured compiler pipeline: **lexing → parsing → AST → type checking → IR generation → code generation**
+- A virtual machine (VM) for executing compiled programs
+- Tools for analysis: symbol tables, control flow graphs, intermediate representations
 
 ## 🎯 Learning Path
 
-### Phase 1: Foundations (EP1-EP12)
-**Goal**: Learn ANTLR4 basics and build an interpreter
+### Phase 0: Hello, Compiler (EP01)
+**Goal**: Get started with ANTLR4 and see a working compiler
 
 | EP | Topic | Key Concepts |
 |----|-------|--------------|
-| EP1-EP2 | Basic Parsing | Lexical analysis, grammar definition, parsing basics |
-| EP3-EP4 | Expression Evaluation | Arithmetic operations, operator precedence |
-| EP5-EP6 | Statements | Control flow (if/else, while), block statements |
-| EP7-EP8 | Functions | Function definition, parameters, return values |
-| EP9-EP10 | Symbol Tables | Scoping, variable declarations, name resolution |
-| EP11-EP12 | Arrays & More | Array operations, advanced language features |
+| EP01 | Hello, Compiler | Grammar definition, parsing basics, expression evaluation |
 
-**Outcome**: A working interpreter that executes Cymbol programs directly.
-
-### Phase 2: Compilation Basics (EP13-EP16)
-**Goal**: Transform interpretation into compilation
+### Phase 1: Parsing (EP02–EP04)
+**Goal**: Understand how source code becomes structured data
 
 | EP | Topic | Key Concepts |
 |----|-------|--------------|
-| EP13 | AST Construction | Abstract syntax trees, visitor pattern |
-| EP14 | Symbol Resolution | Multi-pass compilation, scope management |
-| EP15 | Type Checking | Static type analysis, error reporting |
-| EP16 | Simple Code Generation | Basic bytecode generation, three-address code |
+| EP02 | Tokens | Lexical analysis, manual lexer vs. generated lexer |
+| EP03 | Grammar | Parse trees, operator precedence, rule matching |
+| EP04 | AST | Abstract syntax trees, visitor pattern, tree traversal |
 
-**Outcome**: A compiler that generates simple bytecode for execution.
+**Outcome**: A working interpreter that evaluates expressions via AST traversal.
 
-### Phase 3: Modern Compiler Architecture (EP17-EP21)
-**Goal**: Build a production-quality compiler
+### Phase 2: Meaning (EP05–EP07)
+**Goal**: Give meaning to programs through symbols and types
 
 | EP | Topic | Key Concepts |
 |----|-------|--------------|
-| EP17 | Call Graph Analysis | ANTLR4 4.13.2, function call relationships, DOT visualization |
-| EP18 | Virtual Machine | Stack-based VM, instruction set, memory management, garbage collection |
-| EP18R | Enhanced VM | Advanced GC, optimizations, instruction set extensions |
-| EP19 | IR Generation | Three-address code, SSA basics, IR design patterns |
-| EP20 | CFG & Optimization | Control flow graphs, basic blocks, local optimizations |
-| EP21 | Advanced Optimizations | Full SSA form, dataflow analysis, tail recursion optimization, global optimizations |
+| EP05 | Symbol Tables | Scoping, variable declarations, name resolution |
+| EP06 | Types | Built-in types, type tables, function signatures |
+| EP07 | Semantic Analysis | Static type checking, error reporting |
 
-**Outcome**: A complete compiler with modern architecture and advanced optimizations.
+**Outcome**: A semantic analyzer that validates program correctness.
+
+### Phase 3: IR & Flow (EP08–EP09)
+**Goal**: Transform high-level code into intermediate representations
+
+| EP | Topic | Key Concepts |
+|----|-------|--------------|
+| EP08 | IR Generation | Three-address code, IR instructions, function bodies |
+| EP09 | CFG & LIR | Control flow graphs, basic blocks, low-level IR |
+
+**Outcome**: A compiler front-end that generates structured intermediate code.
+
+### Phase 4: Execution (EP10–EP11)
+**Goal**: Run compiled code on a virtual machine
+
+| EP | Topic | Key Concepts |
+|----|-------|--------------|
+| EP10 | VM Assembler | Stack-based VM, instruction set, bytecode assembly |
+| EP11 | Code Generation | Compiler pipeline, code generation, VM integration |
+
+**Outcome**: A complete compiler that generates and executes VM bytecode.
+
+### Phase 5: Optimization (EP12–EP15)
+**Goal**: Apply classic compiler optimizations
+
+| EP | Topic | Key Concepts |
+|----|-------|--------------|
+| EP12 | Register Allocation | Linear scan algorithm, live ranges, spills |
+| EP13 | SSA Form | Dominator tree, dominance frontiers, phi insertion, variable renaming |
+| EP14 | Classic Optimizations | Dead code elimination, constant propagation, CSE, copy propagation |
+| EP15 | TRO & GC | Tail recursion optimization, reference counting garbage collection |
+
+**Outcome**: A production-quality compiler with advanced optimizations and memory management.
 
 ## 🏗️ Project Structure
 
 ```
-antlr4-project/
-├── ep1-ep16/           # Foundation episodes (historical, not in active build)
-├── ep17/               # Call graph analysis (currently active)
-├── ep18/               # Virtual machine implementation
-├── ep18r/              # Enhanced virtual machine
-├── ep19/               # Intermediate representation generation
-├── ep20/               # Full compiler with CFG and optimization
-├── ep21/               # Advanced compiler with SSA and TRO
-├── pom.xml             # Parent Maven POM
+├── ep01–ep15/          # Main compiler episodes (ep01–ep11 implemented)
+│   ├── ep01/           # Hello, Compiler
+│   ├── ep02/           # Tokens
+│   ├── ep03/           # Grammar
+│   ├── ep04/           # AST
+│   ├── ep05/           # Symbol Tables
+│   ├── ep06/           # Types
+│   ├── ep07/           # Semantic Analysis
+│   ├── ep08/           # IR Generation
+│   ├── ep09/           # CFG & LIR
+│   ├── ep10/           # VM Assembler
+│   ├── ep11/           # Code Generation
+│   ├── ep12/           # Register Allocation
+│   ├── ep13/           # SSA Form
+│   ├── ep14/           # Classic Optimizations
+│   ├── ep15/           # TRO & GC
+├── book/               # Book writing project: "How to Implement a PL in ANTLR4"
+├── pom.xml             # Parent Maven POM (builds ep01–ep15)
 ├── AGENTS.md           # AI agent development guide
 └── README.md           # This file
 ```
 
 ### Active Modules
 
-The root POM currently builds **EP17-EP21**:
+The root POM currently builds **EP01–EP15**:
 ```xml
 <modules>
-    <module>ep17</module>
-    <module>ep18</module>
-    <module>ep18r</module>
-    <module>ep19</module>
-    <module>ep20</module>
-    <module>ep21</module>
+    <module>ep01</module>
+    <module>ep02</module>
+    <module>ep03</module>
+    <module>ep04</module>
+    <module>ep05</module>
+    <module>ep06</module>
+    <module>ep07</module>
+    <module>ep08</module>
+    <module>ep09</module>
+    <module>ep10</module>
+    <module>ep11</module>
+    <module>ep12</module>
+    <module>ep13</module>
+    <module>ep14</module>
+    <module>ep15</module>
 </modules>
 ```
+
+## 📚 The Book Project
+
+The `book/` directory contains the source for the companion book:
+
+- **00_front_matter** — Preface and introduction
+- **01_fundamentals** — Chapters 1–4: Basics of parsing and AST
+- **02_language_features** — Chapters 6–9: Types, symbols, and semantics
+- **03_compilation_basics** — Chapters 10–12: IR, CFG, and code generation
+- **04_modern_architecture** — Chapters 13–16: Advanced topics
+- **05_advanced_topics** — Chapters 17–20: Optimizations and future work
+
+See `book/BOOK_IMPLEMENTATION_PLAN.md` for the writing roadmap.
 
 ## 🚀 Quick Start
 
@@ -100,28 +151,27 @@ The root POM currently builds **EP17-EP21**:
 git clone <repository-url>
 cd How_to_implment_PL_in_Antlr4
 
-# Build all active modules (EP17-EP21)
+# Build all active modules (EP01–EP15)
 mvn clean compile
 
 # Run all tests
 mvn test
 
-# Build specific module
-cd ep21
+# Build a specific module
+cd ep11
 mvn clean compile test
 ```
 
-### Running the Compiler
+### Running an Episode
 
 ```bash
-# Using EP20 compiler (current production-ready version)
-cd ep20
+# Run EP01 compiler
+cd ep01
 mvn exec:java -Dexec.args="src/main/resources/t.cymbol"
 
-# Using EP21 compiler (advanced optimizations)
-cd ep21
-mvn compile exec:java -Dexec.mainClass="org.teachfx.antlr4.ep21.integration.EP21Compiler" \
-    -Dexec.args="src/main/resources/example.cymbol output.vm"
+# Run EP11 compiler (end-to-end pipeline)
+cd ep11
+mvn exec:java -Dexec.args="src/main/resources/t.cymbol"
 ```
 
 ## 📚 The Cymbol Language
@@ -145,11 +195,14 @@ void main() {
 
 ### Features by Episode
 
-- **EP1-EP8**: Basic types, arithmetic, control flow, functions
-- **EP9-EP10**: Scoping, local/global variables
-- **EP11-EP12**: Arrays and array operations
-- **EP13-EP16**: Static typing, type checking, error reporting
-- **EP17-EP21**: Advanced features supporting full compilation
+- **EP01–EP04**: Basic types, arithmetic, control flow, functions, AST
+- **EP05–EP07**: Scoping, local/global variables, static typing, type checking
+- **EP08–EP09**: Intermediate representation, control flow graphs
+- **EP10–EP11**: Bytecode generation, virtual machine execution
+- **EP12**: Register allocation (linear scan)
+- **EP13**: SSA form construction
+- **EP14**: Dead code elimination, constant propagation, CSE
+- **EP15**: Tail recursion optimization, garbage collection
 
 ## 🛠️ Technology Stack
 
@@ -162,7 +215,6 @@ void main() {
 | **Assertions** | AssertJ | 3.21.0 |
 | **Logging** | Log4j2 | 2.17.1 |
 | **Utilities** | Apache Commons Lang3 | 3.12.0 |
-| **Graph Algorithms** (EP21) | JGraphT | Latest |
 
 ## 🧪 Testing
 
@@ -171,38 +223,27 @@ void main() {
 mvn test
 
 # Run tests for a specific module
-cd ep21
+cd ep11
 mvn test
 
 # Run a specific test class
-mvn test -Dtest=CFGBuilderTest
+mvn test -Dtest=CompilerPipelineTest
 
 # Run a specific test method
-mvn test -Dtest=TailRecursionOptimizerTest#testSimpleTailRecursion
+mvn test -Dtest=IRGenerationTest#testSimpleFunction
 ```
 
 ## 📖 Module Documentation
-
-Each active module has its own comprehensive README:
-
-- **[EP17](ep17/README.md)** - Call Graph Analysis & ANTLR4 Upgrade
-- **[EP18](ep18/README.md)** - Virtual Machine & Garbage Collection
-- **[EP18R](ep18r/docs/README.md)** - Enhanced VM
-- **[EP19](ep19/README.md)** - IR Generation
-- **[EP20](ep20/README.md)** - Complete Compiler with CFG & Optimization
-- **[EP21](ep21/README.md)** - Advanced Optimizations (SSA, Dataflow, TRO)
 
 ## 🎓 Learning Outcomes
 
 By completing this project, you'll master:
 
 1. **Language Theory**: Lexical analysis, parsing, grammars, AST design
-2. **Compiler Design**: Multi-pass compilation, intermediate representations, optimization passes
+2. **Compiler Design**: Multi-pass compilation, intermediate representations
 3. **ANTLR4**: Grammar definition, visitor pattern, tree traversal
 4. **Virtual Machines**: Stack-based execution, instruction sets, memory management
-5. **Optimizations**: Local and global optimizations, SSA form, dataflow analysis
-6. **Testing**: Unit testing, integration testing, end-to-end validation
-7. **Software Engineering**: Modular design, clean code, best practices
+5. **Software Engineering**: Modular design, clean code, best practices
 
 ## 💡 Code Style & Conventions
 
@@ -231,11 +272,11 @@ This project is designed to work seamlessly with AI coding agents. The **[AGENTS
 
 ### Working with Multiple EPs
 
-1. **Identify the EP** you need to work with (use EP21 for latest features)
+1. **Identify the EP** you need to work with (use EP11 for the latest complete pipeline)
 2. **Navigate** to the EP directory (`cd epXX`)
 3. **Build** the module (`mvn clean compile`)
 4. **Test** your changes (`mvn test`)
-5. **Respect** module boundaries - don't break encapsulation
+5. **Respect** module boundaries — don't break encapsulation
 
 ### Adding New Features
 
@@ -262,16 +303,6 @@ This project is designed to work seamlessly with AI coding agents. The **[AGENTS
    - Verify bytecode generation is correct
    - Check stack operations in the VM
    - Use logging to trace execution
-
-### Visualization Tools
-
-```bash
-# Visualize call graphs (EP17)
-dot -Tpng src/main/resources/call.dot -o call_graph.png
-
-# Visualize control flow graphs (EP20-EP21)
-# CFGBuilder supports DOT output for graph visualization
-```
 
 ## 🚧 Contributing
 
@@ -310,4 +341,4 @@ This project is inspired by:
 
 **Happy Compiling!** 🎉
 
-Start with EP17-EP21 for the most modern compiler architecture, or explore EP1-EP16 to understand the progressive development journey.
+Start with EP01 and progress through EP11 to build a complete compiler from scratch.

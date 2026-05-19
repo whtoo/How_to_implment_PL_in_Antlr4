@@ -1,5 +1,0 @@
-int a = 12;
-int b = 8;
-int c = 16;
-
-print(a + b);

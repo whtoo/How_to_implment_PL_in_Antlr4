@@ -1,0 +1,31 @@
+package org.teachfx.antlr4.ep09.symtab.type;
+
+public class TypeTable {
+    // Define builtin types
+    public static BuiltInTypeSymbol INT = new BuiltInTypeSymbol("int");
+    public static BuiltInTypeSymbol FLOAT = new BuiltInTypeSymbol("float");
+    public static BuiltInTypeSymbol DOUBLE = new BuiltInTypeSymbol("double");
+    public static BuiltInTypeSymbol CHAR = new BuiltInTypeSymbol("char");
+    public static BuiltInTypeSymbol VOID = new BuiltInTypeSymbol("void");
+    public static BuiltInTypeSymbol NULL = new BuiltInTypeSymbol("null");
+    public static BuiltInTypeSymbol BOOLEAN = new BuiltInTypeSymbol("bool");
+    public static BuiltInTypeSymbol OBJECT = new BuiltInTypeSymbol("Object");
+    public static BuiltInTypeSymbol STRING = new BuiltInTypeSymbol("String");
+
+    // Define true and false value;
+    public static Integer TRUE = 1;
+    public static Integer FALSE = 0;
+
+    /**
+     * Helper method to create array types.
+     * This provides a consistent way to create ArrayType instances across the compiler.
+     *
+     * @param elementType the type of array elements
+     * @return a new ArrayType instance
+     * @throws IllegalArgumentException if elementType is null
+     */
+    public static ArrayType createArrayType(Type elementType) {
+        return new ArrayType(elementType);
+    }
+
+}

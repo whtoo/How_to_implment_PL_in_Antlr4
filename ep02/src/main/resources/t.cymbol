@@ -1,0 +1,9 @@
+// EP02 sample — various token types
+// Demonstrates identifiers, integers, operators, keywords
+x = 42;
+y = x + 7;
+/* block comment demonstrating */
+result = (x * y) / 2;
+// Keywords (reserved for later): if else while return int float void struct
+flag = 1;
+status = flag;

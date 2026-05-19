@@ -1,0 +1,136 @@
+package org.teachfx.antlr4.ep09.symtab.symbol;
+
+import org.teachfx.antlr4.ep09.symtab.scope.Scope;
+import org.teachfx.antlr4.ep09.symtab.type.Type;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+
+public class MethodSymbol extends ScopedSymbol implements Type {
+    private int LABEL_SEQ = 0;
+    private int VAR_SLOT_SEQ = 0;
+
+    private boolean builtIn = false;
+    private int args = 0;
+
+    Map<String, Symbol> orderedArgs = new LinkedHashMap<String, Symbol>();
+
+    // Language func
+    public MethodSymbol(String name, Type retType, Scope parent,
+                        Object tree) {
+        super(name, retType, parent);
+        this.tree = tree;
+    }
+
+    // Native func
+    public MethodSymbol(String name, Scope parent,
+                        Object tree) {
+        super(name, parent, tree);
+    }
+
+
+    public void defineMember(Symbol symbol) {
+        if (symbol instanceof VariableSymbol variableSymbol) {
+            variableSymbol.setSlotIdx(getVarSlotSeq());
+        }
+        orderedArgs.put(symbol.getName(), symbol);
+    }
+
+    @Override
+    public Map<String, Symbol> getMembers() {
+        return orderedArgs;
+    }
+
+
+    @Override
+    public boolean isPreDefined() {
+        return isBuiltIn();
+    }
+
+    @Override
+    public boolean isFunc() {
+        return true;
+    }
+
+    @Override
+    public Type getFuncType() {
+        return this;
+    }
+
+    @Override
+    public boolean isVoid() {
+        return getReturnType().isVoid();
+    }
+
+    @Override
+    public Type getPrimitiveType() {
+        return null;
+    }
+
+    @Override
+    public void setParentScope(Scope currentScope) {
+        this.enclosingScope = currentScope;
+    }
+
+    @Override
+    public int getLabelSeq() {
+        return LABEL_SEQ++;
+    }
+
+
+    @Override
+    public int getVarSlotSeq() {
+        return VAR_SLOT_SEQ++;
+    }
+
+    @Override
+    public int setBaseVarSlotSeq(int baseVarSlotSeq) {
+        return 0;
+    }
+
+    @Override
+    public int getVarSlots() {
+        return getMembers().size();
+    }
+    public int getLocals() {
+        return  getVarSlots() - getArgs();
+    }
+    @Override
+    public boolean isBuiltIn() {
+        return builtIn;
+    }
+
+    public void setBuiltIn(boolean builtIn) {
+        this.builtIn = builtIn;
+    }
+
+    public int getArgs() {
+        return args;
+    }
+
+    public void setArgs(int args) {
+        this.args = args;
+    }
+
+    @Override
+    public String toString() {
+        return "%s<%s:%s>".formatted(getName(),getScopeName(),getType());
+    }
+    public Type getReturnType() {
+        return getType();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MethodSymbol that)) return false;
+        if (!super.equals(o)) return false;
+        return Objects.equals(getReturnType(),((MethodSymbol) o).getReturnType()) && Objects.equals(orderedArgs, that.orderedArgs);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), orderedArgs);
+    }
+}

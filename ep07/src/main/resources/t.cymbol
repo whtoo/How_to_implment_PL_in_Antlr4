@@ -1,0 +1,28 @@
+// EP07 Sample: Full Cymbol — functions, vars, if/while
+int g = 1;
+
+int add(int a, int b) {
+    int sum = a + b;
+    return sum;
+}
+
+int factorial(int n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+void main() {
+    int a = 10;
+    int b = 20;
+    int c = add(a, b);
+    int d = factorial(5);
+
+    int i = 0;
+    int total = 0;
+    while (i < 10) {
+        total = total + i;
+        i = i + 1;
+    }
+}

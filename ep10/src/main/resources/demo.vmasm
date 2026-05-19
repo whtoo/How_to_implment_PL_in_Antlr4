@@ -1,0 +1,29 @@
+; EP10 Demo: Stack Machine — simple arithmetic
+; Computes (3 + 4) * 5 = 35, then prints it
+
+.def main: args=0, locals=1
+
+; Compute 3 + 4
+iconst 3
+iconst 4
+iadd
+
+; Store in local 0
+store 0
+
+; Load and multiply by 5
+load 0
+iconst 5
+imul
+
+; Print the result
+print
+
+; Compute 10 - 3 = 7
+iconst 10
+iconst 3
+isub
+print
+
+; Halt
+halt

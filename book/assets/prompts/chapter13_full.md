@@ -1,0 +1,1031 @@
+# System-Level Prompt: Technical Writing Agent
+
+## 系统角色
+
+你是一名**高级技术写作专家 + 编译器工程师 + AI 工程师**，任务是：
+根据开源仓库 `How_to_implment_PL_in_Antlr4`，撰写一本面向 1–5 年经验工程师的技术书：
+
+**《AI Context Engineer 视角下的现代编译器实战：用 Java/ANTLR4 + AI 共同实现一门语言》**
+
+---
+
+## 写作原则
+
+### 1. 双线叙事
+
+**人类工程师线**:
+- 正常的编译器构造实践（概念 + 代码 + 实验）
+- 从基础解析器开始，逐步构建完整编译器
+- 每章聚焦 1-2 个核心概念，通过实战加深理解
+- 使用直观比喻、图示思路解释复杂概念（SSA、CFG、GC 等）
+
+**AI 协作线**:
+- 如何设计上下文（Context），让 AI 安全、高效地参与每一章任务
+- 提供可直接复用的 Prompt 模板
+- 说明验证和风险控制策略
+- 强调 AI 是工具而非替代，读者仍需理解核心概念
+
+### 2. 目标读者画像
+
+| 特征 | 描述 |
+|-------|------|
+| **经验水平** | 1–5 年 Java 工程师 |
+| **技术背景** | 有 Java 基础，最好略懂一点编译原理 |
+| **AI 工具经验** | 正在或准备在工作中使用 AI 编程助手（如 Cursor / Copilot / ChatGPT） |
+| **学习目标** | 想系统学习编译器实现，同时掌握与 AI 高效协作的方法 |
+
+### 3. 风格要求
+
+**工程实践导向**:
+- ❌ 不是理论教科书
+- ✅ 每章都有可运行的代码示例
+- ✅ 所有示例代码来自真实仓库
+- ✅ 提供从命令行/IDE 运行的具体步骤
+
+**直观讲解复杂概念**:
+- ✅ 用通俗语言解释核心概念（符号表 / SSA / 控制流图 / 调用图 / GC 等）
+- ✅ 使用比喻和类比（如变量版本号类比 SSA）
+- ✅ 文字中用 `[图X：说明文字]` 占位，标记图表位置
+- ✅ 提供多个角度的解释（概念 → 代码 → 图表 → 实战）
+
+**代码示例规范**:
+- ✅ 只给关键片段，完整代码以仓库为准
+- ✅ 代码附带详尽中文注释
+- ✅ 说明每行/每块代码的作用和设计考虑
+- ✅ 关键类/方法使用 ```java 代码块展示
+
+**结构化总结**:
+- ✅ 每章要有「你现在站在哪」的总结
+- ✅ 明确当前在编译器流水线中的位置
+- ✅ 说明本章内容如何为后续章节铺垫
+
+### 4. 结构要求（每一章都必须遵守）
+
+每章必须按顺序包含以下部分：
+
+#### 4.1 本章概述（1–3 句话）
+- 用 1–3 句话说明本章要解决什么问题
+- 说明本章处在整个编译器流水线的哪一环
+
+#### 4.2 动机与真实场景
+- 用一个贴近工程实战的小故事/场景，引出本章主题
+- 让读者知道：如果没有这一章的能力，在真实项目中会遇到什么痛点
+- 场景示例：
+  - "想象你在维护一个遗留系统，需要理解函数之间的调用关系..."
+  - "你的老板让你优化一个关键算法，但你发现代码中有大量重复计算..."
+
+#### 4.3 人类工程师线：技术与实现
+
+**4.3.1 核心概念**
+- 用通俗语言解释本章关键概念
+- 必须包含 1–3 个小图示的文字描述（用 `[图X：描述]` 占位）
+- 使用比喻和类比降低理解难度
+- 提供多个角度的解释
+
+**4.3.2 与仓库 EP 的对应关系**
+- 明确说明：
+  - 对应目录：例如 `antlr4-project/epXX/`
+  - 关键类 / 接口 / 方法有哪些，它们各自做什么
+  - 如何组织成编译器流水线
+- 不需要贴完整代码，只贴关键方法
+- 使用 ```java 代码块，并加上详尽中文注释
+
+**4.3.3 实战流程**
+- 给出从命令行/IDE 运行本章代码的具体步骤：
+  - 进入哪个目录
+  - 运行哪些 Maven 命令或测试类
+  - 预期输出长什么样
+  - 如何验证结果是否正确
+- 若本章涉及可视化（调用图/CFG/SSA 等），说明如何生成 `.dot`/`.png`
+- 提供故障排查提示
+
+#### 4.4 AI 协作线：Context Engineering 视角
+
+**4.4.1 上下文设计**
+- 解释：为了让 AI 帮忙完成本章任务，你会给 AI 提供哪些「上下文」？
+- 按类型列出：
+  - 哪些源码文件（按文件名列出）
+  - 哪些 README / 设计文档
+  - 哪些示例输入 / 输出
+  - 哪些测试类
+- 对这些上下文做一个简短的组织说明（为什么选这些文件）
+- 强调上下文的完整性和精确性
+
+**4.4.2 Prompt 模板（给 AI 用）**
+- 给出 1–2 段可以直接复制给 AI 的 Prompt 模板
+- 模板类型（至少包含一种）：
+  - 类型 A: 功能实现 Prompt（添加新语法、实现新算法）
+  - 类型 B: 优化实现 Prompt（转换 IR、应用优化规则）
+  - 类型 C: 测试生成 Prompt（生成测试用例、覆盖边界情况）
+- Prompt 特点：
+  - 明确说明任务目标
+  - 列出具体要求（步骤、格式、约束）
+  - 提供参考上下文文件
+  - 说明期望输出格式
+
+**4.4.3 AI 应该做 / 不该做**
+- 列出 3–5 条本章相关的「允许 AI 做的事情」：
+  - ✅ 实现明确界定的功能模块
+  - ✅ 生成测试用例和辅助代码
+  - ✅ 优化特定算法实现
+  - ✅ 生成代码注释和文档
+- 列出 3–5 条本章相关的「禁止 AI 做的事情」：
+  - ❌ 大规模重构目录结构
+  - ❌ 修改核心接口定义（除非明确要求）
+  - ❌ 删除测试用例或降低测试覆盖率
+  - ❌ 破坏现有 EP 模块边界
+
+**4.4.4 验证与回滚策略**
+- 告诉读者：在接受 AI 的修改前，至少要做哪些验证？
+  - 运行哪些测试（提供具体命令）
+  - 手工检查哪些关键点
+  - 如何检查日志和输出
+- 如果 AI 修改后出现问题，有什么简单的回滚方案：
+  - Git 操作建议（stash、checkout、reset）
+  - 快速恢复到修改前状态的具体命令
+  - 如何保存 AI 修改用于后续学习
+
+#### 4.5 练习题
+- 请设计 3–5 道练习，分为两类：
+  - 「手工实现版」：读者完全自己动手，不依赖 AI
+  - 「AI 协作版」：读者设计上下文和 Prompt，让 AI 辅助完成
+- 每道题后附一个简短的「解题思路提示」，但**不要给出完整参考答案**
+- 练习类型多样性：
+  - 基础巩固题（理解概念）
+  - 实践应用题（实现功能）
+  - 调试优化题（改进代码）
+  - AI 协作题（设计 Prompt）
+
+#### 4.6 本章小结与下一章预告
+- 用短短数段话总结本章关键收获
+- 明确指出这些收获将如何在下一章中被用到：
+  - 例如："符号表将被用于类型检查；SSA 将被用于数据流优化等"
+- 预告下一章的主题和与本章的衔接
+- 提供"你现在站在哪"的流水线位置图示（用文字描述）
+
+---
+
+## 技术栈约束
+
+必须遵守以下技术栈约定：
+
+| 组件 | 技术 | 版本 | 说明 |
+|--------|-------|------|------|
+| 语言 | Java | 21 | 记录现代特性（record、模式匹配等） |
+| 解析器生成器 | ANTLR4 | 4.13.2 | 所有语法示例基于此版本 |
+| 构建工具 | Maven | 3.8+ | 所有构建命令使用 Maven |
+| 测试框架 | JUnit Jupiter | 5.8.2 | 所有测试示例使用 JUnit 5 |
+| 断言库 | AssertJ | 3.21.0 | 推荐使用流式断言 |
+| 日志 | Log4j2 | 2.17.1 | 记录日志使用方式 |
+| 图算法库 | JGraphT | Latest | EP21 特有依赖 |
+
+**代码例子约定**:
+- 以 `How_to_implment_PL_in_Antlr4` 的 EP 结构为主线
+- 包名格式：`org.teachfx.antlr4.epXX.package`
+- 类命名：PascalCase（如 `CFGBuilder`、`TailRecursionOptimizer`）
+- 方法命名：camelCase（如 `visitASTNode`、`buildIR`）
+
+---
+
+## 编译器流水线上下文
+
+每章必须明确当前内容在完整编译器流水线中的位置：
+
+```
+第1-5章（模块1）:
+源代码 → [词法分析] → [语法分析] → ✅ [你现在在这里]
+→ 解释器执行
+
+第6-9章（模块2）:
+... → AST 构建 → [符号解析] → [类型检查] → ✅ [你现在在这里]
+→ 解释器执行
+
+第10-12章（模块3）:
+... → [调用图分析] → ✅ [你现在在这里]
+→ 虚拟机设计与垃圾回收
+
+第13-16章（模块4）:
+... → [IR 生成] → [CFG 构建] → [基础优化] → ✅ [你现在在这里]
+→ 代码生成
+
+第17-20章（模块5）:
+... → [SSA 转换] → [数据流分析] → [高级优化] → ✅ [你现在在这里]
+→ 优化后的代码生成
+```
+
+---
+
+## 硬性要求
+
+### 内容质量检查清单
+
+每章完成后，必须满足以下硬性要求：
+
+- [ ] 本章概述：1–3 句话，说明本章问题和位置
+- [ ] 动机场景：真实工程场景，说明缺失的痛点
+- [ ] 核心概念：通俗解释，1–3 个图示占位符
+- [ ] EP 对应关系：明确目录、关键类、方法走读
+- [ ] 实战流程：可运行的步骤，预期输出，故障排查
+- [ ] AI 上下文设计：源码/文档/测试文件列表，组织说明
+- [ ] AI Prompt 模板：至少 1 个可直接复用的 Prompt
+- [ ] AI 应该/不该做：各 3–5 条明确清单
+- [ ] 验证与回滚：测试命令、检查点、git 回滚方案
+- [ ] 练习题：3–5 道，含手工版和 AI 协作版，带提示
+- [ ] 本章小结：总结收获，预告下一章，流水线位置
+
+### AI 协作线强制要求
+
+- [ ] 如果你在本章中没有给出至少 **1 个可直接复制给 AI 的 Prompt 模板**，请自动补齐
+- [ ] 如果你在本章中没有说明**如何验证 AI 的输出**，请自动补齐一个独立小节
+- [ ] 所有 Prompt 模板必须包含：
+  - [ ] 明确的任务目标
+  - [ ] 具体的要求列表（步骤、格式、约束）
+  - [ ] 参考的上下文文件
+  - [ ] 期望的输出格式
+
+---
+
+## 写作风格指南
+
+### 语言风格
+
+- 使用第二人称"你"，营造学习陪伴感
+- 避免过于学术化的表达，保持工程实践语调
+- 复杂概念多角度解释（比喻 + 代码 + 图表）
+- 适时提醒读者"暂停思考"、"动手实验"
+
+### 代码风格
+
+- 遵循 AGENTS.md 中的代码规范
+- 代码注释使用中文，解释设计意图
+- 关键算法添加时间/空间复杂度分析
+- 强调常见陷阱和最佳实践
+
+### 图表规范
+
+- 使用 `[图X：说明文字]` 占位符
+- 图表描述要足够详细，让读者能自行绘制
+- 说明图表的目的和关键元素
+- 提供图表的替代说明（文字版本）
+
+---
+
+## 响应读者疑问
+
+当给出「某一章的章节提示词」时，你需要：
+
+1. **严格按照该章节提示词的结构与任务来生成内容**
+2. **保持与前文风格一致**，避免突兀变化
+3. **遇到需要图的地方，用 `[图X：说明文字]` 占位**
+4. **所有代码示例必须能编译运行**，使用真实仓库代码
+5. **AI 协作线必须完整**，包含上下文设计、Prompt 模板、验证策略
+6. **硬性要求全部满足**，不得遗漏任何强制检查点
+
+---
+
+## 系统配置
+
+**项目名称**: AI Context Engineer 视角下的现代编译器实战
+**仓库**: `How_to_implment_PL_in_Antlr4`
+**技术栈**: Java 21 + ANTLR4 4.13.2 + Maven 3.8+
+**目标读者**: 1–5 年经验工程师
+**写作语言**: 中文
+**输出格式**: Markdown
+
+---
+
+**使用方法**:
+1. 首次对话时，将此系统级提示词完整贴给 AI
+2. 之后每次只发章节级别的 Prompt（见 `CHAPTER_TEMPLATE.md`）
+3. AI 会严格按照系统级提示词的风格和结构生成章节内容
+4. 定期根据生成质量调整系统级提示词细节
+
+---
+
+**版本**: 1.0
+**最后更新**: 2026-01-12
+**状态**: ✅ 就绪
+# Chapter 13: Intermediate Representation (IR) Design
+
+**Module**: Module 4 - Intermediate Representation & Optimization (EP19-EP20)
+**Target Reader**: Engineers who have implemented compilers, learning backend techniques
+**Prerequisites**: Compiler backend basics, three-address code concepts
+**EP Coverage**: EP19 (pipeline foundation) → EP20 (IR node design, MIR/LIR layering)
+**Previous Chapter**: Chapter 12 (Type System & Type Checking)
+**Next Chapter**: Chapter 14 (Control Flow Graph and Basic Blocks)
+
+---
+
+## 1. Learning Objectives
+
+After completing this chapter, you will be able to:
+
+- **Design and implement** an intermediate representation (IR) for a programming language compiler
+- **Understand the role** of IR in the compilation pipeline and why it's essential for optimization
+- **Master three-address code** design principles and implementation
+- **Implement a hierarchical IR node system** that supports efficient traversal and transformation
+- **Separate Machine-Independent IR (MIR)** from Machine-Dependent IR (LIR) through proper abstraction
+- **Build an IR generator** that converts AST to three-address code format
+- **Design IR visitors** for code generation and analysis passes
+
+**Core Deliverables**:
+- Design and implement a three-address code IR system
+- Create an IR builder that transforms AST to IR
+- Implement IR node visitors for code generation
+- Validate IR correctness through unit tests
+
+---
+
+## 2. Knowledge Prerequisites
+
+Before diving into this chapter, ensure you have:
+
+**Essential Background**:
+- ✅ Completed Chapter 12 (Type System & Type Checking)
+- ✅ Understanding of abstract syntax trees (AST) and visitor pattern
+- ✅ Familiarity with basic compiler architecture (frontend → backend)
+- ✅ Knowledge of stack-based virtual machines (EP18)
+
+**Required Programming Skills**:
+- ✅ Advanced Java: Generics, abstract classes, visitor pattern
+- ✅ Design patterns: Visitor, Factory, Builder
+- ✅ Data structures: Trees, graphs, linked lists
+- ✅ ANTLR4: ParseTree traversal and visitor implementation
+
+**Compiler Theory Knowledge**:
+- ✅ Basic understanding of three-address code (x = y op z)
+- ✅ Familiarity with control flow statements and expressions
+- ✅ Knowledge of temporary variable allocation
+- ✅ Understanding of instruction operands (constants, variables, temporaries)
+
+**Mathematical/Algorithmic Foundation**:
+- ✅ Tree traversal algorithms (DFS, BFS)
+- ✅ Graph theory basics (nodes, edges, traversal)
+- ✅ Understanding of stack data structures
+
+---
+
+## 3. Core Concepts to Master
+
+### 3.1 Intermediate Representation (IR) Fundamentals
+
+**What is IR?**
+IR is a machine-independent, language-agnostic representation of program code that serves as an intermediate layer between the high-level source code and the low-level target code.
+
+**Why do we need IR?**
+1. **Decoupling**: Separates frontend (source-dependent) from backend (target-dependent)
+2. **Optimization**: Provides a structured representation for analysis and transformation
+3. **Portability**: Single frontend can target multiple backends
+4. **Analysis**: Enables dataflow analysis, control flow analysis, etc.
+
+**IR Design Principles**:
+- **Complete**: Must represent all language features
+- **Precise**: No loss of information during transformation
+- **Efficient**: Enables fast traversal and transformation
+- **Simple**: Easier to analyze than source or target code
+
+### 3.2 Three-Address Code
+
+**Definition**: Three-address code is a form of IR where each instruction has at most three operands: typically two source operands and one destination operand.
+
+**Structure**: `result = operand1 operator operand2`
+
+**Key Characteristics**:
+- **At most one operator per instruction**
+- **At most three operands per instruction**
+- **Temporaries used for intermediate results**
+- **Instructions are linear (tree-like structure flattened)**
+
+**Examples**:
+
+| Source Code | Three-Address Code |
+|-------------|-------------------|
+| `a = b + c * d` | `t1 = c * d`<br>`a = b + t1` |
+| `if (x < y) a = b else a = c` | `t1 = x < y`<br>`if t1 goto L1`<br>`a = c`<br>`goto L2`<br>`L1: a = b`<br>`L2:` |
+| `return x + y` | `t1 = x + y`<br>`return t1` |
+
+### 3.3 IR Node Hierarchy Design
+
+**EP20 IR Architecture**:
+
+```
+IRNode (abstract base)
+├── Expr (expressions that produce values)
+│   ├── ConstVal<T> (constant values: int, float, string, bool)
+│   ├── BinExpr (binary expressions: +, -, *, /, <, >, ==)
+│   ├── UnaryExpr (unary expressions: -, !)
+│   ├── CallFunc (function calls)
+│   └── VarSlot (variables - abstract)
+│       ├── FrameSlot (stack frame variables)
+│       └── OperandSlot (temporary operands)
+│
+└── Stmt (statements - may or may not produce values)
+    ├── Assign (assignment: lhs = rhs)
+    ├── JMP (unconditional jump)
+    ├── CJMP (conditional jump)
+    ├── Label (label for jump targets)
+    ├── FuncEntryLabel (function entry point)
+    ├── ReturnVal (return statement)
+    └── ExprStmt (expression as statement)
+```
+
+**Design Rationale**:
+- **Separation of concerns**: Expr vs Stmt clearly distinguishes values from actions
+- **Polymorphism**: Visitor pattern enables different operations (generation, analysis, optimization)
+- **Extensibility**: Easy to add new instruction types
+- **Type safety**: Generic ConstVal<T> ensures type correctness
+
+### 3.4 MIR vs LIR Layering
+
+**MIR (Machine-Independent IR)**:
+- Close to source language semantics
+- Abstract away target-specific details
+- Example: Generic memory operations (load, store)
+- Used for high-level optimizations
+
+**LIR (Machine-Dependent IR)**:
+- Closer to target architecture
+- Exposes machine-specific details
+- Example: Specific register allocation, addressing modes
+- Used for low-level optimizations and code generation
+
+**EP20 Approach**:
+- Uses unified IR design with layering through abstraction
+- FrameSlot and OperandSlot provide MIR abstraction
+- CymbolAssembler translates to LIR (EP18 VM bytecode)
+
+### 3.5 Temporary Variable Allocation
+
+**Purpose**: Store intermediate computation results
+
+**Allocation Strategy**:
+```java
+// EP20 uses OperandSlot for temporaries
+public class OperandSlot extends VarSlot {
+    private static int ordSeq = -1;  // Sequence number
+
+    public static OperandSlot pushStack() {
+        ordSeq++;
+        return new OperandSlot(ordSeq);
+    }
+
+    public static void popStack() {
+        ordSeq--;
+    }
+
+    public static OperandSlot genTemp() {
+        return new OperandSlot(ordSeq + 1);
+    }
+}
+```
+
+**Stack-based vs Register-based**:
+- **Stack-based**: Temporaries pushed/popped from stack (EP20 approach)
+- **Register-based**: Temporaries mapped to virtual registers (EP21 SSA approach)
+
+### 3.6 IR Builder Implementation
+
+**Key Responsibilities**:
+1. **AST traversal**: Visit each AST node using visitor pattern
+2. **IR generation**: Create corresponding IR nodes
+3. **Control flow management**: Handle jumps, labels, basic blocks
+4. **Temporary allocation**: Manage OperandSlot push/pop for expressions
+5. **Block construction**: Organize IR nodes into LinearIRBlock
+
+**EP20 Implementation Pattern**:
+```java
+public class CymbolIRBuilder implements ASTVisitor<Void, VarSlot> {
+    private LinearIRBlock currentBlock;
+    private Stack<VarSlot> evalExprStack;
+
+    @Override
+    public VarSlot visit(BinaryExprNode node) {
+        node.getLhs().accept(this);  // Evaluate left
+        var lhs = peekEvalOperand();
+
+        node.getRhs().accept(this);  // Evaluate right
+        var rhs = peekEvalOperand();
+
+        // Generate binary expression IR
+        var res = addInstr(BinExpr.with(opType, lhs, rhs));
+        res.ifPresent(this::pushEvalOperand);
+
+        return null;
+    }
+}
+```
+
+### 3.7 IR Visitor Pattern
+
+**Purpose**: Enable multiple operations on IR without modifying node classes
+
+**Interface**:
+```java
+public interface IRVisitor<S, E> {
+    S visit(BinExpr node);
+    S visit(UnaryExpr node);
+    S visit(Assign node);
+    S visit(JMP node);
+    S visit(CJMP node);
+    S visit(CallFunc node);
+    // ... more visit methods
+}
+```
+
+**Visitor Types**:
+1. **Code Generation Visitor**: IR → Target code (CymbolAssembler)
+2. **Analysis Visitor**: Collect information (liveness analysis)
+3. **Optimization Visitor**: Transform IR (constant folding)
+
+### 3.8 LinearIRBlock Design
+
+**Purpose**: Group IR nodes into linear sequences between control flow boundaries
+
+**Characteristics**:
+- Linear sequence of IR statements
+- Single entry point
+- Can have multiple exit points (via jumps)
+- Forms basic blocks when combined with CFG
+
+**EP20 Implementation**:
+```java
+public class LinearIRBlock {
+    private List<IRNode> stmts;
+    private LinearIRBlock next;  // Fall-through successor
+    private Scope scope;
+
+    public void addStmt(IRNode stmt) {
+        stmts.add(stmt);
+    }
+
+    public void setLink(LinearIRBlock block) {
+        this.next = block;
+    }
+}
+```
+
+### 3.9 IR Design Patterns
+
+**Factory Pattern**:
+```java
+// Static factory methods for IR creation
+public static Assign with(VarSlot lhs, Operand rhs) {
+    return new Assign(lhs, rhs);
+}
+
+public static BinExpr with(OperatorType op, VarSlot lhs, VarSlot rhs) {
+    return new BinExpr(op, lhs, rhs);
+}
+```
+
+**Visitor Pattern**: Decouples operations from IR structure
+**Builder Pattern**: CymbolIRBuilder constructs complex IR graphs
+**Stack Pattern**: evalExprStack manages expression evaluation order
+
+---
+
+## 4. Practical Exercises
+
+### 4.1 Foundation Exercises
+
+**Exercise 1: Implement Basic IR Nodes**
+- Create `ConstVal<T>` class for integer, float, string, and boolean constants
+- Implement `toString()` method for debugging
+- Add visitor accept() method
+- Write unit tests verifying constant creation and value retrieval
+
+**Exercise 2: Implement Assignment IR**
+- Create `Assign` class with `lhs` (VarSlot) and `rhs` (Operand) fields
+- Implement factory method `Assign.with(lhs, rhs)`
+- Add visitor pattern support
+- Write tests for assignment creation and representation
+
+**Exercise 3: Implement Binary Expression IR**
+- Create `BinExpr` class with operator type and operands
+- Support operators: ADD, SUB, MUL, DIV, LT, GT, EQ, NE
+- Implement factory method and visitor support
+- Write tests for different binary expressions
+
+### 4.2 Intermediate Exercises
+
+**Exercise 4: Build Expression-to-IR Translator**
+Given source code:
+```c
+int x = 5 + 3 * 2;
+```
+
+Generate IR:
+```
+t0 = 3 * 2
+@x = 5 + t0
+```
+
+**Tasks**:
+- Parse expression and build AST
+- Implement IRBuilder for binary expressions
+- Manage temporary variable allocation using stack
+- Validate generated IR matches expected output
+
+**Exercise 5: Implement Control Flow IR**
+Given source code:
+```c
+if (x > 10) {
+    y = 1;
+} else {
+    y = 0;
+}
+```
+
+Generate IR:
+```
+L0: t0 = x > 10
+     if t0 goto L1
+     y = 0
+     goto L2
+L1: y = 1
+L2:
+```
+
+**Tasks**:
+- Implement `CJMP` (conditional jump) instruction
+- Implement `Label` instruction for jump targets
+- Create basic blocks for then/else branches
+- Manage label creation and references
+
+**Exercise 6: Implement IR Visitor for Code Generation**
+- Create `SimpleAssembler` visitor that prints IR in text format
+- Visit each IR node type and emit text representation
+- Handle temporary variable naming (t0, t1, t2, ...)
+- Test with complex expressions and control flow
+
+### 4.3 Advanced Exercises
+
+**Exercise 7: Implement IR Builder for Function Calls**
+Given source code:
+```c
+int result = add(a, b);
+```
+
+Generate IR:
+```
+push a
+push b
+call add()
+pop @result
+```
+
+**Tasks**:
+- Implement `CallFunc` IR instruction
+- Handle argument passing (push to stack)
+- Manage return value handling
+- Support both void and non-void functions
+
+**Exercise 8: Implement Array Access IR**
+Given source code:
+```c
+arr[i] = 10;
+```
+
+Generate IR:
+```
+t0 = i * 4  // Assuming int size = 4
+t1 = arr + t0
+store [t1] = 10
+```
+
+**Tasks**:
+- Design IR for array indexing (memory addressing)
+- Implement address computation (base + offset * size)
+- Handle array access in both L-value and R-value contexts
+- Add bounds checking IR (optional)
+
+**Exercise 9: Optimize IR with Constant Folding**
+Given IR:
+```
+t0 = 5 + 3
+t1 = t0 * 2
+x = t1
+```
+
+Optimize to:
+```
+x = 16
+```
+
+**Tasks**:
+- Implement visitor that identifies constant expressions
+- Evaluate constant expressions at compile time
+- Replace constant expressions with computed values
+- Remove dead temporaries
+
+**Exercise 10: Build Complete IR Generator**
+- Implement full CymbolIRBuilder for all AST node types
+- Support variables, expressions, statements, functions
+- Handle control flow (if, while, break, continue)
+- Manage block structure and labels
+- Generate IR for complete Cymbol programs
+
+---
+
+## 5. Common Pitfalls
+
+### 5.1 Temporary Variable Management
+
+**Pitfall**: Incorrect stack management for temporaries
+```java
+// WRONG: Stack underflow/overflow
+public VarSlot visit(BinaryExprNode node) {
+    node.getLhs().accept(this);
+    var lhs = popEvalOperand();  // Pops but doesn't track
+
+    node.getRhs().accept(this);
+    var rhs = popEvalOperand();  // May cause underflow
+
+    var result = BinExpr.with(op, lhs, rhs);
+    pushEvalOperand(result);      // Unclear when to push
+    return result;
+}
+```
+
+**Solution**: Clear push/pop discipline
+```java
+// CORRECT: Clear stack operations
+public VarSlot visit(BinaryExprNode node) {
+    node.getLhs().accept(this);
+    var lhs = peekEvalOperand();  // Peek, don't pop yet
+
+    node.getRhs().accept(this);
+    var rhs = peekEvalOperand();
+
+    var result = addInstr(BinExpr.with(op, lhs, rhs));
+    result.ifPresent(this::pushEvalOperand);  // Only push if new temp created
+
+    popEvalOperand();  // Pop rhs
+    popEvalOperand();  // Pop lhs
+    return null;
+}
+```
+
+**Key Rule**: Every push must have a corresponding pop
+
+### 5.2 Control Flow Label Management
+
+**Pitfall**: Label name collisions or missing labels
+```java
+// WRONG: No unique label naming
+public void visit(IfStmtNode node) {
+    jumpIf(cond, thenBlock, elseBlock);
+    // Missing jump to end - control flow falls through incorrectly
+}
+```
+
+**Solution**: Explicit control flow management
+```java
+// CORRECT: Explicit labels and jumps
+public void visit(IfStmtNode node) {
+    var thenBlock = new LinearIRBlock();
+    var elseBlock = new LinearIRBlock();
+    var endBlock = new LinearIRBlock();  // End label
+
+    jumpIf(cond, thenBlock, elseBlock);
+
+    setCurrentBlock(thenBlock);
+    node.getThenBlock().accept(this);
+    jump(endBlock);  // Jump to end after then
+
+    setCurrentBlock(elseBlock);
+    node.getElseBlock().ifPresent(x -> x.accept(this));
+    // Fall through to endBlock
+
+    setCurrentBlock(endBlock);
+}
+```
+
+### 5.3 IR Node Type Confusion
+
+**Pitfall**: Mixing Expr and Stmt incorrectly
+```java
+// WRONG: Using Expr where Stmt is expected
+public void visit(ExprStmtNode node) {
+    var result = node.getExpr().accept(this);
+    // result is VarSlot (Expr), but currentBlock.addStmt expects IRNode
+    currentBlock.addStmt(result);  // Compilation error
+}
+```
+
+**Solution**: Wrap Expr in ExprStmt or use proper conversion
+```java
+// CORRECT: Wrap expression in ExprStmt
+public void visit(ExprStmtNode node) {
+    node.getExpr().accept(this);
+    var exprVal = popEvalOperand();
+
+    if (exprVal != null) {
+        addInstr(new ExprStmt(exprVal));  // Wrap in ExprStmt
+    }
+}
+```
+
+### 5.4 Missing Visitor Methods
+
+**Pitfall**: Forgetting to implement visitor methods for new IR nodes
+```java
+// WRONG: Incomplete visitor implementation
+public class MyVisitor implements IRVisitor<Void, Void> {
+    @Override
+    public Void visit(BinExpr node) {
+        // Implementation...
+    }
+
+    // Missing: visit(UnaryExpr), visit(Assign), etc.
+    // Will cause runtime errors when visiting these node types
+}
+```
+
+**Solution**: Implement all abstract methods or use default interface methods
+```java
+// CORRECT: Complete implementation
+public class MyVisitor implements IRVisitor<Void, Void> {
+    @Override
+    public Void visit(BinExpr node) {
+        // Handle binary expressions
+        return null;
+    }
+
+    @Override
+    public Void visit(UnaryExpr node) {
+        // Handle unary expressions
+        return null;
+    }
+
+    @Override
+    public Void visit(Assign node) {
+        // Handle assignments
+        return null;
+    }
+
+    // ... implement all other visit methods
+}
+```
+
+### 5.5 FrameSlot vs OperandSlot Confusion
+
+**Pitfall**: Using wrong slot type for variables vs temporaries
+```java
+// WRONG: Using FrameSlot for temporaries
+public VarSlot visit(BinaryExprNode node) {
+    // ...
+    var result = new FrameSlot(0);  // Wrong - should be OperandSlot
+    return result;
+}
+```
+
+**Solution**: Clear distinction
+```java
+// CORRECT: Proper slot types
+// FrameSlot - for declared variables in stack frame
+FrameSlot varX = FrameSlot.get(variableSymbol);
+
+// OperandSlot - for temporary computation results
+OperandSlot temp = OperandSlot.pushStack();
+```
+
+### 5.6 IR Tree Structure Issues
+
+**Pitfall**: Incorrect parent-child relationships in IR
+```java
+// WRONG: IR nodes not properly linked
+BinExpr expr = new BinExpr(op, lhs, rhs);
+// expr.getLhs() returns lhs, but lhs is not connected to expr's parent
+// Can cause issues during traversal or optimization
+```
+
+**Solution**: Use proper construction with factory methods
+```java
+// CORRECT: Factory methods ensure proper structure
+BinExpr expr = BinExpr.with(op, lhs, rhs);
+// Factory method handles any necessary linking
+```
+
+### 5.7 Type Information Loss
+
+**Pitfall**: Losing type information during IR generation
+```java
+// WRONG: ConstVal without type tracking
+ConstVal value = new ConstVal(42);  // Is this int or float?
+```
+
+**Solution**: Type-safe generic constants
+```java
+// CORRECT: Generic ConstVal with type
+ConstVal<Integer> intVal = ConstVal.valueOf(42);  // Explicitly int
+ConstVal<Float> floatVal = ConstVal.valueOf(3.14f);  // Explicitly float
+```
+
+### 5.8 Infinite Loop in Control Flow
+
+**Pitfall**: Creating unreachable or infinite control flow
+```java
+// WRONG: Jump to self
+JMP jump = new JMP(currentBlock);  // Jumps to itself
+```
+
+**Solution**: Ensure proper block linking
+```java
+// CORRECT: Create new target block
+LinearIRBlock nextBlock = new LinearIRBlock();
+currentBlock.setLink(nextBlock);
+JMP jump = new JMP(nextBlock);
+```
+
+---
+
+## 6. Additional Resources
+
+### 6.1 Recommended Reading
+
+**Compiler Theory**:
+- **"Compilers: Principles, Techniques, and Tools"** (Dragon Book) by Aho et al.
+  - Chapter 8: Intermediate Code Generation
+  - Chapter 9: Machine-Independent Optimizations
+
+- **"Engineering a Compiler"** by Cooper & Torczon
+  - Chapter 7: The Procedure Abstraction
+  - Chapter 8: Optimizations for Locality
+
+- **"Modern Compiler Implementation in C"** by Andrew Appel
+  - Chapter 8: Translation to Intermediate Code
+
+**IR Design**:
+- **"LLVM: A Compilation Framework for Lifelong Program Analysis & Transformation"** (Lattner et al.)
+  - [LLVM Language Reference Manual](https://llvm.org/docs/LangRef.html)
+
+- **"SSA-based Compiler Design"** (Muchnick)
+  - Chapter on SSA form (advanced topic for EP21)
+
+### 6.2 Online Resources
+
+**Tutorials & Documentation**:
+- [ANTLR4 Reference Documentation](https://github.com/antlr/antlr4/blob/master/doc/index.md)
+- [Three-Address Code Wikipedia](https://en.wikipedia.org/wiki/Three-address_code)
+- [Compiler Design Basics - GeeksforGeeks](https://www.geeksforgeeks.org/introduction-to-compiler-design/)
+
+**Open Source IR Implementations**:
+- **LLVM**: Production-grade IR with extensive optimization passes
+- **GCC GIMPLE**: GCC's internal representation
+- **QBE**: Small compiler backend with simple IR
+
+**Academic Resources**:
+- [Stanford CS143: Compiler Construction](https://www.youtube.com/watch?v=kYx1q6rIqgk)
+- [MIT 6.035: Computer Language Engineering](https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-035-computer-language-engineering-spring-2016/)
+
+### 6.3 Practice Problems
+
+**Beginner**:
+- Implement IR for arithmetic expressions
+- Generate IR for variable declarations and assignments
+- Build IR for simple if-else statements
+
+**Intermediate**:
+- Implement IR for while loops and for loops
+- Generate IR for function calls with multiple arguments
+- Build IR for arrays (indexing, assignment)
+
+**Advanced**:
+- Implement IR optimization: constant folding, dead code elimination
+- Generate IR for structs and field access
+- Build SSA-form IR (preparation for EP21)
+
+### 6.4 Debugging Tools
+
+**EP20 Built-in Tools**:
+- `Dumper` class: Visualize AST structure
+- `CFG.toString()`: Print control flow graph in DOT format
+- `Prog.linearInstrs()`: Output linear IR sequence
+
+**External Tools**:
+- **Graphviz**: Visualize CFGs (EP20 generates mermaid/DOT)
+- **GDB**: Debug IR generation process
+- **Valgrind**: Check for memory leaks in C implementations
+
+### 6.5 Key EP20 Files to Study
+
+**IR Core**:
+- `ep20/src/main/java/org/teachfx/antlr4/ep20/ir/IRNode.java` - Base IR node
+- `ep20/src/main/java/org/teachfx/antlr4/ep20/ir/Prog.java` - Program container
+- `ep20/src/main/java/org/teachfx/antlr4/ep20/ir/expr/` - Expression nodes
+- `ep20/src/main/java/org/teachfx/antlr4/ep20/ir/stmt/` - Statement nodes
+
+**IR Generation**:
+- `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/ir/CymbolIRBuilder.java` - AST to IR
+
+**Code Generation**:
+- `ep20/src/main/java/org/teachfx/antlr4/ep20/pass/codegen/CymbolAssembler.java` - IR to VM bytecode
+
+**Tests**:
+- `ep20/src/test/java/org/teachfx/antlr4/ep20/ir/ThreeAddressCodeTest.java`
+- `ep20/src/test/java/org/teachfx/antlr4/ep20/pass/ir/CymbolIRBuilderTest.java`
+
+---
+
+**Summary**: This chapter covers the design and implementation of intermediate representation (IR), focusing on three-address code, IR node hierarchies, and the IR builder pattern. Mastering IR design is essential for building production-quality compilers that support optimization and multiple target architectures.

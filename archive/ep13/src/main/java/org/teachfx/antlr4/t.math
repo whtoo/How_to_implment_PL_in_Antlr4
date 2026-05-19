@@ -1,0 +1,4 @@
+int i = 9;
+float j;
+int k = i+2;
+j = 12.0;
